@@ -1,0 +1,1542 @@
+# ENTREGAS.md — Registro de entregas prontas
+
+**Este arquivo é atualizado pelo Claude Code, não pela psicóloga.** Sempre
+que uma funcionalidade dos `PROMPTS.md` for concluída, adicione (ou marque)
+uma entrada aqui **antes de seguir para o próximo prompt**. Não apague
+entradas antigas — isso é o histórico do que já foi construído.
+
+## Como preencher cada entrega
+
+```
+## [Semana X] Nome da funcionalidade
+- **Status:** ✅ Pronto | 🟡 Parcial | ⬜ Pendente
+- **Data:**
+- **Prompt de origem:** (ex.: Prompt 2.3 do PROMPTS.md)
+- **O que foi feito:** descrição em linguagem simples, sem jargão técnico
+  — a psicóloga também vai ler isto.
+- **Arquivos criados/alterados:** lista de arquivos principais
+- **Como testar/ver funcionando:** passo a passo curto
+- **Pendências/observações:** o que ficou faltando ou precisa de decisão
+```
+
+---
+
+## Checklist geral (marque conforme for concluindo)
+
+### Semana 1 — Levantamento e Design
+- [x] Estrutura inicial do projeto (Prompt 1.1)
+- [x] Modelagem do banco de dados (Prompt 1.2)
+- [x] Protótipo de telas (Prompt 1.3)
+
+### Semana 2 — Backend e Motor de Regras
+- [x] Autenticação (Prompt 2.1)
+- [x] CRUD de pacientes e templates (Prompt 2.2)
+- [x] Motor de regras — sum_threshold (Prompt 2.3)
+- [x] Motor de regras — count_threshold e seed CARS/ATA/SNAP-IV (Prompt 2.3b)
+- [x] Endpoint de geração de laudo, sem IA/PDF (Prompt 2.4)
+
+### Semana 3 — Frontend e Integração
+- [x] Formulário dinâmico integrado à API (Prompt 3.1)
+- [x] Histórico e dashboard (Prompt 3.2)
+- [x] Gráficos automáticos (Prompt 3.3)
+- [x] Build único servido pelo backend (Prompt 3.4)
+
+### Semana 4 — Testes e Entrega
+- [x] IA gerando o texto do laudo (Prompt 4.1)
+- [x] Exportação em PDF (Prompt 4.2)
+- [x] Testes finais e revisão de segurança (Prompt 4.3)
+- [x] Preparação para implantação (Prompt 4.4)
+
+---
+
+## Registro detalhado das entregas
+
+> As entradas abaixo são adicionadas pelo Claude Code, uma por
+> funcionalidade concluída, na ordem em que forem sendo feitas.
+
+## [Semana 1] Estrutura inicial do projeto
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-12
+- **Prompt de origem:** Prompt 1.1 do PROMPTS.md
+- **O que foi feito:** Criado o esqueleto do projeto com backend em Python
+  (FastAPI) e frontend em React + Vite + TypeScript, do jeito combinado no
+  CLAUDE.md (um único serviço em produção). O backend já sobe com uma rota
+  de teste (`/api/health`) e, quando o frontend está compilado, ele mesmo
+  serve as telas do site na mesma porta — não existe servidor Node rodando
+  em produção. Também foi criado o arquivo `.env.example` com as variáveis
+  que o sistema vai precisar (banco de dados, chave de login e chave de IA)
+  e um `README.md` explicando como ligar tudo. Nenhuma regra de negócio foi
+  implementada ainda, só a base para começar a construir em cima.
+- **Arquivos criados/alterados:**
+  - `backend/app/main.py`, `backend/app/core/config.py`,
+    `backend/requirements.txt`
+  - `frontend/` (projeto Vite + React + TypeScript completo, com
+    `src/App.tsx`, `src/api/client.ts`, `vite.config.ts` ajustado para
+    redirecionar `/api` ao backend em desenvolvimento)
+  - `.env.example`, `.gitignore`, `README.md`
+- **Como testar/ver funcionando:**
+  1. Backend: `cd backend && python3 -m venv .venv && source .venv/bin/activate
+     && pip install -r requirements.txt && uvicorn app.main:app --reload` —
+     depois abrir `http://localhost:8000/api/health` e ver `{"status":"ok"}`.
+  2. Frontend em desenvolvimento (com o backend já ligado):
+     `cd frontend && npm install && npm run dev` — abrir
+     `http://localhost:5173` e ver a página inicial com o status da API.
+  3. Modo produção (um serviço só): `cd frontend && npm run build`, depois
+     `cd backend && uvicorn app.main:app --port 8000` e abrir
+     `http://localhost:8000` — a mesma porta serve o site e a API.
+- **Pendências/observações:** Nenhuma regra de negócio, banco de dados ou
+  autenticação ainda — isso é o próximo passo (Prompt 1.2: modelagem do
+  banco de dados). O material de referência enviado pela psicóloga
+  (protótipo HTML e exemplos de laudo) foi organizado em
+  `referencia_cliente/` para consulta durante o desenvolvimento das próximas
+  etapas, mas não faz parte do sistema novo.
+
+## [Semana 1] Modelagem do banco de dados
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-12
+- **Prompt de origem:** Prompt 1.2 do PROMPTS.md
+- **O que foi feito:** Criadas as quatro tabelas principais do sistema,
+  exatamente como descrito no SPEC.md seção 1: `Psychologist` (a conta da
+  psicóloga que faz login), `Patient` (os pacientes, sempre amarrados a uma
+  psicóloga dona), `ReportTemplate` (os modelos de laudo/escala, como
+  CARS/ATA/SNAP-IV, guardados como um "JSON" flexível para não precisar
+  mexer no código toda vez que aparecer uma escala nova) e `Report` (cada
+  laudo gerado, com as respostas preenchidas, o resultado calculado, o
+  texto e o caminho do PDF). Todas as tabelas usam um código único (UUID)
+  como identificador, como pedido no SPEC.md. Também foi criada e testada a
+  migration inicial do banco (Alembic), que cria essas tabelas do zero.
+- **Arquivos criados/alterados:**
+  - `backend/app/models/base.py`, `psychologist.py`, `patient.py`,
+    `report_template.py`, `report.py`, `__init__.py`
+  - `backend/app/core/database.py` (conexão com o banco e sessão)
+  - `backend/alembic/env.py` (ajustado para ler a URL do banco do `.env` e
+    reconhecer os modelos automaticamente)
+  - `backend/alembic/versions/9715ace3d440_modelos_iniciais_*.py` (migration
+    inicial)
+  - `backend/requirements.txt` (versões de SQLAlchemy e psycopg ajustadas
+    para funcionar no Python instalado nesta máquina — trocado
+    `psycopg2-binary` por `psycopg[binary]`, que é o sucessor mais novo e
+    tem o mesmo papel: conversar com o Postgres)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && alembic upgrade head` —
+     cria o arquivo `dev.db` (SQLite) com as 4 tabelas.
+  2. Conferir as tabelas: abrir `dev.db` em qualquer visualizador de SQLite
+     (ex.: extensão "SQLite Viewer" do VS Code) e ver `psychologists`,
+     `patients`, `report_templates`, `reports`.
+  3. Foi testado manualmente que dá para criar uma psicóloga e um paciente
+     vinculado a ela e que o identificador único (UUID) é gerado sozinho.
+- **Pendências/observações:** Ainda não existe nenhuma rota de API usando
+  essas tabelas (isso é autenticação e CRUD, Prompts 2.1 e 2.2). Em
+  produção o banco será Postgres (`DATABASE_URL` no `.env`); em
+  desenvolvimento local, por padrão, usamos SQLite para simplificar,
+  conforme autorizado no CLAUDE.md seção 2.
+
+## [Semana 1] Protótipo de telas
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-12
+- **Prompt de origem:** Prompt 1.3 do PROMPTS.md
+- **O que foi feito:** Criadas as quatro telas principais do sistema, só
+  com layout e navegação entre elas (sem ligação com o banco de dados
+  ainda): Login, Dashboard (lista de pacientes), Novo Atendimento
+  (formulário) e Histórico do Paciente. As telas usam dados de exemplo só
+  para mostrar como vai ficar — os números reais (pacientes, laudos)
+  entram depois, junto com o login de verdade. Também foi resolvido um
+  detalhe técnico importante: como o navegador entende os "endereços" das
+  telas (ex.: `/dashboard`), o backend agora sabe devolver a página certa
+  mesmo se alguém recarregar o navegador direto numa dessas telas, sem
+  quebrar a API.
+- **Arquivos criados/alterados:**
+  - `frontend/src/pages/Login.tsx`, `Dashboard.tsx`, `NovoAtendimento.tsx`,
+    `HistoricoPaciente.tsx` (+ respectivos `.module.css`)
+  - `frontend/src/components/Layout.tsx` (menu de navegação compartilhado)
+  - `frontend/src/App.tsx` (rotas com `react-router-dom`)
+  - `frontend/index.html` (título da aba do navegador)
+  - `backend/app/main.py` (ajustado para servir corretamente qualquer tela
+    do frontend, mesmo recarregando a página direto numa rota interna)
+- **Como testar/ver funcionando:**
+  1. Modo desenvolvimento: `cd frontend && npm run dev`, abrir
+     `http://localhost:5173`. A tela de Login aparece; ao "entrar" (sem
+     senha real ainda), vai para o Dashboard com pacientes de exemplo; o
+     menu no topo leva a "Novo Atendimento"; clicar em "Ver histórico" de
+     um paciente mostra os laudos de exemplo dele.
+  2. Modo produção (um serviço só): `cd frontend && npm run build`, depois
+     `cd ../backend && uvicorn app.main:app --port 8000` e testar as
+     mesmas telas em `http://localhost:8000` — inclusive recarregando a
+     página direto em `http://localhost:8000/dashboard`, que deve
+     continuar funcionando (antes desse ajuste, dava erro).
+- **Pendências/observações:** Login, listagem de pacientes e histórico
+  ainda são só de mentirinha (dados fixos na tela) — a integração real com
+  a API é dos Prompts 2.1 (login), 3.1 (formulário) e 3.2
+  (dashboard/histórico). Fim da Semana 1 do cronograma.
+
+## [Semana 2] Autenticação
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-12
+- **Prompt de origem:** Prompt 2.1 do PROMPTS.md
+- **O que foi feito:** Implementado o login de verdade no backend: a
+  psicóloga se cadastra com nome, e-mail e senha (`POST /api/auth/register`),
+  faz login com e-mail e senha (`POST /api/auth/login`) e recebe um "crachá
+  digital" (token JWT) que prova quem ela é nas próximas requisições
+  (`GET /api/auth/me`). A senha nunca é guardada em texto puro — é
+  transformada com bcrypt antes de ir para o banco, exatamente como pede o
+  CLAUDE.md seção 5. Também foi criada a trava (`dependency`) que qualquer
+  rota futura vai usar para exigir login antes de mostrar dados de
+  pacientes/laudos.
+- **Arquivos criados/alterados:**
+  - `backend/app/core/security.py` (hash de senha com `bcrypt` e
+    criação/validação do token JWT)
+  - `backend/app/schemas/auth.py` (formato de entrada/saída dos dados de
+    cadastro, login e token)
+  - `backend/app/api/auth.py` (rotas `/api/auth/register`, `/login`, `/me`)
+  - `backend/app/api/deps.py` (função que qualquer rota protegida vai usar
+    para descobrir "quem está logado")
+  - `backend/app/main.py` (rotas de autenticação ligadas ao sistema)
+  - `backend/tests/` (7 testes automatizados cobrindo cadastro, e-mail
+    duplicado, login certo/errado, e acesso com/sem token)
+- **Como testar/ver funcionando:**
+  1. Rodar os testes automáticos: `cd backend && source .venv/bin/activate
+     && pip install -r requirements.txt && python -m pytest tests/ -v` —
+     devem passar 7 de 7.
+  2. Testar manualmente: subir o backend (`uvicorn app.main:app --reload`)
+     e usar a documentação automática em `http://localhost:8000/docs` para
+     experimentar `POST /api/auth/register`, depois `POST /api/auth/login`
+     (copiar o `access_token` da resposta) e por fim `GET /api/auth/me`
+     colando o token no botão "Authorize" da página.
+- **Pendências/observações:** Um detalhe técnico: a biblioteca que o
+  SPEC.md sugeria para hash de senha (`passlib`) está com um problema de
+  compatibilidade conhecido com versões mais novas do `bcrypt` — trocamos
+  por usar a biblioteca `bcrypt` diretamente, que faz a mesma função (hash
+  seguro de senha) e é ativamente mantida; não muda nada para quem usa o
+  sistema. A tela de Login do frontend (Prompt 1.3) ainda não fala com essa
+  API de verdade — essa ligação entra no Prompt 3.1/3.2, junto com o resto
+  da integração do frontend.
+
+## [Semana 2] CRUD de pacientes e templates
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-12
+- **Prompt de origem:** Prompt 2.2 do PROMPTS.md
+- **O que foi feito:** Criadas as rotas para cadastrar/listar/editar/excluir
+  pacientes (`/api/patients`) e para cadastrar/listar/consultar modelos de
+  laudo (`/api/templates`). As duas seguem a mesma regra de segurança do
+  CLAUDE.md seção 5: exigem login e cada psicóloga só vê os próprios
+  pacientes e modelos — se a psicóloga B tentar acessar um paciente da
+  psicóloga A pelo número dele, o sistema responde "não encontrado" (não
+  entrega nem confirma que existe). Também foi criada uma conferência
+  rigorosa do "molde" de cada modelo de laudo (`schema_json`, formato do
+  SPEC.md seção 3): por exemplo, um campo do tipo escala numérica precisa
+  ter mínimo e máximo definidos, um campo de múltipla escolha precisa ter
+  as opções listadas, e as faixas de classificação (Normal / Leve-moderado
+  / Grave, etc.) precisam fazer sentido matematicamente. Um modelo malformado
+  é recusado com uma mensagem explicando o que falta corrigir, antes mesmo
+  de chegar a ser salvo.
+- **Arquivos criados/alterados:**
+  - `backend/app/schemas/patient.py`, `backend/app/schemas/report_template.py`
+    (validação completa do `schema_json`)
+  - `backend/app/api/patients.py`, `backend/app/api/templates.py`
+  - `backend/app/main.py` (rotas ligadas ao sistema)
+  - `backend/tests/test_patients.py`, `backend/tests/test_templates.py`,
+    `backend/tests/helpers.py` (10 novos testes: CRUD, isolamento entre
+    psicólogas diferentes, e recusa de modelos de laudo malformados)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 17 de 17 testes (7 de autenticação + 10 novos).
+  2. Manualmente pelo `http://localhost:8000/docs`: fazer login para pegar
+     o token, "Authorize", depois testar `POST /api/patients` e
+     `POST /api/templates` (dá pra usar o exemplo de CARS do
+     `TEMPLATES_LAUDOS.md` seção 2 como corpo da requisição).
+- **Pendências/observações:** O `schema_json` validado aqui cobre o formato
+  documentado no SPEC.md seção 3 (`rule_type` padrão `sum_threshold`, que
+  também serve para o `count_threshold` do SNAP-IV, já que a estrutura de
+  áreas/campos é a mesma). O formato especial do Portage/IPO
+  (`age_equivalent_percentage`, que usa "idade equivalente" em vez de
+  soma/contagem) foi deixado propositalmente flexível — ele só vai ganhar
+  validação e cálculo completos no Prompt 2.3b, junto com o motor de regras,
+  conforme a prioridade combinada em `TEMPLATES_LAUDOS.md` seção 7. Ainda
+  não existe endpoint para gerar o laudo em si (isso é o motor de regras,
+  Prompt 2.3, e depois o endpoint de geração, Prompt 2.4).
+
+## [Semana 2] Motor de regras — sum_threshold
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-12
+- **Prompt de origem:** Prompt 2.3 do PROMPTS.md
+- **O que foi feito:** Criado o "cérebro" que calcula o resultado de uma
+  escala como CARS ou ATA: soma a pontuação de cada área (respeitando o
+  peso de cada pergunta, quando algum vale mais que outro), soma tudo, e
+  descobre em qual faixa de classificação (ex.: "Normal", "Leve-moderado",
+  "Grave") aquele total se encaixa. O código já está pronto para, no
+  futuro, reconhecer outros tipos de escala (contagem de itens, idade de
+  desenvolvimento) sem precisar mexer no que já funciona — por enquanto,
+  se alguém tentar usar um tipo de escala ainda não implementado, o sistema
+  avisa claramente em vez de dar um resultado errado. Um detalhe técnico
+  importante decidido aqui: como escalas como a CARS repetem o mesmo nome
+  de pergunta ("Pontuação") em todas as áreas, as respostas do formulário
+  vão precisar chegar organizadas por área (não tudo misturado numa lista
+  só), senão o valor de uma área substituiria o de outra.
+- **Arquivos criados/alterados:**
+  - `backend/app/rules_engine/sum_threshold.py` (cálculo em si)
+  - `backend/app/rules_engine/engine.py` (escolhe qual regra usar, olhando
+    o tipo de escala do modelo cadastrado)
+  - `backend/app/rules_engine/exceptions.py` (erro claro quando faltam
+    respostas ou uma resposta não faz sentido, em vez de o sistema quebrar)
+  - `backend/tests/test_rules_engine.py` (14 testes: soma com peso,
+    classificação certa em cada faixa — incluindo os valores exatamente na
+    linha entre duas faixas —, e os erros esperados)
+- **Como testar/ver funcionando:**
+  `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+  — devem passar 31 de 31 testes no total do projeto até aqui.
+- **Pendências/observações:** Só o `sum_threshold` (CARS/ATA) está
+  implementado de verdade. `count_threshold` (SNAP-IV) e
+  `age_equivalent_percentage` (Portage) hoje avisam "ainda não
+  implementado" em vez de dar um resultado errado — isso é o próximo passo
+  (Prompt 2.3b). Também ainda não existe uma rota de API que use esse
+  motor de regras (isso é o Prompt 2.4).
+
+## [Semana 2] Motor de regras — count_threshold e seed CARS/ATA/SNAP-IV
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-12
+- **Prompt de origem:** Prompt 2.3b do PROMPTS.md
+- **O que foi feito:** Implementado o segundo tipo de cálculo do motor de
+  regras: `count_threshold`, usado pelo SNAP-IV. Diferente da CARS/ATA (que
+  somam pontos e comparam contra uma única faixa), aqui o sistema conta,
+  para cada bloco de perguntas (ex.: "Desatenção" e
+  "Hiperatividade/Impulsividade"), quantas respostas caíram em "bastante"
+  ou "demais" — e cada bloco recebe sua própria classificação
+  independente (é possível, por exemplo, ter indicativo de desatenção sem
+  ter indicativo de hiperatividade). O terceiro tipo (`age_equivalent_percentage`,
+  usado pelo Portage) continua propositalmente "ainda não implementado",
+  como combinado — é o mais trabalhoso dos três e fica para depois, se o
+  prazo permitir (ver `TEMPLATES_LAUDOS.md` seção 7).
+  Também foram cadastrados, prontos para uso e teste, os três modelos de
+  laudo reais da clínica: **CARS** (completo, 15 áreas), **ATA**
+  (incompleto de propósito — só 3 dos 22 itens oficiais estavam
+  disponíveis nos documentos enviados) e **SNAP-IV** (completo, 18 itens).
+- **Arquivos criados/alterados:**
+  - `backend/app/rules_engine/count_threshold.py` (cálculo por contagem)
+  - `backend/app/rules_engine/engine.py` (agora também reconhece
+    `count_threshold`)
+  - `backend/app/schemas/report_template.py` (validação Pydantic estendida
+    para aceitar o formato do `count_threshold`: `target_values` e faixas
+    por área com quantidade mínima)
+  - `backend/app/rules_engine/fixtures/cars.json`, `ata.json`,
+    `snap_iv.json` (os três modelos prontos, no formato `schema_json`)
+  - `backend/app/seed_templates.py` (script para cadastrar esses três
+    modelos para uma psicóloga já registrada no sistema)
+  - `backend/tests/test_rules_engine_count_threshold.py` (7 testes,
+    incluindo o caso pedido: exatamente 4 itens em "bastante"/"demais")
+  - `backend/tests/test_seed_fixtures.py` (4 testes que conferem se os
+    três modelos reais estão bem formados e calculam certo)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 42 de 42 testes.
+  2. Para ver os modelos cadastrados de verdade: registrar uma psicóloga
+     (`POST /api/auth/register`) e depois rodar
+     `python -m app.seed_templates <email-cadastrado>` — os três modelos
+     aparecem em `GET /api/templates` (com o token de login).
+- **Pendências/observações:**
+  - **A ATA está incompleta** — falta a psicóloga confirmar os nomes
+    oficiais e a pontuação máxima dos 19 itens restantes (de 22 no total).
+    O arquivo `ata.json` está claramente marcado como incompleto no
+    próprio nome do template, para não ser confundido com uma versão
+    pronta para uso clínico real.
+  - `age_equivalent_percentage` (Portage) continua como
+    "ainda não implementado" — decisão consciente de prioridade, não uma
+    pendência esquecida.
+  - Ainda não existe uma rota de API que gere um laudo de verdade usando
+    esse motor de regras — isso é o Prompt 2.4, o próximo passo.
+
+## [Semana 2] Endpoint de geração de laudo (sem IA/PDF ainda)
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-12
+- **Prompt de origem:** Prompt 2.4 do PROMPTS.md
+- **O que foi feito:** Criada a rota que efetivamente "gera o laudo":
+  `POST /api/patients/{id}/reports`. A psicóloga manda o modelo escolhido
+  (ex.: CARS) e as respostas preenchidas; o sistema confere se o paciente e
+  o modelo são realmente dela, roda o motor de regras (Semana 2, Prompts
+  2.3/2.3b) para calcular a pontuação e a classificação, salva tudo no
+  histórico do paciente e devolve o resultado. Também foram criadas as
+  rotas para consultar o histórico de laudos de um paciente e o detalhe de
+  um laudo específico — sempre checando se quem está pedindo é a dona
+  daquele paciente/laudo. Testado de ponta a ponta com o modelo real da
+  CARS: um conjunto de respostas "2 em tudo" deu pontuação total 30 e
+  classificação "Autismo leve-moderado" — batendo com a faixa esperada.
+  Ainda não tem texto de IA nem PDF (isso é a Semana 4); por enquanto o
+  laudo fica só com os números calculados.
+- **Arquivos criados/alterados:**
+  - `backend/app/schemas/report.py`
+  - `backend/app/api/reports.py` (`POST /api/patients/{id}/reports`,
+    `GET /api/patients/{id}/reports`, `GET /api/reports/{id}`)
+  - `backend/app/api/patients.py` (função de checar dono do paciente
+    reaproveitada pela rota de laudos)
+  - `backend/app/main.py` (rota ligada ao sistema)
+  - `backend/tests/test_reports.py` (7 testes: geração correta, resposta
+    inválida vira erro 400, isolamento entre psicólogas diferentes tanto
+    para paciente quanto para modelo, histórico e detalhe do laudo)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 49 de 49 testes no total do projeto até aqui.
+  2. Fluxo manual completo pela documentação (`/docs`): registrar →
+     login → `python -m app.seed_templates <email>` (cadastra CARS/ATA/
+     SNAP-IV) → criar um paciente → `POST /api/patients/{id}/reports` com
+     o `template_id` da CARS e as 15 respostas → ver a pontuação e a
+     classificação na resposta, e depois em
+     `GET /api/patients/{id}/reports`.
+- **Pendências/observações:** Fim da Semana 2 do cronograma (backend +
+  motor de regras). Ainda faltam: ligar o frontend a essas rotas de
+  verdade (Semana 3), gerar o texto do laudo com IA via LangChain e
+  exportar em PDF (Semana 4). O `age_equivalent_percentage` (Portage)
+  continua não implementado — uma tentativa de gerar laudo com um template
+  desse tipo retorna erro 501 (não confundir com bug: é a resposta
+  correta e esperada por enquanto).
+
+## [Semana 3] Formulário dinâmico, dashboard, histórico e gráficos (Prompts 3.1–3.4)
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Prompt de origem:** Prompts 3.1, 3.2, 3.3 e 3.4 do PROMPTS.md (feitos
+  juntos, por serem partes de um mesmo fluxo de tela)
+- **O que foi feito:** O frontend deixou de usar dados fixos de mentirinha
+  e passou a conversar de verdade com a API:
+  - **Login de verdade**: a tela de login agora chama a API, guarda o
+    "crachá" (token) no navegador e mantém a psicóloga logada mesmo se
+    atualizar a página. Quem não estiver logada é redirecionada para o
+    login automaticamente ao tentar acessar qualquer tela interna.
+  - **Dashboard**: lista os pacientes de verdade da psicóloga logada, com
+    um formulário simples para cadastrar um novo paciente na hora.
+  - **Novo Atendimento**: a parte mais trabalhosa — ao escolher um
+    paciente e um modelo de laudo (CARS, ATA, SNAP-IV...), o formulário
+    é **montado sozinho** a partir das perguntas daquele modelo (campos de
+    escala numérica, sim/não, múltipla escolha ou texto livre, cada um
+    exibido do jeito certo). Ao clicar em "Gerar Laudo", o sistema manda
+    as respostas para o motor de regras (Semana 2) e mostra na hora a
+    pontuação, a classificação e um **gráfico automático** (barra, radar
+    ou pizza, dependendo do que o modelo pede) com o resultado por área.
+  - **Histórico do Paciente**: lista de verdade todos os laudos já
+    gerados daquele paciente, com data, modelo usado e a classificação
+    obtida.
+  - **Build único**: confirmado de novo (com o frontend bem maior agora)
+    que o backend sozinho consegue servir todas essas telas na mesma
+    porta da API, inclusive recarregando a página direto em qualquer tela
+    interna.
+- **Arquivos criados/alterados:**
+  - `frontend/src/api/client.ts` (agora cuida do token de login também),
+    `types.ts`, `auth.ts`, `patients.ts`, `templates.ts`, `reports.ts`
+  - `frontend/src/context/AuthContext.tsx`,
+    `frontend/src/components/RequireAuth.tsx` (controle de quem está
+    logado)
+  - `frontend/src/pages/Login.tsx`, `Dashboard.tsx`, `NovoAtendimento.tsx`,
+    `HistoricoPaciente.tsx` (reescritas com dados reais)
+  - `frontend/src/components/DynamicField.tsx` (um campo do formulário,
+    de qualquer tipo) e `ScoreChart.tsx` (o gráfico automático, usando
+    Chart.js)
+  - `frontend/src/components/Layout.tsx` (mostra o nome de quem está
+    logada e um botão de sair)
+- **Como testar/ver funcionando:**
+  1. Preparar dados de teste: com o backend rodando, registrar uma
+     psicóloga (`POST /api/auth/register`) e rodar
+     `python -m app.seed_templates <email>` para ter CARS/ATA/SNAP-IV
+     disponíveis.
+  2. Modo produção (um serviço só): `cd frontend && npm run build`, depois
+     `cd ../backend && uvicorn app.main:app --port 8000`, abrir
+     `http://localhost:8000`, fazer login, cadastrar um paciente no
+     Dashboard, ir em "Novo Atendimento", escolher o paciente e a escala
+     CARS, preencher as 15 áreas e clicar em "Gerar Laudo" — deve aparecer
+     a pontuação, a classificação e o gráfico de barras. Depois, no
+     histórico daquele paciente, o laudo gerado deve aparecer na lista.
+  3. Testado de ponta a ponta também via API direta (`curl`), simulando
+     exatamente essa sequência, com o build de produção rodando — todos
+     os passos responderam corretamente.
+- **Pendências/observações:**
+  - O formulário automático ainda não sabe lidar com o formato "idade
+    equivalente" do Portage (mostra um aviso em vez de quebrar) — só
+    funciona de verdade quando o motor de regras implementar esse tipo,
+    que continua propositalmente pendente.
+  - Ainda não existem testes automatizados de frontend (tipo Jest/Testing
+    Library) — a verificação até aqui foi manual e via API; o SPEC.md não
+    exige testes de frontend na lista mínima (seção 6), então isso ficou
+    como validação manual mesmo.
+  - Ainda falta o texto gerado por IA e o PDF exportável (Semana 4) — por
+    enquanto o "laudo" na tela é só a pontuação, a classificação e o
+    gráfico.
+
+## [Semana 4] IA gerando o texto do laudo (via LangChain)
+- **Status:** ✅ Pronto (código e testes; chamada real à IA não pôde ser
+  testada ao vivo nesta máquina — ver observações)
+- **Data:** 2026-09-13
+- **Prompt de origem:** Prompt 4.1 do PROMPTS.md
+- **O que foi feito:** Implementada a geração do texto descritivo do laudo
+  usando **LangChain**, como combinamos: o provedor de IA (hoje Anthropic,
+  mas pode virar OpenAI só trocando `AI_PROVIDER`/as chaves no `.env`, sem
+  mexer em código) recebe apenas o nome da escala, as respostas marcadas e
+  a pontuação/classificação já calculada pelo motor de regras — nunca
+  "inventa" dado que não esteja ali, e nunca afirma um diagnóstico fechado
+  (instrução explícita dada à IA). A resposta vem em **três seções
+  organizadas** (introdução, análise por área, conclusão/recomendações),
+  não um texto solto, o que facilita encaixar no layout do laudo depois.
+  O texto gerado fica salvo no laudo, mas a psicóloga pode **editar
+  livremente antes de considerá-lo final** — nada é exportado sem essa
+  revisão (like combinado com o SPEC.md seção 5). No frontend, a tela de
+  "Novo Atendimento" ganhou um botão "Gerar Texto Com IA" e uma caixa de
+  texto editável logo depois do resultado calculado.
+- **Arquivos criados/alterados:**
+  - `backend/app/services/ai/schemas.py` (formato das 3 seções),
+    `provider.py` (escolhe Anthropic/OpenAI conforme `.env`), `chains.py`
+    (monta o prompt e chama a IA), `exceptions.py`
+  - `backend/app/api/reports.py` (`POST /api/reports/{id}/generate-text`,
+    `PUT /api/reports/{id}/text`)
+  - `backend/app/schemas/report.py` (formato do texto revisado)
+  - `backend/tests/test_reports_ai_text.py` (5 testes — usando um "dublê"
+    da chamada de IA, para não depender de uma chave de API real rodando
+    nos testes automatizados)
+  - `frontend/src/api/reports.ts` (chamadas para gerar/salvar o texto)
+  - `frontend/src/pages/NovoAtendimento.tsx` (botão de gerar com IA + caixa
+    de texto editável + botão de salvar)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 54 de 54 testes (os testes de IA usam uma versão falsa
+     da chamada, então passam mesmo sem chave de API configurada).
+  2. Para testar a chamada de IA de verdade: preencher `ANTHROPIC_API_KEY`
+     no `backend/.env`, gerar um laudo normalmente e clicar em "Gerar Texto
+     Com IA" na tela de Novo Atendimento (ou chamar
+     `POST /api/reports/{id}/generate-text` pelo `/docs`).
+- **Pendências/observações:**
+  - **Não foi possível testar uma chamada real à IA nesta máquina** —
+    não há uma `ANTHROPIC_API_KEY` disponível neste ambiente de
+    desenvolvimento. O código está pronto e os testes automatizados
+    confirmam que toda a "fiação" (rota, permissões, salvar no banco,
+    tratamento de erro de configuração) funciona corretamente; só falta
+    validar a qualidade do texto gerado de fato, o que exige a chave real
+    da psicóloga/cliente.
+  - Se a chave de API não estiver configurada, o sistema não quebra:
+    devolve um erro 500 com uma mensagem clara dizendo qual variável falta
+    no `.env`, em vez de travar ou mostrar um erro genérico.
+  - Ainda falta a exportação em PDF (próximo passo, Prompt 4.2) — o texto
+    revisado ainda só existe na tela e no banco de dados.
+
+## [Semana 4] Exportação em PDF
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Prompt de origem:** Prompt 4.2 do PROMPTS.md
+- **O que foi feito:** Implementado o download do laudo em PDF de verdade
+  (`GET /api/reports/{id}/pdf`), com WeasyPrint (biblioteca preferida no
+  SPEC.md). O PDF traz: dados do paciente (nome, data de nascimento, data
+  do atendimento), a tabela de pontuação por área com a classificação de
+  cada uma, a classificação geral e a pontuação total, um **gráfico**
+  gerado com Matplotlib (barra, radar ou pizza — o mesmo tipo configurado
+  no modelo de laudo) e o texto do parecer **já revisado pela psicóloga**
+  (nunca o texto bruto da IA sem revisão, seguindo a regra do SPEC.md
+  seção 5). O PDF é gerado na hora do download, então sempre reflete a
+  versão mais recente do texto e das respostas. No frontend, foi
+  adicionado um botão "Baixar PDF" tanto na tela de Novo Atendimento
+  (logo após gerar o laudo) quanto no Histórico do Paciente (em cada
+  laudo já gerado).
+- **Arquivos criados/alterados:**
+  - `backend/app/services/pdf.py` (monta o HTML do laudo e gera o PDF;
+    gera o gráfico com Matplotlib e embute como imagem)
+  - `backend/app/api/reports.py` (`GET /api/reports/{id}/pdf`)
+  - `backend/tests/test_reports_pdf.py` (4 testes: PDF válido é gerado e
+    baixado, reflete o texto revisado, e outra psicóloga não consegue
+    baixar o laudo de outra pessoa)
+  - `frontend/src/api/reports.ts` (`downloadReportPdf`, que baixa o
+    arquivo já autenticado, sem depender de link direto)
+  - `frontend/src/pages/NovoAtendimento.tsx`,
+    `frontend/src/pages/HistoricoPaciente.tsx` (botão "Baixar PDF")
+  - `.gitignore` (os PDFs gerados ficam em `backend/storage/reports/` e
+    não devem ser versionados)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 57 de 57 testes.
+  2. Pela tela: gerar um laudo em "Novo Atendimento" e clicar em "Baixar
+     PDF" — o navegador baixa um arquivo PDF de verdade, com tabela,
+     gráfico e o texto revisado (se algum tiver sido gerado/editado).
+  3. Testado manualmente com o `pdftotext` para conferir que todo o
+     conteúdo esperado aparece corretamente no arquivo gerado.
+- **Pendências/observações:** O layout do PDF é bem mais simples do que o
+  protótipo original da cliente (`referencia_cliente/`), que tem seções
+  bem mais elaboradas (anamnese completa, fotos, quadros comportamentais,
+  hipóteses diagnósticas com CID, etc.). O que foi entregue aqui cobre
+  exatamente o que o SPEC.md pediu para esta etapa (dados do paciente,
+  pontuações, gráfico, classificação, texto revisado) — deixar o PDF no
+  padrão visual completo do protótipo da clínica é um refinamento visual
+  que pode ser feito depois, se a psicóloga quiser aproximar mais o
+  layout final do que ela já está acostumada a usar.
+
+## [Semana 4] Testes finais e revisão de segurança
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Prompt de origem:** Prompt 4.3 do PROMPTS.md
+- **O que foi feito:** Revisão de ponta a ponta em todas as rotas que
+  mexem com dados de paciente ou laudo, conferindo item por item o que o
+  CLAUDE.md seção 5 exige: (1) toda rota que devolve dado de paciente
+  exige login e (2) cada psicóloga só acessa o que é dela. Resultado:
+  **todas as rotas de pacientes, templates e laudos já exigiam login e
+  filtravam por dona** desde que foram criadas nas semanas anteriores —
+  confirmado revisando o código rota por rota. Também foi checado que o
+  sistema nunca grava dados de paciente em log de texto puro (não existe
+  nenhum `print`/log de dado clínico no código).
+  Durante essa revisão, foi encontrado e corrigido um problema de verdade:
+  **excluir um paciente que já tinha laudos no histórico não tinha
+  nenhuma proteção** — dependendo do banco, isso poderia apagar um
+  paciente e deixar laudos "órfãos" no banco, ou dar um erro feio e
+  confuso. Corrigido: agora o sistema recusa a exclusão com uma mensagem
+  clara ("Não é possível excluir um paciente com laudos no histórico"),
+  protegendo o histórico clínico de ser apagado sem querer.
+- **Arquivos criados/alterados:**
+  - `backend/app/api/patients.py` (proteção contra excluir paciente com
+    laudos)
+  - `backend/tests/test_patients.py` (teste novo cobrindo essa proteção)
+- **Como testar/ver funcionando:**
+  `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+  — devem passar 58 de 58 testes no total do projeto.
+- **Pendências/observações (pontos de atenção para produção, não bugs):**
+  - `JWT_SECRET` no `.env.example` tem um valor de exemplo
+    (`troque-por-um-segredo-forte`) — é responsabilidade de quem for
+    implantar o sistema trocar por um segredo forte de verdade antes de
+    ir para produção. Isso vai virar um item do checklist de implantação
+    (Prompt 4.4).
+  - Não existe limite de tentativas de login (proteção contra "força
+    bruta" na senha). O SPEC.md não pede isso na lista mínima de
+    segurança (seção 5/6), mas é uma melhoria recomendável antes de expor
+    o sistema publicamente na internet.
+  - Não há testes automatizados de frontend (Jest/Testing Library) — a
+    validação do frontend foi manual e via chamadas diretas à API,
+    também compatível com a lista mínima do SPEC.md seção 6 (que só pede
+    testes do motor de regras e de autenticação/autorização, ambos
+    cobertos).
+
+## [Semana 4] Preparação para implantação
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Prompt de origem:** Prompt 4.4 do PROMPTS.md
+- **O que foi feito:** Criado um `Dockerfile` único que compila o
+  frontend e empacota tudo com o backend num só serviço (exatamente a
+  decisão de arquitetura do CLAUDE.md seção 2 — sem servidor Node em
+  produção). O container já sabe rodar as migrations do banco sozinho
+  antes de subir. Também foi criado o `DEPLOY.md`, um checklist completo
+  de implantação: quais variáveis de ambiente são obrigatórias e por quê
+  (com destaque para trocar o `JWT_SECRET` de exemplo), banco de dados e
+  backup, HTTPS (obrigatório — hoje o serviço só fala HTTP puro, então
+  precisa ficar atrás de um proxy com TLS), e um checklist de segurança
+  final antes de ir ao ar.
+  O build ficou travado na primeira tentativa por falta de espaço em
+  disco nesta máquina de desenvolvimento (compartilhada com outros
+  projetos). Com autorização, foi feita uma limpeza pontual de containers
+  parados e imagens Docker antigas não usadas por nenhum projeto em
+  execução no momento — sem tocar em nada que estivesse rodando (os
+  projetos "ferias-*", os dois Postgres e o Portainer continuaram
+  intactos). Depois disso, **o build e a execução completa em Docker
+  foram testados de ponta a ponta com sucesso**: build da imagem, subida
+  do container, migrations automáticas, cadastro de psicóloga, login,
+  seed dos templates, criação de paciente, geração de laudo e **download
+  de PDF dentro do container** (confirmando que as bibliotecas de sistema
+  do WeasyPrint instaladas no `Dockerfile` funcionam corretamente).
+- **Arquivos criados/alterados:**
+  - `Dockerfile`, `.dockerignore`
+  - `DEPLOY.md` (checklist de implantação)
+  - `README.md` (seção de como buildar/rodar via Docker)
+- **Como testar/ver funcionando:**
+  `docker build -t formpsico .` a partir da raiz do projeto, depois
+  `docker run -p 8000:8000 --env-file backend/.env formpsico` (com o
+  `.env` configurado para um Postgres real). Já testado com sucesso nesta
+  máquina.
+- **Pendências/observações:**
+  - Conforme pedido no `PROMPTS.md`, **o deploy em produção em si não foi
+    feito** — só a preparação e a validação local via Docker.
+  - A imagem de teste (`formpsico:test`) foi removida depois de validada,
+    para não ocupar espaço à toa — quem for implantar de verdade deve
+    gerar sua própria imagem com a tag/registro apropriado.
+  - Este é o último prompt do roteiro original de 4 semanas
+    (`PROMPTS.md`). O sistema cobre o fluxo completo: login → cadastro de
+    paciente → escolha de modelo de laudo → formulário dinâmico → motor
+    de regras → texto por IA (revisável) → PDF para download — com as
+    pendências já listadas em cada entrega anterior (ATA incompleta,
+    Portage não implementado, chave de IA não testada ao vivo nesta
+    máquina — o build Docker, por outro lado, já foi validado de ponta a
+    ponta).
+
+## Ajuste de fluxo: Novo Atendimento, Configurações de IA e correção de erro
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Origem:** Pedido direto no chat (fora da lista numerada do
+  PROMPTS.md), ajustando a experiência de uso do sistema depois de ver o
+  fluxo funcionando pela primeira vez.
+- **O que foi pedido:** Depois do login, a psicóloga deveria conseguir
+  cadastrar o paciente e preencher a "planilha" do atendimento no mesmo
+  lugar (sem precisar ir ao Dashboard antes); com os dados informados, o
+  laudo em PDF com gráficos deveria sair praticamente pronto; o histórico
+  do paciente e do laudo deveria ficar salvo, com opção fácil de gerar um
+  novo laudo para um paciente já existente; e deveria existir um lugar
+  fácil, dentro do próprio sistema, para configurar a chave da IA que
+  gera o texto do laudo (antes só dava pra mudar isso editando o arquivo
+  `.env` do servidor).
+- **O que foi feito:**
+  - **Tela "Configurações"** nova: a psicóloga escolhe o provedor de IA
+    (Anthropic ou OpenAI), o modelo e cola a própria chave de API, direto
+    pela tela — sem precisar de acesso técnico ao servidor. Cada
+    psicóloga tem a própria configuração, guardada de forma isolada (uma
+    não vê nem usa a chave da outra).
+  - **"Novo Atendimento" agora cadastra o paciente no mesmo lugar**: tem
+    um "+ Cadastrar Novo Paciente" logo ao lado da lista de pacientes, que
+    abre um formulariozinho ali mesmo — não precisa mais ir ao Dashboard
+    primeiro.
+  - **Geração mais direta**: assim que a pontuação é calculada, o sistema
+    já tenta gerar o texto do laudo por IA sozinho, sem precisar de um
+    clique extra. A psicóloga só entra em ação se quiser revisar, editar
+    ou gerar de novo — e o PDF com os gráficos fica um clique depois
+    disso.
+  - **"Novo Laudo" a partir do histórico**: tanto no Dashboard quanto no
+    Histórico do Paciente, agora tem um atalho "Novo Atendimento" /
+    "+ Novo Laudo Para Este Paciente" que já leva para a tela de Novo
+    Atendimento com aquele paciente pré-selecionado.
+  - **Bug real encontrado e corrigido durante o teste manual**: quando a
+    chave de IA configurada estava errada (ou o provedor tinha algum
+    problema), o sistema respondia com um erro genérico e sem explicação
+    ("Internal Server Error"), sem dizer à psicóloga o que fazer. Agora
+    esse tipo de erro vira uma mensagem clara, apontando para a tela de
+    Configurações, sem derrubar o resto do sistema.
+- **Arquivos criados/alterados:**
+  - `backend/app/models/ai_settings.py` (nova tabela `ai_settings`, uma
+    configuração por psicóloga) + migration
+    `5a34ed7c7607_adiciona_ai_settings.py`
+  - `backend/app/schemas/ai_settings.py`, `backend/app/api/ai_settings.py`
+    (`GET`/`PUT /api/settings/ai` — a chave nunca volta em texto puro nas
+    respostas, só uma prévia mascarada)
+  - `backend/app/services/ai/resolver.py` (decide qual chave usar: a da
+    psicóloga, cadastrada no banco, ou a do `.env` do servidor como
+    reserva)
+  - `backend/app/services/ai/provider.py`, `chains.py` (ajustados para
+    receber a credencial já resolvida, em vez de ler só do `.env` global)
+  - `backend/app/api/reports.py` (usa o resolvedor; e agora captura
+    qualquer erro do provedor de IA — não só falta de configuração — e
+    devolve uma mensagem clara em vez de um erro genérico)
+  - `backend/tests/test_ai_settings.py` (5 testes novos),
+    `backend/tests/test_reports_ai_text.py` (atualizado + teste novo do
+    erro genérico do provedor)
+  - `frontend/src/api/aiSettings.ts`, `frontend/src/pages/Configuracoes.tsx`
+  - `frontend/src/pages/NovoAtendimento.tsx` (cadastro de paciente
+    embutido, pré-seleção de paciente por link, geração automática do
+    texto por IA)
+  - `frontend/src/pages/Dashboard.tsx`, `HistoricoPaciente.tsx` (atalhos
+    de "Novo Atendimento" por paciente)
+  - `frontend/src/components/Layout.tsx` (link "Configurações" no menu)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 65 de 65 testes.
+  2. Pela tela: entrar em "Configurações" e cadastrar uma chave de IA de
+     verdade; ir em "Novo Atendimento", cadastrar um paciente novo ali
+     mesmo, escolher a escala CARS, preencher e clicar em "Gerar Laudo" —
+     o texto por IA já deve aparecer sozinho, pronto para revisão, com o
+     gráfico e o botão "Baixar PDF". No histórico daquele paciente, o
+     atalho "+ Novo Laudo Para Este Paciente" já leva de volta para o
+     mesmo paciente.
+  3. Testado manualmente também o caminho de erro: sem nenhuma chave
+     configurada, e depois com uma chave errada de propósito — os dois
+     casos agora mostram uma mensagem clara em vez de travar ou mostrar
+     um erro genérico (foi assim que o bug do "Internal Server Error" foi
+     encontrado).
+- **Pendências/observações:** A chave de API fica guardada em texto puro
+  na tabela `ai_settings` do banco de dados (não criptografada). Para uma
+  clínica real isso merece atenção extra — o banco de dados já precisa
+  estar protegido (acesso restrito, backup seguro) como qualquer outro
+  dado sensível do sistema (SPEC.md seção 5), mas criptografar a chave
+  em repouso seria um reforço extra recomendável antes de um uso mais
+  amplo.
+
+## Adição: suporte ao Google Gemini como provedor de IA
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Origem:** Pedido direto no chat — o usuário já paga a assinatura do
+  Google (Gemini Advanced/Google AI Pro) e quer usar essa IA em vez de
+  Anthropic/OpenAI.
+- **O que foi feito:** Adicionado o Gemini como terceiro provedor de IA,
+  ao lado de Anthropic e OpenAI, na tela de "Configurações". Como o
+  LangChain já foi escolhido desde o início justamente para isso (SPEC.md
+  seção 5 e a conversa sobre arquitetura no começo do projeto), trocar de
+  provedor não exigiu mexer no motor de regras, no PDF nem em nenhuma
+  outra parte do sistema — só a camada de IA precisou aprender a falar
+  com mais um provedor.
+  **Atenção importante para o usuário:** a assinatura do aplicativo do
+  Gemini (Google One AI Premium / Gemini Advanced) é uma assinatura de
+  consumidor e **não é a mesma coisa** que uma chave de API para
+  desenvolvedor — são cobradas separadamente pelo Google. É preciso gerar
+  uma chave própria em https://aistudio.google.com/app/apikey (o Google
+  costuma oferecer uma cota gratuita generosa nessa chave, separada da
+  mensalidade do app). A tela de Configurações já mostra esse aviso e o
+  link direto quando "Google (Gemini)" é escolhido.
+- **Arquivos criados/alterados:**
+  - `backend/requirements.txt` (`langchain-google-genai`)
+  - `backend/app/core/config.py` (`GOOGLE_API_KEY` como opção no `.env`
+    do servidor, reserva/padrão)
+  - `backend/app/services/ai/provider.py` (reconhece `provider="google"`)
+  - `backend/app/services/ai/resolver.py` (também procura
+    `GOOGLE_API_KEY` como reserva)
+  - `backend/app/schemas/ai_settings.py` (`"google"` como opção válida)
+  - `.env.example`, `backend/.env` (variável nova documentada)
+  - `backend/tests/test_ai_provider.py` (3 testes: cada provedor
+    instancia a classe certa do LangChain, provedor desconhecido dá erro
+    claro), `test_ai_settings.py` (teste novo aceitando `"google"`)
+  - `frontend/src/api/aiSettings.ts`, `frontend/src/pages/Configuracoes.tsx`
+    (Gemini na lista de provedores, com o aviso sobre a chave de API ser
+    separada da assinatura do app)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 70 de 70 testes.
+  2. Em "Configurações", escolher "Google (Gemini)", colar uma chave
+     gerada em aistudio.google.com/app/apikey, e usar "Gerar Texto Com
+     IA" normalmente em qualquer laudo.
+  3. Testado manualmente de ponta a ponta com uma chave falsa: a
+     requisição chegou de verdade nos servidores do Google e voltou com
+     "chave inválida" (confirma que a integração está correta — só
+     faltou uma chave real, que não está disponível nesta máquina de
+     desenvolvimento).
+- **Pendências/observações:** Assim como Anthropic/OpenAI, não foi
+  possível testar com uma chave real do Gemini nesta máquina — só a
+  "fiação" completa (configuração → resolução de credenciais →
+  chamada real ao Google → tratamento do erro) foi validada.
+
+## Adição: edição do histórico com log de auditoria, e PDF consolidado por IA
+- **Status:** ✅ Pronto (funcionalidade e testes; chamada real de IA para
+  o PDF consolidado não testada ao vivo nesta máquina, mesma limitação já
+  registrada nas entregas anteriores de IA)
+- **Data:** 2026-09-13
+- **Origem:** Pedido direto no chat, olhando a tela de Histórico do
+  Paciente já funcionando.
+- **O que foi pedido:** Poder editar e salvar o "Modelo Usado" e a
+  "Classificação" de cada linha do histórico, com essas alterações
+  guardadas em "Logs"; e poder selecionar um ou mais laudos do histórico
+  para a IA ler e gerar um único PDF consolidado a partir deles — com a
+  IA tratada, no prompt, como uma assistente experiente em psicologia que
+  gera os melhores documentos/laudos possíveis.
+- **O que foi feito:**
+  - **Edição inline no histórico**: cada linha da tabela agora tem um
+    botão "Editar" que transforma "Modelo Usado" e "Classificação" em
+    campos de texto editáveis, com "Salvar"/"Cancelar". O valor editado
+    não apaga o cálculo original (pontuação, gráfico) — só passa a
+    aparecer no lugar dele na tela e no PDF daquele laudo.
+  - **Log de auditoria**: toda vez que um desses campos é alterado, fica
+    guardado quem mudou, quando, e o valor antes/depois — nada é
+    sobrescrito silenciosamente. Um botão "Ver Logs" em cada linha mostra
+    esse histórico de edições. Editar com o mesmo valor que já estava
+    (sem mudança de verdade) não gera um log à toa.
+  - **Seleção múltipla + PDF consolidado**: cada linha do histórico agora
+    tem uma caixa de seleção; ao marcar um ou mais laudos, aparece o
+    botão "Gerar PDF Consolidado", que manda a IA ler todas as avaliações
+    marcadas (pontuações, classificações, texto já revisado de cada uma,
+    inclusive as correções manuais feitas via "Editar") e escrever um
+    **único parecer integrado**, apontando convergências, divergências e
+    evolução ao longo do tempo — seguido de um resumo (tabela + gráfico)
+    de cada avaliação de origem, tudo num PDF só.
+  - **Prompt da IA atualizado**: conforme pedido, o prompt agora começa
+    afirmando explicitamente que a IA "tem formação e experiência sólida
+    na área de psicologia e neuropsicopedagogia clínica" e que seu
+    objetivo é "produzir o melhor documento clínico possível" — usado
+    tanto na geração de texto de um laudo individual quanto no parecer
+    consolidado.
+- **Arquivos criados/alterados:**
+  - `backend/app/models/report.py` (dois campos novos:
+    `template_name_override`, `classification_override`),
+    `backend/app/models/report_change_log.py` (tabela de auditoria) +
+    migration `752d5a642845_adiciona_edicao_log_de_laudos.py`
+  - `backend/app/schemas/report.py` (`ReportEditUpdate`,
+    `ReportChangeLogOut`, `ConsolidatedPdfRequest`)
+  - `backend/app/api/reports.py` (`PATCH /api/reports/{id}`,
+    `GET /api/reports/{id}/logs`,
+    `POST /api/patients/{id}/consolidated-pdf`)
+  - `backend/app/services/ai/chains.py` (persona da IA atualizada +
+    `generate_consolidated_report_text`, novo prompt específico para
+    síntese de múltiplas avaliações)
+  - `backend/app/services/pdf.py` (`render_consolidated_pdf`; e o PDF de
+    um laudo individual agora também respeita as correções manuais)
+  - `backend/tests/test_reports_edit_log.py` (6 testes),
+    `backend/tests/test_consolidated_pdf.py` (4 testes)
+  - `frontend/src/api/client.ts` (`apiPatch`, `downloadBlob`),
+    `frontend/src/api/reports.ts` (`updateReportEdit`, `getReportLogs`,
+    `downloadConsolidatedPdf`)
+  - `frontend/src/pages/HistoricoPaciente.tsx` (reescrita: edição inline,
+    logs expansíveis, seleção múltipla, botão de PDF consolidado)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 79 de 79 testes.
+  2. Pela tela: no Histórico do Paciente, clicar em "Editar" numa linha,
+     mudar o nome do modelo e a classificação, "Salvar" — depois "Ver
+     Logs" mostra a alteração com data/hora e quem editou. Marcar duas ou
+     mais linhas e clicar em "Gerar PDF Consolidado" (precisa de uma
+     chave de IA configurada em "Configurações") — deve baixar um único
+     PDF com o parecer integrado e o resumo de cada avaliação.
+  3. Testado manualmente de ponta a ponta via API: edição, log com dois
+     registros na ordem certa (mais recente primeiro), e o endpoint do
+     PDF consolidado devolvendo a mensagem clara de "sem chave de IA
+     configurada" quando aplicável.
+- **Pendências/observações:**
+  - O PDF consolidado não fica salvo no histórico como um novo laudo —
+    é gerado na hora e baixado, sem ficar guardado em lugar nenhum do
+    sistema (decisão de escopo: ele é um documento derivado de laudos já
+    existentes, não um novo atendimento).
+  - Assim como os outros recursos de IA, não foi possível testar a
+    geração real do parecer consolidado nesta máquina por falta de uma
+    chave de API válida — só a "fiação" completa (seleção → validação de
+    propriedade dos laudos → chamada de IA → geração do PDF → erro claro
+    quando mal configurado) foi validada.
+
+## Motor de regras: Portage/IPO (age_equivalent_percentage) implementado
+
+- **Status:** ✅ Pronto (motor de regras e formulário; inventário oficial
+  completo do Portage continua pendente — ver observações)
+- **Data:** 2026-09-13
+- **Origem:** Pedido direto no chat, retomando a pendência documentada em
+  `TEMPLATES_LAUDOS.md` seção 5/7 (o Portage era o único dos quatro tipos
+  de escala sem implementação, porque dependia de um inventário oficial de
+  ~580 habilidades que a clínica nunca chegou a enviar).
+- **O que foi pedido:** Implementar o cálculo do Portage sem ficar
+  esperando o inventário completo — usando uma abordagem genérica que a
+  própria psicóloga consiga alimentar aos poucos.
+- **O que foi feito:** Em vez de exigir a idade exata de cada uma das ~580
+  habilidades (dado que não existe ainda), o motor de regras passou a
+  organizar cada área do Portage em **faixas etárias** (ex.: "0 a 24
+  meses", "24 a 48 meses"), cada uma com os itens que a psicóloga já tem.
+  Para cada área, o sistema calcula o quanto a criança "acertou" em cada
+  faixa (respostas "sim"/"às vezes"/"não", com peso 1,0/0,5/0,2) e estima
+  uma **idade de desenvolvimento**: a maior faixa totalmente atingida (75%
+  ou mais de acerto), mais um crédito parcial proporcional da faixa
+  seguinte (não é mais "tudo ou nada"). Essa idade estimada é comparada com
+  a idade cronológica do paciente na data da avaliação, virando um
+  percentual (ex.: "80% da idade esperada") que é classificado (ex.:
+  "Atraso leve") do mesmo jeito que as outras escalas. O formulário de
+  "Novo Atendimento" também ganhou suporte a esse formato — antes mostrava
+  um aviso de "ainda não suportado", agora mostra os itens agrupados por
+  faixa etária normalmente. Foi cadastrado um exemplo (`portage.json`, 2
+  áreas com 2 faixas cada) para servir de ponto de partida — **não é o
+  inventário completo**, é só para mostrar o formato funcionando.
+- **Arquivos criados/alterados:**
+  - `backend/app/rules_engine/age_equivalent_percentage.py` (cálculo novo)
+  - `backend/app/rules_engine/engine.py` (passa a receber a data de
+    nascimento do paciente e despachar para o cálculo novo)
+  - `backend/app/schemas/report_template.py` (`AgeBracket`, `TemplateArea`
+    ganha `age_brackets` no lugar do antigo `age_range` nunca usado,
+    `item_scoring` no schema, validação completa do `rule_type`
+    `age_equivalent_percentage`)
+  - `backend/app/schemas/report.py` (`ReportCreate.evaluation_date`,
+    opcional — usa a data de hoje se não vier)
+  - `backend/app/api/reports.py` (passa a idade do paciente para o motor de
+    regras)
+  - `backend/app/rules_engine/fixtures/portage.json` (exemplo novo),
+    `backend/app/seed_templates.py` (cadastra o exemplo também)
+  - `backend/tests/test_rules_engine_age_equivalent.py` (10 testes novos:
+    cálculo completo, crédito parcial interpolado, faixas fora de ordem,
+    idade cronológica maior que a de desenvolvimento, dados inválidos/
+    incompletos), `backend/tests/test_rules_engine.py` (teste do stub
+    antigo trocado por um teste real), `backend/tests/test_seed_fixtures.py`
+    (fixture novo validado + um caso de cálculo completo)
+  - `frontend/src/api/types.ts` (`AgeBracket`, `Answers` e `ComputedResult`
+    atualizados para o novo formato)
+  - `frontend/src/pages/NovoAtendimento.tsx` (formulário e resultado
+    passam a exibir faixas etárias/idade de desenvolvimento em vez do
+    aviso de "não suportado")
+  - `TEMPLATES_LAUDOS.md` seção 5 (documentação da decisão e do algoritmo)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 91 de 91 testes.
+  2. Pela tela: `python -m app.seed_templates <email>` cadastra também o
+     "Inventário Portage Operacionalizado (IPO) — EXEMPLO INCOMPLETO"; em
+     "Novo Atendimento", escolher esse modelo, preencher as duas faixas
+     etárias das áreas Socialização/Linguagem e clicar em "Gerar Laudo" —
+     deve aparecer a idade de desenvolvimento estimada por área, o
+     percentual em relação à idade cronológica do paciente e a
+     classificação.
+- **Pendências/observações:**
+  - **O inventário oficial do Portage (~580 habilidades com idade mapeada
+    uma a uma) continua não fornecido pela clínica.** A decisão tomada foi
+    não bloquear a funcionalidade por causa disso: o `portage.json` atual é
+    só um exemplo ilustrativo (2 áreas, 2 faixas cada) — a psicóloga precisa
+    completá-lo com os itens reais (aos poucos, sem precisar do inventário
+    inteiro de uma vez) antes de uso clínico real. A tela "Modelos de
+    Laudo" (próxima entrega, importação de templates via IA) vai facilitar
+    isso.
+  - O limiar de 75% para considerar uma faixa etária "atingida" é uma
+    escolha razoável e documentada no código, mas não é um valor oficial
+    do manual do Portage — vale a psicóloga validar/ajustar se tiver
+    acesso ao manual completo.
+
+## Cadastro de modelos de laudo por upload de documento (IA)
+
+- **Status:** ✅ Pronto (funcionalidade e testes; chamada real de IA para a
+  extração não testada ao vivo nesta máquina, mesma limitação já registrada
+  nas outras entregas de IA)
+- **Data:** 2026-09-13
+- **Origem:** Pedido direto no chat — em vez de eu completar manualmente os
+  22 itens que faltam da ATA (ou qualquer outra escala), a psicóloga quer
+  poder subir o próprio documento da escala e o sistema usar IA para montar
+  o modelo, revisando antes de salvar.
+- **O que foi feito:** Nova tela **"Modelos De Laudo"** (não existia
+  nenhuma tela para isso antes — só um script de linha de comando). A
+  psicóloga sobe um arquivo PDF, DOCX ou TXT com a descrição da escala; o
+  sistema extrai o texto do documento e pede para a IA estruturar isso no
+  formato que o sistema entende (nome, áreas/domínios, itens de cada área,
+  tipo de regra de pontuação mais adequado — soma, contagem ou idade
+  equivalente —, e faixas de classificação). O resultado aparece como um
+  JSON editável na tela, junto com uma lista de avisos caso alguma parte
+  não tenha ficado válida — a psicóloga revisa/corrige à vontade antes de
+  clicar em "Salvar Modelo" (que usa exatamente a mesma validação rigorosa
+  já existente para cadastro de modelos). Também dá para pular a IA e
+  cadastrar/editar um modelo do zero, direto no JSON, com um exemplo em
+  branco pronto para editar. Nada é salvo automaticamente — a extração da
+  IA só devolve um rascunho, nunca grava nada sozinha.
+- **Arquivos criados/alterados:**
+  - `backend/requirements.txt` (`pypdf`, `python-docx` — extração de texto)
+  - `backend/app/services/document_text.py` (extrai texto de PDF/DOCX/TXT)
+  - `backend/app/services/ai/schemas.py` (`ExtractedTemplateDraft` e
+    modelos auxiliares — versão mais permissiva do formato de modelo, só
+    para a IA preencher), `chains.py`
+    (`extract_template_from_document`), `__init__.py`
+  - `backend/app/api/templates.py` (`POST /api/templates/import` —
+    extrai e devolve o rascunho, não persiste nada)
+  - `backend/tests/test_document_text.py` (7 testes: PDF/DOCX/TXT válidos,
+    PDF/DOCX corrompidos, formato não suportado)
+  - `backend/tests/test_templates_import.py` (9 testes: rascunho válido e
+    com erros de validação, formato não suportado, sem configuração de IA,
+    erro do provedor, isolamento entre psicólogas — tudo com a chamada de
+    IA "dublada", sem depender de uma chave real)
+  - `frontend/src/api/client.ts` (`apiPostFile`, upload multipart
+    autenticado), `frontend/src/api/templates.ts`
+    (`importTemplateFromDocument`, `createTemplate`)
+  - `frontend/src/pages/ModelosDeLaudo.tsx` (tela nova)
+  - `frontend/src/App.tsx`, `frontend/src/components/Layout.tsx` (rota e
+    link "Modelos De Laudo" no menu)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 105 de 105 testes.
+  2. Pela tela: com uma chave de IA configurada em "Configurações", ir em
+     "Modelos De Laudo", subir um `.txt`/`.pdf`/`.docx` com a descrição de
+     uma escala qualquer e clicar em "Importar Com IA" — o JSON extraído
+     aparece para revisão; ajustar se necessário e "Salvar Modelo". Também
+     dá para testar "Ou Cadastrar Um Modelo Manualmente", que abre um
+     exemplo em branco editável.
+- **Pendências/observações:**
+  - Assim como os outros recursos de IA do projeto, a extração real de um
+    documento não foi testada com uma chave de API válida nesta máquina —
+    só a "fiação" completa (upload → extração de texto → chamada de IA →
+    validação → devolução do rascunho → erro claro quando mal configurado)
+    foi validada com uma versão dublada da chamada de IA.
+  - A revisão do modelo extraído é feita editando o JSON bruto na tela, não
+    um formulário visual campo a campo — decisão consciente dado o tamanho
+    já grande desta rodada de mudanças; um construtor visual fica como
+    possível melhoria futura se a psicóloga achar o JSON difícil de editar.
+  - O formato de rascunho da IA (`ExtractedTemplateDraft`) não inclui o
+    formato de faixas etárias do Portage (`age_brackets`) — para esse tipo
+    de escala, a IA hoje só extrai áreas/itens no formato comum (soma), e a
+    psicóloga precisa ajustar manualmente o JSON para o formato
+    `age_equivalent_percentage` (ver `TEMPLATES_LAUDOS.md` seção 5). Estender
+    a extração por IA para reconhecer faixas etárias diretamente é uma
+    melhoria possível para uma próxima rodada.
+
+## PDF completo: seções clínicas, fotos, hipóteses com CID e assinatura
+
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Origem:** Pedido direto no chat — o PDF gerado (dados, tabela, gráfico,
+  classificação, texto por IA) era bem mais simples que o laudo real da
+  clínica (`referencia_cliente/RELATORIO_FINAL_ARTHUR_DANIEL__assinado.pdf`,
+  com anamnese, histórico de desenvolvimento, hipóteses diagnósticas com
+  CID, plano de intervenção, fotos e assinatura com registro profissional).
+  Combinado com o usuário um primeiro pacote realista: seções de texto/
+  checklist + fotos + hipóteses com CID + assinatura — ficando de fora
+  desta rodada o quadro de funções executivas/habilidades acadêmicas por
+  ano e o gráfico de "probabilidade estimada por hipótese diagnóstica"
+  (dado estruturado extenso e heurística nova, respectivamente — candidatos
+  a uma rodada futura se a psicóloga quiser).
+- **O que foi feito:**
+  - **Seções clínicas por laudo** (opcionais — um laudo sem nada
+    preenchido continua gerando o PDF exatamente como antes): Anamnese
+    Inicial, Histórico De Desenvolvimento, Encaminhamento/Histórico/
+    Queixas, Metodologia, Estudo De Caso E Observações Clínicas, Plano De
+    Intervenção, Encaminhamentos (checklist), Considerações Finais, e
+    Hipóteses Diagnósticas com código CID (lista curta de hipóteses comuns
+    — TEA, TDAH, DI, TOD, Transtorno de Aprendizagem, TPAC — mais opção de
+    digitar qualquer outra hipótese como texto livre). Editável no
+    Histórico do Paciente, num painel "Seções Clínicas" por linha, igual
+    ao padrão já usado para "Editar"/"Ver Logs".
+  - **Fotos do paciente**: upload/galeria/exclusão na tela de Histórico do
+    Paciente (fotos são do paciente, não de um laudo específico), embutidas
+    no PDF na seção de identificação.
+  - **Assinatura profissional**: nova tela "Registro Profissional" em
+    Configurações (ex.: número do CRP), que aparece no bloco de assinatura
+    no fim do PDF junto com o nome da psicóloga e a data.
+  - **Sexo e Escola do paciente**: campos opcionais novos no cadastro do
+    paciente (Dashboard), aparecem na seção de identificação do PDF quando
+    preenchidos.
+  - **Bug real encontrado e corrigido durante o teste manual de ponta a
+    ponta** (feito via API real, não só nos testes automatizados): o PDF
+    de um laudo Portage estava saindo com a tabela de resultados vazia e
+    sem gráfico, porque o gerador de PDF só sabia ler o formato de
+    resultado do `sum_threshold`/`count_threshold` (`scores`), não o do
+    `age_equivalent_percentage` (`areas`, com idade de desenvolvimento e
+    percentual). Corrigido: a tabela agora mostra "Idade De
+    Desenvolvimento" + percentual da idade cronológica por área, e o
+    gráfico passa a ser gerado a partir desses percentuais.
+- **Arquivos criados/alterados:**
+  - `backend/app/models/patient.py` (`sex`, `school_info`, relação com
+    `photos`), `backend/app/models/patient_photo.py` (novo),
+    `backend/app/models/psychologist.py` (`professional_registration`),
+    `backend/app/models/report.py` (`clinical_sections_json`) +
+    migration `069c31366544_adiciona_secoes_clinicas_fotos_e_.py`
+  - `backend/app/schemas/patient.py` (campos novos, `PatientPhotoOut`),
+    `backend/app/schemas/report.py` (`ClinicalSections`,
+    `DiagnosticHypothesis`), `backend/app/schemas/auth.py`
+    (`PsychologistProfileUpdate`)
+  - `backend/app/core/cid_codes.py` (novo, lista curta de CID-11)
+  - `backend/app/api/patients.py` (`POST`/`GET`/`DELETE`
+    `/api/patients/{id}/photos...`), `backend/app/api/reports.py`
+    (`GET /api/cid-codes`, `PATCH /api/reports/{id}/clinical-sections`),
+    `backend/app/api/auth.py` (`PUT /api/auth/me`)
+  - `backend/app/services/pdf.py` (seções, fotos embutidas em base64 e
+    assinatura renderizadas no PDF individual quando presentes)
+  - `backend/tests/test_patient_photos.py` (4 testes), `test_clinical_sections.py`
+    (6 testes), `test_reports_pdf.py` (1 teste novo confirmando que o PDF
+    continua gerando corretamente com tudo preenchido junto),
+    `test_pdf_age_equivalent.py` (4 testes cobrindo a correção do PDF do
+    Portage)
+  - `frontend/src/api/patients.ts` (fotos, `sex`/`school_info`),
+    `frontend/src/api/reports.ts` (`updateClinicalSections`,
+    `listCidCodes`), `frontend/src/api/auth.ts` (`updateProfile`)
+  - `frontend/src/pages/HistoricoPaciente.tsx` (galeria de fotos + painel
+    "Seções Clínicas" por laudo), `frontend/src/pages/Dashboard.tsx`
+    (campos sexo/escola no cadastro), `frontend/src/pages/Configuracoes.tsx`
+    (seção "Registro Profissional")
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && alembic upgrade head &&
+     python -m pytest tests/ -v` — devem passar 119 de 119 testes.
+  2. Pela tela: em "Configurações", preencher o registro profissional; no
+     Dashboard, cadastrar um paciente com sexo/escola; no Histórico do
+     Paciente, subir uma foto e abrir "Seções Clínicas" de um laudo,
+     preencher anamnese/hipóteses/plano de intervenção/encaminhamentos e
+     salvar; "Baixar PDF" deve trazer tudo isso junto com o que já existia
+     (pontuação, gráfico, texto por IA).
+- **Pendências/observações:**
+  - O PDF **consolidado** (síntese de vários laudos) não foi alterado
+    nesta rodada — continua no formato anterior (parecer integrado +
+    resumo por avaliação), sem as seções clínicas/fotos/assinatura, que
+    são conceitos por laudo individual/paciente. Se fizer sentido incluir
+    fotos/assinatura no consolidado também, é um ajuste pequeno a partir
+    daqui.
+  - Ficaram fora desta rodada (candidatos a uma próxima, se a psicóloga
+    quiser): quadro de funções executivas/habilidades acadêmicas por ano
+    escolar (dado estruturado grande, não modelado ainda) e o gráfico de
+    "probabilidade estimada por hipótese diagnóstica" (heurística nova,
+    não pedida explicitamente).
+  - A lista de CID-11 é curta e cobre só as hipóteses mais comuns vistas no
+    laudo de referência da clínica — não é uma tabela oficial completa do
+    CID-11; a psicóloga pode sempre digitar outra hipótese como texto
+    livre.
+
+## Redesenho do frontend com o design system da marca (Neuropp Mayra Vanessa)
+
+- **Status:** ✅ Pronto (build e checagem de tipos limpos; ver observação
+  sobre verificação visual)
+- **Data:** 2026-09-13
+- **Origem:** Pedido direto no chat — usar a pasta `desgin systema/` (fora
+  do projeto, ao lado dele) como base para refazer a aparência do
+  frontend. Essa pasta tinha dois materiais sem relação entre si: o
+  design system real da cliente (extraído do Instagram
+  @neuroppmayravanessa — cores roxo/rosa, tipografia Baloo 2/Nunito,
+  biblioteca de componentes prontos) e um template genérico de landing
+  page médica ("white-medical/VITALIS", Tailwind, sem relação com a
+  marca). Perguntado ao usuário, a decisão foi **combinar os dois**: marca
+  da Neuropp para cores/tipografia/componentes, com inspiração de layout
+  do white-medical só para o "cartão de gráfico" e blocos de estatística
+  (número grande + legenda).
+- **O que foi feito:** Todo o frontend foi reconstruído visualmente em
+  cima do design system da própria cliente, sem mudar nenhuma regra de
+  negócio, chamada de API ou comportamento:
+  - **Tokens de design** copiados da pasta de origem (cores, tipografia,
+    espaçamento, sombras, fontes Baloo 2/Nunito via Google Fonts) e
+    aplicados como variáveis CSS globais.
+  - **Biblioteca de componentes compartilhados** nova
+    (`frontend/src/components/ds/`): Button, IconButton, Card, Badge,
+    Input, Select, Textarea, Checkbox, Alert, EmptyState, ProgressBar,
+    PageHeader, Tabs, SidebarNav (integrado ao roteamento real via
+    `react-router-dom`), PatientAvatar — portados dos componentes React
+    da Neuropp, com tipos TypeScript.
+  - **Layout novo**: menu lateral fixo (sidebar) com o logo real da
+    cliente, no lugar do menu de topo antigo; colapsa para um menu
+    hambúrguer em telas estreitas.
+  - **Todas as telas reescritas** com os componentes novos: Login,
+    Dashboard (com bloco de estatística "Pacientes cadastrados"), Novo
+    Atendimento (formulário dinâmico, cartão de resultado, cartão de
+    gráfico no estilo "chart card"), Histórico do Paciente (fotos, tabela,
+    painéis de edição/logs/seções clínicas), Configurações, Modelos De
+    Laudo.
+  - **Ícones**: adicionado `lucide-react` (biblioteca leve recomendada
+    pelo próprio guideline da marca), usado na sidebar e em botões de
+    ação.
+  - **Gráficos**: paleta do Chart.js (`ScoreChart`) trocada para as cores
+    da marca; a biblioteca de gráficos em si não mudou.
+- **Arquivos criados/alterados:** só em `frontend/` — nenhum arquivo do
+  `backend/` foi tocado.
+  - Novos: `frontend/src/styles/tokens/*.css`, `frontend/src/components/ds/*.tsx`,
+    `frontend/public/logo-neuropp.png`
+  - Reescritos: `frontend/src/index.css`, `frontend/src/components/Layout.tsx`
+    + `Layout.module.css`, `frontend/src/components/DynamicField.tsx`,
+    `frontend/src/components/ScoreChart.tsx` (só a paleta),
+    `frontend/src/pages/{Login,Dashboard,NovoAtendimento,HistoricoPaciente,Configuracoes,ModelosDeLaudo}.tsx`
+    + `Login.module.css`, `Page.module.css` (simplificado — só o que
+    ainda é usado)
+  - `frontend/package.json` (+ `lucide-react`)
+- **Como testar/ver funcionando:**
+  1. `cd frontend && npx tsc --noEmit && npm run build` — sem erros de
+     tipo/build.
+  2. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem continuar passando 119 de 119 (nada de backend foi tocado).
+  3. Pela tela: `cd frontend && npm run build`, depois
+     `cd ../backend && uvicorn app.main:app --port 8000` e navegar por
+     todas as telas logadas — sidebar com o logo, cores roxo/rosa da
+     marca, formulários e tabelas com a nova aparência.
+- **Pendências/observações:**
+  - **Este ambiente de desenvolvimento não tem navegador disponível para
+    tirar screenshot** — a verificação foi feita por checagem de tipos,
+    build de produção limpo, teste de fumaça servindo o build real pelo
+    backend (todos os assets carregando com sucesso) e conferência de que
+    toda variável de cor/espaçamento usada no código existe de fato nos
+    tokens copiados (nenhuma variável inválida). **A conferência visual
+    final (cores, alinhamento, responsividade) precisa ser feita pelo
+    usuário rodando `npm run dev` e navegando pelo sistema.**
+  - `Dialog`, `Tag` e `Switch` do design system de origem não foram
+    portados — nenhuma tela usa modal, chip removível ou toggle hoje;
+    ficam disponíveis para portar se uma tela futura precisar.
+  - O PDF exportado (WeasyPrint/Matplotlib) não foi alterado — a paleta
+    usada nos gráficos do PDF continua a antiga; alinhar também o PDF à
+    nova marca é um refinamento possível para uma próxima rodada, mas não
+    fazia parte do pedido (frontend).
+
+## Ajustes de feedback: texto do parecer, tabela de classificação e gráficos ilegíveis
+
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Origem:** Feedback direto do usuário revendo o PDF consolidado e o
+  gráfico da CARS: (1) o parecer consolidado trazia um rótulo "Gerado Por
+  IA — Revisar Antes De Uso Clínico" bem visível no corpo do texto; (2) a
+  coluna "Classificação Da Área" da tabela de pontuações da CARS aparecia
+  sempre vazia; (3) o gráfico de barras (PDF e tela) ficava com os rótulos
+  das 15 áreas da CARS sobrepostos uns nos outros, ilegível.
+- **O que foi feito:**
+  - **Título do parecer consolidado** simplificado para "Parecer
+    Integrado" (sem a marcação de IA no corpo do texto). O aviso legal
+    padrão (rodapé, letra pequena, "gerado automaticamente com apoio de
+    inteligência artificial... responsabilidade final é do profissional")
+    foi mantido — é uma proteção de responsabilidade, não o rótulo
+    chamativo que incomodava.
+  - **Texto da IA mais técnico e humanizado**: o prompt (`chains.py`)
+    ganhou uma instrução explícita de estilo — escrever em prosa corrida
+    como um parecer redigido à mão por um profissional, integrando os
+    números na argumentação clínica em vez de listar "área X: valor Y"
+    numa sequência mecânica, e nunca mencionar que o texto foi gerado por
+    IA dentro do próprio texto.
+  - **Coluna de classificação corrigida**: a tabela de pontuações agora só
+    mostra a coluna "Classificação Da Área" quando ela existe de verdade
+    (escalas `count_threshold`, como o SNAP-IV, ou `age_equivalent_percentage`,
+    como o Portage). Escalas `sum_threshold` (CARS, ATA) não têm
+    classificação por área — só geral — então a tabela agora mostra só
+    "Área" e "Pontuação", e a classificação geral continua aparecendo
+    logo abaixo, como já acontecia.
+  - **Gráficos de barra tornados horizontais** (backend, Matplotlib, e
+    frontend, Chart.js) com altura proporcional ao número de áreas — com
+    15 áreas como a CARS, os rótulos agora ficam um embaixo do outro, sem
+    rotação e sem sobreposição, em vez de espremidos e girados no eixo X.
+- **Arquivos alterados:**
+  - `backend/app/services/ai/chains.py` (`ESTILO_DE_ESCRITA`, aplicado a
+    `SYSTEM_PROMPT` e `CONSOLIDATED_SYSTEM_PROMPT`)
+  - `backend/app/services/pdf.py` (`_cabecalho_tabela_pontuacao`/
+    `_linhas_pontuacao` condicionais, `_grafico_barra_horizontal` novo,
+    reaproveitado por `_gerar_grafico` e `_gerar_grafico_idade_equivalente`,
+    título do parecer consolidado, paleta de cores alinhada à marca)
+  - `frontend/src/components/ScoreChart.tsx` (gráfico de barra passa a ser
+    horizontal com altura dinâmica, `indexAxis: 'y'`)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem continuar passando 119 de 119.
+  2. Gerar um laudo com a escala CARS completa (15 áreas) e baixar o PDF —
+     a tabela mostra só "Área"/"Pontuação" (sem coluna vazia) e o gráfico
+     aparece com barras horizontais, uma por área, totalmente legível.
+     Testado de ponta a ponta via API real nesta máquina (extraindo a
+     imagem do PDF gerado para conferência visual).
+  3. Gerar um PDF consolidado (precisa de chave de IA configurada) — o
+     título aparece como "Parecer Integrado", sem menção a IA no corpo.
+- **Pendências/observações:**
+  - Não foi possível testar a qualidade do texto humanizado com uma
+    chamada real de IA nesta máquina (mesma limitação de sempre — falta
+    uma chave de API válida no ambiente de desenvolvimento); só o prompt
+    foi ajustado e revisado.
+
+## Ajustes de feedback: aviso de geração mais visível, fluxo de salvar e estabilidade do PDF consolidado
+
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Origem:** Feedback direto do usuário: (1) a mensagem de "gerando texto
+  com IA" passava despercebida; (2) depois de salvar o texto revisado, a
+  psicóloga queria já ser levada de volta ao histórico do paciente, sem
+  precisar navegar manualmente; (3) selecionar mais de um laudo para o PDF
+  consolidado às vezes retornava erro.
+- **O que foi feito:**
+  - **Aviso de geração mais visível** ("Novo Atendimento"): enquanto o
+    texto está sendo gerado, aparece um aviso destacado (tom rosa da
+    marca, ícone girando) com "Gerando texto com IA..." em negrito — antes
+    era uma caixa azul-clara discreta, fácil de não notar. O botão "Gerar
+    Texto Com IA" também ganhou o mesmo ícone girando enquanto processa.
+  - **"Salvar Texto Revisado" agora leva direto ao Histórico do Paciente**
+    daquele atendimento, em vez de deixar a psicóloga na mesma tela sem
+    indicação do que fazer a seguir.
+  - **PDF consolidado mais resistente a falhas intermitentes da IA**:
+    - As três chamadas de IA do sistema (texto individual, parecer
+      consolidado, importação de modelo) agora tentam de novo
+      automaticamente (até 3 tentativas, com pequena espera entre elas)
+      antes de desistir — cobre falhas transitórias comuns de provedores
+      de IA (limite de taxa, instabilidade momentânea de rede), que são a
+      causa mais provável de "às vezes dá erro" ao combinar vários laudos
+      num prompt maior.
+    - O texto já redigido de cada laudo de origem é truncado a um tamanho
+      razoável ao montar o resumo para a IA — evita que selecionar vários
+      laudos com textos longos gere um prompt grande demais para o
+      provedor de IA processar de uma vez.
+    - Corrigida também uma falha não tratada (erro genérico, não uma
+      mensagem clara) que ocorreria se um dos laudos selecionados
+      referenciasse um modelo de laudo que não existe mais — agora vira
+      um erro claro em vez de travar.
+- **Arquivos alterados:**
+  - `backend/app/services/ai/chains.py` (`_invocar_com_retentativas`,
+    `_truncar`, aplicados às 3 chamadas de IA)
+  - `backend/app/api/reports.py` (proteção contra modelo de laudo ausente
+    no PDF consolidado)
+  - `backend/tests/test_ai_chains_retry.py` (4 testes novos: recuperação
+    após falha transitória, erro repassado após esgotar tentativas,
+    truncamento)
+  - `frontend/src/index.css` (`@keyframes np-spin`, reaproveitável em
+    qualquer ícone de carregamento)
+  - `frontend/src/pages/NovoAtendimento.tsx` (aviso de geração destacado,
+    navegação para o histórico após salvar o texto revisado)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 123 de 123 testes.
+  2. Pela tela: gerar um laudo em "Novo Atendimento" — o aviso rosa com
+     ícone girando aparece durante a geração do texto. Editar o texto e
+     clicar em "Salvar Texto Revisado" — deve levar direto para o
+     Histórico do Paciente.
+- **Pendências/observações:**
+  - As retentativas reduzem bastante os erros intermitentes, mas não
+    eliminam 100% das falhas possíveis de um provedor de IA externo (ex.:
+    chave inválida, provedor fora do ar por muito tempo) — esses casos
+    continuam mostrando a mensagem de erro clara já existente, como
+    esperado.
+  - Não foi possível reproduzir o erro relatado do PDF consolidado com uma
+    chamada de IA real nesta máquina (falta chave de API válida) — a
+    correção foi feita por análise de código (causas mais prováveis:
+    falha transitória do provedor e prompt grande demais ao combinar
+    vários laudos), não por reprodução direta do sintoma.
+
+## Bloco de segurança: chave de IA criptografada e limite de tentativas de login
+
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Origem:** Pedido direto do usuário depois de eu listar pontos de
+  melhoria antes de um uso real com pacientes — este é o primeiro dos 3
+  blocos combinados (segurança → infraestrutura → produto).
+- **O que foi feito:**
+  - **Chave de IA criptografada em repouso**: a chave de API que cada
+    psicóloga cadastra em "Configurações" agora é criptografada antes de
+    salvar no banco (`cryptography.fernet`, chave derivada do
+    `JWT_SECRET` do servidor) — antes ficava em texto puro na tabela
+    `ai_settings`. Chaves já salvas antes desta mudança continuam
+    funcionando normalmente (o sistema reconhece que não estão
+    criptografadas e as recriptografa na próxima vez que forem salvas).
+  - **Limite de tentativas de login**: depois de 5 tentativas erradas com
+    o mesmo e-mail em 15 minutos, o login fica temporariamente bloqueado
+    (erro claro, "muitas tentativas..."), mesmo que a senha certa seja
+    digitada depois. Um login correto zera o contador. É um contador em
+    memória do próprio processo (coerente com a arquitetura de serviço
+    único do projeto) — reseta se o servidor reiniciar.
+- **Arquivos criados/alterados:**
+  - `backend/app/core/security.py` (`encrypt_secret`, `decrypt_secret`)
+  - `backend/app/core/rate_limit.py` (novo)
+  - `backend/app/api/ai_settings.py`, `backend/app/services/ai/resolver.py`
+    (criptografar/descriptografar a chave), `backend/app/api/auth.py`
+    (checagem de bloqueio no login)
+  - `backend/app/models/ai_settings.py` (coluna `api_key` virou `Text` —
+    o valor criptografado é maior que a chave original) + migration
+    `ccbad30d88c7_amplia_coluna_api_key_para_texto_chave_.py`
+  - `backend/requirements.txt` (`cryptography`, já era dependência
+    transitiva, agora declarada explicitamente)
+  - `backend/tests/test_encryption.py` (novo, 3 testes),
+    `backend/tests/test_ai_settings.py` (+1 teste: chave nunca aparece em
+    texto puro no banco), `backend/tests/test_auth.py` (+2 testes de
+    bloqueio/desbloqueio), `backend/tests/conftest.py` (fixture para
+    isolar o contador de tentativas entre testes + acesso ao banco de
+    teste para inspeção direta)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && alembic upgrade head &&
+     python -m pytest tests/ -v` — devem passar 129 de 129 testes.
+  2. Pela tela: errar a senha 5 vezes seguidas com o mesmo e-mail — a 6ª
+     tentativa (mesmo com a senha certa) mostra "muitas tentativas,
+     aguarde alguns minutos".
+- **Pendências/observações:**
+  - **Recuperação de senha por e-mail não entra nesta rodada** — decisão
+    combinada com o usuário: precisa de um serviço de e-mail que ainda
+    não existe no projeto. Continua documentada como pendência.
+  - **HTTPS automático também não entra nesta rodada** — já é resolvido
+    por Render/Fly (recomendados em `APRESENTACAO.md`); forçar
+    redirecionamento no próprio código arriscaria quebrar quem já está
+    atrás de um proxy que termina o TLS.
+  - O bloqueio de login é por e-mail, não por IP — é a proteção mais
+    relevante para este sistema (evita adivinhar a senha de uma conta
+    específica), mas não impede um único atacante de tentar e-mails
+    diferentes rapidamente. Suficiente para o risco atual (poucas
+    contas, uso interno de clínica), não para um sistema exposto a
+    milhares de usuários.
+
+## Bloco de infraestrutura: storage configurável (S3) e backup do banco
+
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Origem:** Segundo dos 3 blocos combinados com o usuário (segurança →
+  infraestrutura → produto), depois da lista de pontos de melhoria.
+- **O que foi feito:**
+  - **Fotos e PDFs deixam de depender só de disco local**: criada uma
+    camada de armazenamento (`services/storage.py`) que hoje continua
+    salvando tudo em disco (`backend/storage/...`, comportamento de
+    sempre) mas passa a aceitar um bucket compatível com S3 (AWS,
+    Cloudflare R2, Backblaze B2...) via variáveis de ambiente opcionais
+    (`S3_BUCKET` e companhia — ver `.env.example`). Sem configurar nada,
+    nada muda; configurando, os arquivos passam a ir para o bucket sem
+    precisar tocar em mais nada do sistema.
+  - **PDF consolidado agora fica salvo** (era gerado e baixado na hora,
+    sem ficar guardado em lugar nenhum — pendência antiga, ver entrega
+    "Adição: edição do histórico..."). Cada parecer consolidado vira um
+    registro (`ConsolidatedReport`) com o texto e o PDF salvos; dá para
+    listar os pareceres já gerados de um paciente e rebaixar o PDF depois
+    **sem chamar a IA de novo**.
+  - **Script de backup do banco** (`backend/scripts/backup_db.sh`) — roda
+    um `pg_dump` compactado; documentado em `DEPLOY.md` com exemplo de
+    agendamento via cron.
+- **Arquivos criados/alterados:**
+  - `backend/app/services/storage.py` (novo — `LocalDiskStorage`,
+    `S3Storage`, `get_photos_storage`, `get_reports_storage`)
+  - `backend/app/core/config.py` (variáveis `s3_*`, todas opcionais)
+  - `backend/app/api/patients.py` (fotos), `backend/app/services/pdf.py`
+    (PDFs) — passam a usar a camada de storage em vez de escrever direto
+    em disco; `file_path`/`pdf_path` agora guardam uma chave lógica, não
+    um caminho absoluto
+  - `backend/app/models/consolidated_report.py` (novo) + migration
+    `d11dc0afd0e2_adiciona_consolidated_reports.py`
+  - `backend/app/schemas/report.py` (`ConsolidatedReportOut`)
+  - `backend/app/api/reports.py` (`POST .../consolidated-pdf` agora
+    persiste; `GET /api/patients/{id}/consolidated-reports` e
+    `GET /api/consolidated-reports/{id}/pdf` novos)
+  - `backend/app/models/ai_settings.py` + migration
+    `ccbad30d88c7_...` (já registrada no bloco de segurança)
+  - `backend/requirements.txt` (`boto3`)
+  - `backend/scripts/backup_db.sh` (novo)
+  - `.env.example`, `DEPLOY.md` (variáveis novas + checklist de backup)
+  - Testes: `backend/tests/test_storage.py` (novo, 4 testes),
+    `backend/tests/test_consolidated_pdf.py` (+3 testes: persistência,
+    listagem, redownload sem nova chamada de IA, isolamento por dono),
+    `test_patient_photos.py`/`test_reports_pdf.py` (ajustados para o novo
+    ponto de mock do storage)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && alembic upgrade head &&
+     python -m pytest tests/ -v` — devem passar 136 de 136 testes.
+  2. Pela tela: gerar um PDF consolidado no Histórico do Paciente — ele
+     continua baixando na hora como antes, mas agora existe um registro
+     dele guardado (checar via `GET /api/patients/{id}/consolidated-reports`
+     pela documentação `/docs`, já que a lista ainda não apareceu na tela
+     — isso é o próximo bloco, produto/UX).
+- **Pendências/observações:**
+  - O `S3Storage` foi testado com o cliente `boto3` simulado (sem
+    depender de credenciais reais/rede) — não foi testado contra um
+    bucket de verdade nesta máquina.
+  - A lista de pareceres consolidados salvos ainda não tem uma tela — só
+    a API. A tela entra no próximo bloco (produto/UX).
+  - Backup automático de verdade (rodando sozinho, sem alguém disparar)
+    depende de onde o sistema for hospedado — o script cobre a parte que
+    dá para deixar pronta agora; agendar (cron, ou o backup gerenciado da
+    plataforma escolhida) é passo de implantação, não de código.
+
+## Bloco de produto/UX: editor visual de modelos, formulário mais fácil, painel de uso, testes de frontend
+
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-13
+- **Origem:** Terceiro e último dos 3 blocos combinados com o usuário
+  (segurança → infraestrutura → produto), fechando a lista de pontos de
+  melhoria levantada antes de um uso real com pacientes.
+- **O que foi feito:**
+  - **Editor visual de modelos de laudo**: a tela "Modelos De Laudo" não
+    depende mais só de editar JSON cru. Agora tem um formulário de
+    verdade — adicionar/remover área, campo, faixa etária (Portage),
+    faixa de classificação, tudo com campos e seletores, sem precisar
+    entender a sintaxe do JSON. Continua existindo um "Modo Avançado
+    (JSON)" para quem preferir editar o texto direto (ex.: ajustes finos
+    depois de importar um documento com a IA) — os dois modos ficam
+    sincronizados.
+  - **Formulário de atendimento mais fácil de preencher**: barra de
+    progresso mostrando "X de Y perguntas respondidas", e atalhos de
+    navegação por área quando o modelo tem muitas (ex.: CARS, 15 áreas) —
+    facilita não se perder em formulários longos.
+  - **Painel de uso no Dashboard**: além de "Pacientes Cadastrados", agora
+    mostra "Laudos Gerados", "Laudos Nos Últimos 30 Dias" e um resumo de
+    quantos laudos foram feitos por escala — dá pra acompanhar o uso do
+    sistema sem abrir a documentação da API.
+  - **Testes automatizados de frontend**: configurado Vitest + Testing
+    Library (não existia nenhum teste de frontend antes). 14 testes novos
+    cobrindo componentes com lógica de verdade: botão (clique/desabilitado),
+    campo dinâmico do formulário (cada tipo de campo chama `onChange` com
+    o valor certo), tela de login (mostra erro de credencial), e o editor
+    visual de modelos (adicionar área/campo/faixa reflete na tela).
+- **Arquivos criados/alterados:**
+  - `frontend/src/components/TemplateBuilder.tsx` (novo — editor visual)
+  - `frontend/src/pages/ModelosDeLaudo.tsx` (usa o editor visual +
+    alternância para modo JSON avançado)
+  - `frontend/src/pages/NovoAtendimento.tsx` (barra de progresso, atalhos
+    de navegação por área), `frontend/src/components/ds/Card.tsx` (+ prop
+    `id`, usado para as âncoras)
+  - `backend/app/api/stats.py`, `backend/app/schemas/stats.py` (novos —
+    `GET /api/stats/summary`), `backend/app/main.py` (router registrado)
+  - `frontend/src/api/stats.ts` (novo), `frontend/src/pages/Dashboard.tsx`
+    (blocos de estatística novos)
+  - `frontend/src/api/types.ts` (`ClassificationRange`/`item_scoring`
+    tipados corretamente — antes eram `Record<string, unknown>`;
+    `StatsSummary`, `ConsolidatedReport`)
+  - `frontend/vite.config.ts`, `frontend/src/test/setup.ts` (novo),
+    `frontend/package.json` (`vitest`, `@testing-library/*`, `jsdom`,
+    script `test`)
+  - Testes novos: `frontend/src/components/ds/Button.test.tsx`,
+    `frontend/src/components/DynamicField.test.tsx`,
+    `frontend/src/components/TemplateBuilder.test.tsx`,
+    `frontend/src/pages/Login.test.tsx` — 14 testes
+  - `backend/tests/test_stats.py` (novo, 4 testes)
+- **Como testar/ver funcionando:**
+  1. `cd backend && source .venv/bin/activate && python -m pytest tests/ -v`
+     — devem passar 140 de 140 testes.
+  2. `cd frontend && npx tsc --noEmit && npm run build && npm run test` —
+     typecheck, build e os 14 testes novos de frontend, todos limpos.
+  3. Pela tela: em "Modelos De Laudo", clicar em "Ou Montar Um Modelo Do
+     Zero" e montar uma escala simples só clicando em "Adicionar
+     Área"/"Adicionar Campo" — sem escrever nenhum JSON à mão; em "Novo
+     Atendimento", escolher a escala CARS e ver a barra de progresso subir
+     conforme preenche; no Dashboard, ver os novos blocos de estatística.
+  4. Testado de ponta a ponta via API real nesta máquina: build de
+     produção do frontend + backend real (banco do zero, todas as
+     migrations), registro, bloqueio de login após 5 tentativas erradas,
+     chave de IA salva e confirmada criptografada direto no arquivo do
+     banco, cadastro de template/paciente/laudo, estatísticas corretas, e
+     download de PDF confirmando que o `pdf_path` salvo é uma chave
+     lógica (não mais um caminho absoluto de disco).
+- **Pendências/observações:**
+  - Isso fecha os 3 blocos de melhoria combinados nesta sessão
+    (segurança → infraestrutura → produto). Pendências que ficaram de
+    fora por decisão explícita do usuário: recuperação de senha por
+    e-mail (falta um serviço de e-mail) e contas multi-profissional
+    (mantido 1 conta = 1 profissional) — ambas documentadas, não
+    esquecidas.
+  - Os testes de frontend cobrem componentes com lógica própria, não a
+    aplicação inteira — não havia nenhum teste de frontend antes desta
+    entrega, então qualquer cobertura é um ganho líquido; expandir para
+    mais páginas é um próximo passo natural, não uma urgência.
+  - O bundle de produção do frontend passou de ~150KB para ~163KB
+    (gzip) com todas essas adições — o Vite avisa que o chunk principal
+    já passa de 500KB (antes da compressão); não é um problema para o
+    tamanho atual do sistema, mas code-splitting é uma otimização válida
+    se o app continuar crescendo. 

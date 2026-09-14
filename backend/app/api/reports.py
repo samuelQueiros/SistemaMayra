@@ -1,0 +1,423 @@
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from sqlalchemy.orm import Session
+
+from app.api.deps import get_current_psychologist
+from app.api.patients import get_patient_or_404
+from app.core.cid_codes import CID_CODES
+from app.core.database import get_db
+from app.models.consolidated_report import ConsolidatedReport
+from app.models.psychologist import Psychologist
+from app.models.report import Report
+from app.models.report_change_log import ReportChangeLog
+from app.models.report_template import ReportTemplate
+from app.models.ai_settings import AISettings
+from app.rules_engine import RulesEngineError, calculate_report
+from app.schemas.report import (
+    ClinicalSections,
+    ConsolidatedPdfRequest,
+    ConsolidatedReportOut,
+    ReportChangeLogOut,
+    ReportCreate,
+    ReportEditUpdate,
+    ReportOut,
+    ReportTextUpdate,
+)
+from app.services.ai import (
+    AIConfigurationError,
+    generate_consolidated_report_text,
+    generate_report_text,
+    resolve_ai_credentials,
+)
+from app.services.pdf import render_consolidated_pdf, render_report_pdf
+from app.services.storage import get_reports_storage
+
+router = APIRouter(tags=["reports"])
+
+
+def _get_template_or_404(template_id: UUID, db: Session, current: Psychologist) -> ReportTemplate:
+    template = db.get(ReportTemplate, template_id)
+    if template is None or template.owner_id != current.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Modelo não encontrado")
+    return template
+
+
+def _get_report_do_psicologo(report_id: UUID, db: Session, current: Psychologist) -> Report:
+    report = db.get(Report, report_id)
+    if report is None or report.patient.owner_id != current.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Laudo não encontrado")
+    return report
+
+
+@router.post(
+    "/api/patients/{patient_id}/reports",
+    response_model=ReportOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_report(
+    patient_id: UUID,
+    data: ReportCreate,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Report:
+    patient = get_patient_or_404(patient_id, db, current)
+    template = _get_template_or_404(data.template_id, db, current)
+
+    try:
+        computed = calculate_report(
+            template.schema_json,
+            data.answers,
+            birth_date=patient.birth_date,
+            evaluation_date=data.evaluation_date,
+        )
+    except RulesEngineError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    report = Report(
+        patient_id=patient.id,
+        template_id=template.id,
+        answers_json=data.answers,
+        computed_json=computed,
+    )
+    db.add(report)
+    db.commit()
+    db.refresh(report)
+    return report
+
+
+@router.get("/api/patients/{patient_id}/reports", response_model=list[ReportOut])
+def list_reports(
+    patient_id: UUID,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> list[Report]:
+    patient = get_patient_or_404(patient_id, db, current)
+    return (
+        db.query(Report)
+        .filter(Report.patient_id == patient.id)
+        .order_by(Report.created_at.desc())
+        .all()
+    )
+
+
+@router.get("/api/reports/{report_id}", response_model=ReportOut)
+def get_report(
+    report_id: UUID,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Report:
+    return _get_report_do_psicologo(report_id, db, current)
+
+
+@router.post("/api/reports/{report_id}/generate-text", response_model=ReportOut)
+def generate_text(
+    report_id: UUID,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Report:
+    report = _get_report_do_psicologo(report_id, db, current)
+    if report.computed_json is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este laudo ainda não tem pontuação calculada.",
+        )
+
+    template = db.get(ReportTemplate, report.template_id)
+    ai_settings = db.query(AISettings).filter(AISettings.owner_id == current.id).first()
+
+    try:
+        provider, model, api_key = resolve_ai_credentials(ai_settings)
+        sections = generate_report_text(
+            provider=provider,
+            model=model,
+            api_key=api_key,
+            template_name=template.name,
+            patient_name=report.patient.name,
+            schema=template.schema_json,
+            answers=report.answers_json,
+            computed=report.computed_json,
+        )
+    except AIConfigurationError as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+    except Exception as exc:
+        # Erros do próprio provedor de IA (chave inválida, modelo
+        # inexistente, indisponibilidade, etc.) não devem virar um 500 sem
+        # explicação — a psicóloga precisa saber que é algo para revisar
+        # em "Configurações", não um bug do sistema.
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=(
+                "Não foi possível gerar o texto com o provedor de IA configurado "
+                f"({provider}/{model}). Verifique a chave de API e o modelo em "
+                f"\"Configurações\". Detalhe técnico: {exc}"
+            ),
+        ) from exc
+
+    report.generated_text = sections.como_texto()
+    db.commit()
+    db.refresh(report)
+    return report
+
+
+@router.put("/api/reports/{report_id}/text", response_model=ReportOut)
+def update_text(
+    report_id: UUID,
+    data: ReportTextUpdate,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Report:
+    # A psicóloga revisa/edita o texto gerado pela IA antes da exportação
+    # final (SPEC.md seção 5: nunca exportar sem revisão humana).
+    report = _get_report_do_psicologo(report_id, db, current)
+    report.generated_text = data.generated_text
+    db.commit()
+    db.refresh(report)
+    return report
+
+
+@router.patch("/api/reports/{report_id}", response_model=ReportOut)
+def edit_report(
+    report_id: UUID,
+    data: ReportEditUpdate,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Report:
+    """Correção manual do que aparece no histórico (nome do modelo,
+    classificação) — cada mudança de valor vira uma entrada de log,
+    nunca é sobrescrita silenciosamente."""
+
+    report = _get_report_do_psicologo(report_id, db, current)
+
+    for field, new_value in data.model_dump(exclude_unset=True).items():
+        old_value = getattr(report, field)
+        if old_value == new_value:
+            continue
+        db.add(
+            ReportChangeLog(
+                report_id=report.id,
+                psychologist_id=current.id,
+                field=field,
+                old_value=old_value,
+                new_value=new_value,
+            )
+        )
+        setattr(report, field, new_value)
+
+    db.commit()
+    db.refresh(report)
+    return report
+
+
+@router.get("/api/cid-codes")
+def list_cid_codes() -> list[dict]:
+    """Lista curta de hipóteses diagnósticas comuns com o CID-11
+    correspondente, para a tela de seções clínicas do laudo (ver
+    ENTREGAS.md — "PDF completo"). Não é uma tabela oficial completa do
+    CID-11 — a psicóloga pode digitar qualquer outra hipótese como texto
+    livre."""
+    return CID_CODES
+
+
+@router.patch("/api/reports/{report_id}/clinical-sections", response_model=ReportOut)
+def update_clinical_sections(
+    report_id: UUID,
+    data: ClinicalSections,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Report:
+    """Salva as seções clínicas opcionais do PDF completo (anamnese,
+    histórico, hipóteses diagnósticas com CID, plano de intervenção etc.).
+    Endpoint separado do `PATCH /api/reports/{id}` (que já tem seu próprio
+    log de auditoria testado) para não arriscar mudar aquele comportamento."""
+
+    report = _get_report_do_psicologo(report_id, db, current)
+    report.clinical_sections_json = data.model_dump(exclude_none=True)
+    db.commit()
+    db.refresh(report)
+    return report
+
+
+@router.get("/api/reports/{report_id}/logs", response_model=list[ReportChangeLogOut])
+def list_report_logs(
+    report_id: UUID,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> list[ReportChangeLogOut]:
+    report = _get_report_do_psicologo(report_id, db, current)
+    return [
+        ReportChangeLogOut(
+            id=log.id,
+            field=log.field,
+            old_value=log.old_value,
+            new_value=log.new_value,
+            created_at=log.created_at,
+            psychologist_name=log.psychologist.name,
+        )
+        for log in report.change_logs
+    ]
+
+
+@router.post("/api/patients/{patient_id}/consolidated-pdf")
+def download_consolidated_pdf(
+    patient_id: UUID,
+    data: ConsolidatedPdfRequest,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Response:
+    """Gera um único PDF, escrito por IA, sintetizando um ou mais laudos
+    já existentes do histórico do paciente (pedido do usuário: selecionar
+    vários laudos e a IA lê tudo para produzir um documento consolidado).
+    Fica salvo como um `ConsolidatedReport` — pode ser rebaixado depois
+    (`GET /api/consolidated-reports/{id}/pdf`) sem chamar a IA de novo."""
+
+    patient = get_patient_or_404(patient_id, db, current)
+
+    if not data.report_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Selecione ao menos um laudo do histórico para consolidar.",
+        )
+
+    reports_com_template = []
+    for report_id in data.report_ids:
+        report = _get_report_do_psicologo(report_id, db, current)
+        if report.patient_id != patient.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Todos os laudos selecionados precisam ser do mesmo paciente.",
+            )
+        if report.computed_json is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Um dos laudos selecionados ainda não tem pontuação calculada.",
+            )
+        template = db.get(ReportTemplate, report.template_id)
+        if template is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="O modelo de um dos laudos selecionados não existe mais.",
+            )
+        reports_com_template.append((report, template))
+
+    ai_settings = db.query(AISettings).filter(AISettings.owner_id == current.id).first()
+
+    try:
+        provider, model, api_key = resolve_ai_credentials(ai_settings)
+        sections = generate_consolidated_report_text(
+            provider=provider,
+            model=model,
+            api_key=api_key,
+            patient_name=patient.name,
+            reports=[
+                {
+                    "template_name": template.name,
+                    "schema": template.schema_json,
+                    "answers": report.answers_json,
+                    "computed": report.computed_json,
+                    "generated_text": report.generated_text,
+                    "created_at": report.created_at,
+                }
+                for report, template in reports_com_template
+            ],
+        )
+    except AIConfigurationError as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=(
+                "Não foi possível gerar o documento consolidado com o provedor de IA "
+                f"configurado ({provider}/{model}). Verifique a chave de API e o "
+                f"modelo em \"Configurações\". Detalhe técnico: {exc}"
+            ),
+        ) from exc
+
+    pdf_bytes = render_consolidated_pdf(patient=patient, reports=reports_com_template, sections=sections)
+
+    consolidated = ConsolidatedReport(
+        patient_id=patient.id,
+        owner_id=current.id,
+        report_ids=[str(report_id) for report_id in data.report_ids],
+        generated_text=sections.como_texto(),
+        pdf_path="",  # preenchido abaixo, depois de saber o id
+    )
+    db.add(consolidated)
+    db.flush()  # gera o id sem fechar a transação
+    chave_pdf = f"consolidado_{consolidated.id}.pdf"
+    get_reports_storage().save(chave_pdf, pdf_bytes)
+    consolidated.pdf_path = chave_pdf
+    db.commit()
+
+    nome_arquivo = f"laudo_consolidado_{patient.name.replace(' ', '_')}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{nome_arquivo}"'},
+    )
+
+
+@router.get("/api/patients/{patient_id}/consolidated-reports", response_model=list[ConsolidatedReportOut])
+def list_consolidated_reports(
+    patient_id: UUID,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> list[ConsolidatedReport]:
+    patient = get_patient_or_404(patient_id, db, current)
+    return (
+        db.query(ConsolidatedReport)
+        .filter(ConsolidatedReport.patient_id == patient.id, ConsolidatedReport.owner_id == current.id)
+        .order_by(ConsolidatedReport.created_at.desc())
+        .all()
+    )
+
+
+@router.get("/api/consolidated-reports/{consolidated_report_id}/pdf")
+def download_saved_consolidated_pdf(
+    consolidated_report_id: UUID,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Response:
+    """Rebaixa um parecer consolidado já gerado antes, sem chamar a IA de
+    novo — reaproveita o PDF salvo em `POST .../consolidated-pdf`."""
+    consolidated = db.get(ConsolidatedReport, consolidated_report_id)
+    if consolidated is None or consolidated.owner_id != current.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parecer consolidado não encontrado")
+
+    conteudo = get_reports_storage().read(consolidated.pdf_path)
+    nome_arquivo = f"laudo_consolidado_{consolidated.patient.name.replace(' ', '_')}.pdf"
+    return Response(
+        content=conteudo,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{nome_arquivo}"'},
+    )
+
+
+@router.get("/api/reports/{report_id}/pdf")
+def download_pdf(
+    report_id: UUID,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Response:
+    report = _get_report_do_psicologo(report_id, db, current)
+    if report.computed_json is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este laudo ainda não tem pontuação calculada.",
+        )
+
+    template = db.get(ReportTemplate, report.template_id)
+    chave_pdf = render_report_pdf(
+        patient=report.patient, template=template, report=report, psychologist=current
+    )
+
+    report.pdf_path = chave_pdf
+    db.commit()
+
+    conteudo = get_reports_storage().read(chave_pdf)
+    nome_arquivo = f"laudo_{report.patient.name.replace(' ', '_')}_{report.id}.pdf"
+    return Response(
+        content=conteudo,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{nome_arquivo}"'},
+    )

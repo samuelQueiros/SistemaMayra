@@ -1,0 +1,11 @@
+**/node_modules
+**/.venv
+**/venv
+**/__pycache__
+**/*.pyc
+backend/dev.db
+backend/storage
+frontend/dist
+.git
+.env
+referencia_cliente

@@ -1,0 +1,26 @@
+:root {
+  --np-space-1: 4px;
+  --np-space-2: 8px;
+  --np-space-3: 12px;
+  --np-space-4: 16px;
+  --np-space-5: 20px;
+  --np-space-6: 24px;
+  --np-space-8: 32px;
+  --np-space-10: 40px;
+  --np-space-12: 48px;
+  --np-space-16: 64px;
+
+  --np-gutter: var(--np-space-6);
+  --np-page-pad-x: var(--np-space-8);
+  --np-page-pad-y: var(--np-space-6);
+  --np-card-pad: var(--np-space-5);
+  --np-field-pad-x: var(--np-space-3);
+  --np-field-pad-y: 10px;
+
+  --np-sidebar-w: 248px;
+  --np-topbar-h: 64px;
+  --np-content-max: 1180px;
+  --np-control-h: 40px;
+  --np-control-h-sm: 32px;
+  --np-control-h-lg: 48px;
+}

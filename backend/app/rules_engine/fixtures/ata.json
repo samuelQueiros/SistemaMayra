@@ -1,0 +1,15 @@
+{
+  "name": "Escala ATA (INCOMPLETA — ver observação abaixo)",
+  "rule_type": "sum_threshold",
+  "areas": [
+    { "key": "dificuldade_interacao_social", "label": "Dificuldade na interação social", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 0, "max": 2, "weight": 1 } ] },
+    { "key": "manipulacao_do_ambiente", "label": "Manipulação do ambiente", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 0, "max": 2, "weight": 1 } ] },
+    { "key": "resistencia_a_mudancas", "label": "Resistência a mudanças", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 0, "max": 2, "weight": 1 } ] }
+  ],
+  "classification_ranges": [
+    { "label": "Sem indicação de atraso", "min": 0, "max": 16 },
+    { "label": "Atraso no desenvolvimento", "min": 16.01, "max": 20 },
+    { "label": "Traços autísticos", "min": 20.01, "max": 66 }
+  ],
+  "chart": { "type": "bar", "group_by": "areas" }
+}

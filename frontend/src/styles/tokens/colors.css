@@ -1,0 +1,81 @@
+:root {
+  /* --- Roxo da marca (amostrado do logo) --- */
+  --np-purple-900: #2f2547;
+  --np-purple-700: #43356b;
+  --np-purple-600: #5c4b92;
+  --np-purple-500: #7561ae;
+  --np-purple-300: #b3a5e2;
+  --np-purple-200: #d6cef2;
+  --np-purple-100: #ede9fa;
+
+  /* --- Rosa (lacinho do logo, faixas dos posts) --- */
+  --np-pink-600: #c9548b;
+  --np-pink-500: #d9709f;
+  --np-pink-400: #e7a8c8;
+  --np-pink-200: #f7dce9;
+
+  /* --- Azul (bone do logo) --- */
+  --np-blue-400: #8fb4d6;
+  --np-blue-200: #dce9f5;
+
+  /* --- Acentos do feed (CUIDAR / ACOLHER / INCLUIR / TRANSFORMAR, Setembro Amarelo) --- */
+  --np-orange-500: #f5a623;
+  --np-yellow-400: #ffd100;
+  --np-green-500: #3fa35b;
+  --np-red-500: #c8443f;
+
+  /* --- Neutros (levemente frios, puxados para o roxo) --- */
+  --np-white: #ffffff;
+  --np-gray-50: #f5f4fa;
+  --np-gray-100: #edecf4;
+  --np-gray-200: #e6e3f0;
+  --np-gray-300: #cbc6dc;
+  --np-gray-500: #8a85a0;
+  --np-gray-700: #5a5570;
+  --np-gray-900: #2b2740;
+
+  /* --- Aliases semanticos: use estes na interface --- */
+  --np-bg-app: var(--np-gray-50);
+  --np-bg-brand: var(--np-purple-600);
+  --np-bg-brand-soft: var(--np-purple-100);
+  --np-surface: var(--np-white);
+  --np-surface-alt: var(--np-purple-100);
+  --np-surface-sunken: var(--np-gray-100);
+
+  --np-text: var(--np-gray-900);
+  --np-text-muted: var(--np-gray-700);
+  --np-text-subtle: var(--np-gray-500);
+  --np-text-on-brand: var(--np-white);
+  --np-text-brand: var(--np-purple-700);
+  --np-text-link: var(--np-purple-700);
+  --np-text-link-hover: var(--np-pink-600);
+
+  --np-border: var(--np-gray-200);
+  --np-border-strong: var(--np-gray-300);
+  --np-border-brand: var(--np-purple-300);
+
+  --np-primary: var(--np-purple-600);
+  --np-primary-hover: var(--np-purple-700);
+  --np-primary-active: var(--np-purple-900);
+  --np-secondary: var(--np-pink-500);
+  --np-secondary-hover: var(--np-pink-600);
+
+  --np-focus-ring: color-mix(in oklab, var(--np-purple-500) 45%, transparent);
+
+  /* Estados / semantica de dado clinico */
+  --np-success: var(--np-green-500);
+  --np-success-soft: #e4f4e9;
+  --np-warning: var(--np-orange-500);
+  --np-warning-soft: #fdefd8;
+  --np-danger: var(--np-red-500);
+  --np-danger-soft: #fae4e3;
+  --np-info: var(--np-blue-400);
+  --np-info-soft: var(--np-blue-200);
+
+  /* Cores de categoria (agenda, tipos de atendimento) */
+  --np-cat-avaliacao: var(--np-purple-500);
+  --np-cat-intervencao: var(--np-pink-500);
+  --np-cat-orientacao: var(--np-blue-400);
+  --np-cat-escola: var(--np-green-500);
+  --np-cat-mentoria: var(--np-orange-500);
+}

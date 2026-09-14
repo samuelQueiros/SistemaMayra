@@ -1,0 +1,35 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+sqlalchemy==2.0.52
+alembic==1.13.2
+pydantic==2.13.5
+pydantic-settings==2.15.0
+email-validator==2.3.0
+python-dotenv==1.0.1
+psycopg[binary]==3.3.5
+bcrypt==5.0.0
+python-jose[cryptography]==3.3.0
+cryptography==46.0.3
+python-multipart==0.0.9
+
+# IA (LangChain) — provedor configurável, ver SPEC.md seção 5 e ENTREGAS.md
+langchain==1.4.0
+langchain-anthropic==1.7.2
+langchain-openai==1.6.2
+langchain-google-genai==4.4.0
+
+# PDF e gráficos para o PDF (SPEC.md seção 2)
+weasyprint==70.0
+matplotlib==3.11.2
+
+# Extração de texto de documentos enviados pela psicóloga (importação de
+# modelos de laudo via IA — ver ENTREGAS.md)
+pypdf==5.9.0
+python-docx==1.1.2
+
+# Storage de arquivos compatível com S3 (opcional — ver app/services/storage.py)
+boto3==1.40.32
+
+# testes
+pytest==9.1.1
+httpx==0.28.1

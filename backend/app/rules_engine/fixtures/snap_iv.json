@@ -1,0 +1,268 @@
+{
+  "name": "Escala SNAP-IV",
+  "rule_type": "count_threshold",
+  "target_values": [
+    "bastante",
+    "demais"
+  ],
+  "areas": [
+    {
+      "key": "desatencao",
+      "label": "Desatenção (itens 1 a 9)",
+      "fields": [
+        {
+          "key": "item_1",
+          "label": "Item 1",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_2",
+          "label": "Item 2",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_3",
+          "label": "Item 3",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_4",
+          "label": "Item 4",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_5",
+          "label": "Item 5",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_6",
+          "label": "Item 6",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_7",
+          "label": "Item 7",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_8",
+          "label": "Item 8",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_9",
+          "label": "Item 9",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "key": "hiperatividade_impulsividade",
+      "label": "Hiperatividade / Impulsividade (itens 10 a 18)",
+      "fields": [
+        {
+          "key": "item_10",
+          "label": "Item 10",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_11",
+          "label": "Item 11",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_12",
+          "label": "Item 12",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_13",
+          "label": "Item 13",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_14",
+          "label": "Item 14",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_15",
+          "label": "Item 15",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_16",
+          "label": "Item 16",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_17",
+          "label": "Item 17",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        },
+        {
+          "key": "item_18",
+          "label": "Item 18",
+          "type": "select",
+          "options": [
+            "nem um pouco",
+            "só um pouco",
+            "bastante",
+            "demais"
+          ],
+          "weight": 1
+        }
+      ]
+    }
+  ],
+  "classification_ranges": [
+    {
+      "label": "Indicativo de sintomas de desatenção",
+      "area": "desatencao",
+      "minimum_count": 4,
+      "comparison": "gte"
+    },
+    {
+      "label": "Sem indicativo de sintomas de desatenção",
+      "area": "desatencao",
+      "minimum_count": 4,
+      "comparison": "lt"
+    },
+    {
+      "label": "Indicativo de sintomas de hiperatividade/impulsividade",
+      "area": "hiperatividade_impulsividade",
+      "minimum_count": 4,
+      "comparison": "gte"
+    },
+    {
+      "label": "Sem indicativo de sintomas de hiperatividade/impulsividade",
+      "area": "hiperatividade_impulsividade",
+      "minimum_count": 4,
+      "comparison": "lt"
+    }
+  ],
+  "chart": {
+    "type": "bar",
+    "group_by": "response_option"
+  }
+}

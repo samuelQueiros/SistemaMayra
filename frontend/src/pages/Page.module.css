@@ -1,0 +1,36 @@
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: var(--np-space-3) var(--np-space-2);
+  border-bottom: 1px solid var(--np-border);
+  font: var(--np-type-body);
+}
+
+.table th {
+  font: var(--np-type-label);
+  color: var(--np-text-muted);
+}
+
+.rowLink {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--np-text-brand);
+  font: var(--np-type-label);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.rowLink:hover {
+  color: var(--np-text-link-hover);
+  text-decoration: underline;
+}

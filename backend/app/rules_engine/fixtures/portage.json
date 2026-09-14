@@ -1,0 +1,57 @@
+{
+  "name": "Inventário Portage Operacionalizado (IPO) — EXEMPLO INCOMPLETO",
+  "rule_type": "age_equivalent_percentage",
+  "item_scoring": { "sim": 1.0, "as_vezes": 0.5, "nao": 0.2 },
+  "areas": [
+    {
+      "key": "socializacao",
+      "label": "Socialização",
+      "age_brackets": [
+        {
+          "label": "0 a 24 meses",
+          "max_age_months": 24,
+          "fields": [
+            { "key": "sorri_para_pessoas_conhecidas", "label": "Sorri para pessoas conhecidas", "type": "select", "options": ["sim", "as_vezes", "nao"] },
+            { "key": "brinca_de_esconder_o_rosto", "label": "Brinca de esconder o rosto (peek-a-boo)", "type": "select", "options": ["sim", "as_vezes", "nao"] }
+          ]
+        },
+        {
+          "label": "24 a 48 meses",
+          "max_age_months": 48,
+          "fields": [
+            { "key": "brinca_cooperativamente_com_outras_criancas", "label": "Brinca cooperativamente com outras crianças", "type": "select", "options": ["sim", "as_vezes", "nao"] },
+            { "key": "espera_a_vez_em_brincadeiras_simples", "label": "Espera a vez em brincadeiras simples", "type": "select", "options": ["sim", "as_vezes", "nao"] }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "linguagem",
+      "label": "Linguagem",
+      "age_brackets": [
+        {
+          "label": "0 a 24 meses",
+          "max_age_months": 24,
+          "fields": [
+            { "key": "balbucia_sons_repetidos", "label": "Balbucia sons repetidos (ex.: 'ba-ba')", "type": "select", "options": ["sim", "as_vezes", "nao"] },
+            { "key": "aponta_para_pedir_objetos", "label": "Aponta para pedir objetos", "type": "select", "options": ["sim", "as_vezes", "nao"] }
+          ]
+        },
+        {
+          "label": "24 a 48 meses",
+          "max_age_months": 48,
+          "fields": [
+            { "key": "usa_frases_de_3_ou_mais_palavras", "label": "Usa frases de 3 ou mais palavras", "type": "select", "options": ["sim", "as_vezes", "nao"] },
+            { "key": "responde_perguntas_simples", "label": "Responde perguntas simples ('o que é isso?')", "type": "select", "options": ["sim", "as_vezes", "nao"] }
+          ]
+        }
+      ]
+    }
+  ],
+  "classification_ranges": [
+    { "label": "Atraso significativo", "min": 0, "max": 69.9 },
+    { "label": "Atraso leve", "min": 70, "max": 89.9 },
+    { "label": "Adequado", "min": 90, "max": 200 }
+  ],
+  "chart": { "type": "bar", "group_by": "areas", "compare_to": "idade_cronologica" }
+}

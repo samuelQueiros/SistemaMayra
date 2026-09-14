@@ -1,0 +1,27 @@
+{
+  "name": "Escala CARS",
+  "rule_type": "sum_threshold",
+  "areas": [
+    { "key": "relacionamento_interpessoal", "label": "Relacionamento interpessoal", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "imitacao", "label": "Imitação", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "resposta_emocional", "label": "Resposta emocional", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "uso_corporal", "label": "Uso corporal", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "uso_de_objetos", "label": "Uso de objetos", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "adaptacao_a_mudancas", "label": "Adaptação a mudanças", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "resposta_visual", "label": "Uso do olhar / resposta visual", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "resposta_auditiva", "label": "Uso da audição / resposta auditiva", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "resposta_paladar_olfato_tato", "label": "Resposta e uso do paladar, olfato e tato", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "medo_ou_nervosismo", "label": "Medo ou nervosismo", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "comunicacao_verbal", "label": "Comunicação verbal", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "comunicacao_nao_verbal", "label": "Comunicação não verbal", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "nivel_de_atividade", "label": "Nível de atividade", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "consistencia_resposta_intelectual", "label": "Nível e consistência da resposta intelectual", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] },
+    { "key": "impressao_geral", "label": "Impressão geral", "fields": [ { "key": "score", "label": "Pontuação", "type": "scale", "min": 1, "max": 4, "weight": 1 } ] }
+  ],
+  "classification_ranges": [
+    { "label": "Normal", "min": 15, "max": 29.5 },
+    { "label": "Autismo leve-moderado", "min": 30, "max": 36.5 },
+    { "label": "Autismo grave", "min": 37, "max": 60 }
+  ],
+  "chart": { "type": "bar", "group_by": "areas" }
+}
