@@ -18,6 +18,7 @@ from app.schemas.report import (
     ClinicalSections,
     ConsolidatedPdfRequest,
     ConsolidatedReportOut,
+    ReportAnswersUpdate,
     ReportChangeLogOut,
     ReportCreate,
     ReportEditUpdate,
@@ -171,6 +172,23 @@ def update_text(
     # final (SPEC.md seção 5: nunca exportar sem revisão humana).
     report = _get_report_do_psicologo(report_id, db, current)
     report.generated_text = data.generated_text
+    db.commit()
+    db.refresh(report)
+    return report
+
+
+@router.put("/api/reports/{report_id}/answers", response_model=ReportOut)
+def update_answers(
+    report_id: UUID,
+    data: ReportAnswersUpdate,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Report:
+    """Autosave: sincroniza com o banco cada campo alterado no formulário
+    standalone enquanto a psicóloga preenche, em vez de ficar só no
+    localStorage do navegador (ver ENTREGAS.md)."""
+    report = _get_report_do_psicologo(report_id, db, current)
+    report.answers_json = data.answers
     db.commit()
     db.refresh(report)
     return report

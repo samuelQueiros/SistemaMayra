@@ -43,5 +43,8 @@ if frontend_dist.exists():
 
         # Fallback de SPA: qualquer outra rota (ex.: /dashboard, recarregada
         # direto no navegador) devolve o index.html e o React Router decide
-        # o que mostrar no lado do cliente.
-        return FileResponse(frontend_dist / "index.html")
+        # o que mostrar no lado do cliente. Cache-Control: no-cache força o
+        # navegador a sempre revalidar essa casca (que referencia o bundle
+        # JS hasheado do build atual) em vez de reter uma versão antiga
+        # depois de um novo deploy.
+        return FileResponse(frontend_dist / "index.html", headers={"Cache-Control": "no-cache"})

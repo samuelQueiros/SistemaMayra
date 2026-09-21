@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 FieldType = Literal["scale", "boolean", "select", "text"]
 ChartType = Literal["bar", "radar", "pie"]
-RuleType = Literal["sum_threshold", "count_threshold", "age_equivalent_percentage"]
+RuleType = Literal["sum_threshold", "count_threshold", "age_equivalent_percentage", "custom_form"]
 
 
 class TemplateField(BaseModel):

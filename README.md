@@ -1,8 +1,14 @@
 # Sistema de Relatório Automático para Psicólogos
 
-Ver `CLAUDE.md` (contexto do projeto e decisões de arquitetura) e `SPEC.md`
-(especificação técnica: entidades, endpoints, motor de regras, IA) antes de
-mexer em qualquer parte do sistema.
+Sistema de avaliação neuropsicopedagógica: a psicóloga preenche um
+protocolo fixo (formulário standalone com todos os campos, escalas e
+motor de interpretação clínica já embutidos), e o sistema salva paciente e
+laudo no banco, com autosave por campo e PDF sob demanda.
+
+Ver `CLAUDE.md` (contexto do projeto e decisões de arquitetura — **leia a
+seção 1/9 antes de qualquer coisa**: o motor de templates configuráveis por
+escala foi abandonado em 2026-09-20) e `SPEC.md` (especificação técnica)
+antes de mexer em qualquer parte do sistema.
 
 ## Arquitetura (resumo)
 

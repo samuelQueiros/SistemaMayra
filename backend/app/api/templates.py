@@ -9,7 +9,15 @@ from app.core.database import get_db
 from app.models.ai_settings import AISettings
 from app.models.psychologist import Psychologist
 from app.models.report_template import ReportTemplate
-from app.schemas.report_template import ReportTemplateCreate, ReportTemplateOut, ReportTemplateSchemaJSON
+from app.schemas.report_template import (
+    ChartConfig,
+    ClassificationRange,
+    ReportTemplateCreate,
+    ReportTemplateOut,
+    ReportTemplateSchemaJSON,
+    TemplateArea,
+    TemplateField,
+)
 from app.services.ai import AIConfigurationError, extract_template_from_document, resolve_ai_credentials
 from app.services.document_text import DocumentTextError, extract_text
 
@@ -106,6 +114,53 @@ def import_template_from_document(
         validation_errors = [erro["msg"] for erro in exc.errors()]
 
     return {"draft_schema_json": draft_schema_json, "validation_errors": validation_errors}
+
+
+_NOME_TEMPLATE_CUSTOM_FORM = "Avaliação Neuropsicopedagógica e Análise Comportamental"
+
+
+@router.post("/custom-form-avaliacao", response_model=ReportTemplateOut)
+def get_or_create_custom_form_template(
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> ReportTemplate:
+    """Garante (cria se não existir) o `ReportTemplate` fixo usado pelo
+    formulário HTML standalone (`/formulario-novo-paciente.html`) — só serve
+    de "porta-laudo" para o rule_type 'custom_form' guardar generated_text/
+    pdf; não faz nenhuma pontuação. Idempotente por psicóloga."""
+    existente = (
+        db.query(ReportTemplate)
+        .filter(ReportTemplate.owner_id == current.id, ReportTemplate.name == _NOME_TEMPLATE_CUSTOM_FORM)
+        .first()
+    )
+    if existente:
+        return existente
+
+    schema_json = ReportTemplateSchemaJSON(
+        name=_NOME_TEMPLATE_CUSTOM_FORM,
+        rule_type="custom_form",
+        areas=[
+            TemplateArea(
+                key="formulario",
+                label="Formulário Completo",
+                fields=[TemplateField(key="html", label="HTML", type="text")],
+            )
+        ],
+        classification_ranges=[
+            ClassificationRange(label="Não Aplicável (Formulário Externo)", min=0, max=0)
+        ],
+        chart=ChartConfig(type="bar", group_by="areas"),
+    )
+    template = ReportTemplate(
+        owner_id=current.id,
+        name=schema_json.name,
+        version=1,
+        schema_json=schema_json.model_dump(mode="json"),
+    )
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    return template
 
 
 @router.get("/{template_id}", response_model=ReportTemplateOut)

@@ -94,10 +94,10 @@ segurança", Prompt 4.3, para o detalhamento do que já foi revisado)
 ## 6. Depois de subir
 
 - [ ] Cadastrar a primeira conta de psicóloga (`POST /api/auth/register`).
-- [ ] Cadastrar os modelos de laudo reais (CARS, ATA, SNAP-IV) via
-      `python -m app.seed_templates <email>` (dentro do container, ou
-      apontando `DATABASE_URL` para o banco de produção a partir de uma
-      máquina com acesso) — **lembrando que o modelo da ATA está
-      incompleto** (ver `TEMPLATES_LAUDOS.md` e a entrega do Prompt 2.3b em
-      `ENTREGAS.md`) e precisa ser revisado pela psicóloga antes do
-      primeiro uso clínico real.
+- [ ] Nada mais a semear: desde 2026-09-20 o sistema usa um protocolo fixo
+      (`frontend/public/formulario-novo-paciente.html`), não mais templates
+      configuráveis por escala. O `ReportTemplate` interno
+      (`rule_type="custom_form"`) é criado sozinho, de forma idempotente,
+      na primeira vez que a psicóloga salvar um atendimento pelo
+      formulário — não é preciso rodar `seed_templates` (ver `CLAUDE.md`
+      seção 9).

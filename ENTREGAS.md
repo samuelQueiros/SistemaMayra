@@ -1539,4 +1539,314 @@ entradas antigas — isso é o histórico do que já foi construído.
     (gzip) com todas essas adições — o Vite avisa que o chunk principal
     já passa de 500KB (antes da compressão); não é um problema para o
     tamanho atual do sistema, mas code-splitting é uma otimização válida
-    se o app continuar crescendo. 
+    se o app continuar crescendo.
+
+## Mudança de arquitetura: protocolo fixo substitui o motor de templates configuráveis
+
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-20
+- **Origem:** Decisão explícita do usuário — o motor de templates
+  configuráveis (`schema_json` por escala, cadastrados pela psicóloga) foi
+  considerado um erro de concepção desde o início do projeto. O usuário já
+  tinha um protótipo HTML standalone completo, testado e validado na
+  prática pela psicóloga (`formulario_prototipo_cliente.html`,
+  originalmente em `referencia_cliente/`), e pediu para esse arquivo virar
+  "o coração do sistema", exatamente como está, em vez de recriar a lógica
+  clínica em React/JSON.
+- **O que foi feito:**
+  - **`frontend/public/formulario-novo-paciente.html`** (novo): cópia
+    byte-a-byte do protótipo original, sem nenhuma linha da lógica clínica
+    alterada. Um segundo `<script>` foi acrescentado no fim do arquivo
+    fazendo a ponte com o backend: cria paciente/template/laudo no
+    primeiro "Salvar No Sistema", depois sincroniza **cada campo alterado
+    automaticamente com o banco** (`PUT /api/reports/{id}/answers`,
+    debounce ~1,2s) — autosave real, não só `localStorage`. Botão
+    "Concluir E Ver Histórico" separado, navegando a janela pai (por causa
+    do iframe) para o Histórico do Paciente.
+  - **Novo `rule_type` "custom_form"** (`backend/app/schemas/
+    report_template.py`, `rules_engine/engine.py`): não calcula nada — o
+    HTML já pontuou tudo sozinho. `POST /api/templates/
+    custom-form-avaliacao` (novo endpoint, idempotente por psicóloga)
+    garante o `ReportTemplate` interno fixo, sem precisar de tela de
+    cadastro.
+  - **PDF direto do HTML já pronto** (`backend/app/services/pdf.py`): para
+    `rule_type="custom_form"`, `render_report_pdf` pega
+    `report.generated_text` (HTML completo, com `<style>` embutido,
+    montado pelo bootstrap a partir do laudo já gerado pelo formulário) e
+    manda direto pro WeasyPrint, sem passar pelas tabelas de
+    pontuação/gráfico Matplotlib do motor antigo. O gráfico de
+    probabilidades (Chart.js/canvas) é congelado como `<img>` antes de
+    enviar, porque o WeasyPrint não executa JavaScript.
+  - **Novo endpoint de autosave**: `PUT /api/reports/{id}/answers`
+    (`backend/app/schemas/report.py::ReportAnswersUpdate`,
+    `backend/app/api/reports.py::update_answers`) — substitui
+    `answers_json` inteiro, sem tocar no resto do laudo.
+  - **"Novo Atendimento" embutido no sistema**: a rota `/atendimento/novo`
+    (`frontend/src/pages/NovoAtendimento.tsx`, reescrita do zero) agora só
+    embute o HTML standalone num `<iframe>` dentro do layout do app
+    (sidebar/cabeçalho continuam visíveis) — nada abre mais em nova aba. O
+    item de menu "Novo Atendimento" e os botões "Novo Atendimento"/"+ Novo
+    Laudo Para Este Paciente" (Dashboard, Histórico do Paciente) foram
+    atualizados para essa rota, passando `?paciente=<id>` quando aplicável
+    (o bootstrap do HTML pré-carrega a identificação).
+  - **Removido da navegação e do código**: páginas `pages/
+    ModelosDeLaudo.tsx`, `pages/NovoAtendimento.tsx` antigo (formulário
+    dinâmico via `schema_json`) e `components/DynamicField.tsx` (+ teste)
+    foram **apagadas**, não só desligadas. Item de menu "Modelos De
+    Laudo" removido. Formulário rápido de cadastro de paciente inline no
+    Dashboard removido (paciente agora só é criado pelo fluxo do
+    formulário standalone).
+  - **Cache do `index.html`**: `backend/app/main.py` passou a responder o
+    fallback de SPA com `Cache-Control: no-cache`, para o navegador sempre
+    revalidar e pegar o bundle JS mais recente depois de um novo build —
+    sem isso, uma aba já aberta antes de um deploy continuava rodando o JS
+    antigo indefinidamente (bug real observado nesta sessão).
+  - **Banco de dados zerado a pedido do usuário**: todos os laudos, logs
+    de edição, PDFs consolidados e `ReportTemplate` antigos (CARS/ATA/
+    SNAP-IV/Portage de exemplo) foram apagados do banco de desenvolvimento
+    — pacientes cadastrados foram preservados. PDFs órfãos removidos do
+    storage local.
+  - **`referencia_cliente/` apagada**: continha o protótipo original (já
+    copiado para o novo local) e PDFs de exemplo com dados reais de
+    pacientes (nome completo, laudo assinado) — não deveriam continuar no
+    repositório sem necessidade depois que a integração real foi feita.
+    Backup intocado do HTML original mantido fora do repositório, em
+    `/home/samu/formpsico/.claude/formulario_prototipo_cliente.html`.
+  - **Documentação atualizada**: `CLAUDE.md` (seções 1, 2, 3, 6 e 9
+    reescritas), `SPEC.md` (aviso no topo + nova seção 7 descrevendo a
+    arquitetura atual), `APRESENTACAO.md` (seções 1-4 e 6 reescritas para
+    o público não técnico), `README.md` e `DEPLOY.md` (referências a
+    `seed_templates`/modelos corrigidas).
+- **Arquivos criados/alterados:**
+  - `frontend/public/formulario-novo-paciente.html` (novo)
+  - `backend/app/schemas/report_template.py`, `rules_engine/engine.py`,
+    `services/pdf.py`, `api/templates.py`, `schemas/report.py`,
+    `api/reports.py`, `main.py`
+  - `frontend/src/App.tsx`, `components/Layout.tsx`, `components/ds/
+    SidebarNav.tsx`, `pages/Dashboard.tsx`, `pages/HistoricoPaciente.tsx`,
+    `pages/NovoAtendimento.tsx` (reescrita)
+  - Apagados: `frontend/src/pages/ModelosDeLaudo.tsx`,
+    `frontend/src/components/DynamicField.tsx` (+ `.test.tsx`),
+    `referencia_cliente/` (pasta inteira)
+  - `CLAUDE.md`, `SPEC.md`, `APRESENTACAO.md`, `README.md`, `DEPLOY.md`
+- **Como testar/ver funcionando:**
+  1. `cd backend && ./.venv/bin/python3 -m pytest tests/ -v` — 140 de 140
+     testes passando (nada quebrou no motor de regras legado).
+  2. `cd frontend && npx tsc --noEmit && npm run build && npm run test` —
+     typecheck, build e 10 testes de frontend, todos limpos.
+  3. Pela tela: login → "Novo Atendimento" (menu ou Dashboard) → formulário
+     completo aparece embutido no sistema → preencher nome/data de
+     nascimento e ver a linha de status confirmando o autosave conforme
+     digita → "Salvar No Sistema" → "Concluir E Ver Histórico" → laudo
+     aparece no Histórico do Paciente → baixar PDF.
+  4. Testado de ponta a ponta via API real nesta máquina: criar paciente,
+     garantir template idempotente (chamado duas vezes, mesmo id), criar
+     laudo, autosave de resposta via `PUT /answers`, salvar texto, baixar
+     PDF (`HTTP 200`, `PDF document, version 1.7` confirmado via `file`).
+- **Pendências/observações:**
+  - Fotos do paciente continuam só embutidas em base64 no laudo (não
+    entram na galeria oficial `/api/patients/{id}/photos`) — documentado
+    como próximo passo, não bloqueia o uso atual.
+  - Motor de regras dinâmico, geração de texto por IA e CRUD/import de
+    templates **continuam no backend**, só não são mais chamados por
+    nenhuma tela — decisão deliberada de não remover código que pode
+    voltar a ser útil, documentada em `CLAUDE.md` seção 9 para não
+    confundir uma sessão futura.
+  - `.venv` do backend tem um `shebang` quebrado (caminho antigo da
+    máquina) — usar `./.venv/bin/python3 -m uvicorn ...` em vez do script
+    `uvicorn` direto; documentado em `CLAUDE.md` seção 9.
+
+## Fotos do paciente passam a sincronizar com a galeria oficial
+
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-20
+- **Origem:** Pendência conhecida, documentada desde a entrega da mudança
+  de arquitetura (protocolo fixo): o formulário standalone embutia fotos
+  só como base64 no laudo/PDF, sem usar a galeria oficial de fotos do
+  paciente já existente no backend (`/api/patients/{id}/photos`, com tela
+  própria em "Fotos Do Paciente" no Histórico do Paciente).
+- **O que foi feito:** `frontend/public/formulario-novo-paciente.html` —
+  só no segundo `<script>` (bootstrap de integração); nenhuma linha da
+  lógica clínica original (~897 linhas) foi tocada:
+  - `enviarFotosNovasParaGaleria()`: depois que o paciente existe no banco
+    (dentro de `salvarNoSistema()`, logo após `garantirRegistroCriado()`),
+    converte cada foto ainda não enviada (sem `_photoId`) de volta para
+    `File` (`dataUrlParaArquivo()`) e faz `POST
+    /api/patients/{id}/photos` (multipart, função nova `apiFetchArquivo`).
+    A foto guarda o `_photoId` devolvido para não ser reenviada de novo.
+  - `carregarFotosDaGaleria()`: quando o formulário abre para um paciente
+    já existente (`?paciente=<id>`) e ainda não tem nenhuma foto
+    carregada, busca as fotos já salvas na galeria
+    (`GET /api/patients/{id}/photos`), baixa cada uma como blob
+    autenticado e converte para dataURL (`baixarFotoComoDataUrl`), para
+    que continuem aparecendo e sendo embutidas no laudo normalmente.
+  - `interceptarRemocaoDeFoto()`: envolve (sem editar) a função original
+    `removerFotoPaciente` — se a foto removida já tinha `_photoId`,
+    também apaga da galeria (`DELETE
+    /api/patients/{id}/photos/{photoId}`).
+  - Upload é best-effort: se o arquivo não for de um formato aceito pela
+    galeria (`.jpg/.jpeg/.png/.webp`) ou a chamada falhar, a foto continua
+    funcionando no laudo/PDF (base64 embutido, inalterado) — só não
+    aparece na galeria oficial.
+  - Nenhuma mudança no backend — os endpoints de fotos já existiam,
+    prontos e testados (`backend/tests/test_patient_photos.py`).
+- **Arquivos alterados:** `frontend/public/formulario-novo-paciente.html`,
+  `CLAUDE.md` (seção 9), `SPEC.md` (seção 7).
+- **Como testar/ver funcionando:**
+  1. `cd backend && ./.venv/bin/python3 -m pytest tests/ -v` — 140 de 140
+     continuam passando (nenhum endpoint de backend foi alterado).
+  2. `cd frontend && npx tsc --noEmit && npm run build` — typecheck e
+     build de produção limpos.
+  3. Pela tela: "Novo Atendimento" → adicionar uma ou mais fotos na seção
+     de identificação → "Salvar No Sistema" → abrir o Histórico do
+     Paciente → card "Fotos Do Paciente" deve mostrar as mesmas fotos.
+     Remover uma foto no formulário e salvar de novo deve tirá-la também
+     do card. Reabrir "+ Novo Laudo Para Este Paciente" para o mesmo
+     paciente deve pré-carregar as fotos já enviadas antes.
+- **Pendências/observações:**
+  - Formatos fora de `.jpg/.jpeg/.png/.webp` (ex.: HEIC de iPhone) não
+    entram na galeria oficial (a rota de upload já rejeitava esses
+    formatos antes desta entrega) — continuam funcionando no laudo/PDF.
+
+## Relatório: CARS item a item (Fase 1 de aproximação ao layout de referência)
+
+- **Status:** 🟡 Parcial (fase 1 de um trabalho maior, em andamento)
+- **Data:** 2026-09-20
+- **Origem:** Usuário pediu que o PDF/Word/formulário gerados pelo sistema
+  fiquem estruturalmente idênticos a um relatório real de referência
+  (`RELATÓRIO FINAL GUSTAVO HENRIQUE`). Esse relatório usa a CARS, a ATA e
+  três checklists de "Habilidades" item a item, com gráficos próprios —
+  nada disso existia no formulário (só uma nota total por escala). Os
+  itens exatos da CARS vieram de uma planilha real da psicóloga
+  (`CARS_Gustavo Henrique Amancio Lopes(2).xlsx`, aba "CARS"), sem nenhum
+  texto inventado.
+- **O que foi feito** (só em `frontend/public/formulario-novo-paciente.html`):
+  - Novo array `carsItens`: as 15 áreas oficiais da CARS, cada uma com os
+    4 textos de gravidade (Normal/Leve/Moderado/Severo) extraídos da
+    planilha da psicóloga.
+  - `montarFormulario()` agora renderiza um `<select>` por área (15 ao
+    todo, id `cars_0` a `cars_14`), com os 4 graus e os 3 valores
+    intermediários (1,5 / 2,5 / 3,5) que a psicóloga usa na prática.
+  - `calcularCARS()`: soma as 15 áreas e preenche o campo `Pontuação CARS`
+    automaticamente (só quando todas as 15 estiverem preenchidas) — o
+    campo antes era digitado manualmente, agora é sempre calculado a
+    partir dos itens, exatamente como a planilha original faz. A
+    classificação (Normal/Leve-Moderado/Grave) que já existia
+    (`atualizarInterpretacoes()`) não foi alterada — só passou a receber
+    o total calculado em vez do total digitado.
+  - `gerarTabelaCARS()` e um gráfico de linha (`graficoCARS`, Chart.js)
+    foram adicionados à seção "10. ATA E CARS" do relatório gerado,
+    mostrando pontuação por área — igual ao gráfico da página 11 do
+    relatório de referência.
+  - `congelarGraficoComoImagem()` (bootstrap de integração) foi
+    generalizada para congelar **todos** os gráficos do relatório como
+    imagem (antes só congelava o gráfico de probabilidades) — necessário
+    para o gráfico novo da CARS também aparecer no PDF gerado pelo
+    backend (WeasyPrint não executa JavaScript/Canvas).
+- **O que NÃO foi alterado:** nenhuma lógica clínica pré-existente (ATA,
+  SNAP-IV, Portage, M-CHAT, quadro DSM-5-TR, funções executivas atuais,
+  cálculo de probabilidades) — só a CARS, que antes era só um número
+  digitado, virou um cálculo a partir dos itens reais.
+- **Como testar:** "Novo Atendimento" → seção "11. Pontuações ATA E CARS"
+  → selecionar o grau das 15 áreas da CARS → conferir que o campo
+  "Pontuação CARS" preenche sozinho e a interpretação muda de faixa
+  corretamente → "Gerar Relatório" → conferir a tabela e o gráfico de
+  linha da CARS no relatório em tela.
+- **Pendências (próximas fases, aguardando confirmação da psicóloga a
+  cada etapa):**
+  - ATA item a item (22 categorias, cada uma com pontuação máxima
+    própria) — dados já levantados da planilha `PROTOCOLO ATA(1).xlsx`,
+    implementação ainda não feita.
+  - 3 checklists de "Habilidades" (Cognitivas/Metacognitivas,
+    Socioemocionais/Comunicativas, Motoras/Sociomotoras, ~31 itens) com
+    gráficos de barra — dados já levantados do próprio PDF de referência,
+    implementação ainda não feita.
+  - Gráficos extras do SNAP-IV (pontos por categoria + % por categoria) e
+    do Portage por área (hoje é só um percentual agregado).
+  - Reagrupamento do quadro de observações em 4 áreas fixas
+    (Comunicação/Interação, Padrões Comportamentais, Sensorial/Emocional,
+    Aprendizagem) como no relatório de referência.
+  - Layout de cabeçalho (foto do paciente + caixa de identificação) e
+    rodapé de contato repetidos por página no PDF/impressão.
+  - Quadro de Funções Executivas por faixa etária do relatório de
+    referência: por decisão do usuário, **não será copiado** — o bloco
+    atual de Funções Executivas do sistema permanece como está.
+
+## Formulário "gamificado": wizard com progresso, etapas e feedback de conclusão
+
+- **Status:** ✅ Pronto
+- **Data:** 2026-09-20
+- **Origem:** Pedido do usuário para melhorar a UX do preenchimento de um
+  formulário longo (20 seções), tornando o progresso visível e o
+  preenchimento menos cansativo.
+- **O que foi feito:** um **terceiro `<script>`**, independente da lógica
+  clínica original (primeiro script) e do bootstrap de integração com o
+  backend (segundo script), adicionado só em
+  `frontend/public/formulario-novo-paciente.html`:
+  - As 20 seções (`<h2>1...` a `<h2>20...`) são divididas em
+    "etapas" (`.etapa-form`) automaticamente via JavaScript, sem duplicar
+    HTML — os elementos originais são só movidos para dentro de um
+    `<section>` por etapa, nada foi reescrito manualmente.
+  - Barra de progresso geral fixa no topo (`% Do Formulário Preenchido`,
+    contando campos de texto/número/seleção não somente-leitura e
+    ignorando campos condicionalmente ocultos como os "Descreva..." que só
+    aparecem quando a resposta é "Sim").
+  - Barra de etapas (stepper) clicável, com círculo numerado por etapa;
+    vira verde com "✓" quando todos os campos daquela etapa estão
+    preenchidos.
+  - Botões "Etapa Anterior"/"Próxima Etapa" ao final de cada seção; a
+    última etapa tem "Ir Para Ações Finais" que rola até os botões de
+    salvar/gerar relatório (que continuam sempre visíveis, fora do fluxo
+    de etapas).
+  - Ao completar uma etapa pela primeira vez, aparece um toast
+    ("✓ Seção Concluída: ...") no canto da tela por ~2,6s.
+  - Ao abrir o formulário (inclusive com dados de um paciente já
+    existente, carregados de forma assíncrona pelo bootstrap), o wizard
+    pula automaticamente para a primeira etapa ainda incompleta.
+  - **Impressão preservada:** ao imprimir o formulário em branco
+    (`imprimirFormularioPDF()`), uma regra CSS (`.print-form
+    .etapa-form{display:block!important}`) faz todas as etapas
+    aparecerem de novo, junto com `@media print` — a função de imprimir
+    não foi alterada e continua imprimindo o formulário inteiro, não só a
+    etapa atual.
+  - A "cópia editável" salva (`salvarCopiaEditavelPaciente()`) também
+    funciona normalmente: como o wizard reconstrói a barra de progresso e
+    religa os cliques toda vez que a página carrega (em vez de confiar em
+    manipuladores de evento que não sobrevivem ao salvar o HTML), o
+    arquivo salvo abre com o wizard funcionando igual.
+- **O que NÃO foi alterado:** nenhuma função de lógica clínica, nenhuma
+  função do bootstrap de integração com o backend — é uma camada de UX
+  por cima, adicionada como um script novo e separado.
+- **Como testar:** abrir "Novo Atendimento" → conferir a barra de
+  progresso e o stepper no topo → preencher uma seção inteira e ver o
+  círculo virar verde com o toast de confirmação → clicar em etapas
+  diferentes do stepper para navegar → testar "Imprimir Formulário Em
+  PDF" e confirmar que todas as 20 seções aparecem na impressão, não só a
+  etapa ativa na tela.
+- **Verificação feita nesta sessão:** simulação completa em ambiente
+  isolado (jsdom) confirmando 20 etapas criadas corretamente, navegação
+  por clique funcionando, cálculo de progresso e detecção de etapa
+  completa corretos, e que `#statusSalvamento`/os botões de ação
+  permanecem fora do fluxo de etapas (sempre visíveis). Testes de backend
+  (140/140) e build/typecheck do frontend seguem limpos.
+- **Bug real encontrado e corrigido após o usuário reportar "os campos
+  sumiram"**: o jsdom (usado na verificação acima) só confere estrutura e
+  lógica, não faz renderização visual — por isso não pegou este bug.
+  Instalei um Chromium headless (Playwright) só para diagnosticar e
+  confirmei visualmente: `dividirFormularioEmEtapas()` reanexava as 20
+  etapas com `form.appendChild(etapa)`, que sempre adiciona ao final da
+  lista atual de filhos — como `#statusSalvamento`/`.acoes` já eram os
+  únicos filhos restantes do `<form>` naquele momento, as etapas acabavam
+  entrando DEPOIS deles, invertendo a ordem original. Isso fazia a função
+  que esconde os botões de ação até a última etapa
+  (`montarBlocoAcoesFinais`) varrer "tudo depois de `#statusSalvamento`" e
+  engolir as 20 etapas inteiras dentro do bloco escondido — resultando em
+  formulário com progresso/stepper visíveis, mas nenhum campo aparecendo.
+  Corrigido trocando `form.appendChild(etapa)` por
+  `form.insertBefore(etapa, referenciaFixaAoStatusSalvamento)`, que
+  preserva a ordem correta (etapas primeiro, ações por último). Reconferido
+  com o Chromium headless: 20 etapas como filhas diretas do formulário,
+  altura do formulário voltando ao normal, campos visíveis. Também ajustei
+  o toast de "seção concluída" para não disparar na carga inicial (seções
+  com texto padrão pré-preenchido, como "Considerações Finais", apareciam
+  como "recém-concluídas" assim que a página abria). 

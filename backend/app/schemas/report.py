@@ -16,6 +16,14 @@ class ReportTextUpdate(BaseModel):
     generated_text: str
 
 
+class ReportAnswersUpdate(BaseModel):
+    """Autosave das respostas de um laudo em edição (ver formulário
+    standalone `formulario-novo-paciente.html`): cada campo alterado
+    sincroniza com o banco, substituindo integralmente `answers_json`."""
+
+    answers: dict
+
+
 class ReportEditUpdate(BaseModel):
     """Correção manual do que aparece no histórico. Só os campos enviados
     são alterados (ver `exclude_unset` no endpoint) — cada mudança de

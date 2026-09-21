@@ -8,23 +8,27 @@
 ## 1. O que é
 
 Uma plataforma web para a clínica da Mayra Vanessa (neuropsicopedagoga)
-substituir o processo manual de aplicar escalas de avaliação (CARS, ATA,
-SNAP-IV, Portage/IPO...) e escrever o laudo em um editor de texto comum.
+substituir o processo manual de aplicar o protocolo de avaliação
+neuropsicopedagógica e comportamental (CARS, ATA, SNAP-IV, TOD, M-CHAT,
+Portage/IPO...) e escrever o laudo em um editor de texto comum.
 
 Hoje, com o sistema:
 
 1. A psicóloga faz login com sua própria conta.
-2. Cadastra o paciente (ou já tem cadastrado).
-3. Escolhe a escala e preenche um formulário guiado — o sistema já sabe
-   quais perguntas fazer, porque cada escala foi cadastrada como um
-   "modelo" configurável (não é código fixo; ver seção 3).
-4. O sistema **calcula a pontuação e a classificação automaticamente**,
-   monta o gráfico, e **gera um rascunho do texto do laudo com IA** —
-   sempre revisável antes de qualquer exportação.
-5. A psicóloga revisa/edita o texto, completa seções clínicas extras se
-   quiser (anamnese, hipóteses diagnósticas com CID, plano de
-   intervenção...), e baixa o **PDF pronto**, com gráfico, tabela e
-   assinatura.
+2. Clica em "Novo Atendimento" — abre, dentro do próprio sistema, o
+   protocolo completo de avaliação (o mesmo formulário que a psicóloga já
+   usava e validou, agora integrado ao sistema — não precisou reaprender
+   nada nem reescrever nenhuma escala do zero).
+3. Preenche o formulário: identificação, histórico, escola, e os
+   protocolos aplicados. **Cada campo preenchido é salvo automaticamente
+   no banco de dados** assim que o atendimento é iniciado — não depende
+   de lembrar de salvar.
+4. O próprio formulário **calcula a pontuação de cada protocolo, monta o
+   quadro de observações associando comportamentos a critérios
+   diagnósticos, e estima probabilidades por hipótese diagnóstica** —
+   tudo automático, sempre revisável antes de fechar o laudo.
+5. Ao concluir, o laudo final (com gráfico, tabelas e assinatura) fica
+   pronto para exportar em **PDF**.
 6. Tudo fica salvo no histórico do paciente — dá para ver, editar
    (com log de auditoria de qualquer correção) e gerar um PDF
    **consolidado** juntando vários atendimentos num só parecer.
@@ -39,48 +43,42 @@ saúde é sensível, isolado por conta).
 |---|---|
 | Login e conta por psicóloga (dados isolados entre contas) | ✅ Pronto |
 | Cadastro de pacientes | ✅ Pronto |
-| Motor de cálculo das escalas (3 formatos diferentes de pontuação) | ✅ Pronto |
-| Formulário que se monta sozinho a partir da escala escolhida | ✅ Pronto |
-| Gráfico automático do resultado | ✅ Pronto |
-| Texto do laudo redigido por IA (sempre revisável) | ✅ Pronto |
+| Protocolo completo de avaliação embutido no sistema (CARS, ATA, SNAP-IV, TOD, M-CHAT, Portage) | ✅ Pronto |
+| Autosave de cada campo direto no banco de dados (não só no navegador) | ✅ Pronto |
+| Cálculo automático de pontuação/classificação de cada protocolo | ✅ Pronto |
+| Quadro de observações clínicas associado a critérios diagnósticos, gerado automaticamente | ✅ Pronto |
+| Gráfico automático de probabilidades por hipótese diagnóstica | ✅ Pronto |
 | Exportação em PDF (individual e consolidado de vários atendimentos) | ✅ Pronto |
 | Seções clínicas extras (anamnese, hipóteses com CID, plano de intervenção, fotos, assinatura) | ✅ Pronto |
-| Cadastro de novas escalas subindo o documento — a IA monta o modelo | ✅ Pronto |
 | Histórico do paciente com edição e log de quem mudou o quê | ✅ Pronto |
-| Tela de configuração da chave de IA (cada psicóloga usa a própria) | ✅ Pronto |
 | Aparência com a identidade visual da marca (cores, logo, tipografia) | ✅ Pronto |
 | Preparado para produção (Docker, checklist de segurança) | ✅ Pronto |
 
-**123 testes automatizados** cobrindo login, isolamento entre contas,
-cálculo de cada escala e geração de PDF — todos passando.
+**140 testes automatizados** de backend cobrindo login, isolamento entre
+contas e geração de PDF, todos passando.
 
-## 3. Decisão de design mais importante: escalas configuráveis
+## 3. Decisão de design mais importante: o protocolo é o próprio formulário validado pela psicóloga
 
-As escalas (CARS, ATA, SNAP-IV, Portage...) **não estão fixas no código**.
-Elas são cadastradas como um "modelo" — um formato de dados que descreve
-as perguntas, os pesos e como calcular a pontuação. Isso significa que
-**uma escala nova não exige programação**: a psicóloga sobe o documento
-da escala (PDF/DOCX/TXT) e a IA já extrai um rascunho do modelo para ela
-revisar e salvar. Isso é o que torna o sistema reutilizável no longo
-prazo, em vez de um software que só funciona para as 3-4 escalas
-pensadas hoje.
+Diferente de uma versão anterior deste sistema (que tentava deixar cada
+escala "configurável" por dentro, como se fossem peças montáveis
+genéricas), o sistema hoje usa **o formulário exato que a psicóloga já
+desenvolveu e testa há tempo** — com toda a lógica de pontuação, o quadro
+de observações e o cálculo de probabilidades exatamente como ela
+projetou. Isso elimina o risco de a "tradução" para um formato genérico
+perder nuances clínicas, e faz o sistema já nascer usando um protocolo
+validado na prática, em vez de recriar do zero. O custo dessa escolha:
+adicionar uma escala/protocolo novo hoje significa editar o formulário
+diretamente (não existe mais uma tela de "montar modelo" sem programação)
+— uma troca deliberada em favor de fidelidade ao que já funciona.
 
 ## 4. O que ainda está pendente (transparência)
 
-- **Escala ATA incompleta**: só 3 dos 22 itens oficiais foram fornecidos
-  até agora. O caminho para completar já existe (subir o documento
-  oficial pela tela "Modelos De Laudo").
-- **Portage/IPO**: o cálculo funciona, mas só tem um exemplo pequeno
-  cadastrado — falta a psicóloga alimentar os itens reais por área.
-- **Nenhuma chamada de IA foi testada com uma chave paga de verdade**
-  nesta máquina de desenvolvimento — toda a integração foi validada com
-  simulações; falta só configurar uma chave real (Anthropic, OpenAI ou
-  Google) para começar a usar de fato.
-- **Sem teste automatizado de frontend** (a validação da tela foi manual)
-  — não é um requisito de segurança, é só uma cobertura extra possível.
-- **Sem limite de tentativas de login** (proteção contra força bruta) —
-  recomendável antes de expor publicamente numa clínica com muitos
-  acessos externos.
+- **Fotos do paciente**: hoje entram junto com o laudo/PDF do atendimento,
+  mas ainda não aparecem na galeria separada "Fotos Do Paciente" do
+  Histórico — funcional, só falta essa segunda vitrine.
+- **Sem teste automatizado de frontend para a tela nova** de "Novo
+  Atendimento" (a tela em si é só uma moldura — a lógica pesada está no
+  formulário, testada manualmente).
 
 Nada disso impede uma demonstração ou um primeiro uso real controlado —
 são pontos para amadurecer com o uso.
@@ -144,17 +142,15 @@ tamanho:
 | **Produção com serviços gerenciados** (mais robusto, sem administrar servidor) | Web service pago (sem dormir) + banco Postgres gerenciado com backup automático, ambos no Render/Railway ou similar | **R$ 80 – 190** |
 | **Domínio próprio** (opcional, ex. `sistema.neuropp.com.br`) | Registro do domínio | **R$ 40 – 80/ano** |
 
-**Custo da IA (texto do laudo) é separado da hospedagem** — é cobrado
-diretamente pelo provedor escolhido (Anthropic, OpenAI ou Google), por
-uso, na chave que cada psicóloga configura. Cada geração de texto usa
-poucos milhares de "tokens" (uma fração de centavo a poucos centavos de
-dólar por laudo, dependendo do modelo escolhido). Para o volume de uma
-clínica pequena/média, isso costuma ficar na casa de **US$ 2 – 10/mês**
-(≈ R$ 10 – 55/mês) mesmo com uso frequente — não é um custo que escala
-junto com o número de psicólogas cadastradas, só com quantos laudos são
-gerados por IA.
+**Não há custo de IA hoje**: o texto do laudo e o cálculo de cada
+protocolo são gerados pelo próprio formulário (regras fixas, sem chamar
+nenhum serviço de IA pago) — diferente de uma versão anterior do sistema,
+que dependia de uma chave de API paga por geração de texto. A tela de
+configuração de IA e o suporte a Anthropic/OpenAI/Google continuam
+existindo no sistema para uso futuro, mas não são necessários para o
+fluxo de hoje.
 
 **Resumo prático**: dá para mostrar o sistema ao sócio hoje sem gastar
 nada, e colocar em uso real por uma clínica pequena por algo entre
-R$ 25 e R$ 90 por mês (hospedagem) + um valor pequeno e variável de IA,
-sem precisar de investimento inicial em infraestrutura.
+R$ 25 e R$ 90 por mês, só de hospedagem — sem custo variável de IA no
+fluxo principal.

@@ -76,6 +76,31 @@ button:hover{opacity:.9}
  .print-report form{display:none!important}
  .print-report .relatorio{display:block!important}
 }
+
+/* Wizard/gamificação do formulário — camada de UX adicionada por cima do
+   formulário original, sem alterar nenhuma função de lógica clínica. */
+.etapa-form{display:none}
+.etapa-form.ativa{display:block;animation:etapaEntrada .25s ease}
+@keyframes etapaEntrada{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.print-form .etapa-form{display:block!important;animation:none}
+@media print{.etapa-form{display:block!important}.wizard-progresso,.wizard-steps{display:none!important}}
+.wizard-progresso{position:sticky;top:0;background:#fff;z-index:20;padding:12px 0 6px;margin-bottom:2px}
+.wizard-barra{background:#eee;border-radius:20px;height:10px;overflow:hidden}
+.wizard-barra-preenchida{background:linear-gradient(90deg,var(--roxo),var(--azul));height:100%;width:0%;transition:width .4s ease;border-radius:20px}
+.wizard-texto{font-size:13px;color:#5d52a5;font-weight:bold;margin-top:6px;text-align:right}
+.wizard-steps{display:flex;overflow-x:auto;gap:6px;padding:8px 2px 14px;margin-bottom:6px;border-bottom:1px solid #eee}
+.wizard-step{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;padding:4px 6px;cursor:pointer;color:#888;font-size:10.5px;max-width:78px;text-align:center;text-transform:none;border-radius:8px}
+.wizard-step:hover{background:#f5f2ff}
+.wizard-step .circulo{width:26px;height:26px;border-radius:50%;background:#eee;color:#888;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;border:2px solid #ddd;transition:all .2s ease}
+.wizard-step.ativo .circulo{background:var(--roxo);border-color:var(--roxo);color:#fff;transform:scale(1.12)}
+.wizard-step.ativo{color:var(--roxo)}
+.wizard-step.completo .circulo{background:#5fb878;border-color:#5fb878;color:#fff}
+.wizard-nav-etapa{display:flex;justify-content:space-between;gap:10px;margin-top:22px;padding-top:16px;border-top:1px dashed #ddd}
+.wizard-nav-etapa button{background:#eee;color:#333}
+.wizard-nav-etapa button.avancar{background:var(--roxo);color:#fff}
+.wizard-toast{position:fixed;bottom:20px;right:20px;background:#5fb878;color:#fff;padding:14px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.22);font-weight:bold;font-size:13.5px;z-index:999;opacity:0;transform:translateY(12px) scale(.96);transition:all .3s ease;pointer-events:none;max-width:280px}
+.wizard-toast.mostrar{opacity:1;transform:translateY(0) scale(1)}
+@media(max-width:780px){.wizard-step{max-width:58px;font-size:9.5px}.wizard-nav-etapa{flex-direction:column}.wizard-toast{left:16px;right:16px;max-width:none}}
 </style>
 </head>
 <body>
@@ -228,7 +253,13 @@ A avaliação busca descrever, por meio dos testes, protocolos e observações a
 <div class="grid">
 <div><label>Pontuação ATA</label><input type="number" id="ata" oninput="atualizarInterpretacoes()"></div>
 <div><label>Interpretação ATA</label><textarea id="ataInterpretacao" readonly></textarea></div>
-<div><label>Pontuação CARS</label><input type="number" id="cars" min="0" max="60" step="0.5" oninput="atualizarInterpretacoes()"></div>
+</div>
+
+<h3>CARS – Escala De Classificação De Autismo Na Infância (Item A Item)</h3>
+<div class="aviso">Selecione o grau de cada uma das 15 áreas abaixo (Normal, Leve, Moderado Ou Severo). A pontuação total (mínimo 15, máximo 60) e a classificação são calculadas automaticamente a partir dos itens preenchidos.</div>
+<div id="carsItensContainer"></div>
+<div class="grid">
+<div><label>Pontuação CARS (Total, Calculada Automaticamente)</label><input type="number" id="cars" readonly></div>
 <div><label>Interpretação CARS / Nível De Suporte</label><textarea id="carsInterpretacao" readonly></textarea></div>
 </div>
 
@@ -445,6 +476,84 @@ const funcoesBase = [
 ["Linguagem Verbal/Não Verbal, Comunicação E Interação","Satisfatório","Troca informações, nomeia objetos, pede, aguarda resposta, interage e comunica-se visualmente conforme contexto."]
 ];
 
+const carsItens = [
+["1 - Relacionamento Interpessoal",
+"Sem evidência de dificuldade ou anormalidade: o comportamento da criança é apropriado para a idade. Alguma timidez, inquietação ou prejuízo pode ser observado, mas não a um nível diferente (atípico) quando comparado com outra de mesma idade.",
+"Grau leve de anormalidade: a criança evita olhar o adulto nos olhos; evita o adulto; demonstra dificuldade quando é forçado a tal; é extremamente tímido; não é tão sociável com um adulto quanto uma criança normal de mesma idade; fica agarrada aos familiares de forma mais intensa que outras de mesma idade.",
+"Grau moderado: a criança às vezes demonstra isolamento. Há necessidade de esforço persistente para obter sua atenção. Há um contato mínimo por iniciativa da criança (o contato pode ser impessoal).",
+"Grau severo: a criança é isolada realmente, não se dando conta do que o adulto está fazendo; nunca responde às iniciativas do adulto ou inicia contato. Somente as tentativas muito intensas para obter sua atenção têm algum efeito positivo."],
+["2 - Imitação",
+"Apropriada: a criança imita sons, palavras e movimentos que são apropriados para seu nível de desenvolvimento.",
+"Grau leve de anormalidade: a criança imita comportamentos simples como bater palmas ou palavras isoladas na maior parte do tempo. Às vezes reproduz uma imitação atrasada (após tempo de latência).",
+"Grau moderado: a criança só imita às vezes e mesmo assim precisa de considerável persistência e auxílio do adulto. Frequentemente reproduz uma imitação atrasada.",
+"Grau severo: a criança raramente ou mesmo nunca imita sons, palavras, ou movimentos mesmo com auxílio de adultos ou após período de latência."],
+["3 - Resposta Emocional",
+"Resposta apropriada para a idade e situação: a resposta emocional (forma e quantidade) demonstra sintonia com a expressão facial, postura corporal e modos.",
+"Grau leve de anormalidade: a criança ocasionalmente demonstra alguma inadequação na forma e quantidade das reações emocionais. Às vezes as reações não são relacionadas aos objetos ou acontecimentos do entorno.",
+"Grau moderado: há presença definitiva de sinais inapropriados na forma e quantidade das respostas emocionais. As reações podem ser inibidas ou exageradas, mas também podem não estar relacionadas com a situação. A criança pode fazer caretas, rir ou ficar estática apesar de não estarem presentes fatos que possam estar causando tais reações.",
+"Grau severo: as respostas são raramente apropriadas às situações: quando há determinado tipo de humor é muito difícil modificá-lo mesmo que se mude a atividade. O contrário também é verdadeiro, podendo haver enorme variedade de diferentes reações emocionais durante um curto espaço de tempo mesmo que não tenha sido acompanhado por nenhuma mudança no meio ambiente."],
+["4 - Expressão Corporal",
+"Apropriada: a criança se move com a mesma facilidade, agilidade e coordenação que outra da mesma idade.",
+"Grau leve de anormalidade: algumas peculiaridades menores podem estar presentes como movimentos desajeitados, repetitivos, coordenação motora pobre, ou presença rara de movimentos não usuais descritos no próximo item.",
+"Grau moderado: comportamentos que são claramente estranhos ou não usuais para outras crianças de mesma idade. Podem estar presentes: peculiar postura de dedos e corpo, autoagressão, balançar-se, rodar e contorcer-se, movimentos serpentiformes de dedos ou andar na ponta dos pés.",
+"Grau severo: movimentos frequentes ou intensos (descritos acima) são sinais de comprometimento severo do uso do corpo. Estes comportamentos podem estar presentes apesar de um persistente trabalho de modificação comportamental, assim como se manterem quando a criança está envolvida em atividades."],
+["5 - Uso Do Objeto",
+"Uso e interesse apropriado: a criança demonstra interesse adequado em brinquedos e outros objetos relativos a seu nível de desenvolvimento. Há uso funcional dos brinquedos.",
+"Grau leve de anormalidade: a criança apresenta menos interesse pelo brinquedo que a criança normal ou há um uso inapropriado para a idade (bater o brinquedo no chão ou colocá-lo na boca).",
+"Grau moderado: há muito pouco interesse por brinquedos e objetos ou o uso é disfuncional. Pode haver um foco de interesse em uma parte insignificante do brinquedo, ficar fascinado com o reflexo de luz do objeto, ou eleger um excluindo todos os outros. Este comportamento pode ao menos ser parcialmente ou temporariamente modificável.",
+"Grau severo: a criança pode apresentar os sintomas descritos acima porém com uma intensidade e frequência maior. Há significativa dificuldade em distrair a criança quando está ocupada com estas atividades inadequadas e é extremamente difícil modificar o uso inadequado dos objetos."],
+["6 - Adaptação A Mudanças",
+"Idade apropriada na resposta: apesar da criança notar e comentar sobre as mudanças de rotina, há uma aceitação sem grandes distúrbios.",
+"Grau leve de anormalidade: quando o adulto tenta modificar algumas rotinas a criança continua com a mesma atividade ou no uso dos mesmos materiais, porém pode ficar facilmente confusa assim como aceitar a mudança. Ex.: fica muito agitada quando é levada numa padaria diferente / o caminho para a escola é mudado, mas é acalmada facilmente.",
+"Grau moderado: há resistência às mudanças da rotina. Há uma tentativa de persistir na atividade costumeira e é difícil acalmá-la; ficam raivosos ou tristes quando há modificação.",
+"Grau severo: quando ocorrem mudanças a criança apresenta reações graves que são difíceis de serem eliminadas. Se são forçadas a modificarem a rotina podem ficar extremamente irritados/raivosos ou não cooperativos e talvez respondam com birras."],
+["7 - Uso Do Olhar",
+"Idade apropriada na resposta: o uso do olhar é normal para a idade. A visão é usada junto com os outros sentidos como a audição e tato, como forma de explorar os objetos.",
+"Grau leve de anormalidade: a criança precisa ser lembrada de vez em quando para olhar para os objetos. A criança pode estar mais interessada em olhar para espelhos e luzes que outras crianças da mesma idade, ou ficar olhando para o espaço de forma vaga. Pode haver evitação do olhar.",
+"Grau moderado: a criança precisa ser lembrada a olhar o que está fazendo. Podem ficar olhando para o espaço de forma vaga; evitação do olhar; olhar para objetos de modo peculiar; colocar objetos muito próximos aos olhos apesar de não terem déficit visual.",
+"Grau severo: há uma persistente recusa em olhar para pessoas ou certos objetos e podem apresentar outras peculiaridades no uso do olhar em graus extremos como os descritos acima."],
+["8 - Uso Da Audição",
+"Idade apropriada na resposta: o uso da audição é normal para a idade. A audição é usada junto com os outros sentidos como a visão e tato.",
+"Grau leve de anormalidade: pode haver falta de resposta a certos sons, assim como uma hiper-reação. Às vezes a reação é atrasada, às vezes é necessário a repetição de um determinado som para \"ativar\" a atenção da criança. A criança pode apresentar uma resposta catastrófica a sons estranhos a ela.",
+"Grau moderado: as respostas aos sons podem variar: ignorá-lo das primeiras vezes, ficar assustado com sons de seu cotidiano, tampar os ouvidos.",
+"Grau severo: há uma sub ou hiper-reatividade aos sons, de uma forma extremada, independentemente do tipo do som."],
+["9 - Uso Do Paladar, Olfato E Do Tato",
+"Normal: a criança explora novos objetos de acordo com a idade geralmente através dos sentidos. O paladar e olfato são usados apropriadamente quando o objeto é percebido como comível. Quando há dor resultante de batida, queda, ou pequenos machucados a criança expressa seu desconforto, porém sem uma reação desmedida.",
+"Grau leve de anormalidade: a criança persiste no levar e manter objetos na boca, em discrepância de outras da mesma idade. Pode cheirar ou colocar na boca, de vez em quando, objetos não comestíveis. A criança pode ignorar ou reagir de forma exacerbada a um beliscão ou alguma dor leve que numa criança normal seria expressada de forma adequada.",
+"Grau moderado: pode haver um comportamento de grau moderado de tocar, cheirar, lamber objetos ou pessoas. Pode haver uma reação não usual à dor de grau moderado, assim como sub ou hiper-reação.",
+"Grau severo: há um comportamento de cheirar, colocar na boca, ou pegar objetos — pela sensação em si — sem o objetivo de exploração do objeto. Pode haver uma completa falta de resposta à dor assim como uma hiper-reação a algo que é só levemente desconfortável."],
+["10 - Medo E Nervosismo",
+"Normal: o comportamento é apropriado à situação e à idade da criança.",
+"Grau leve de anormalidade: de vez em quando a criança demonstra medo e nervosismo que é levemente inapropriado (para mais ou para menos) quando comparado a outras de mesma idade.",
+"Grau moderado: a criança apresenta um pouco mais ou um pouco menos de medo do que apresentaria uma criança normal mesmo quando comparado a outra de menor idade colocada em situação idêntica, assim como é difícil confortá-la nessa situação. Pode ser difícil entender o que está causando o comportamento de medo.",
+"Grau severo: há manutenção de medo mesmo após repetidas experiências de espera do bem-estar. Na consulta de avaliação a criança pode estar amedrontada sem razão aparente. É extremamente difícil acalmá-la. Pode também não apresentar medo/senso de autoconservação a cachorros não conhecidos, a riscos da rua e trânsito, como outras crianças da mesma idade evitam."],
+["11 - Comunicação Verbal",
+"Normal: a comunicação verbal é apropriada à situação e à idade da criança.",
+"Grau leve de anormalidade: a fala apresenta um atraso global. A maior parte da fala é significativa, porém pode estar presente ecolalia ou inversão pronominal em idade onde já não é normal sua presença. Algumas palavras peculiares e jargões podem estar presentes ocasionalmente.",
+"Grau moderado: a fala pode estar ausente. Quando presente, a comunicação verbal pode ser uma mistura de fala significativa e fala peculiar como jargões, comerciais de TV, jogo de futebol, reportagem sobre o tempo, ecolalia e inversão pronominal. Quando há fala significativa podem estar presentes um excessivo questionamento e preocupação com tópicos específicos.",
+"Grau severo: não há fala significativa; há grunhidos, gritos, sons que lembram animais ou até sons mais complexos que se aproximam da fala humana. A criança pode mostrar persistente e bizarro uso de conhecimento de algumas palavras ou frases."],
+["12 - Comunicação Não-Verbal",
+"Normal: a comunicação não-verbal é apropriada à situação e à idade da criança.",
+"Grau leve de anormalidade: o uso da comunicação não-verbal é imaturo, por exemplo, a criança somente aponta/mostra sem precisão o que quer numa situação em que a criança normal de mesma idade aponta ou demonstra por gestos de forma mais significativa o que quer.",
+"Grau moderado: a criança é geralmente incapaz de expressar necessidades e desejos através de meios não-verbais, assim como é, geralmente, incapaz de compreender a comunicação não-verbal dos outros. Pegam na mão do adulto o levando ao objeto desejado, mas são incapazes de mostrar através de gestos o objeto desejado.",
+"Grau severo: há somente uso de gestos bizarros e peculiares que não aparentam significado. Demonstram não ter conhecimento do significado de gestos ou expressões faciais de terceiros."],
+["13 - Atividade",
+"Normal: a atividade é apropriada à situação e à idade da criança, quando comparada a outras.",
+"Grau leve de anormalidade: pode haver uma leve inquietação ou alguma lentidão de movimentos. O grau de atividade interfere somente de forma leve na performance da criança. Geralmente é possível encorajar a manter um nível adequado de atividade.",
+"Grau moderado: a criança pode ser inquieta e ter dificuldade de ficar quieta. Pode aparentar ter uma quantidade infinita de energia e não querer/ter vontade de dormir à noite. Pode também ser letárgica e exigir grande esforço para modificação deste comportamento. Podem não gostar de jogos que exijam atividade física e assim \"passar\" por preguiçosos.",
+"Grau severo: há demonstração de níveis de atividade em seus extremos: hiper ou hipo, podendo também passar de uma para outra. É difícil o manejo desta criança. Quando há hiperatividade ela está presente em todos os níveis do cotidiano, sendo necessário quase que um constante acompanhamento por parte de um adulto. Se a criança é letárgica, é muito difícil motivá-la a alguma atividade."],
+["14 - Grau E Consistência Das Respostas Da Inteligência",
+"Normal: a criança é inteligente como uma criança normal de sua idade, não havendo nenhuma habilidade não usual ou problema.",
+"Grau leve de anormalidade: a criança não é tão inteligente quanto uma criança de mesma idade e suas habilidades apresentam um atraso global em todas as áreas, de forma equitativa.",
+"Grau moderado: em geral a criança não é tão inteligente quanto outra de mesma idade, entretanto há algumas áreas intelectivas em que o funcionamento beira o normal.",
+"Grau severo: mesmo em uma criança que geralmente não é tão inteligente quanto uma normal de mesma idade, pode haver um funcionamento até melhor em uma ou mais áreas. Podem estar presentes certas habilidades não usuais como, por exemplo, talento para música, ou facilidade com números."],
+["15 - Impressão Geral",
+"Não há autismo: a criança não apresentou nenhum sintoma característico de autismo.",
+"Autismo de grau leve: a criança apresentou somente alguns poucos sintomas ou grau leve de autismo.",
+"Autismo de grau moderado: a criança apresentou um número de sintomas ou um moderado grau de autismo.",
+"Autismo de grau severo: a criança apresentou muitos sintomas ou um grau severo de autismo."]
+];
+
 const todItens = ["Teimosia Persistente","Comportamento Negativista","Resistência Às Ordens","Não Negocia Com Adultos","Raiva Frequente","Tentativa Constante De Irritar Pessoas","Problemas Acadêmicos","Dificuldade Em Manter Amizades","Agressividade Com Colegas","Frequentemente Rancoroso Ou Vingativo","Frequentemente Se Aborrece Sem Motivos","Descontrola-Se Com Facilidade","Impulsividade Ou Irritabilidade Frequentes","Comportamento Antissocial"];
 const snapItens = ["Desatenção A Detalhes","Dificuldade Em Manter Atenção","Parece Não Escutar","Não Segue Instruções","Dificuldade De Organização","Evita Esforço Mental Prolongado","Perde Objetos","Distrai-Se Facilmente","Esquecimento","Mexe Mãos/Pés","Levanta-Se Quando Deveria Permanecer Sentado","Corre Ou Escala Em Situações Inadequadas","Dificuldade Em Brincar Em Silêncio","Age Como Se Estivesse Ligado A Um Motor","Fala Em Excesso","Responde Antes De Terminar A Pergunta","Dificuldade Em Esperar A Vez","Interrompe Ou Se Intromete"];
 
@@ -569,6 +678,27 @@ function montarFormulario(){
   funcoesBase.forEach((item,i)=>{f.innerHTML += '<div class="bloco"><label>'+item[0]+'</label><select id="func_status_'+i+'"><option '+(item[1]=="Satisfatório"?"selected":"")+'>Satisfatório</option><option '+(item[1]=="Em desenvolvimento"?"selected":"")+'>Em desenvolvimento</option><option '+(item[1]=="Insatisfatório"?"selected":"")+'>Insatisfatório</option></select><label>Observação</label><textarea id="func_obs_'+i+'">'+item[2]+'</textarea></div>';});
   document.getElementById("tod").innerHTML = todItens.map((t,i)=>'<label>'+(i+1)+'. '+t+'</label><select id="tod_'+i+'"><option value="">Selecione</option><option value="1">Sim</option><option value="0">Não</option></select>').join("");
   document.getElementById("snap").innerHTML = snapItens.map((t,i)=>'<label>'+(i+1)+'. '+t+'</label><select id="snap_'+i+'"><option value="">Selecione</option><option value="0">0 - Nem Um Pouco</option><option value="1">1 - Só Um Pouco</option><option value="2">2 - Bastante</option><option value="3">3 - Demais</option></select>').join("");
+  document.getElementById("carsItensContainer").innerHTML = carsItens.map((item,i)=>{
+    const [rotulo,normal,leve,moderado,severo] = item;
+    return '<div class="bloco"><label>'+rotulo+'</label><select id="cars_'+i+'" onchange="calcularCARS()">'
+      +'<option value="">Selecione O Grau</option>'
+      +'<option value="1">1 – '+normal+'</option>'
+      +'<option value="1.5">1,5 – Grau Intermediário Entre Normal E Leve</option>'
+      +'<option value="2">2 – '+leve+'</option>'
+      +'<option value="2.5">2,5 – Grau Intermediário Entre Leve E Moderado</option>'
+      +'<option value="3">3 – '+moderado+'</option>'
+      +'<option value="3.5">3,5 – Grau Intermediário Entre Moderado E Severo</option>'
+      +'<option value="4">4 – '+severo+'</option>'
+      +'</select></div>';
+  }).join("");
+}
+
+function calcularCARS(){
+  const valores = carsItens.map((_,i)=>Number(valor("cars_"+i))).filter(v=>!isNaN(v)&&v>0);
+  if(valores.length!==carsItens.length){setValor("cars","");return;}
+  const total = valores.reduce((a,b)=>a+b,0);
+  setValor("cars", total);
+  atualizarInterpretacoes();
 }
 
 function formatarDataBR(v){v=v.replace(/\D/g,"").slice(0,8);if(v.length>=5)return v.replace(/(\d{2})(\d{2})(\d{0,4})/,"$1/$2/$3");if(v.length>=3)return v.replace(/(\d{2})(\d{0,2})/,"$1/$2");return v;}
@@ -719,6 +849,22 @@ function gerarQuadroRelatorio(){
   return '<table class="obs-table"><tr><th>Comportamento Observado</th><th>Descrição Detalhada</th><th>Possíveis Associações Clínicas</th><th>Associação Aos Critérios DSM-5-TR</th></tr>'+linhas+"</table>";
 }
 function gerarFuncoesRelatorio(){let h="";funcoesBase.forEach((f,i)=>{h+="<p><strong>"+f[0]+":</strong> "+valor("func_status_"+i)+" – "+valor("func_obs_"+i)+"</p>";});return h;}
+function gerarTabelaCARS(){
+  const linhas = carsItens.map((item,i)=>{
+    const v = valor("cars_"+i);
+    const rotulo = item[0];
+    const textos = {"1":item[1],"2":item[2],"3":item[3],"4":item[4]};
+    const grauTexto = v ? (textos[String(Math.floor(Number(v)))] || "Grau Intermediário") : "Não Preenchido";
+    return "<tr><td>"+rotulo+"</td><td>"+grauTexto+"</td><td>"+(v||"-")+"</td></tr>";
+  }).join("");
+  return '<table class="obs-table"><tr><th>Área</th><th>Grau Observado</th><th>Pontuação</th></tr>'+linhas+'</table>';
+}
+function classificacaoCARSTexto(cars){
+  if(isNaN(cars))return"";
+  if(cars<30)return"Normal (15 A 29,5 Pontos)";
+  if(cars<=36.5)return"Autismo Leve/Moderado (30 A 36,5 Pontos)";
+  return"Autismo Grave (Acima De 37 Pontos)";
+}
 function gerarTextoFeminino(){
   if(valor("sexo")!=="Feminino")return"";
   return `<h2>Consideração Sobre TEA No Sexo Feminino</h2>
@@ -767,6 +913,9 @@ function gerarRelatorio(){
   '<h2>8. Quadro De Observações</h2>'+gerarQuadroRelatorio()+
   '<h2>9. Hipóteses Diagnósticas</h2><p>'+selecionados("hipotese")+'</p>'+
   '<h2>10. ATA E CARS</h2><p>'+valor("ataInterpretacao")+'</p><p>'+valor("carsInterpretacao")+'</p>'+
+  '<h3>Pontuação Por Área – CARS</h3><p>Classificação: Normal – 15 A 29,5 Pontos / Autismo Leve-Moderado – 30 A 36,5 Pontos / Autismo Grave – Acima De 37 Pontos. Classificação Obtida: '+classificacaoCARSTexto(Number(valor("cars")))+'.</p>'+
+  '<div class="grafico-box"><div class="grafico-container"><canvas id="graficoCARS"></canvas></div></div>'+
+  gerarTabelaCARS()+
   gerarTextoFeminino()+
   '<h2>11. Funções Executivas E Cognitivas</h2>'+gerarFuncoesRelatorio()+
   '<h2>12. Síntese Dos Protocolos</h2>'+
@@ -782,7 +931,16 @@ function gerarRelatorio(){
   '<div class="assinatura"><p class="assinatura-manuscrita">Mayra Vanessa Andrade da Cunha</p><div class="linha-assinatura"></div><p style="text-align:center!important;text-indent:0!important;"><strong>Mayra Vanessa Andrade da Cunha</strong><br>Neuropsicopedagoga Clínica – CBO 2394-40<br>Analista Comportamental – ABA<br>Especialista Em Educação Inclusiva</p></div>'+
   '<div class="rodape-relatorio"><img src="'+FOOTER+'"></div>';
   rel.style.display="block";
-  setTimeout(()=>{graficos.forEach(g=>g.destroy());graficos=[];const ctx=document.getElementById("graficoProbabilidade");if(ctx){graficos.push(new Chart(ctx,{type:"pie",data:{labels:["TEA","TDAH","TOD","DI","Aprendizagem","TPAC"],datasets:[{label:"Probabilidade Estimativa (%)",data:[prob.tea,prob.tdah,prob.tod,prob.di,prob.aprendizagem,prob.tpac],backgroundColor:["#c9c3ee","#9bd6ee","#f6c7d6","#f8dca8","#b8d8c0","#d7c0e6"],borderColor:"#ffffff",borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:function(ctx){return ctx.label+": "+ctx.parsed+"%";}}}}}}));}},300);
+  setTimeout(()=>{
+    graficos.forEach(g=>g.destroy());graficos=[];
+    const ctx=document.getElementById("graficoProbabilidade");
+    if(ctx){graficos.push(new Chart(ctx,{type:"pie",data:{labels:["TEA","TDAH","TOD","DI","Aprendizagem","TPAC"],datasets:[{label:"Probabilidade Estimativa (%)",data:[prob.tea,prob.tdah,prob.tod,prob.di,prob.aprendizagem,prob.tpac],backgroundColor:["#c9c3ee","#9bd6ee","#f6c7d6","#f8dca8","#b8d8c0","#d7c0e6"],borderColor:"#ffffff",borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:function(ctx){return ctx.label+": "+ctx.parsed+"%";}}}}}}));}
+    const ctxCars=document.getElementById("graficoCARS");
+    if(ctxCars){
+      const valoresCars=carsItens.map((_,i)=>Number(valor("cars_"+i))||null);
+      graficos.push(new Chart(ctxCars,{type:"line",data:{labels:carsItens.map((item,i)=>String(i+1)),datasets:[{label:"Pontuação Por Área (CARS)",data:valoresCars,borderColor:"#7466b5",backgroundColor:"#c9c3ee",tension:0.2,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:4,ticks:{stepSize:1}}},plugins:{legend:{display:false}}}}));
+    }
+  },300);
   rel.scrollIntoView({behavior:"smooth"});
 }
 
@@ -894,5 +1052,594 @@ document.addEventListener("DOMContentLoaded",()=>{
   ativarSalvamentoAutomatico();
 });
 </script>
+
+<!-- INÍCIO — bootstrap de integração com o sistema (não editar o formulário acima) -->
+<script>
+(function () {
+  const params = new URLSearchParams(location.search);
+  const pacienteId = params.get('paciente');
+  const token = localStorage.getItem('formpsico_token');
+
+  function apiFetch(path, options) {
+    options = options || {};
+    const headers = Object.assign(
+      { 'Content-Type': 'application/json' },
+      token ? { Authorization: 'Bearer ' + token } : {},
+      options.headers || {}
+    );
+    return fetch('/api' + path, Object.assign({}, options, { headers })).then(async (r) => {
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        throw new Error(body.detail || ('Erro ' + r.status));
+      }
+      return r.status === 204 ? null : r.json();
+    });
+  }
+
+  function apiFetchArquivo(path, arquivo) {
+    const formData = new FormData();
+    formData.append('file', arquivo);
+    const headers = token ? { Authorization: 'Bearer ' + token } : {};
+    return fetch('/api' + path, { method: 'POST', headers, body: formData }).then(async (r) => {
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        throw new Error(body.detail || ('Erro ' + r.status));
+      }
+      return r.json();
+    });
+  }
+
+  function brParaISO(dataBr) {
+    const partes = dataBr.split('/');
+    if (partes.length !== 3) return null;
+    const [d, m, y] = partes;
+    return y + '-' + m + '-' + d;
+  }
+
+  // Fotos do paciente: `fotosPacienteDados` (script original acima) guarda
+  // cada foto como base64 (dataURL), usado para embutir direto no laudo/PDF
+  // — isso continua igual. Além disso, sincronizamos as mesmas fotos com a
+  // galeria oficial (`/api/patients/{id}/photos`), que é o que aparece no
+  // Histórico do Paciente. Cada item ganha um `_photoId` depois de enviado,
+  // para não reenviar/duplicar em saves seguintes.
+  function dataUrlParaArquivo(dataUrl, nomeSugerido) {
+    const [cabecalho, base64] = dataUrl.split(',');
+    const mimeMatch = /data:(.*?);base64/.exec(cabecalho || '');
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const bytes = atob(base64 || '');
+    const buffer = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
+    const extensao = mime.split('/')[1] === 'jpeg' ? 'jpg' : (mime.split('/')[1] || 'jpg');
+    const nomeBase = (nomeSugerido || 'foto').replace(/\.[^.]+$/, '');
+    return new File([buffer], nomeBase + '.' + extensao, { type: mime });
+  }
+
+  function arquivoParaDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const leitor = new FileReader();
+      leitor.onload = () => resolve(leitor.result);
+      leitor.onerror = reject;
+      leitor.readAsDataURL(blob);
+    });
+  }
+
+  async function baixarFotoComoDataUrl(idPaciente, idFoto) {
+    const resposta = await fetch('/api/patients/' + idPaciente + '/photos/' + idFoto + '/file', {
+      headers: token ? { Authorization: 'Bearer ' + token } : {},
+    });
+    if (!resposta.ok) throw new Error('Erro ' + resposta.status);
+    return arquivoParaDataUrl(await resposta.blob());
+  }
+
+  // Carrega, na primeira vez que o formulário abre para um paciente já
+  // existente, as fotos que já estão na galeria oficial (ex.: enviadas em
+  // um atendimento anterior) — só quando o formulário ainda não tem
+  // nenhuma foto carregada, para não duplicar com um rascunho local.
+  async function carregarFotosDaGaleria() {
+    if (!pacienteCarregado || (typeof fotosPacienteDados !== 'undefined' && fotosPacienteDados.length)) return;
+    try {
+      const fotos = await apiFetch('/patients/' + pacienteCarregado.id + '/photos');
+      for (const foto of fotos) {
+        try {
+          const src = await baixarFotoComoDataUrl(pacienteCarregado.id, foto.id);
+          fotosPacienteDados.push({ nome: foto.caption || 'foto', src, _photoId: foto.id });
+        } catch (e) {
+          // Uma foto específica falhou ao baixar — segue com as demais.
+        }
+      }
+      if (typeof renderizarFotosPaciente === 'function') renderizarFotosPaciente();
+    } catch (e) {
+      // Galeria indisponível — não bloqueia o carregamento do paciente.
+    }
+  }
+
+  // Envia para a galeria oficial as fotos que ainda não foram enviadas
+  // (sem `_photoId`). Chamado depois que o paciente já existe no banco.
+  async function enviarFotosNovasParaGaleria() {
+    if (!pacienteAtual || typeof fotosPacienteDados === 'undefined') return;
+    const pendentes = fotosPacienteDados.filter((f) => !f._photoId);
+    for (const foto of pendentes) {
+      try {
+        const arquivo = dataUrlParaArquivo(foto.src, foto.nome);
+        const salva = await apiFetchArquivo('/patients/' + pacienteAtual.id + '/photos', arquivo);
+        foto._photoId = salva.id;
+      } catch (e) {
+        // Formato de imagem não aceito pela galeria (ex.: heic) ou falha de
+        // rede — a foto continua funcionando no laudo/PDF (embutida em
+        // base64), só não aparece na galeria oficial do Histórico.
+      }
+    }
+  }
+
+  // Mantém a galeria oficial em sincronia quando uma foto é removida do
+  // formulário — sem alterar `removerFotoPaciente` original (script acima).
+  function interceptarRemocaoDeFoto() {
+    if (typeof window.removerFotoPaciente !== 'function') return;
+    const original = window.removerFotoPaciente;
+    window.removerFotoPaciente = function (i) {
+      const foto = fotosPacienteDados[i];
+      const idPaciente = (pacienteAtual || pacienteCarregado || {}).id;
+      original(i);
+      if (foto && foto._photoId && idPaciente) {
+        apiFetch('/patients/' + idPaciente + '/photos/' + foto._photoId, { method: 'DELETE' }).catch(() => {});
+      }
+    };
+  }
+
+  let pacienteCarregado = null;
+  let pacienteAtual = null;
+  let laudoAtual = null;
+  let templateAtual = null;
+  let temporizadorAutosaveBanco = null;
+
+  function definirStatus(texto) {
+    const el = document.getElementById('statusBanco');
+    if (el) el.textContent = texto;
+  }
+
+  async function carregarPaciente() {
+    if (!pacienteId || !token) return;
+    try {
+      pacienteCarregado = await apiFetch('/patients/' + pacienteId);
+      setValor('nomePaciente', pacienteCarregado.name);
+      if (pacienteCarregado.birth_date) {
+        const [y, m, d] = pacienteCarregado.birth_date.split('-');
+        setValor('dataNascimento', d + '/' + m + '/' + y);
+      }
+      if (pacienteCarregado.sex) setValor('sexo', pacienteCarregado.sex);
+      if (pacienteCarregado.school_info) setValor('escola', pacienteCarregado.school_info);
+      if (typeof atualizarCamposBasePaciente === 'function') atualizarCamposBasePaciente();
+      await carregarFotosDaGaleria();
+    } catch (e) {
+      alert('Não foi possível carregar os dados do paciente: ' + e.message);
+    }
+  }
+
+  function garantirTemplateCustomForm() {
+    return apiFetch('/templates/custom-form-avaliacao', { method: 'POST' });
+  }
+
+  function congelarGraficoComoImagem() {
+    // Congela todos os gráficos Chart.js do relatório (probabilidades, CARS
+    // e os que forem adicionados depois) como <img>, porque o WeasyPrint
+    // (backend) não executa JavaScript/Canvas.
+    document.querySelectorAll('#relatorio canvas').forEach((canvas) => {
+      try {
+        const img = document.createElement('img');
+        img.src = canvas.toDataURL('image/png');
+        img.style.maxWidth = '100%';
+        canvas.replaceWith(img);
+      } catch (e) {
+        // Canvas vazio/sem dados ainda — segue sem imagem desse gráfico.
+      }
+    });
+  }
+
+  const ESTILO_EXPORTACAO =
+    '<style>body{font-family:Arial;font-size:10pt}p,td,th,li{font-family:Arial;font-size:10pt;' +
+    'line-height:1.5;text-align:justify;text-indent:1.5em}h1{font-size:16pt;color:#5d52a5;' +
+    'text-align:center}h2{font-size:12pt;background:#f5f2ff;border-left:6px solid #7466b5;' +
+    'padding:8px;color:#443b91}table{border-collapse:collapse;width:100%}td,th{border:1px solid ' +
+    '#999;padding:6px}.assinatura-manuscrita{font-family:Brush Script MT,Segoe Script,cursive;' +
+    'font-size:30pt;color:#4d4295;text-align:center;text-indent:0}.linha-assinatura{border-top:1px ' +
+    'solid #333;width:380px;margin:auto}img{max-width:100%}</style>';
+
+  function montarHtmlCompletoDoLaudo() {
+    const corpo = document.getElementById('relatorio').innerHTML;
+    return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">' + ESTILO_EXPORTACAO +
+      '</head><body>' + corpo + '</body></html>';
+  }
+
+  // Garante que exista um paciente e um laudo (rascunho) no banco. É
+  // idempotente: se já rodou uma vez nesta sessão (pacienteAtual/laudoAtual
+  // preenchidos), não cria de novo, só devolve os ids já criados.
+  async function garantirRegistroCriado() {
+    if (pacienteAtual && laudoAtual) return;
+
+    let paciente = pacienteCarregado;
+    if (!paciente) {
+      const nome = valor('nomePaciente').trim();
+      const dataBrasil = valor('dataNascimento').trim();
+      const dataISO = dataBrasil ? brParaISO(dataBrasil) : null;
+      if (!nome || !dataISO) {
+        throw new Error('Preencha ao menos Nome Completo Do Paciente e Data De Nascimento (dd/mm/aaaa) antes de salvar.');
+      }
+      paciente = await apiFetch('/patients', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: nome,
+          birth_date: dataISO,
+          sex: valor('sexo') || undefined,
+          school_info: valor('escola') || undefined,
+        }),
+      });
+    }
+    pacienteAtual = paciente;
+
+    templateAtual = await garantirTemplateCustomForm();
+
+    const laudo = await apiFetch('/patients/' + pacienteAtual.id + '/reports', {
+      method: 'POST',
+      body: JSON.stringify({ template_id: templateAtual.id, answers: coletarDados() }),
+    });
+    laudoAtual = laudo;
+  }
+
+  // Autosave real: sincroniza com o banco (não só localStorage) as
+  // respostas atuais do formulário. Chamado tanto pelo botão principal
+  // quanto, depois que o laudo já existe, automaticamente a cada campo
+  // alterado (ver hook de autosave mais abaixo).
+  async function salvarRespostasNoBanco() {
+    if (!laudoAtual) return;
+    await apiFetch('/reports/' + laudoAtual.id + '/answers', {
+      method: 'PUT',
+      body: JSON.stringify({ answers: coletarDados() }),
+    });
+  }
+
+  async function salvarNoSistema() {
+    if (!token) {
+      alert('Sessão expirada. Abra este formulário de dentro do sistema (menu "Novo Atendimento").');
+      return;
+    }
+    const botao = document.getElementById('btnSalvarNoSistema');
+    const textoOriginal = botao.textContent;
+    botao.disabled = true;
+    botao.textContent = 'Salvando...';
+    definirStatus('Salvando no sistema...');
+    try {
+      await garantirRegistroCriado();
+      await enviarFotosNovasParaGaleria();
+      await salvarRespostasNoBanco();
+
+      gerarRelatorio();
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      congelarGraficoComoImagem();
+
+      await apiFetch('/reports/' + laudoAtual.id + '/text', {
+        method: 'PUT',
+        body: JSON.stringify({ generated_text: montarHtmlCompletoDoLaudo() }),
+      });
+
+      const agora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      definirStatus('Salvo no sistema às ' + agora + ' — cada campo alterado agora sincroniza automaticamente.');
+      botao.textContent = 'Atualizar No Sistema';
+      mostrarBotaoConcluir();
+    } catch (e) {
+      definirStatus('Erro ao salvar: ' + e.message);
+      alert('Erro ao salvar no sistema: ' + e.message);
+      botao.textContent = textoOriginal;
+    } finally {
+      botao.disabled = false;
+    }
+  }
+
+  function irParaHistorico() {
+    if (!pacienteAtual) return;
+    // Quando aberto dentro do iframe do app (rota /atendimento/novo),
+    // navega a janela de verdade (pai), não o próprio iframe.
+    (window.top || window).location.href = '/pacientes/' + pacienteAtual.id + '/historico';
+  }
+
+  function mostrarBotaoConcluir() {
+    if (document.getElementById('btnConcluirHistorico')) return;
+    const acoes = document.querySelector('.acoes.no-print');
+    if (!acoes) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'btnConcluirHistorico';
+    btn.className = 'botao-principal';
+    btn.textContent = 'Concluir E Ver Histórico';
+    btn.onclick = irParaHistorico;
+    acoes.insertBefore(btn, acoes.children[1] || null);
+  }
+
+  function injetarBotao() {
+    const acoes = document.querySelector('.acoes.no-print');
+    if (!acoes) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'btnSalvarNoSistema';
+    btn.className = 'botao-principal';
+    btn.textContent = 'Salvar No Sistema';
+    btn.onclick = salvarNoSistema;
+    acoes.insertBefore(btn, acoes.firstChild);
+
+    const status = document.createElement('div');
+    status.id = 'statusBanco';
+    status.className = 'status-salvamento no-print';
+    status.textContent = token
+      ? 'Ainda não salvo no sistema. Preencha os dados e clique em "Salvar No Sistema".'
+      : 'Sessão não identificada — abra este formulário pelo menu "Novo Atendimento" dentro do sistema.';
+    acoes.parentNode.insertBefore(status, acoes.nextSibling);
+  }
+
+  // Autosave no banco: depois que o laudo já existe (após o primeiro
+  // "Salvar No Sistema"), qualquer alteração de campo sincroniza sozinha,
+  // com um pequeno debounce — igual ao autosave original no localStorage,
+  // só que agora persistindo de verdade no banco de dados do sistema.
+  function ativarAutosaveNoBanco() {
+    function agendar() {
+      if (!laudoAtual) return;
+      clearTimeout(temporizadorAutosaveBanco);
+      definirStatus('Salvando alterações no sistema...');
+      temporizadorAutosaveBanco = setTimeout(() => {
+        salvarRespostasNoBanco()
+          .then(() => {
+            const agora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            definirStatus('Alterações salvas no sistema às ' + agora + '.');
+          })
+          .catch((e) => definirStatus('Erro ao sincronizar com o sistema: ' + e.message));
+      }, 1200);
+    }
+    document.addEventListener('input', (e) => {
+      if (!e.target || !e.target.matches('input, textarea, select')) return;
+      agendar();
+    }, true);
+    document.addEventListener('change', (e) => {
+      if (!e.target || !e.target.matches('input, textarea, select')) return;
+      agendar();
+    }, true);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    injetarBotao();
+    ativarAutosaveNoBanco();
+    interceptarRemocaoDeFoto();
+    carregarPaciente();
+  });
+})();
+</script>
+<!-- FIM — bootstrap de integração -->
+
+<!-- INÍCIO — wizard/gamificação do formulário (camada de UX, não mexe em
+     nenhuma função de lógica clínica nem no bootstrap de integração acima) -->
+<script>
+(function () {
+  let etapaAtual = 0;
+  let temporizadorToast = null;
+
+  function tituloDaEtapa(h2) {
+    return h2.textContent.trim().replace(/^\d+\.\s*/, '');
+  }
+
+  function ehLimiteDeEtapa(no) {
+    return no.nodeType === 1 && (no.tagName === 'H2' || no.id === 'statusSalvamento');
+  }
+
+  function dividirFormularioEmEtapas(form) {
+    const h2s = Array.from(form.querySelectorAll(':scope > h2'));
+    // Referência fixa de onde as etapas devem ser reinseridas: antes de
+    // #statusSalvamento (que nunca é movido pelo laço abaixo), preservando a
+    // ordem original do formulário. Sem isso, form.appendChild jogaria as
+    // etapas para DEPOIS de #statusSalvamento/.acoes, e a lógica de "ações só
+    // na última etapa" acabaria capturando as 20 etapas dentro do bloco
+    // escondido — foi exatamente esse o bug reportado (campos "sumindo").
+    const referencia = document.getElementById('statusSalvamento');
+    const etapas = [];
+    h2s.forEach((h2, i) => {
+      const etapa = document.createElement('section');
+      etapa.className = 'etapa-form';
+      etapa.dataset.etapa = String(i);
+      etapa.dataset.titulo = tituloDaEtapa(h2);
+      let atual = h2;
+      while (atual) {
+        const proximo = atual.nextSibling;
+        etapa.appendChild(atual);
+        atual = (proximo && !ehLimiteDeEtapa(proximo)) ? proximo : null;
+      }
+      etapas.push(etapa);
+    });
+    etapas.forEach((etapa) => form.insertBefore(etapa, referencia));
+    return etapas;
+  }
+
+  function coletarCamposRastreaveis(etapa) {
+    return Array.from(etapa.querySelectorAll('input,textarea,select')).filter((el) => {
+      if (el.type === 'file' || el.type === 'button' || el.type === 'checkbox' || el.type === 'radio') return false;
+      if (el.readOnly) return false;
+      const detalhe = el.closest('.detalhe-sim');
+      if (detalhe && detalhe.style.display === 'none') return false;
+      return true;
+    });
+  }
+
+  function campoPreenchido(el) {
+    return (el.value || '').trim() !== '';
+  }
+
+  function mostrarToastConclusao(titulo) {
+    let toast = document.getElementById('wizardToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'wizardToast';
+      toast.className = 'wizard-toast no-print';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = '✓ Seção Concluída: ' + titulo;
+    toast.classList.add('mostrar');
+    clearTimeout(temporizadorToast);
+    temporizadorToast = setTimeout(() => toast.classList.remove('mostrar'), 2600);
+  }
+
+  function atualizarProgressoWizard(etapasEls, silencioso) {
+    let totalCampos = 0, totalPreenchidos = 0;
+    etapasEls.forEach((etapa, i) => {
+      const campos = coletarCamposRastreaveis(etapa);
+      const preenchidos = campos.filter(campoPreenchido).length;
+      totalCampos += campos.length;
+      totalPreenchidos += preenchidos;
+      const completo = campos.length > 0 && preenchidos === campos.length;
+      const jaEstavaCompleto = etapa.dataset.completo === '1';
+      etapa.dataset.completo = completo ? '1' : '0';
+      const botaoStep = document.querySelector('.wizard-step[data-step="' + i + '"]');
+      if (botaoStep) {
+        botaoStep.classList.toggle('completo', completo);
+        const circulo = botaoStep.querySelector('.circulo');
+        if (circulo) circulo.textContent = completo ? '✓' : String(i + 1);
+        // Não mostra o toast na carga inicial (dados restaurados/pré-preenchidos
+        // já vêm "completos"), só quando o próprio preenchimento em tempo real
+        // faz a etapa passar de incompleta para completa.
+        if (completo && !jaEstavaCompleto && !silencioso) mostrarToastConclusao(etapa.dataset.titulo);
+      }
+    });
+    const pct = totalCampos ? Math.round((totalPreenchidos / totalCampos) * 100) : 0;
+    const barra = document.getElementById('wizardBarraPreenchida');
+    if (barra) barra.style.width = pct + '%';
+    const texto = document.getElementById('wizardTextoProgresso');
+    if (texto) texto.textContent = pct + '% Do Formulário Preenchido';
+  }
+
+  function montarBlocoAcoesFinais(form) {
+    let bloco = document.getElementById('wizardAcoesFinais');
+    if (bloco) return bloco;
+    const statusSalvamento = document.getElementById('statusSalvamento');
+    if (!statusSalvamento) return null;
+    bloco = document.createElement('div');
+    bloco.id = 'wizardAcoesFinais';
+    bloco.className = 'no-print';
+    let no = statusSalvamento;
+    while (no) {
+      const proximo = no.nextSibling;
+      bloco.appendChild(no);
+      no = proximo;
+    }
+    form.appendChild(bloco);
+    return bloco;
+  }
+
+  function irParaEtapa(etapasEls, i) {
+    if (i < 0 || i >= etapasEls.length) return;
+    etapaAtual = i;
+    etapasEls.forEach((etapa, idx) => etapa.classList.toggle('ativa', idx === i));
+    document.querySelectorAll('.wizard-step').forEach((btn, idx) => btn.classList.toggle('ativo', idx === i));
+    const bloco = document.getElementById('wizardAcoesFinais');
+    if (bloco) bloco.style.display = (i === etapasEls.length - 1) ? '' : 'none';
+    const nav = document.getElementById('wizardSteps');
+    const ativo = nav && nav.querySelector('.wizard-step.ativo');
+    if (ativo && typeof ativo.scrollIntoView === 'function') ativo.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    const form = document.getElementById('formulario');
+    if (form && typeof window.scrollTo === 'function') window.scrollTo({ top: Math.max(0, form.offsetTop - 70), behavior: 'smooth' });
+  }
+
+  function montarBarraEProgresso(etapasEls, irParaEtapaFn) {
+    document.querySelectorAll('.wizard-progresso, .wizard-steps').forEach((el) => el.remove());
+    const progresso = document.createElement('div');
+    progresso.className = 'wizard-progresso no-print';
+    progresso.innerHTML = '<div class="wizard-barra"><div class="wizard-barra-preenchida" id="wizardBarraPreenchida"></div></div>' +
+      '<div class="wizard-texto" id="wizardTextoProgresso">0% Do Formulário Preenchido</div>';
+    const steps = document.createElement('div');
+    steps.className = 'wizard-steps no-print';
+    steps.id = 'wizardSteps';
+    etapasEls.forEach((etapa, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'wizard-step';
+      btn.dataset.step = String(i);
+      btn.innerHTML = '<span class="circulo">' + (i + 1) + '</span><span>' + etapa.dataset.titulo + '</span>';
+      btn.onclick = () => irParaEtapaFn(i);
+      steps.appendChild(btn);
+    });
+    const form = document.getElementById('formulario');
+    form.parentNode.insertBefore(progresso, form);
+    form.parentNode.insertBefore(steps, form);
+  }
+
+  function montarNavegacaoDeEtapa(etapasEls, irParaEtapaFn) {
+    etapasEls.forEach((etapa, i) => {
+      etapa.querySelectorAll(':scope > .wizard-nav-etapa').forEach((el) => el.remove());
+      const nav = document.createElement('div');
+      nav.className = 'wizard-nav-etapa no-print';
+      const anterior = document.createElement('button');
+      anterior.type = 'button';
+      anterior.textContent = '← Etapa Anterior';
+      anterior.onclick = () => irParaEtapaFn(i - 1);
+      if (i === 0) anterior.style.visibility = 'hidden';
+      const proximo = document.createElement('button');
+      proximo.type = 'button';
+      proximo.className = 'avancar';
+      const ultima = i === etapasEls.length - 1;
+      proximo.textContent = ultima ? 'Ir Para Ações Finais ↓' : 'Próxima Etapa →';
+      proximo.onclick = () => {
+        if (ultima) {
+          const acoes = document.querySelector('.acoes.no-print');
+          if (acoes && typeof acoes.scrollIntoView === 'function') acoes.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          irParaEtapaFn(i + 1);
+        }
+      };
+      nav.appendChild(anterior);
+      nav.appendChild(proximo);
+      etapa.appendChild(nav);
+    });
+  }
+
+  function primeiraEtapaIncompleta(etapasEls) {
+    for (let i = 0; i < etapasEls.length; i++) {
+      const campos = coletarCamposRastreaveis(etapasEls[i]);
+      const preenchidos = campos.filter(campoPreenchido).length;
+      if (campos.length > 0 && preenchidos < campos.length) return i;
+    }
+    return 0;
+  }
+
+  function montarWizard() {
+    const form = document.getElementById('formulario');
+    if (!form) return;
+    let etapasEls = Array.from(form.querySelectorAll(':scope > .etapa-form'));
+    if (!etapasEls.length) etapasEls = dividirFormularioEmEtapas(form);
+    if (!etapasEls.length) return;
+
+    montarBlocoAcoesFinais(form);
+    const irParaEtapaFn = (i) => irParaEtapa(etapasEls, i);
+    montarBarraEProgresso(etapasEls, irParaEtapaFn);
+    montarNavegacaoDeEtapa(etapasEls, irParaEtapaFn);
+
+    if (!document.body.dataset.wizardEventosLigados) {
+      document.body.dataset.wizardEventosLigados = '1';
+      const recalcular = () => atualizarProgressoWizard(Array.from(document.querySelectorAll('#formulario > .etapa-form')));
+      document.addEventListener('input', (e) => { if (e.target && e.target.matches('input,textarea,select')) recalcular(); }, true);
+      document.addEventListener('change', (e) => { if (e.target && e.target.matches('input,textarea,select')) recalcular(); }, true);
+    }
+
+    atualizarProgressoWizard(etapasEls, true);
+    irParaEtapa(etapasEls, primeiraEtapaIncompleta(etapasEls));
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(montarWizard, 0);
+    // Recalcula depois que o carregamento assíncrono de um paciente existente
+    // (bootstrap de integração, GET /api/patients/{id}) já deve ter terminado
+    // de preencher os campos, para a etapa inicial/porcentagem ficarem certas.
+    setTimeout(() => {
+      const etapasEls = Array.from(document.querySelectorAll('#formulario > .etapa-form'));
+      if (!etapasEls.length) return;
+      atualizarProgressoWizard(etapasEls, true);
+      irParaEtapa(etapasEls, primeiraEtapaIncompleta(etapasEls));
+    }, 900);
+  });
+})();
+</script>
+<!-- FIM — wizard/gamificação do formulário -->
 </body>
 </html>

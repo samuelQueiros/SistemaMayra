@@ -24,6 +24,15 @@ def render_report_pdf(*, patient, template, report, psychologist=None) -> str:
 
     chave = f"{report.id}.pdf"
 
+    if template.schema_json.get("rule_type") == "custom_form":
+        # O laudo já vem pronto (HTML completo, com <style> embutido) do
+        # formulário standalone, salvo em generated_text via PUT
+        # /api/reports/{id}/text — não passa pelas tabelas de
+        # pontuação/gráfico Matplotlib do motor de regras dinâmico.
+        pdf_bytes = HTML(string=report.generated_text or "<p>Laudo vazio.</p>").write_pdf()
+        get_reports_storage().save(chave, pdf_bytes)
+        return chave
+
     grafico_data_uri = _gerar_grafico(template.schema_json, report.computed_json or {})
     html = _montar_html(patient, template, report, grafico_data_uri, psychologist)
 

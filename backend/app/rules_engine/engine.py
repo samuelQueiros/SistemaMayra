@@ -25,6 +25,12 @@ def calculate_report(
     if rule_type == "count_threshold":
         return count_threshold.calculate(schema, answers)
 
+    if rule_type == "custom_form":
+        # O formulário HTML standalone já pontuou e classificou tudo
+        # sozinho (CARS/ATA/SNAP-IV/TOD/Portage), então não há o que
+        # calcular aqui — o laudo pronto chega via generated_text.
+        return {}
+
     if rule_type == "age_equivalent_percentage":
         if birth_date is None:
             raise RulesEngineError(

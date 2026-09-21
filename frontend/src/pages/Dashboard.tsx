@@ -1,11 +1,10 @@
 import { CalendarClock, FileText, Plus, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { createPatient, listPatients } from '../api/patients'
+import { listPatients } from '../api/patients'
 import { getStatsSummary } from '../api/stats'
 import type { Patient, StatsSummary } from '../api/types'
-import { Alert, Badge, Button, buttonStyle, Card, EmptyState, Input, PageHeader, PatientAvatar, Select } from '../components/ds'
+import { Alert, Badge, buttonStyle, Card, EmptyState, PageHeader, PatientAvatar } from '../components/ds'
 import styles from './Page.module.css'
 
 function BlocoEstatistica({ icon, valor, legenda }: { icon: React.ReactNode; valor: string | number; legenda: string }) {
@@ -42,13 +41,6 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null)
   const [stats, setStats] = useState<StatsSummary | null>(null)
 
-  const [showForm, setShowForm] = useState(false)
-  const [name, setName] = useState('')
-  const [birthDate, setBirthDate] = useState('')
-  const [sex, setSex] = useState('')
-  const [schoolInfo, setSchoolInfo] = useState('')
-  const [saving, setSaving] = useState(false)
-
   function carregarPacientes() {
     setLoading(true)
     listPatients()
@@ -65,24 +57,6 @@ export default function Dashboard() {
       .catch(() => setStats(null))
   }, [])
 
-  async function handleCreate(event: FormEvent) {
-    event.preventDefault()
-    setSaving(true)
-    try {
-      await createPatient({ name, birth_date: birthDate, sex: sex || undefined, school_info: schoolInfo || undefined })
-      setName('')
-      setBirthDate('')
-      setSex('')
-      setSchoolInfo('')
-      setShowForm(false)
-      carregarPacientes()
-    } catch {
-      setError('Não foi possível cadastrar o paciente.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
   return (
     <div>
       <PageHeader
@@ -90,9 +64,9 @@ export default function Dashboard() {
         title="Pacientes"
         description="Cadastre pacientes e acompanhe o histórico de atendimentos."
         actions={
-          <Button icon={<Plus size={18} />} onClick={() => setShowForm((v) => !v)}>
-            {showForm ? 'Cancelar' : 'Novo Paciente'}
-          </Button>
+          <Link to="/atendimento/novo" style={buttonStyle('primary')}>
+            <Plus size={18} /> Novo Atendimento
+          </Link>
         }
       />
 
@@ -120,44 +94,6 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {showForm && (
-        <Card title="Cadastrar Paciente" style={{ marginBottom: 'var(--np-space-6)' }}>
-          <form onSubmit={handleCreate} style={{ display: 'grid', gap: 'var(--np-space-4)' }}>
-            <Input id="patient-name" label="Nome Completo" value={name} onChange={(e) => setName(e.target.value)} required />
-            <Input
-              id="patient-birth"
-              label="Data De Nascimento"
-              type="date"
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-              required
-            />
-            <Select
-              id="patient-sex"
-              label="Sexo (Opcional)"
-              value={sex}
-              onChange={(e) => setSex(e.target.value)}
-              placeholder="Não informado"
-              options={[
-                { value: 'Feminino', label: 'Feminino' },
-                { value: 'Masculino', label: 'Masculino' },
-                { value: 'Outro', label: 'Outro' },
-              ]}
-            />
-            <Input
-              id="patient-school"
-              label="Escola (Opcional)"
-              value={schoolInfo}
-              onChange={(e) => setSchoolInfo(e.target.value)}
-              placeholder="Nome da escola, ano/série, turno..."
-            />
-            <Button type="submit" disabled={saving} style={{ justifySelf: 'start' }}>
-              {saving ? 'Salvando...' : 'Salvar Paciente'}
-            </Button>
-          </form>
-        </Card>
-      )}
-
       <Card title="Todos Os Pacientes">
         {error && <Alert tone="danger">{error}</Alert>}
         {loading && <p>Carregando...</p>}
@@ -166,7 +102,7 @@ export default function Dashboard() {
           <EmptyState
             icon={<Users size={40} />}
             title="Nenhum paciente cadastrado ainda"
-            description='Use o botão "Novo Paciente" acima para começar.'
+            description='Use o botão "Novo Atendimento" acima para começar.'
           />
         )}
 

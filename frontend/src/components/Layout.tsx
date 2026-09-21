@@ -1,4 +1,4 @@
-import { ClipboardPlus, FileStack, LogOut, Menu, Settings, Users, X } from 'lucide-react'
+import { ClipboardPlus, LogOut, Menu, Settings, Users, X } from 'lucide-react'
 import { useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -8,7 +8,6 @@ import styles from './Layout.module.css'
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Pacientes', icon: <Users size={18} /> },
   { to: '/atendimento/novo', label: 'Novo Atendimento', icon: <ClipboardPlus size={18} /> },
-  { to: '/modelos', label: 'Modelos De Laudo', icon: <FileStack size={18} /> },
   { to: '/configuracoes', label: 'Configurações', icon: <Settings size={18} /> },
 ]
 
