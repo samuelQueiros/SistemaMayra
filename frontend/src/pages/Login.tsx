@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { Alert, Button, Card, Input } from '../components/ds'
@@ -9,6 +9,8 @@ import styles from './Login.module.css'
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
+  const [searchParams] = useSearchParams()
+  const sessaoExpirada = searchParams.get('sessao') === 'expirada'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -36,6 +38,9 @@ export default function Login() {
         <p className={styles.subtitle}>Sistema de Relatório Automático para Psicólogos</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {!error && sessaoExpirada && (
+            <Alert tone="warning">Sua sessão expirou por segurança. Entre novamente para continuar de onde parou.</Alert>
+          )}
           {error && <Alert tone="danger">{error}</Alert>}
 
           <Input

@@ -5,9 +5,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import models  # noqa: F401 -- garante que todos os modelos sejam registrados no ORM
-from app.api import ai_settings, auth, patients, reports, stats, templates
+from app.api import ai_settings, auth, documents, patients, reports, stats, templates
+from app.core.errors import registrar_tratadores_de_erro
 
 app = FastAPI(title="Sistema de Relatório Automático para Psicólogos")
+registrar_tratadores_de_erro(app)
 
 app.include_router(auth.router)
 app.include_router(patients.router)
@@ -15,6 +17,7 @@ app.include_router(templates.router)
 app.include_router(reports.router)
 app.include_router(ai_settings.router)
 app.include_router(stats.router)
+app.include_router(documents.router)
 
 
 @app.get("/api/health")

@@ -1,0 +1,613 @@
+"""Exportação do laudo do formulário fixo (`formulario-novo-paciente.html`)
+para PDF e DOCX.
+
+O HTML do laudo é montado inteiro no navegador (`gerarDocumentoLaudoHTML()`
+no formulário), seguindo o modelo oficial da psicóloga (relatório
+"Parecer Neuropsicopedagógico / Análise Comportamental"). Este módulo só
+converte esse HTML:
+
+- PDF: WeasyPrint, com o CSS de página (A4, moldura, logo e rodapé em
+  todas as páginas) que já vem embutido no próprio HTML;
+- DOCX: python-docx, percorrendo o vocabulário fechado de blocos que o
+  formulário gera (classes CSS abaixo) e reproduzindo a mesma estrutura em
+  Word — moldura da página, cabeçalho com logo, rodapé com contatos,
+  tabelas, gráficos e destaques —, para a psicóloga poder editar o laudo
+  no Word mantendo o layout.
+
+Imagens só são aceitas como `data:` URI (o formulário embute tudo em
+base64): nenhuma URL externa é buscada, nem pelo WeasyPrint.
+"""
+
+import base64
+import io
+import re
+
+from docx import Document
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_COLOR_INDEX, WD_LINE_SPACING
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Mm, Pt, RGBColor
+from lxml import html as lxml_html
+from weasyprint import HTML
+from weasyprint.urls import URLFetcher
+
+FONTE_PADRAO = "Arial"
+TAMANHO_PADRAO = 10
+RECUO_PRIMEIRA_LINHA_MM = 12.5
+
+_DESTAQUES = {"cinza": WD_COLOR_INDEX.GRAY_25, "amarelo": WD_COLOR_INDEX.YELLOW}
+_ALINHAMENTOS = {
+    "centro": WD_ALIGN_PARAGRAPH.CENTER,
+    "direita": WD_ALIGN_PARAGRAPH.RIGHT,
+    "esquerda": WD_ALIGN_PARAGRAPH.LEFT,
+}
+
+
+class DocumentoInvalidoError(ValueError):
+    pass
+
+
+# ---------------------------------------------------------------- PDF
+
+
+def _buscador_somente_data_uri() -> URLFetcher:
+    return URLFetcher(allowed_protocols={"data"})
+
+
+def html_para_pdf(html: str) -> bytes:
+    return HTML(string=html, url_fetcher=_buscador_somente_data_uri()).write_pdf()
+
+
+# ---------------------------------------------------------------- DOCX
+
+
+def _classes(el) -> set[str]:
+    return set((el.get("class") or "").split())
+
+
+def _cor_hex(valor: str | None) -> RGBColor | None:
+    if not valor:
+        return None
+    m = re.fullmatch(r"#?([0-9a-fA-F]{6})", valor.strip())
+    return RGBColor.from_string(m.group(1).upper()) if m else None
+
+
+def _estilo_inline(el, propriedade: str) -> str | None:
+    m = re.search(rf"(?:^|;)\s*{propriedade}\s*:\s*([^;]+)", el.get("style") or "")
+    return m.group(1).strip() if m else None
+
+
+def _imagem_bytes(src: str | None) -> io.BytesIO | None:
+    if not src or not src.startswith("data:") or "," not in src:
+        return None
+    cabecalho, dados = src.split(",", 1)
+    if ";base64" not in cabecalho:
+        return None
+    try:
+        return io.BytesIO(base64.b64decode(dados))
+    except (ValueError, TypeError):
+        return None
+
+
+def _adicionar_imagem(run, src: str | None, largura_mm: float) -> bool:
+    """Insere a imagem no run; imagem corrompida ou em formato que o Word
+    não aceita é ignorada em vez de impedir a geração do documento."""
+    imagem = _imagem_bytes(src)
+    if imagem is None:
+        return False
+    try:
+        run.add_picture(imagem, width=Mm(largura_mm))
+    except Exception:  # noqa: BLE001 — python-docx levanta vários tipos para imagem inválida
+        return False
+    return True
+
+
+def _mm_do_elemento(el, padrao: float) -> float:
+    try:
+        return float(el.get("data-mm") or padrao)
+    except ValueError:
+        return padrao
+
+
+def _sombrear(elemento_pr, cor: str) -> None:
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:color"), "auto")
+    shd.set(qn("w:fill"), cor.lstrip("#").upper())
+    elemento_pr.append(shd)
+
+
+def _bordas_celula(celula, cor: str = "000000", tipo: str = "single", tamanho: int = 4) -> None:
+    tc_pr = celula._tc.get_or_add_tcPr()
+    bordas = OxmlElement("w:tcBorders")
+    for lado in ("top", "left", "bottom", "right"):
+        b = OxmlElement(f"w:{lado}")
+        b.set(qn("w:val"), tipo)
+        b.set(qn("w:sz"), str(tamanho))
+        b.set(qn("w:space"), "0")
+        b.set(qn("w:color"), cor)
+        bordas.append(b)
+    tc_pr.append(bordas)
+
+
+def _sem_bordas_tabela(tabela) -> None:
+    tbl_pr = tabela._tbl.tblPr
+    bordas = OxmlElement("w:tblBorders")
+    for lado in ("top", "left", "bottom", "right", "insideH", "insideV"):
+        b = OxmlElement(f"w:{lado}")
+        b.set(qn("w:val"), "nil")
+        bordas.append(b)
+    tbl_pr.append(bordas)
+
+
+def _bordas_tabela(tabela, cor: str, tipo: str, tamanho: int) -> None:
+    tbl_pr = tabela._tbl.tblPr
+    bordas = OxmlElement("w:tblBorders")
+    for lado in ("top", "left", "bottom", "right", "insideH", "insideV"):
+        b = OxmlElement(f"w:{lado}")
+        b.set(qn("w:val"), tipo)
+        b.set(qn("w:sz"), str(tamanho))
+        b.set(qn("w:space"), "0")
+        b.set(qn("w:color"), cor)
+        bordas.append(b)
+    tbl_pr.append(bordas)
+
+
+def _largura_celula(celula, mm: float) -> None:
+    celula.width = Mm(mm)
+    tc_pr = celula._tc.get_or_add_tcPr()
+    tc_w = tc_pr.find(qn("w:tcW"))
+    if tc_w is None:
+        tc_w = OxmlElement("w:tcW")
+        tc_pr.append(tc_w)
+    tc_w.set(qn("w:w"), str(int(mm * 56.7)))
+    tc_w.set(qn("w:type"), "dxa")
+
+
+def _fixar_colunas(tabela, larguras_mm: list[float]) -> None:
+    """Grade fixa de colunas: sem isso Word/LibreOffice redistribuem as
+    larguras e a tabela perde as proporções do modelo."""
+    tabela.autofit = False
+    tbl = tabela._tbl
+    tbl_pr = tbl.tblPr
+    layout = OxmlElement("w:tblLayout")
+    layout.set(qn("w:type"), "fixed")
+    tbl_pr.append(layout)
+    tbl_w = tbl_pr.find(qn("w:tblW"))
+    if tbl_w is None:
+        tbl_w = OxmlElement("w:tblW")
+        tbl_pr.append(tbl_w)
+    tbl_w.set(qn("w:w"), str(int(sum(larguras_mm) * 56.7)))
+    tbl_w.set(qn("w:type"), "dxa")
+    for col, largura in zip(tbl.tblGrid.findall(qn("w:gridCol")), larguras_mm):
+        col.set(qn("w:w"), str(int(largura * 56.7)))
+    for linha in tabela.rows:
+        for celula, largura in zip(linha.cells, larguras_mm):
+            _largura_celula(celula, largura)
+
+
+def _repetir_cabecalho(linha) -> None:
+    tr_pr = linha._tr.get_or_add_trPr()
+    el = OxmlElement("w:tblHeader")
+    el.set(qn("w:val"), "true")
+    tr_pr.append(el)
+
+
+def _nao_quebrar_linha(linha) -> None:
+    tr_pr = linha._tr.get_or_add_trPr()
+    tr_pr.append(OxmlElement("w:cantSplit"))
+
+
+def _moldura_da_pagina(secao) -> None:
+    """Borda fina ao redor de toda a página, como no modelo."""
+    sect_pr = secao._sectPr
+    bordas = OxmlElement("w:pgBorders")
+    bordas.set(qn("w:offsetFrom"), "page")
+    for lado in ("top", "left", "bottom", "right"):
+        b = OxmlElement(f"w:{lado}")
+        b.set(qn("w:val"), "single")
+        b.set(qn("w:sz"), "6")
+        b.set(qn("w:space"), "24")
+        b.set(qn("w:color"), "000000")
+        bordas.append(b)
+    # A ordem dos filhos de sectPr importa para o Word: pgBorders vem logo
+    # depois de pgMar.
+    pg_mar = sect_pr.find(qn("w:pgMar"))
+    if pg_mar is not None:
+        pg_mar.addnext(bordas)
+    else:
+        sect_pr.append(bordas)
+
+
+class _ConversorDocx:
+    def __init__(self) -> None:
+        self.doc = Document()
+        self.quebra_pendente = False
+        self._configurar_documento()
+
+    # -- configuração geral -------------------------------------------
+
+    def _configurar_documento(self) -> None:
+        estilo = self.doc.styles["Normal"]
+        estilo.font.name = FONTE_PADRAO
+        estilo.font.size = Pt(TAMANHO_PADRAO)
+        estilo.element.rPr.rFonts.set(qn("w:eastAsia"), FONTE_PADRAO)
+        formato = estilo.paragraph_format
+        formato.space_before = Pt(0)
+        formato.space_after = Pt(6)
+        formato.line_spacing_rule = WD_LINE_SPACING.MULTIPLE
+        formato.line_spacing = 1.5
+
+        secao = self.doc.sections[0]
+        secao.page_width = Mm(210)
+        secao.page_height = Mm(297)
+        secao.top_margin = Mm(30)
+        secao.bottom_margin = Mm(27)
+        secao.left_margin = Mm(20)
+        secao.right_margin = Mm(20)
+        secao.header_distance = Mm(11)
+        secao.footer_distance = Mm(10)
+        _moldura_da_pagina(secao)
+
+    def _cabecalho_e_rodape(self, raiz) -> None:
+        secao = self.doc.sections[0]
+        for classe, destino, largura in (
+            ("cabecalho-pagina", secao.header, 19),
+            ("rodape-pagina", secao.footer, 78),
+        ):
+            achados = raiz.xpath(f'//*[contains(concat(" ", normalize-space(@class), " "), " {classe} ")]//img')
+            paragrafo = destino.paragraphs[0]
+            paragrafo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            paragrafo.paragraph_format.space_after = Pt(0)
+            paragrafo.paragraph_format.line_spacing = 1.0
+            if achados:
+                _adicionar_imagem(paragrafo.add_run(), achados[0].get("src"), _mm_do_elemento(achados[0], largura))
+
+    # -- blocos ---------------------------------------------------------
+
+    def _novo_paragrafo(self, container=None, *, recuo: bool = False, alinhamento=None):
+        destino = container if container is not None else self.doc
+        paragrafo = destino.add_paragraph()
+        if recuo:
+            paragrafo.paragraph_format.first_line_indent = Mm(RECUO_PRIMEIRA_LINHA_MM)
+        paragrafo.alignment = alinhamento if alinhamento is not None else WD_ALIGN_PARAGRAPH.JUSTIFY
+        if container is None and self.quebra_pendente:
+            paragrafo.paragraph_format.page_break_before = True
+            self.quebra_pendente = False
+        return paragrafo
+
+    def _antes_de_tabela(self) -> None:
+        # Tabelas não aceitam "quebra de página antes" no Word: usa um
+        # parágrafo mínimo com a quebra.
+        if self.quebra_pendente:
+            p = self.doc.add_paragraph()
+            p.paragraph_format.page_break_before = True
+            p.paragraph_format.space_after = Pt(0)
+            p.paragraph_format.line_spacing = 1.0
+            run = p.add_run()
+            run.font.size = Pt(2)
+            self.quebra_pendente = False
+
+    def _inline(self, paragrafo, el, formato: dict | None = None) -> None:
+        """Adiciona ao parágrafo o texto de `el` (e filhos) como runs,
+        preservando negrito, itálico, destaques, cor e tamanho."""
+        formato = dict(formato or {})
+        tag = el.tag if isinstance(el.tag, str) else ""
+        classes = _classes(el)
+        if tag in ("strong", "b"):
+            formato["negrito"] = True
+        elif tag in ("em", "i"):
+            formato["italico"] = True
+        elif tag == "u":
+            formato["sublinhado"] = True
+        elif tag == "mark":
+            formato["destaque"] = "amarelo" if "amarelo" in classes else "cinza"
+        cor = _estilo_inline(el, "color")
+        if cor:
+            formato["cor"] = cor
+        tamanho = _estilo_inline(el, "font-size")
+        if tamanho and tamanho.endswith("pt"):
+            try:
+                formato["tamanho"] = float(tamanho[:-2])
+            except ValueError:
+                pass
+        if "negrito" in classes:
+            formato["negrito"] = True
+
+        if tag == "br":
+            paragrafo.add_run().add_break()
+        elif tag == "img":
+            _adicionar_imagem(paragrafo.add_run(), el.get("src"), _mm_do_elemento(el, 40))
+        else:
+            self._run_texto(paragrafo, el.text, formato)
+            for filho in el:
+                self._inline(paragrafo, filho, formato)
+                # O texto depois de um filho (tail) tem a formatação do pai.
+                self._run_texto(paragrafo, filho.tail, formato)
+
+    def _run_texto(self, paragrafo, texto: str | None, formato: dict) -> None:
+        if not texto:
+            return
+        texto = re.sub(r"\s+", " ", texto)
+        if not texto.strip() and not paragrafo.runs:
+            return
+        run = paragrafo.add_run(texto)
+        run.bold = formato.get("negrito") or None
+        run.italic = formato.get("italico") or None
+        run.underline = formato.get("sublinhado") or None
+        if formato.get("destaque"):
+            run.font.highlight_color = _DESTAQUES[formato["destaque"]]
+        cor = _cor_hex(formato.get("cor"))
+        if cor is not None:
+            run.font.color.rgb = cor
+        if formato.get("tamanho"):
+            run.font.size = Pt(formato["tamanho"])
+        if formato.get("fonte"):
+            run.font.name = formato["fonte"]
+
+    def _paragrafo_de(self, el, container=None, formato: dict | None = None):
+        classes = _classes(el)
+        alinhamento = next((_ALINHAMENTOS[c] for c in classes if c in _ALINHAMENTOS), None)
+        recuo = "recuo" in classes
+        paragrafo = self._novo_paragrafo(container, recuo=recuo, alinhamento=alinhamento)
+        if "junto" in classes:
+            paragrafo.paragraph_format.keep_with_next = True
+        if "compacto" in classes:
+            paragrafo.paragraph_format.space_after = Pt(0)
+            paragrafo.paragraph_format.line_spacing = 1.15
+        formato = dict(formato or {})
+        if "assinatura-nome" in classes:
+            formato.update(italico=True, tamanho=15, fonte="Arial Narrow")
+        self._inline(paragrafo, el, formato)
+        return paragrafo
+
+    def _lista(self, el, container=None) -> None:
+        marcador = "✔" if "checks" in _classes(el) else "•"
+        for li in el.findall("li"):
+            p = self._novo_paragrafo(container, alinhamento=WD_ALIGN_PARAGRAPH.LEFT)
+            formato = p.paragraph_format
+            formato.left_indent = Mm(6 if marcador == "✔" else 12)
+            formato.first_line_indent = Mm(-6)
+            formato.space_after = Pt(0)
+            formato.tab_stops.add_tab_stop(formato.left_indent)
+            p.add_run(marcador + "\t")
+            self._inline(p, li)
+        if container is None:
+            espaco = self.doc.add_paragraph()
+            espaco.paragraph_format.space_after = Pt(0)
+            espaco.paragraph_format.line_spacing = 1.0
+
+    def _titulo_marcado(self, el) -> None:
+        p = self._novo_paragrafo(alinhamento=WD_ALIGN_PARAGRAPH.LEFT)
+        p.paragraph_format.keep_with_next = True
+        p.paragraph_format.space_before = Pt(6)
+        self._inline(p, el, {"negrito": True, "destaque": "cinza"})
+
+    def _titulo(self, el) -> None:
+        classes = _classes(el)
+        p = self._novo_paragrafo(alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
+        p.paragraph_format.keep_with_next = True
+        p.paragraph_format.space_before = Pt(4)
+        p.paragraph_format.space_after = Pt(10)
+        formato = {"negrito": True, "tamanho": 12.5}
+        if "roxo" in classes:
+            formato["cor"] = "#5B4A91"
+        if "marcado" in classes:
+            formato.update(destaque="cinza", tamanho=10)
+        self._inline(p, el, formato)
+
+    def _faixa(self, el, cor: str) -> None:
+        classes = _classes(el)
+        alinhamento = WD_ALIGN_PARAGRAPH.CENTER if "centro" in classes else WD_ALIGN_PARAGRAPH.LEFT
+        p = self._novo_paragrafo(alinhamento=alinhamento)
+        p.paragraph_format.keep_with_next = True
+        p.paragraph_format.space_before = Pt(4)
+        p.paragraph_format.space_after = Pt(8)
+        p.paragraph_format.line_spacing = 1.15
+        _sombrear(p._p.get_or_add_pPr(), cor)
+        self._inline(p, el, {"negrito": True})
+
+    def _caixa(self, el, cor: str) -> None:
+        self._antes_de_tabela()
+        tabela = self.doc.add_table(rows=1, cols=1)
+        tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
+        _sem_bordas_tabela(tabela)
+        _fixar_colunas(tabela, [170])
+        celula = tabela.cell(0, 0)
+        _sombrear(celula._tc.get_or_add_tcPr(), cor)
+        celula.paragraphs[0]._p.getparent().remove(celula.paragraphs[0]._p)
+        for filho in el:
+            if filho.tag == "p":
+                p = self._paragrafo_de(filho, celula, {"negrito": "normal" not in _classes(el)})
+                p.paragraph_format.space_after = Pt(6)
+        if not celula.paragraphs:
+            celula.add_paragraph()
+        self.doc.add_paragraph().paragraph_format.space_after = Pt(0)
+
+    def _imagem_centralizada(self, el) -> None:
+        img = el if el.tag == "img" else next(iter(el.iter("img")), None)
+        if img is None or _imagem_bytes(img.get("src")) is None:
+            return
+        p = self._novo_paragrafo(alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
+        p.paragraph_format.keep_together = True
+        p.paragraph_format.line_spacing = 1.0
+        _adicionar_imagem(p.add_run(), img.get("src"), _mm_do_elemento(img, 160))
+
+    def _linha_de_imagens(self, el) -> None:
+        imagens = [img for img in el.iter("img") if _imagem_bytes(img.get("src")) is not None]
+        if not imagens:
+            return
+        self._antes_de_tabela()
+        tabela = self.doc.add_table(rows=1, cols=len(imagens))
+        tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
+        _sem_bordas_tabela(tabela)
+        largura_coluna = 170 / len(imagens)
+        _fixar_colunas(tabela, [largura_coluna] * len(imagens))
+        for i, img in enumerate(imagens):
+            celula = tabela.cell(0, i)
+            _largura_celula(celula, largura_coluna)
+            celula.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+            p = celula.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.paragraph_format.line_spacing = 1.0
+            largura = min(_mm_do_elemento(img, largura_coluna - 4), largura_coluna - 2)
+            _adicionar_imagem(p.add_run(), img.get("src"), largura)
+        self.doc.add_paragraph().paragraph_format.space_after = Pt(0)
+
+    def _cabecalho_paciente(self, el) -> None:
+        """Bloco inicial: foto à esquerda e caixa com a identificação."""
+        self._antes_de_tabela()
+        foto = next(iter(el.xpath('.//*[contains(@class,"cab-foto")]//img')), None)
+        caixa = next(iter(el.xpath('.//*[contains(@class,"cab-box")]')), None)
+        tabela = self.doc.add_table(rows=1, cols=3)
+        tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
+        _sem_bordas_tabela(tabela)
+        _fixar_colunas(tabela, [48, 8, 114])
+        c_foto, c_espaco, c_caixa = tabela.rows[0].cells
+        if foto is not None:
+            p = c_foto.paragraphs[0]
+            p.paragraph_format.line_spacing = 1.0
+            _adicionar_imagem(p.add_run(), foto.get("src"), _mm_do_elemento(foto, 42))
+        c_caixa.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+        _bordas_celula(c_caixa)
+        c_caixa.paragraphs[0]._p.getparent().remove(c_caixa.paragraphs[0]._p)
+        if caixa is not None:
+            for filho in caixa.findall("p"):
+                p = self._paragrafo_de(filho, c_caixa, {"negrito": True})
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.paragraph_format.space_before = Pt(5)
+                p.paragraph_format.space_after = Pt(5)
+                p.paragraph_format.line_spacing = 1.0
+        if not c_caixa.paragraphs:
+            c_caixa.add_paragraph()
+        self.doc.add_paragraph().paragraph_format.space_after = Pt(2)
+
+    def _tabela(self, el) -> None:
+        classes = _classes(el)
+        linhas_html = el.xpath("./tr|./thead/tr|./tbody/tr")
+        if not linhas_html:
+            return
+        num_colunas = max(
+            sum(int(c.get("colspan") or 1) for c in tr.xpath("./td|./th")) for tr in linhas_html
+        )
+        larguras = [float(x) for x in (el.get("data-larguras") or "").split(",") if x.strip()]
+        if len(larguras) != num_colunas:
+            larguras = [170 / num_colunas] * num_colunas
+        tamanho_fonte = float(el.get("data-fonte") or 9)
+
+        self._antes_de_tabela()
+        tabela = self.doc.add_table(rows=len(linhas_html), cols=num_colunas)
+        tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
+        if "dupla" in classes:
+            _bordas_tabela(tabela, "000000", "double", 4)
+        elif "roxa" in classes:
+            _bordas_tabela(tabela, "B4A7D6", "single", 6)
+        else:
+            _bordas_tabela(tabela, "000000", "single", 4)
+        _fixar_colunas(tabela, larguras)
+
+        for i, tr in enumerate(linhas_html):
+            linha = tabela.rows[i]
+            _nao_quebrar_linha(linha)
+            celulas_html = tr.xpath("./td|./th")
+            eh_cabecalho = bool(celulas_html) and all(c.tag == "th" for c in celulas_html)
+            if eh_cabecalho:
+                _repetir_cabecalho(linha)
+            coluna = 0
+            for celula_html in celulas_html:
+                span = int(celula_html.get("colspan") or 1)
+                celula = linha.cells[coluna]
+                if span > 1:
+                    celula = celula.merge(linha.cells[coluna + span - 1])
+                _largura_celula(celula, sum(larguras[coluna : coluna + span]))
+                celula.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+                classes_celula = _classes(celula_html)
+                fundo = _estilo_inline(celula_html, "background") or _estilo_inline(celula_html, "background-color")
+                if fundo and _cor_hex(fundo) is not None:
+                    _sombrear(celula._tc.get_or_add_tcPr(), fundo.lstrip("#"))
+                formato = {"tamanho": tamanho_fonte}
+                if celula_html.tag == "th":
+                    formato["negrito"] = True
+                cor_texto = _estilo_inline(celula_html, "color")
+                if cor_texto:
+                    formato["cor"] = cor_texto
+                p = celula.paragraphs[0]
+                if "centro" in classes_celula or celula_html.tag == "th" or "centro" in classes:
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                else:
+                    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                p.paragraph_format.space_after = Pt(0)
+                p.paragraph_format.line_spacing = 1.0
+                self._inline(p, celula_html, formato)
+                coluna += span
+        espaco = self.doc.add_paragraph()
+        espaco.paragraph_format.space_after = Pt(4)
+
+    def bloco(self, el) -> None:
+        if not isinstance(el.tag, str):
+            return
+        tag = el.tag
+        classes = _classes(el)
+
+        if "quebra" in classes:
+            self.quebra_pendente = True
+        elif "cabecalho-pagina" in classes or "rodape-pagina" in classes or "moldura" in classes:
+            return
+        elif "cab-paciente" in classes:
+            self._cabecalho_paciente(el)
+        elif "faixa" in classes:
+            self._faixa(el, "BFBFBF")
+        elif "faixa-topico" in classes:
+            self._faixa(el, "A6A6A6")
+        elif "caixa-cinza" in classes:
+            self._caixa(el, "BFBFBF" if "clara" in classes else "A6A6A6")
+        elif "linha-assinatura" in classes:
+            p = self._novo_paragrafo(alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
+            p.paragraph_format.left_indent = Mm(38)
+            p.paragraph_format.right_indent = Mm(38)
+            p.paragraph_format.space_before = Pt(36)
+            p.paragraph_format.space_after = Pt(0)
+            p_bdr = OxmlElement("w:pBdr")
+            base = OxmlElement("w:bottom")
+            base.set(qn("w:val"), "single")
+            base.set(qn("w:sz"), "6")
+            base.set(qn("w:space"), "1")
+            base.set(qn("w:color"), "000000")
+            p_bdr.append(base)
+            p._p.get_or_add_pPr().append(p_bdr)
+        elif "grafico" in classes:
+            self._imagem_centralizada(el)
+        elif "graficos-lado" in classes or "fotos" in classes:
+            self._linha_de_imagens(el)
+        elif tag == "table":
+            self._tabela(el)
+        elif tag == "ul":
+            self._lista(el)
+        elif tag in ("h1", "h2"):
+            self._titulo(el)
+        elif tag == "h3":
+            self._titulo_marcado(el)
+        elif tag == "p":
+            self._paragrafo_de(el)
+        elif tag == "img":
+            self._imagem_centralizada(el)
+        elif tag in ("div", "section", "main", "article"):
+            for filho in el:
+                self.bloco(filho)
+
+    def converter(self, html: str) -> bytes:
+        raiz = lxml_html.fromstring(html)
+        corpo = raiz.xpath('//*[contains(concat(" ", normalize-space(@class), " "), " documento ")]')
+        if not corpo:
+            raise DocumentoInvalidoError("HTML do laudo não contém o bloco .documento.")
+        self._cabecalho_e_rodape(raiz)
+        for filho in corpo[0]:
+            self.bloco(filho)
+        saida = io.BytesIO()
+        self.doc.save(saida)
+        return saida.getvalue()
+
+
+def html_para_docx(html: str) -> bytes:
+    return _ConversorDocx().converter(html)

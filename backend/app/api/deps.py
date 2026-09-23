@@ -15,7 +15,7 @@ def get_current_psychologist(
 ) -> Psychologist:
     unauthorized = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Não autenticado",
+        detail="Sua sessão expirou. Entre novamente para continuar.",
         headers={"WWW-Authenticate": "Bearer"},
     )
     if credentials is None:

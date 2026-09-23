@@ -1850,3 +1850,103 @@ entradas antigas — isso é o histórico do que já foi construído.
   o toast de "seção concluída" para não disparar na carga inicial (seções
   com texto padrão pré-preenchido, como "Considerações Finais", apareciam
   como "recém-concluídas" assim que a página abria). 
+## Relatório idêntico ao modelo oficial (Parecer Neuropsicopedagógico) em PDF e Word
+
+**Status:** ✅ Concluído (2026-09-23)
+
+**O que mudou:** o relatório gerado pelo formulário agora segue a estrutura
+do modelo oficial da psicóloga (relatório "Parecer Neuropsicopedagógico /
+Análise Comportamental"), página a página: moldura em todas as páginas, logo
+no topo e contatos no rodapé; cabeçalho com foto + caixa de identificação;
+faixa "PARECER NEUROPSICOPEDAGÓGICO / ANÁLISE COMPORTAMENTAL"; metodologia;
+anamnese e histórico em tópicos; quadro comparativo; texto + gráfico da CARS;
+texto + gráfico + tabela da ATA; fotos; tabelas e gráficos de habilidades
+(Sim/Às vezes/Não); perfil das funções executivas; gráfico de idade de
+desenvolvimento (Portage); análise por área em faixas cinza; SNAP-IV com os
+dois gráficos; síntese clínica; gráfico de déficits das funções executivas;
+pizza por domínio; encaminhamento, hipóteses com CID, observação e assinatura.
+
+- **Um único documento para tudo:** `gerarDocumentoLaudoHTML()` (novo bloco
+  `<script>` no formulário) monta o HTML usado na pré-visualização, salvo
+  no laudo e convertido pelo backend.
+- **Botões do formulário:** "Pré-Visualizar Relatório", "Gerar Word (DOCX)"
+  e "Gerar PDF". PDF e Word vêm do backend: `POST /api/documents/pdf`
+  (WeasyPrint) e `POST /api/documents/docx` (python-docx, Word editável de
+  verdade, com moldura, cabeçalho/rodapé, tabelas e destaques).
+- **Histórico:** novo "Baixar Word" (`GET /api/reports/{id}/docx`) ao lado
+  de "Baixar PDF".
+- **Campos novos no formulário:** idade cognitiva/marco do cabeçalho
+  (preenchidos sozinhos), ATA por área (pontos + %), percentuais CARS/ATA do
+  relatório, títulos das colunas do quadro, hipóteses em texto livre, perfil
+  das 6 funções executivas (substitui a lista antiga de 7 funções),
+  habilidades Sim/Às vezes/Não, domínios da pizza e a seção "Textos Do
+  Parecer" com o texto-padrão do modelo (ajustado para o/a paciente
+  conforme o sexo; marcação `**negrito**`, `==cinza==`, `!!amarelo!!`).
+- **Fora do relatório (uso interno, avisado no formulário):** habilidades
+  acadêmicas, TOD, M-CHAT, plano de intervenção e checklist de
+  encaminhamentos — não existem no modelo oficial.
+- **Correções encontradas na revisão:** respostas do Portage/M-CHAT não eram
+  salvas (selects sem id); habilidades acadêmicas e linhas extras do quadro
+  se perdiam ao reabrir; nome de paciente com acento quebrava o download do
+  PDF; o PDF não busca mais nenhuma URL externa (só imagens embutidas).
+- **SNAP-IV:** o texto usa o corte padrão de 6 itens "bastante/demais" por
+  bloco (o modelo dizia 4 na metodologia; o texto-padrão foi ajustado para 6).
+
+**Arquivos:** `frontend/public/formulario-novo-paciente.html`,
+`backend/app/services/laudo_documento.py` (novo), `backend/app/api/documents.py`
+(novo), `backend/app/api/reports.py`, `backend/app/services/pdf.py`,
+`backend/app/main.py`, `backend/tests/test_documents_export.py` (novo),
+`frontend/src/api/reports.ts`, `frontend/src/pages/HistoricoPaciente.tsx`,
+`Dockerfile` (fonte Liberation, métrica do Arial).
+
+**Como testar:** `npm run build` no frontend, subir o backend, abrir "Novo
+Atendimento", preencher e clicar em "Gerar PDF" / "Gerar Word (DOCX)". Testes:
+`cd backend && ./.venv/bin/python3 -m pytest` (150 passando).
+
+### Ajuste (2026-09-23): Quadro Comparativo igual ao modelo (página 4)
+
+O quadro da seção "Quadro De Observações Comportamentais" vinha do protótipo
+original com 5 linhas sobre TEA/DSM-5-TR, por isso a página 4 não batia com
+o modelo. Agora ele já vem com as **16 linhas do modelo (TDAH × TPAC)** e
+colunas "Relação com TDAH" / "Relação com TPAC"; ganhou "+ Adicionar Linha",
+"Remover Esta Linha" e "Restaurar Quadro Do Modelo". O botão "Gerar Quadro
+Interpretativo Pelo Estudo De Caso" continua existindo (substitui o quadro e
+troca os títulos das colunas para o formato DSM-5-TR). Tabela compactada
+para caber numa página, como no modelo. Atendimentos já salvos mantêm o
+quadro que tinham.
+
+## Usabilidade do protocolo (heurísticas de Nielsen), fases e mensagens de erro
+
+**Status:** ✅ Concluído (2026-09-23)
+
+- **Nome correto: "protocolo".** Botões, fases, avisos, Histórico ("Protocolos
+  Do Paciente", "+ Novo Protocolo…"), Painel e mensagens do backend deixaram de
+  chamar o registro de "laudo" (o termo continua só onde é conteúdo clínico, ex.
+  "Possui Laudo Anterior?", "não configura laudo médico").
+- **Fases verdes de verdade.** Cada fase tem campos essenciais (marcados com *);
+  o número fica verde ✓ quando eles estão completos, amarelo quando a fase está
+  pela metade. Antes, a fase só ficava verde com *todos* os campos (inclusive
+  opcionais) e 4 fases nunca podiam ficar verdes. Fases com texto-padrão
+  (Metodologia, Quadro, Textos do Parecer, Plano, Considerações) só ficam verdes
+  depois de abertas/revisadas. "Se sim, descreva" passa a ser exigido. M-CHAT
+  conclui sozinho acima de 30 meses ("não se aplica"). No fim de cada fase:
+  "Falta preencher nesta fase" com botões que levam direto ao campo.
+- **Mensagens de erro:** validação do backend em português claro (antes:
+  JSON técnico em inglês), falta de conexão, servidor fora do ar, sessão
+  expirada (com "Entrar Novamente" e aviso na tela de login), fotos grandes
+  demais — sempre dizendo o que fazer. `alert()` substituídos por avisos que não
+  travam a tela, com "Tentar Novamente" quando faz sentido.
+- **Heurísticas de Nielsen aplicadas:** status de salvamento sempre visível no
+  topo (salvando / salvo / erro); barra fixa com Salvar Protocolo, Pré-Visualizar,
+  Gerar PDF e Gerar Word em qualquer fase (antes só na última); botões mostram
+  "Gerando…"; validação na hora (data de nascimento, valores 0–100, soma da
+  pizza); salvar sem nome/data leva ao campo com o erro; autosave tenta de novo
+  sozinho após falha de rede e antes de ir ao Histórico garante o último
+  salvamento; atalhos Ctrl+S e Alt+←/→; ações raras e destrutivas em "Mais Opções".
+- **Bug corrigido:** "Gerar Novo Formulário" dentro do sistema continuava
+  gravando por cima do protocolo anterior; agora "Novo Protocolo" recomeça do zero.
+
+**Arquivos:** `frontend/public/formulario-novo-paciente.html`,
+`frontend/src/api/client.ts`, `frontend/src/pages/{Login,Dashboard,HistoricoPaciente,NovoAtendimento,Configuracoes}.tsx`,
+`backend/app/core/errors.py` (novo), `backend/app/main.py`, `backend/app/api/{deps,reports,patients}.py`,
+`backend/tests/test_error_messages.py` (novo).

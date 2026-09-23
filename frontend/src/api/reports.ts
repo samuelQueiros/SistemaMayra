@@ -24,6 +24,9 @@ export const getReportLogs = (reportId: string) =>
 
 export const downloadReportPdf = (reportId: string, fileName: string) => downloadGet(`/reports/${reportId}/pdf`, fileName)
 
+export const downloadReportDocx = (reportId: string, fileName: string) =>
+  downloadGet(`/reports/${reportId}/docx`, fileName)
+
 export const downloadConsolidatedPdf = (patientId: string, reportIds: string[], fileName: string) =>
   downloadBlob(`/patients/${patientId}/consolidated-pdf`, { report_ids: reportIds }, fileName)
 

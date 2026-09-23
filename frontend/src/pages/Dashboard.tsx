@@ -75,15 +75,15 @@ export default function Dashboard() {
           <BlocoEstatistica icon={<Users size={22} />} valor={patients.length} legenda="Pacientes cadastrados" />
           {stats && (
             <>
-              <BlocoEstatistica icon={<FileText size={22} />} valor={stats.total_reports} legenda="Laudos gerados" />
-              <BlocoEstatistica icon={<CalendarClock size={22} />} valor={stats.reports_last_30_days} legenda="Laudos nos últimos 30 dias" />
+              <BlocoEstatistica icon={<FileText size={22} />} valor={stats.total_reports} legenda="Protocolos registrados" />
+              <BlocoEstatistica icon={<CalendarClock size={22} />} valor={stats.reports_last_30_days} legenda="Protocolos nos últimos 30 dias" />
             </>
           )}
         </div>
       )}
 
       {stats && stats.reports_by_template.length > 0 && (
-        <Card title="Laudos Por Escala" style={{ marginBottom: 'var(--np-space-6)' }}>
+        <Card title="Protocolos Por Modelo" style={{ marginBottom: 'var(--np-space-6)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)' }}>
             {stats.reports_by_template.map((item) => (
               <Badge key={item.template_name} tone="brand">

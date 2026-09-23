@@ -31,6 +31,8 @@ from app.services.ai import (
     generate_report_text,
     resolve_ai_credentials,
 )
+from app.api.documents import MIME_DOCX, nome_de_arquivo_seguro, resposta_de_arquivo
+from app.services.laudo_documento import DocumentoInvalidoError, html_para_docx
 from app.services.pdf import render_consolidated_pdf, render_report_pdf
 from app.services.storage import get_reports_storage
 
@@ -47,7 +49,7 @@ def _get_template_or_404(template_id: UUID, db: Session, current: Psychologist) 
 def _get_report_do_psicologo(report_id: UUID, db: Session, current: Psychologist) -> Report:
     report = db.get(Report, report_id)
     if report is None or report.patient.owner_id != current.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Laudo não encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Protocolo não encontrado. Ele pode ter sido excluído ou pertencer a outra conta.")
     return report
 
 
@@ -121,7 +123,7 @@ def generate_text(
     if report.computed_json is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Este laudo ainda não tem pontuação calculada.",
+            detail="Este protocolo ainda não tem pontuação calculada.",
         )
 
     template = db.get(ReportTemplate, report.template_id)
@@ -294,7 +296,7 @@ def download_consolidated_pdf(
     if not data.report_ids:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Selecione ao menos um laudo do histórico para consolidar.",
+            detail="Selecione ao menos um protocolo do histórico para consolidar.",
         )
 
     reports_com_template = []
@@ -303,18 +305,18 @@ def download_consolidated_pdf(
         if report.patient_id != patient.id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Todos os laudos selecionados precisam ser do mesmo paciente.",
+                detail="Todos os protocolos selecionados precisam ser do mesmo paciente.",
             )
         if report.computed_json is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Um dos laudos selecionados ainda não tem pontuação calculada.",
+                detail="Um dos protocolos selecionados ainda não tem pontuação calculada.",
             )
         template = db.get(ReportTemplate, report.template_id)
         if template is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="O modelo de um dos laudos selecionados não existe mais.",
+                detail="O modelo de um dos protocolos selecionados não existe mais.",
             )
         reports_com_template.append((report, template))
 
@@ -367,7 +369,7 @@ def download_consolidated_pdf(
     consolidated.pdf_path = chave_pdf
     db.commit()
 
-    nome_arquivo = f"laudo_consolidado_{patient.name.replace(' ', '_')}.pdf"
+    nome_arquivo = nome_de_arquivo_seguro(f"laudo_consolidado_{patient.name}", "pdf")
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -403,7 +405,7 @@ def download_saved_consolidated_pdf(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parecer consolidado não encontrado")
 
     conteudo = get_reports_storage().read(consolidated.pdf_path)
-    nome_arquivo = f"laudo_consolidado_{consolidated.patient.name.replace(' ', '_')}.pdf"
+    nome_arquivo = nome_de_arquivo_seguro(f"laudo_consolidado_{consolidated.patient.name}", "pdf")
     return Response(
         content=conteudo,
         media_type="application/pdf",
@@ -421,7 +423,7 @@ def download_pdf(
     if report.computed_json is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Este laudo ainda não tem pontuação calculada.",
+            detail="Este protocolo ainda não tem pontuação calculada.",
         )
 
     template = db.get(ReportTemplate, report.template_id)
@@ -433,9 +435,35 @@ def download_pdf(
     db.commit()
 
     conteudo = get_reports_storage().read(chave_pdf)
-    nome_arquivo = f"laudo_{report.patient.name.replace(' ', '_')}_{report.id}.pdf"
+    nome_arquivo = nome_de_arquivo_seguro(f"laudo_{report.patient.name}_{report.id}", "pdf")
     return Response(
         content=conteudo,
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{nome_arquivo}"'},
     )
+
+
+@router.get("/api/reports/{report_id}/docx")
+def download_docx(
+    report_id: UUID,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Response:
+    """Word (.docx) editável do laudo do formulário fixo, a partir do mesmo
+    HTML salvo em `generated_text` que gera o PDF."""
+    report = _get_report_do_psicologo(report_id, db, current)
+    template = db.get(ReportTemplate, report.template_id)
+    if template.schema_json.get("rule_type") != "custom_form" or not report.generated_text:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="O relatório deste protocolo ainda não foi gerado. Abra o protocolo e clique em \"Salvar Protocolo\".",
+        )
+    try:
+        conteudo = html_para_docx(report.generated_text)
+    except DocumentoInvalidoError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este protocolo foi salvo num formato antigo. Abra o protocolo e clique em \"Salvar Protocolo\" para gerar o Word.",
+        ) from exc
+    nome = nome_de_arquivo_seguro(f"laudo_{report.patient.name}", "docx")
+    return resposta_de_arquivo(conteudo, MIME_DOCX, nome)

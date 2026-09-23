@@ -8,6 +8,7 @@ matplotlib.use("Agg")  # backend sem interface gráfica, seguro em servidor
 import matplotlib.pyplot as plt
 from weasyprint import HTML
 
+from app.services.laudo_documento import html_para_pdf
 from app.services.storage import get_photos_storage, get_reports_storage
 
 _COR_PRIMARIA = "#7561ae"
@@ -29,7 +30,7 @@ def render_report_pdf(*, patient, template, report, psychologist=None) -> str:
         # formulário standalone, salvo em generated_text via PUT
         # /api/reports/{id}/text — não passa pelas tabelas de
         # pontuação/gráfico Matplotlib do motor de regras dinâmico.
-        pdf_bytes = HTML(string=report.generated_text or "<p>Laudo vazio.</p>").write_pdf()
+        pdf_bytes = html_para_pdf(report.generated_text or "<p>Laudo vazio.</p>")
         get_reports_storage().save(chave, pdf_bytes)
         return chave
 

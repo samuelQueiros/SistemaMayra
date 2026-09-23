@@ -13,7 +13,7 @@ export default function NovoAtendimento() {
       <PageHeader
         eyebrow="Atendimento"
         title="Novo Atendimento"
-        description="Preencha o protocolo completo. Ao salvar, o paciente e o laudo ficam registrados no histórico."
+        description="Preencha o protocolo completo. Ao salvar, o paciente e o protocolo ficam registrados no histórico."
       />
       <iframe
         key={src}

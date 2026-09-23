@@ -50,4 +50,16 @@ describe('Login', () => {
       expect(screen.queryByText('E-mail ou senha inválidos')).not.toBeInTheDocument()
     })
   })
+
+  it('explica quando a pessoa volta ao login porque a sessão expirou', () => {
+    render(
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/login?sessao=expirada']}>
+          <Login />
+        </MemoryRouter>
+      </AuthProvider>,
+    )
+
+    expect(screen.getByText(/Sua sessão expirou por segurança/)).toBeInTheDocument()
+  })
 })

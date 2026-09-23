@@ -89,7 +89,7 @@ def delete_patient(
         # o sistema).
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Não é possível excluir um paciente com laudos no histórico.",
+            detail="Este paciente tem protocolos no histórico e por isso não pode ser excluído.",
         )
     db.delete(patient)
     db.commit()

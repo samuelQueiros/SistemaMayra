@@ -11,6 +11,7 @@ import {
 } from '../api/patients'
 import {
   downloadConsolidatedPdf,
+  downloadReportDocx,
   downloadReportPdf,
   downloadSavedConsolidatedPdf,
   getReportLogs,
@@ -153,7 +154,7 @@ export default function HistoricoPaciente() {
     setConsolidating(true)
     setConsolidateError(null)
     try {
-      await downloadConsolidatedPdf(id, Array.from(selectedIds), `laudo_consolidado_${patient?.name ?? id}.pdf`)
+      await downloadConsolidatedPdf(id, Array.from(selectedIds), `protocolo_consolidado_${patient?.name ?? id}.pdf`)
       setConsolidatedRefreshKey((k) => k + 1)
     } catch (err) {
       setConsolidateError(
@@ -161,6 +162,17 @@ export default function HistoricoPaciente() {
       )
     } finally {
       setConsolidating(false)
+    }
+  }
+
+  async function handleDownloadReport(report: Report, formato: 'pdf' | 'docx') {
+    setError(null)
+    const nomeArquivo = `relatorio_${(patient?.name ?? nomeDoTemplate(report)).replace(/\s+/g, '_')}.${formato}`
+    try {
+      if (formato === 'pdf') await downloadReportPdf(report.id, nomeArquivo)
+      else await downloadReportDocx(report.id, nomeArquivo)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : `Não foi possível gerar o ${formato === 'pdf' ? 'PDF' : 'Word'}.`)
     }
   }
 
@@ -173,7 +185,7 @@ export default function HistoricoPaciente() {
         title={patient ? patient.name : `Paciente #${id}`}
         actions={
           <Link to={`/atendimento/novo?paciente=${id}`} style={buttonStyle('primary')}>
-            + Novo Laudo Para Este Paciente
+            + Novo Protocolo Para Este Paciente
           </Link>
         }
       />
@@ -182,15 +194,15 @@ export default function HistoricoPaciente() {
 
       {error && <Alert tone="danger">{error}</Alert>}
 
-      <Card title="Laudos Do Paciente" style={{ marginTop: 'var(--np-space-5)' }}>
+      <Card title="Protocolos Do Paciente" style={{ marginTop: 'var(--np-space-5)' }}>
         {!error && reports.length === 0 && (
-          <p style={{ color: 'var(--np-text-muted)' }}>Nenhum laudo gerado para este paciente ainda.</p>
+          <p style={{ color: 'var(--np-text-muted)' }}>Nenhum protocolo registrado para este paciente ainda. Clique em "+ Novo Protocolo Para Este Paciente" para começar.</p>
         )}
 
         {reports.length > 0 && (
           <>
             <p style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-subtle)' }}>
-              Marque um ou mais laudos abaixo para gerar um único PDF consolidado, escrito por IA a
+              Marque um ou mais protocolos abaixo para gerar um único PDF consolidado, escrito por IA a
               partir de todos eles.
             </p>
             <div style={{ marginBottom: 'var(--np-space-3)' }}>
@@ -276,9 +288,16 @@ export default function HistoricoPaciente() {
                             <button
                               type="button"
                               className={styles.rowLink}
-                              onClick={() => downloadReportPdf(report.id, `laudo_${nomeDoTemplate(report)}.pdf`)}
+                              onClick={() => handleDownloadReport(report, 'pdf')}
                             >
                               Baixar PDF
+                            </button>{' '}
+                            <button
+                              type="button"
+                              className={styles.rowLink}
+                              onClick={() => handleDownloadReport(report, 'docx')}
+                            >
+                              Baixar Word
                             </button>
                           </td>
                         </>
@@ -290,7 +309,7 @@ export default function HistoricoPaciente() {
                         <td colSpan={4}>
                           <Card tone="sunken" style={{ boxShadow: 'none' }}>
                             {loadingLogs && <p>Carregando logs...</p>}
-                            {!loadingLogs && logs.length === 0 && <p>Nenhuma edição registrada para este laudo.</p>}
+                            {!loadingLogs && logs.length === 0 && <p>Nenhuma edição registrada para este protocolo.</p>}
                             {!loadingLogs && logs.length > 0 && (
                               <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
                                 {logs.map((log) => (
@@ -362,7 +381,7 @@ function ListaDeConsolidados({
         {consolidados.map((c) => (
           <li key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--np-space-3)' }}>
             <span style={{ font: 'var(--np-type-body)', color: 'var(--np-text-muted)' }}>
-              {new Date(c.created_at).toLocaleString('pt-BR')} — {c.report_ids.length} laudo
+              {new Date(c.created_at).toLocaleString('pt-BR')} — {c.report_ids.length} protocolo
               {c.report_ids.length === 1 ? '' : 's'} consolidado{c.report_ids.length === 1 ? '' : 's'}
             </span>
             <Button
@@ -370,7 +389,7 @@ function ListaDeConsolidados({
               size="sm"
               variant="outline"
               icon={<Download size={14} />}
-              onClick={() => downloadSavedConsolidatedPdf(c.id, `laudo_consolidado_${patientName}.pdf`)}
+              onClick={() => downloadSavedConsolidatedPdf(c.id, `protocolo_consolidado_${patientName}.pdf`)}
             >
               Baixar PDF
             </Button>
@@ -443,7 +462,7 @@ function FotosDoPaciente({ patientId }: { patientId: string }) {
   if (loading) return null
 
   return (
-    <Card title="Fotos Do Paciente" subtitle="Usadas na identificação do laudo em PDF completo." style={{ marginTop: 'var(--np-space-5)' }}>
+    <Card title="Fotos Do Paciente" subtitle="Usadas no relatório em PDF e Word (a primeira foto vai no cabeçalho)." style={{ marginTop: 'var(--np-space-5)' }}>
       {error && <Alert tone="danger" style={{ marginBottom: 'var(--np-space-3)' }}>{error}</Alert>}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)', marginBottom: 'var(--np-space-4)' }}>
         {photos.map((photo) => (

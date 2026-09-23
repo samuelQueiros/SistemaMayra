@@ -73,7 +73,7 @@ export default function Configuracoes() {
 
         <Card title="Configurações Da IA">
           <p style={{ color: 'var(--np-text-muted)', marginTop: 0 }}>
-            Configure aqui a chave de acesso à IA usada para redigir o texto descritivo dos laudos
+            Configure aqui a chave de acesso à IA usada para redigir o texto descritivo dos relatórios
             (ver SPEC.md seção 5). Sem isso configurado, o sistema continua gerando a pontuação e o
             gráfico normalmente — só o texto por IA não fica disponível.
           </p>
