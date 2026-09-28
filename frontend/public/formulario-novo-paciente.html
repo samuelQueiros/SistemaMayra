@@ -31,6 +31,11 @@ textarea{min-height:80px}
 .simnao{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
 .simnao button{padding:8px 12px;font-size:14px;background:#eee;color:#222;border:1px solid #bbb}
 .simnao button.ativo{background:var(--roxo);color:#fff;border-color:var(--roxo)}
+.escalas-toggle{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.escala-icone{display:flex;align-items:center;gap:6px;padding:7px 12px;font-size:13px;font-weight:bold;background:#eee;color:#444;border:1px solid #bbb;border-radius:20px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.escala-icone svg{width:16px;height:16px;flex:none;stroke:currentColor}
+.escala-icone.ativo{background:var(--roxo);color:#fff;border-color:var(--roxo)}
+.escala-icone:not(.ativo){opacity:.75}
 .acoes{display:flex;flex-wrap:wrap;gap:10px;position:sticky;bottom:0;background:#fff;border-top:2px solid #ddd;padding:14px 0;margin-top:24px;z-index:10}
 
 .status-salvamento{font-size:13px;color:#4d4295;background:#f5f2ff;border-left:5px solid var(--roxo);padding:10px;border-radius:8px;margin-top:10px}
@@ -229,6 +234,8 @@ body{padding-bottom:86px}
 
 <h2>5. Metodologia</h2>
 <div class="aviso">Os textos abaixo já vêm com o <strong>texto-padrão do modelo oficial</strong> do relatório (ajustado automaticamente para "o paciente"/"a paciente" conforme o sexo). Edite livremente. Cada linha vira um parágrafo; use <code>**texto**</code> para <strong>negrito</strong>, <code>==texto==</code> para <mark style="background:#d9d9d9"><strong>destaque cinza</strong></mark>, <code>!!texto!!</code> para <mark style="background:#ffff00"><strong>destaque amarelo</strong></mark> e comece a linha com ✔ ou • para lista. Deixe um campo vazio para retirar aquele bloco do relatório.</div>
+<label>Escalas E Protocolos Incluídos No Texto (Clique Para Ligar/Desligar)</label>
+<div class="escalas-toggle" id="escalasMetodologiaToggle"></div>
 <textarea id="metodologia" style="min-height:420px"></textarea>
 
 
@@ -778,6 +785,7 @@ function gerarQuadroResumidoEscolar(){
 function montarFormulario(){
   renderizarQuadroObservacao(obsBase);
   montarSecoesDoModelo();
+  inicializarEscalasMetodologia();
   document.getElementById("tod").innerHTML = todItens.map((t,i)=>'<label>'+(i+1)+'. '+t+'</label><select id="tod_'+i+'"><option value="">Selecione</option><option value="1">Sim</option><option value="0">Não</option></select>').join("");
   document.getElementById("snap").innerHTML = snapItens.map((t,i)=>'<label>'+(i+1)+'. '+t+'</label><select id="snap_'+i+'"><option value="">Selecione</option><option value="0">0 - Nem Um Pouco</option><option value="1">1 - Só Um Pouco</option><option value="2">2 - Bastante</option><option value="3">3 - Demais</option></select>').join("");
   document.getElementById("carsItensContainer").innerHTML = carsItens.map((item,i)=>{
@@ -1220,6 +1228,25 @@ const TOPICOS_LAUDO = [
   ["topico_desempenhoEscolar","Desempenho Escolar"]
 ];
 
+// Ícones (liga/desliga) das escalas/protocolos citados no texto-padrão da
+// Metodologia — ver textosPadraoLaudo()/paragrafosMetodologia() e
+// alternarEscalaMetodologia().
+const ESCALAS_METODOLOGIA = [
+  {id:"CARS",    label:"CARS",     marcador:"**Escala CARS**",
+    svg:'<path d="M9 3h6a1 1 0 0 1 1 1v1h1a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1V4a1 1 0 0 1 1-1Z"/><path d="M9 11h6M9 15h6M9 7h6"/>'},
+  {id:"ATA",     label:"ATA",      marcador:"**Escala ATA**",
+    svg:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".5" fill="currentColor"/>'},
+  {id:"SNAPIV",  label:"SNAP-IV",  marcador:"Escala **SNAP-IV**",
+    svg:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>'},
+  {id:"PORTAGE", label:"Portage",  marcador:"**Escala Portage - O Inventário Portage Operacionalizado (IPO)**",
+    svg:'<path d="M4 20V14h4v6M11 20V10h4v10M18 20V6h4v14"/>'},
+  {id:"TOD",     label:"TOD",      marcador:"**Protocolo TOD** - **O Transtorno Opositor Desafiador (TOD)**",
+    svg:'<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4"/><path d="M12 17h.01"/>'},
+  {id:"MCHAT",   label:"M-CHAT",   marcador:"**O M-CHAT (Modified Checklist for Autism in Toddlers)**",
+    svg:'<circle cx="10" cy="10" r="7"/><path d="m20 20-4.35-4.35"/>'}
+];
+const FECHAMENTO_METODOLOGIA_MARCADOR = "A avaliação em questão é de natureza predominantemente qualitativa";
+
 // Campos preenchidos automaticamente (enquanto a psicóloga não os edita à mão).
 const CAMPOS_AUTOMATICOS = ["idadeCognitivaRelatorio","marcoRelatorio","carsPercentualFalhas","ataPercentual"];
 
@@ -1237,28 +1264,41 @@ function formasGenero(sexo){
 // calculado a partir das escalas ATA/CARS.
 function textosPadraoLaudo(g){
   const t = {};
+  const paragrafosMetodologia = {
+    intro: "**METODOLOGIA**: Realizada análise dos comportamentos quanto ao desenvolvimento sócio comunicativo e cognitivo, baseado no **DSM - V**, registrado a partir de observações clínicas e escalas de avaliação **(ATA, CARS, SNAP IV, TOD e PORTAGE),** a depender da necessidade do processo da avaliação e da suspeita apresentada.",
+    CARS: "**Escala CARS** - **(Childhood Autism Rating Scale)**, em português escala de pontuação para Autismo na infância, é um questionário frequentemente utilizado por profissionais da área da saúde para averiguar a possibilidade da presença de Autismo em crianças e adolescentes **(2 anos de idade e adolescentes até 17 anos e 11 meses)** e é considerada uma ferramenta pré-diagnóstica bastante confiável. Dentre todas as escalas de avaliação do Autismo, a **CARS** é a de maior validação e preferência.",
+    ATA: "**Escala ATA** - Escala de avaliação de Traços Autísticos **(ATA)** validade e confiabilidade de uma escala para a detecção de condutas autísticas Francisco B. Assumpção Jr., Evelyn Kuczynski, Marcia Rego Gabriel, Cristiane Castanho Rocca. Sua aplicação é indicada em **crianças a partir de 2 anos de idade** (Assumpção et al., 2008). O estudo de validade e confiabilidade da **ATA** foi realizado em amostra brasileira com idades entre **2 e 18 anos.**",
+    SNAPIV: "Escala **SNAP-IV** é composta pela descrição de 18 sintomas do **TDAH** e entre os sintomas de desatenção **(9 primeiros itens)** e hiperatividade/impulsividade **(itens 10 ao 18)**, os quais devem ser pontuados por pais e/ou professores, em uma escala de quatro níveis de gravidade. Existem chances de "+g.o+" paciente ser portador"+g.r+" de **TDAH** caso seja identificado pelo menos **6** em cada uma das partes “bastante” e/ou “demais”.",
+    PORTAGE: "**Escala Portage - O Inventário Portage Operacionalizado (IPO)** é um guia de descrição e levantamento de comportamentos que abrange as áreas de Socialização, Linguagem, Autocuidados, Cognição e desenvolvimento Motor **de crianças de 0 a 6 anos**. O Inventário consiste em uma listagem de 580 habilidades de crianças de 0 a 6 anos ou desenvolvimento compatível com essa faixa etária.",
+    TOD: "**Protocolo TOD** - **O Transtorno Opositor Desafiador (TOD)** é um distúrbio que ocorre na infância e adolescência e provoca sintomas como comportamento desafiador e impulsivo, dificuldade de lidar com frustrações, teimosia, entre outros. Ele geralmente **surge antes dos 8 anos de idade**, mas também pode ser diagnosticado em crianças mais velhas ou adolescentes.",
+    MCHAT: "**O M-CHAT (Modified Checklist for Autism in Toddlers)** é um questionário que pode ser aplicado em crianças entre **16 e 30 meses de idade**. O objetivo é identificar sinais precoces de autismo, como alterações no desenvolvimento social, comunicativo e motor.",
+    fechamento: [
+      "A avaliação em questão é de natureza predominantemente qualitativa, não se baseia apenas em dados numéricos ou testes padronizados, mas em uma análise aprofundada do comportamento, desenvolvimento e contexto "+g.do+" paciente. Foi conduzida a partir de diversas observações diretas e indiretas, além de um estudo detalhado do caso, considerando informações fornecidas pela família, escola e demais envolvidos na rotina da criança. Ressaltamos que os protocolos utilizados são abertos e acessíveis a profissionais da área, e, além disso, foi aplicada uma metodologia própria desenvolvida pela equipe responsável, visando ampliar a compreensão do perfil individual "+g.do+" paciente.",
+      "Objetivando a socialização das informações, segue abaixo resultado de ==Avaliação Neuropsicopedagógica== e ==Análise dos Comportamentos== "+g.do+" paciente supracitad"+g.e+" encaminhad"+g.e+" por médico e a partir das observações dos comportamentos e não evolução do seu processo de ensino aprendizagem formal/ informal.",
+      "Partindo de uma hipótese diagnóstica de **TEA - Transtorno do Espectro Autista** a ==Análise dos Comportamentos== foi realizada com as expectativas na queixa apresentada. Entretanto, outras características cognitivas foram observadas durante o processo. Essas foram realizadas com a utilização de recursos lúdicos e gráficos com ênfase nas observações ao desenvolvimento das Funções Executivas e Cognitivas **(Planejamento, Monitoramento, Controle inibitório, Atenção Seletiva, Memória de Trabalho, Flexibilidade Cognitiva e comportamental).**",
+      "Durante o período de trinta dias foram planejados encontros semanais de (1) uma vez por semana com duração de 45 minutos, os seguintes recursos avaliativos:",
+      "✔ Sessões lúdicas **(Dinâmicas e Brincadeiras Simbólicas);**",
+      "✔ Provas para sondagem das Funções Executivas/Cognitivas",
+      "✔ Anamnese;",
+      "✔ Entrevista com a família;",
+      "✔ Provas projetivas;",
+      "✔ Provas pedagógicas;",
+      "✔ Estudo de caso a partir dos protocolos do corpo docente e queixas da família",
+      "✔ Protocolos de Rastreio **ATA, CARS, SNAP IV**",
+      "Os instrumentos de rastreio e de observação, foram utilizados com fins de ==Avaliação Neuropsicopedagógica== e ==Análise dos Comportamentos== constituem recursos protocolos específicos na investigação das habilidades cognitivas, emocionais, comportamentais e funções executivas. A avaliação dos resultados obtidos tem como referência a faixa etária, ano escolar e o marco de desenvolvimento "+g.do+" paciente.",
+      "A avaliação busca descrever por meio dos testes e protocolos não restritos aplicados, o desempenho e desenvolvimento da criança em foco, assim como relacionar os resultados obtidos com possíveis hipóteses diagnósticas quando o caso se fizer necessário."
+    ].join("\n")
+  };
+  t._metodologiaPartes = paragrafosMetodologia;
   t.metodologia = [
-    "**METODOLOGIA**: Realizada análise dos comportamentos quanto ao desenvolvimento sócio comunicativo e cognitivo, baseado no **DSM - V**, registrado a partir de observações clínicas e escalas de avaliação **(ATA, CARS, SNAP IV, TOD e PORTAGE),** a depender da necessidade do processo da avaliação e da suspeita apresentada.",
-    "**Escala CARS** - **(Childhood Autism Rating Scale)**, em português escala de pontuação para Autismo na infância, é um questionário frequentemente utilizado por profissionais da área da saúde para averiguar a possibilidade da presença de Autismo em crianças e adolescentes **(2 anos de idade e adolescentes até 17 anos e 11 meses)** e é considerada uma ferramenta pré-diagnóstica bastante confiável. Dentre todas as escalas de avaliação do Autismo, a **CARS** é a de maior validação e preferência.",
-    "**Escala ATA** - Escala de avaliação de Traços Autísticos **(ATA)** validade e confiabilidade de uma escala para a detecção de condutas autísticas Francisco B. Assumpção Jr., Evelyn Kuczynski, Marcia Rego Gabriel, Cristiane Castanho Rocca. Sua aplicação é indicada em **crianças a partir de 2 anos de idade** (Assumpção et al., 2008). O estudo de validade e confiabilidade da **ATA** foi realizado em amostra brasileira com idades entre **2 e 18 anos.**",
-    "Escala **SNAP-IV** é composta pela descrição de 18 sintomas do **TDAH** e entre os sintomas de desatenção **(9 primeiros itens)** e hiperatividade/impulsividade **(itens 10 ao 18)**, os quais devem ser pontuados por pais e/ou professores, em uma escala de quatro níveis de gravidade. Existem chances de "+g.o+" paciente ser portador"+g.r+" de **TDAH** caso seja identificado pelo menos **6** em cada uma das partes “bastante” e/ou “demais”.",
-    "**Escala Portage - O Inventário Portage Operacionalizado (IPO)** é um guia de descrição e levantamento de comportamentos que abrange as áreas de Socialização, Linguagem, Autocuidados, Cognição e desenvolvimento Motor **de crianças de 0 a 6 anos**. O Inventário consiste em uma listagem de 580 habilidades de crianças de 0 a 6 anos ou desenvolvimento compatível com essa faixa etária.",
-    "**Protocolo TOD** - **O Transtorno Opositor Desafiador (TOD)** é um distúrbio que ocorre na infância e adolescência e provoca sintomas como comportamento desafiador e impulsivo, dificuldade de lidar com frustrações, teimosia, entre outros. Ele geralmente **surge antes dos 8 anos de idade**, mas também pode ser diagnosticado em crianças mais velhas ou adolescentes.",
-    "**O M-CHAT (Modified Checklist for Autism in Toddlers)** é um questionário que pode ser aplicado em crianças entre **16 e 30 meses de idade**. O objetivo é identificar sinais precoces de autismo, como alterações no desenvolvimento social, comunicativo e motor.",
-    "A avaliação em questão é de natureza predominantemente qualitativa, não se baseia apenas em dados numéricos ou testes padronizados, mas em uma análise aprofundada do comportamento, desenvolvimento e contexto "+g.do+" paciente. Foi conduzida a partir de diversas observações diretas e indiretas, além de um estudo detalhado do caso, considerando informações fornecidas pela família, escola e demais envolvidos na rotina da criança. Ressaltamos que os protocolos utilizados são abertos e acessíveis a profissionais da área, e, além disso, foi aplicada uma metodologia própria desenvolvida pela equipe responsável, visando ampliar a compreensão do perfil individual "+g.do+" paciente.",
-    "Objetivando a socialização das informações, segue abaixo resultado de ==Avaliação Neuropsicopedagógica== e ==Análise dos Comportamentos== "+g.do+" paciente supracitad"+g.e+" encaminhad"+g.e+" por médico e a partir das observações dos comportamentos e não evolução do seu processo de ensino aprendizagem formal/ informal.",
-    "Partindo de uma hipótese diagnóstica de **TEA - Transtorno do Espectro Autista** a ==Análise dos Comportamentos== foi realizada com as expectativas na queixa apresentada. Entretanto, outras características cognitivas foram observadas durante o processo. Essas foram realizadas com a utilização de recursos lúdicos e gráficos com ênfase nas observações ao desenvolvimento das Funções Executivas e Cognitivas **(Planejamento, Monitoramento, Controle inibitório, Atenção Seletiva, Memória de Trabalho, Flexibilidade Cognitiva e comportamental).**",
-    "Durante o período de trinta dias foram planejados encontros semanais de (1) uma vez por semana com duração de 45 minutos, os seguintes recursos avaliativos:",
-    "✔ Sessões lúdicas **(Dinâmicas e Brincadeiras Simbólicas);**",
-    "✔ Provas para sondagem das Funções Executivas/Cognitivas",
-    "✔ Anamnese;",
-    "✔ Entrevista com a família;",
-    "✔ Provas projetivas;",
-    "✔ Provas pedagógicas;",
-    "✔ Estudo de caso a partir dos protocolos do corpo docente e queixas da família",
-    "✔ Protocolos de Rastreio **ATA, CARS, SNAP IV**",
-    "Os instrumentos de rastreio e de observação, foram utilizados com fins de ==Avaliação Neuropsicopedagógica== e ==Análise dos Comportamentos== constituem recursos protocolos específicos na investigação das habilidades cognitivas, emocionais, comportamentais e funções executivas. A avaliação dos resultados obtidos tem como referência a faixa etária, ano escolar e o marco de desenvolvimento "+g.do+" paciente.",
-    "A avaliação busca descrever por meio dos testes e protocolos não restritos aplicados, o desempenho e desenvolvimento da criança em foco, assim como relacionar os resultados obtidos com possíveis hipóteses diagnósticas quando o caso se fizer necessário."
+    paragrafosMetodologia.intro,
+    paragrafosMetodologia.CARS,
+    paragrafosMetodologia.ATA,
+    paragrafosMetodologia.SNAPIV,
+    paragrafosMetodologia.PORTAGE,
+    paragrafosMetodologia.TOD,
+    paragrafosMetodologia.MCHAT,
+    paragrafosMetodologia.fechamento
   ].join("\n");
   t.parecerContexto = "As dificuldades "+g.do+" paciente podem estar relacionadas ao fato de ser laudad"+g.e+" com **TDAH e TOD** e por estar em fase de adaptação a novas rotinas, regras escolares e sociais constantemente, "+g.o+" paciente está em processo de estímulo e desenvolvimento de habilidades necessárias para o ambiente escolar, como atenção, disciplina e interação social desde sempre.";
   t.aspectosComportamentais = [
@@ -1358,6 +1398,65 @@ function aplicarTextosPadrao(preencherVazios){
     const v=el.value;
     if((preencherVazios&&!v.trim())||v===masc[id]||v===fem[id])el.value=atual[id];
   });
+  atualizarBotoesEscalasMetodologia();
+}
+
+/* ------------------------------------------------- ícones de escalas (Metodologia) */
+
+// Texto-padrão (no gênero atual do paciente) do parágrafo de uma escala,
+// usado ao ligar o ícone correspondente.
+function paragrafoEscala(escalaId){
+  return textosPadraoLaudo(formasGenero(valor("sexo")))._metodologiaPartes[escalaId];
+}
+
+// Um ícone fica "ativo" quando o parágrafo daquela escala está presente no
+// texto atual do campo Metodologia (o estado nunca é guardado à parte —
+// é sempre lido do próprio texto, então sobrevive a reload/rascunho salvo).
+function escalaAtivaNoTexto(escalaId){
+  const cfg=ESCALAS_METODOLOGIA.find(e=>e.id===escalaId);
+  const ta=document.getElementById("metodologia");
+  if(!cfg||!ta)return false;
+  return ta.value.split(/\r?\n/).some(linha=>linha.trim().startsWith(cfg.marcador));
+}
+
+function alternarEscalaMetodologia(escalaId){
+  const cfg=ESCALAS_METODOLOGIA.find(e=>e.id===escalaId);
+  const ta=document.getElementById("metodologia");
+  if(!cfg||!ta)return;
+  const linhas=ta.value.split(/\r?\n/);
+  const idxAtual=linhas.findIndex(linha=>linha.trim().startsWith(cfg.marcador));
+  if(idxAtual>=0){
+    linhas.splice(idxAtual,1);
+  }else{
+    let idxFechamento=linhas.findIndex(linha=>linha.trim().startsWith(FECHAMENTO_METODOLOGIA_MARCADOR));
+    if(idxFechamento<0)idxFechamento=linhas.length;
+    linhas.splice(idxFechamento,0,paragrafoEscala(escalaId));
+  }
+  ta.value=linhas.join("\n");
+  atualizarBotoesEscalasMetodologia();
+  ta.dispatchEvent(new Event("input",{bubbles:true}));
+}
+
+function atualizarBotoesEscalasMetodologia(){
+  ESCALAS_METODOLOGIA.forEach(cfg=>{
+    const btn=document.getElementById("escalaBtn_"+cfg.id);
+    if(btn)btn.classList.toggle("ativo",escalaAtivaNoTexto(cfg.id));
+  });
+}
+
+function inicializarEscalasMetodologia(){
+  const cont=document.getElementById("escalasMetodologiaToggle");
+  if(!cont)return;
+  cont.innerHTML=ESCALAS_METODOLOGIA.map(cfg=>
+    '<button type="button" class="escala-icone" id="escalaBtn_'+cfg.id+'" '+
+    'title="Incluir/remover o parágrafo padrão da escala '+cfg.label+' no texto" '+
+    'onclick="alternarEscalaMetodologia(\''+cfg.id+'\')">'+
+    '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+cfg.svg+'</svg>'+
+    '<span>'+cfg.label+'</span></button>'
+  ).join("");
+  const ta=document.getElementById("metodologia");
+  if(ta)ta.addEventListener("input",atualizarBotoesEscalasMetodologia);
+  atualizarBotoesEscalasMetodologia();
 }
 
 /* ---------------------------------------------------------------- seções novas do formulário */
