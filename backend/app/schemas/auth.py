@@ -21,11 +21,17 @@ class PsychologistOut(BaseModel):
     name: str
     email: EmailStr
     professional_registration: str | None = None
+    bio_profissional: str | None = None
+    credenciais_assinatura: str | None = None
 
 
 class PsychologistProfileUpdate(BaseModel):
     # Usado no bloco de assinatura do PDF completo (ex.: registro no CRP).
     professional_registration: str | None = Field(default=None, max_length=100)
+    # Bloco "Sobre A Profissional Responsável" impresso no laudo.
+    bio_profissional: str | None = Field(default=None, max_length=4000)
+    # Linhas de credencial da assinatura, uma por linha.
+    credenciais_assinatura: str | None = Field(default=None, max_length=1000)
 
 
 class Token(BaseModel):

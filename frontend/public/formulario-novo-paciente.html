@@ -786,6 +786,7 @@ function montarFormulario(){
   renderizarQuadroObservacao(obsBase);
   montarSecoesDoModelo();
   inicializarEscalasMetodologia();
+  perfilProfissional(); // aquece o cache cedo, para o bloco final do laudo
   document.getElementById("tod").innerHTML = todItens.map((t,i)=>'<label>'+(i+1)+'. '+t+'</label><select id="tod_'+i+'"><option value="">Selecione</option><option value="1">Sim</option><option value="0">Não</option></select>').join("");
   document.getElementById("snap").innerHTML = snapItens.map((t,i)=>'<label>'+(i+1)+'. '+t+'</label><select id="snap_'+i+'"><option value="">Selecione</option><option value="0">0 - Nem Um Pouco</option><option value="1">1 - Só Um Pouco</option><option value="2">2 - Bastante</option><option value="3">3 - Demais</option></select>').join("");
   document.getElementById("carsItensContainer").innerHTML = carsItens.map((item,i)=>{
@@ -1854,6 +1855,35 @@ td.cab-espaco{width:8mm}
   .quebra{border-top:2px dashed #c9c3ee;margin:8mm -20mm}
 }`;
 
+// Perfil da profissional responsável (bio + credenciais da assinatura),
+// buscado uma vez em /api/auth/me e usado no bloco "Sobre A Profissional
+// Responsável" e na assinatura do laudo. Editável pela própria psicóloga
+// (não hardcoded) — se o perfil não tiver bio/credenciais configuradas,
+// cai no texto padrão abaixo.
+let _perfilProfissionalCache=null;
+async function perfilProfissional(){
+  if(_perfilProfissionalCache)return _perfilProfissionalCache;
+  const padrao={
+    nome:"Mayra Vanessa Andrade da Cunha",
+    bio:"Este relatório foi elaborado por Mayra Vanessa Andrade da Cunha, Neuropsicopedagoga Clínica (CBO 2394-40) e Institucional (CBO 2394-45), com formação especializada em Análise do Comportamento Aplicada (ABA) e atuação profissional voltada ao desenvolvimento, aprendizagem e acompanhamento de crianças neurodivergentes. Possui mais de 25 anos de experiência profissional na área educacional e mais de 15 anos de atuação com crianças com Transtorno do Espectro Autista (TEA), integrando experiência educacional, conhecimento técnico e prática clínica neuropsicopedagógica na análise individualizada de cada caso.",
+    credenciais:["Neuropsicopedagoga Clínica","com formação especializada em Análise do Comportamento Aplicada (ABA)","Especialista em Educação Inclusiva"]
+  };
+  try{
+    if(typeof window.apiFetch!=="function")return _perfilProfissionalCache=padrao;
+    const dados=await window.apiFetch("/auth/me");
+    _perfilProfissionalCache={
+      nome:(dados&&dados.name)||padrao.nome,
+      bio:(dados&&dados.bio_profissional&&dados.bio_profissional.trim())||padrao.bio,
+      credenciais:(dados&&dados.credenciais_assinatura&&dados.credenciais_assinatura.trim())
+        ?dados.credenciais_assinatura.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)
+        :padrao.credenciais
+    };
+  }catch(e){
+    _perfilProfissionalCache=padrao;
+  }
+  return _perfilProfissionalCache;
+}
+
 async function gerarDocumentoLaudoHTML(){
   atualizarInterpretacoes();
   calcularCARS();
@@ -2052,13 +2082,15 @@ async function gerarDocumentoLaudoHTML(){
     partes.push('<h3><mark class="cinza">Hipóteses Diagnósticas:</mark></h3><ul class="bullets">'+hipoteses.map(formatarHipotese).join("")+"</ul>");
   }
   partes.push(texto("consideracoes"));
+  const perfil=await perfilProfissional();
+  partes.push(QUEBRA+'<div class="caixa-cinza clara"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>'+esc(perfil.bio)+"</p></div>");
   const dataRel=dataRelatorioObj();
   const cidade=(valor("cidade")||"").replace(/\s*–\s*/g," - ");
   partes.push('<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>');
   partes.push('<p class="direita" style="margin-top:4mm"><strong>'+esc(cidade)+", "+dataRel.getDate()+" de "+MESES_EXTENSO[dataRel.getMonth()]+" de "+dataRel.getFullYear()+".</strong></p>");
   partes.push('<div class="linha-assinatura"></div>');
-  partes.push('<p class="centro compacto assinatura-nome">Mayra Vanessa Andrade da Cunha</p>');
-  ["Neuropsicopedagoga Clínica","Analista Comportamental - ABA","Especialista em Educação Inclusiva"].forEach(t=>partes.push('<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">'+t+"</span></strong></mark></p>"));
+  partes.push('<p class="centro compacto assinatura-nome">'+esc(perfil.nome)+"</p>");
+  perfil.credenciais.forEach(t=>partes.push('<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">'+esc(t)+"</span></strong></mark></p>"));
 
   const titulo="Relatório - "+(valor("nomePaciente")||"Paciente");
   return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>'+esc(titulo)+"</title><style>"+CSS_LAUDO+"</style></head><body>"+
@@ -2133,6 +2165,7 @@ function mostrarPreviaDoLaudo(html){
     );
     return requisitar(path, Object.assign({}, options, { headers })).then((r) => (r.status === 204 ? null : r.json()));
   }
+  window.apiFetch = apiFetch;
 
   function apiFetchArquivo(path, arquivo) {
     const formData = new FormData();
