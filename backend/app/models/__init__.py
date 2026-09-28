@@ -1,5 +1,6 @@
 from app.models.ai_settings import AISettings
 from app.models.consolidated_report import ConsolidatedReport
+from app.models.guardian_form_submission import GuardianFormSubmission
 from app.models.patient import Patient
 from app.models.patient_photo import PatientPhoto
 from app.models.psychologist import Psychologist
@@ -16,4 +17,5 @@ __all__ = [
     "AISettings",
     "ReportChangeLog",
     "ConsolidatedReport",
+    "GuardianFormSubmission",
 ]

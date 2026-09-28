@@ -119,3 +119,7 @@ def get_photos_storage() -> Storage:
 
 def get_reports_storage() -> Storage:
     return _build_storage("reports")
+
+
+def get_guardian_forms_storage() -> Storage:
+    return _build_storage("guardian_forms")
