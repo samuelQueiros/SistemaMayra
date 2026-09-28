@@ -243,10 +243,14 @@ def _secoes_clinicas_html(report) -> str:
 
     hipoteses = secoes.get("diagnostic_hypotheses")
     if hipoteses:
-        itens = "".join(
-            f"<li>{h['label']}" + (f" (CID: {h['cid']})" if h.get("cid") else "") + "</li>" for h in hipoteses
-        )
-        blocos.append(f"<h2>Hipóteses Diagnósticas</h2><ul>{itens}</ul>")
+        # O relatório mostra só a hipótese marcada como selecionada, nunca
+        # a lista completa das hipóteses investigadas. Laudos salvos antes
+        # desse campo existir (nenhuma com `selected=True`) caem para a
+        # primeira hipótese registrada, também sem listar as demais.
+        selecionadas = [h for h in hipoteses if h.get("selected")]
+        hipotese = (selecionadas or hipoteses)[0]
+        cid = f" (CID: {hipotese['cid']})" if hipotese.get("cid") else ""
+        blocos.append(f"<h2>Hipótese Diagnóstica</h2><ul><li>{hipotese['label']}{cid}</li></ul>")
 
     encaminhamentos = secoes.get("encaminhamentos")
     if encaminhamentos:

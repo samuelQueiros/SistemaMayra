@@ -280,6 +280,9 @@ body{padding-bottom:86px}
 <label><input type="checkbox" class="hipotese" value="TPAC – Transtorno Do Processamento Auditivo Central"> TPAC – Transtorno Do Processamento Auditivo Central</label>
 </div>
 <label>Hipóteses Como Devem Sair No Relatório (Opcional — Uma Por Linha; Substitui As Marcadas Acima)</label><textarea id="hipotesesTexto" placeholder="Ex.:&#10;TDAH - Transtorno de Déficit de Atenção Hiperatividade, combinada (CID 11 6A05.2)&#10;TPAC - Transtorno do Processamento Auditivo Central (CID 10 H93)"></textarea>
+<label>Hipótese Diagnóstica Selecionada Para Este Paciente</label>
+<select id="hipoteseSelecionada"><option value="">Marque/digite as hipóteses investigadas acima e selecione aqui a que se aplica</option></select>
+<div class="aviso">O relatório final exibe <strong>somente</strong> a hipótese selecionada aqui — nunca a lista completa das hipóteses investigadas acima.</div>
 
 
 <h2>11. Pontuações ATA E CARS</h2>
@@ -787,6 +790,10 @@ function montarFormulario(){
   montarSecoesDoModelo();
   inicializarEscalasMetodologia();
   perfilProfissional(); // aquece o cache cedo, para o bloco final do laudo
+  document.querySelectorAll(".hipotese").forEach(cb=>cb.addEventListener("change",atualizarOpcoesHipoteseSelecionada));
+  const hipTextarea=document.getElementById("hipotesesTexto");
+  if(hipTextarea)hipTextarea.addEventListener("input",atualizarOpcoesHipoteseSelecionada);
+  atualizarOpcoesHipoteseSelecionada();
   document.getElementById("tod").innerHTML = todItens.map((t,i)=>'<label>'+(i+1)+'. '+t+'</label><select id="tod_'+i+'"><option value="">Selecione</option><option value="1">Sim</option><option value="0">Não</option></select>').join("");
   document.getElementById("snap").innerHTML = snapItens.map((t,i)=>'<label>'+(i+1)+'. '+t+'</label><select id="snap_'+i+'"><option value="">Selecione</option><option value="0">0 - Nem Um Pouco</option><option value="1">1 - Só Um Pouco</option><option value="2">2 - Bastante</option><option value="3">3 - Demais</option></select>').join("");
   document.getElementById("carsItensContainer").innerHTML = carsItens.map((item,i)=>{
@@ -989,6 +996,10 @@ function aplicarDados(dados){
   if(chaves.some(k=>k.startsWith("portage_")))carregarPortage();
   if(chaves.some(k=>k.startsWith("mchat_")))carregarMCHAT();
   Object.keys(dados).forEach(key=>{if(key.startsWith("__"))return;const el=document.getElementById(key);if(!el)return;if(el.type==="checkbox"||el.type==="radio")el.checked=!!dados[key];else el.value=dados[key];});
+  if(document.getElementById("hipoteseSelecionada")){
+    atualizarOpcoesHipoteseSelecionada();
+    if(typeof dados.hipoteseSelecionada==="string")setValor("hipoteseSelecionada",dados.hipoteseSelecionada);
+  }
   atualizarRotulosDoQuadro();
   Object.keys(dados.__auto||{}).forEach(id=>{const el=document.getElementById(id);if(el)el.dataset.auto=dados.__auto[id];});
   atualizarCamposBasePaciente();
@@ -1855,6 +1866,28 @@ td.cab-espaco{width:8mm}
   .quebra{border-top:2px dashed #c9c3ee;margin:8mm -20mm}
 }`;
 
+/* ------------------------------------------------- hipótese diagnóstica selecionada */
+
+// Lista de hipóteses investigadas (o texto livre, se preenchido, substitui
+// as marcadas — mesma regra já usada na montagem do relatório).
+function listaHipotesesInvestigadas(){
+  const livres=valor("hipotesesTexto").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  return livres.length?livres:Array.from(document.querySelectorAll(".hipotese:checked")).map(i=>i.value);
+}
+
+// Recalcula as opções do seletor "Hipótese Selecionada" a partir do que
+// está marcado/digitado acima, preservando a seleção atual quando ainda
+// é uma opção válida.
+function atualizarOpcoesHipoteseSelecionada(){
+  const sel=document.getElementById("hipoteseSelecionada");
+  if(!sel)return;
+  const atual=sel.value;
+  const opcoes=listaHipotesesInvestigadas();
+  sel.innerHTML='<option value="">Selecione a hipótese deste paciente...</option>'+
+    opcoes.map(h=>'<option value="'+esc(h)+'">'+esc(h)+"</option>").join("");
+  if(opcoes.includes(atual))sel.value=atual;
+}
+
 // Perfil da profissional responsável (bio + credenciais da assinatura),
 // buscado uma vez em /api/auth/me e usado no bloco "Sobre A Profissional
 // Responsável" e na assinatura do laudo. Editável pela própria psicóloga
@@ -2051,6 +2084,27 @@ async function gerarDocumentoLaudoHTML(){
     partes.push(texto("textoSNAP"));
   }
 
+  /* Protocolo TOD — só entra no relatório se algum item foi respondido */
+  const tod=analisarTOD();
+  if(tod.pre>0){
+    partes.push(QUEBRA+'<h3><mark class="cinza">Protocolo TOD — Transtorno Opositor Desafiador</mark></h3>');
+    if(tod.completo){
+      partes.push('<p class="recuo">Foram identificados <strong>'+tod.pos+" de "+todItens.length+"</strong> comportamentos compatíveis com o "+"Transtorno Opositor Desafiador (TOD), o que corresponde a <strong>"+tod.perc+'%</strong> dos itens do protocolo.</p>');
+    }else{
+      partes.push('<p class="recuo">Protocolo TOD respondido parcialmente ('+tod.pre+" de "+todItens.length+' itens) — resultado percentual não calculado por falta de preenchimento completo.</p>');
+    }
+  }
+
+  /* M-CHAT — tabela descritiva dos itens respondidos, sem escore clínico
+     automático (o instrumento não tem algoritmo de pontuação implementado
+     neste sistema; a interpretação cabe à profissional). */
+  const itensMCHAT=mchatItens.map((t,i)=>({item:t,resp:valor("mchat_"+i)})).filter(x=>x.resp!=="");
+  if(itensMCHAT.length){
+    const linhasMCHAT=itensMCHAT.map(x=>"<tr><td>"+esc(x.item)+"</td><td>"+(x.resp==="sim"?"Sim":"Não")+"</td></tr>").join("");
+    partes.push(QUEBRA+'<h3><mark class="cinza">M-CHAT — Modified Checklist For Autism In Toddlers</mark></h3>');
+    partes.push('<table class="tabela dupla compacta" data-larguras="130,40" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:130mm"><col style="width:40mm"></colgroup><tr><th>Item</th><th>Resposta</th></tr>'+linhasMCHAT+"</table>");
+  }
+
   /* Síntese clínica */
   if(valor("textoSintese").trim())partes.push(QUEBRA+texto("textoSintese"));
 
@@ -2075,11 +2129,15 @@ async function gerarDocumentoLaudoHTML(){
   /* Página final: encaminhamento, hipóteses, considerações e assinatura */
   partes.push(QUEBRA);
   if(valor("textoEncaminhamentoExames").trim())partes.push('<div class="caixa-cinza clara">'+blocoDeTexto(valor("textoEncaminhamentoExames"),opcoesTexto)+"</div>");
-  const hipotesesLivres=valor("hipotesesTexto").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-  const hipoteses=hipotesesLivres.length?hipotesesLivres:Array.from(document.querySelectorAll(".hipotese:checked")).map(i=>i.value);
-  if(hipoteses.length){
+  // O relatório mostra só a hipótese selecionada em #hipoteseSelecionada,
+  // nunca a lista completa de hipóteses investigadas (ver
+  // atualizarOpcoesHipoteseSelecionada()). Se por algum motivo não houver
+  // seleção salva (ex.: laudo criado antes deste campo existir), cai para
+  // a primeira hipótese investigada, sem listar as demais.
+  const hipoteseSelecionada=valor("hipoteseSelecionada").trim()||listaHipotesesInvestigadas()[0]||"";
+  if(hipoteseSelecionada){
     const formatarHipotese=h=>{const m=h.match(/^(.*?)\s*(\((?:CID)[^)]*\))\s*$/i);return m?"<li><strong>"+esc(m[1])+'</strong> <mark class="cinza"><strong>'+esc(m[2])+"</strong></mark></li>":"<li><strong>"+esc(h)+"</strong></li>";};
-    partes.push('<h3><mark class="cinza">Hipóteses Diagnósticas:</mark></h3><ul class="bullets">'+hipoteses.map(formatarHipotese).join("")+"</ul>");
+    partes.push('<h3><mark class="cinza">Hipótese Diagnóstica:</mark></h3><ul class="bullets">'+formatarHipotese(hipoteseSelecionada)+"</ul>");
   }
   partes.push(texto("consideracoes"));
   const perfil=await perfilProfissional();
@@ -2650,6 +2708,7 @@ function mostrarPreviaDoLaudo(html){
       }
       case "hipoteses":
         exigir(document.querySelectorAll(".hipotese:checked").length > 0 || preenchido(document.getElementById("hipotesesTexto")), "Marque ao menos uma hipótese diagnóstica", etapa.querySelector(".hipotese"));
+        exigir(preenchido(document.getElementById("hipoteseSelecionada")), "Selecione, entre as hipóteses marcadas, qual é a hipótese deste paciente (o relatório mostra só ela)", document.getElementById("hipoteseSelecionada"));
         break;
       case "portage":
         if (!etapa.querySelector(".portageItem")) exigir(false, "Clique em \"Carregar Portage Pela Idade\"", botao("Carregar Portage"));

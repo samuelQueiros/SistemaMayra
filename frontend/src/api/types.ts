@@ -103,6 +103,8 @@ export interface ComputedResult {
 export interface DiagnosticHypothesis {
   label: string
   cid?: string | null
+  // Só a hipótese marcada como selecionada aparece no PDF final.
+  selected?: boolean
 }
 
 export interface ClinicalSections {

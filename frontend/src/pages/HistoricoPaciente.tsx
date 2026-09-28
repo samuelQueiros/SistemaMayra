@@ -545,9 +545,18 @@ function SecoesClinicasForm({
       const jaMarcada = atuais.some((h) => h.label === label)
       const proximas = jaMarcada
         ? atuais.filter((h) => h.label !== label)
-        : [...atuais, { label, cid }]
+        : [...atuais, { label, cid, selected: atuais.length === 0 }]
       return { ...prev, diagnostic_hypotheses: proximas }
     })
+  }
+
+  // Só a hipótese marcada aqui aparece no PDF final — as demais ficam
+  // registradas como "investigadas", mas não impressas no relatório.
+  function selecionarHipotesePrincipal(label: string) {
+    setForm((prev) => ({
+      ...prev,
+      diagnostic_hypotheses: (prev.diagnostic_hypotheses ?? []).map((h) => ({ ...h, selected: h.label === label })),
+    }))
   }
 
   function adicionarOutraHipotese() {
@@ -599,7 +608,7 @@ function SecoesClinicasForm({
 
         <div>
           <span style={{ font: 'var(--np-type-label)', color: 'var(--np-text)', display: 'block', marginBottom: 'var(--np-space-2)' }}>
-            Hipóteses Diagnósticas
+            Hipóteses Diagnósticas Investigadas
           </span>
           <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
             {cidCodes.map((c) => (
@@ -622,6 +631,30 @@ function SecoesClinicasForm({
               Adicionar
             </Button>
           </div>
+
+          {(form.diagnostic_hypotheses ?? []).length > 0 && (
+            <div style={{ marginTop: 'var(--np-space-4)' }}>
+              <span style={{ font: 'var(--np-type-label)', color: 'var(--np-text)', display: 'block', marginBottom: 'var(--np-space-2)' }}>
+                Hipótese Selecionada Para Este Paciente (única que aparece no PDF)
+              </span>
+              <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
+                {(form.diagnostic_hypotheses ?? []).map((h) => (
+                  <label key={h.label} style={{ display: 'flex', gap: 'var(--np-space-2)', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="hipotese-principal"
+                      checked={!!h.selected}
+                      onChange={() => selecionarHipotesePrincipal(h.label)}
+                    />
+                    <span>
+                      {h.label}
+                      {h.cid ? ` (CID: ${h.cid})` : ''}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <Textarea

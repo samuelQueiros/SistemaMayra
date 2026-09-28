@@ -36,6 +36,9 @@ class ReportEditUpdate(BaseModel):
 class DiagnosticHypothesis(BaseModel):
     label: str
     cid: str | None = None
+    # Só a hipótese com selected=True aparece no PDF (nunca a lista
+    # completa das hipóteses investigadas) — ver `_secoes_clinicas_html`.
+    selected: bool = False
 
 
 class ClinicalSections(BaseModel):
