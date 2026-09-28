@@ -100,6 +100,65 @@ certificado automática pelo Caddy. Para atualizar após um novo commit:
       fora deste ambiente de desenvolvimento — confirme cada passo ao
       subir pela primeira vez).
 
+### 3.2 Deploy pelo Portainer
+
+Arquivos usados: `docker-compose.portainer.yml` (a stack),
+`portainer.env.example` (modelo das variáveis) e
+`.github/workflows/docker-publish.yml` (publica a imagem).
+
+A stack usa uma **imagem pronta** no GitHub Container Registry, em vez de
+buildar no servidor, e não sobe Caddy — servidores com Portainer
+normalmente já têm um proxy reverso (Traefik, Nginx Proxy Manager...) em
+80/443.
+
+**1. Publicar a imagem (uma vez, e depois automático)**
+
+- Faça push na `master`: o GitHub Actions builda o `Dockerfile` e publica
+  `ghcr.io/samuelqueiros/psicologa:latest` (e uma tag `sha-<commit>`).
+  Acompanhe em GitHub > Actions.
+- O pacote nasce **privado**. Ou torne público (GitHub > Packages >
+  psicologa > Package settings > Change visibility), ou cadastre o
+  registry no Portainer: *Registries > Add registry > Custom registry*,
+  URL `ghcr.io`, usuário do GitHub e um Personal Access Token (classic)
+  com escopo `read:packages`.
+
+**2. Criar a stack**
+
+- Portainer > *Stacks > Add stack*, nome ex.: `psicologa`.
+- *Web editor*: cole o conteúdo de `docker-compose.portainer.yml`.
+  (Alternativa: *Repository*, apontando para este repositório e
+  *Compose path* `docker-compose.portainer.yml` — se o repo for privado,
+  informe as credenciais do GitHub.)
+- *Environment variables > Load variables from .env file*: carregue uma
+  cópia preenchida de `portainer.env.example`. Obrigatórias:
+  `POSTGRES_PASSWORD` e `JWT_SECRET` (`openssl rand -hex 32`). Se a porta
+  8000 já estiver em uso no servidor, troque `APP_PORT`.
+- *Deploy the stack*. O container `app` roda as migrations sozinho e fica
+  `healthy` quando `/api/health` responde.
+
+**3. HTTPS / domínio**
+
+- No proxy reverso existente, crie o host do domínio (ex.:
+  `laudos.suaclinica.com.br`) apontando para `http://IP_DO_SERVIDOR:APP_PORT`
+  (ou para `app:8000`, se o proxy estiver na mesma rede Docker da stack),
+  com certificado Let's Encrypt. Não exponha o app sem HTTPS (seção 4).
+- Se não houver proxy nenhum no servidor, use o `docker-compose.yml` com
+  Caddy da seção 3.1.
+
+**4. Atualizar após um novo commit**
+
+- Push na `master` → espere o Actions terminar → no Portainer, abra a
+  stack e clique *Update the stack* marcando *Re-pull image and
+  redeploy*. (Para fixar uma versão, use `APP_IMAGE=ghcr.io/samuelqueiros/psicologa:sha-<commit>`.)
+
+- [x] Stack testada localmente com `docker compose -f
+      docker-compose.portainer.yml` (2026-09-28): migrations aplicadas,
+      container `healthy`, API e frontend respondendo.
+- [ ] Executado num Portainer real.
+- [ ] Backup: os dados ficam nos volumes `<stack>_db_data` e
+      `<stack>_app_storage` — configure o backup (seção 2) apontando para
+      o Postgres da stack.
+
 ## 4. HTTPS
 
 - [x] Resolvido pelo runbook da seção 3.1 (Caddy com HTTPS automático) —

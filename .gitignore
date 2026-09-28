@@ -11,3 +11,6 @@ frontend/dist/
 frontend/.vite/
 
 .DS_Store
+
+# Cópia preenchida das variáveis da stack do Portainer
+portainer.env

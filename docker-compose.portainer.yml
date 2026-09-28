@@ -1,0 +1,62 @@
+# Stack para o Portainer (Stacks > Add stack). Ver DEPLOY.md seção 3.2.
+#
+# Diferenças em relação ao docker-compose.yml (VPS "crua"):
+#   - Usa a imagem pronta publicada no GHCR pelo GitHub Actions
+#     (.github/workflows/docker-publish.yml) em vez de "build: .", então
+#     funciona tanto colando no Web editor quanto via Repository.
+#   - Não usa env_file nem bind mount de arquivos do repositório (o
+#     Portainer não tem esses arquivos no Web editor). Todas as variáveis
+#     vêm da seção "Environment variables" da stack (dá pra carregar o
+#     portainer.env.example com "Load variables from .env file").
+#   - Não sobe Caddy: servidores com Portainer normalmente já têm um proxy
+#     reverso (Traefik, Nginx Proxy Manager, Caddy...) ocupando 80/443. O
+#     app é publicado em APP_PORT e o proxy existente aponta pra ele.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: formpsico
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD nas variáveis da stack}"
+      POSTGRES_DB: formpsico
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U formpsico"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    image: "${APP_IMAGE:-ghcr.io/samuelqueiros/psicologa:latest}"
+    restart: unless-stopped
+    environment:
+      ENV: production
+      DATABASE_URL: "postgresql+psycopg://formpsico:${POSTGRES_PASSWORD}@db:5432/formpsico"
+      JWT_SECRET: "${JWT_SECRET:?defina JWT_SECRET nas variáveis da stack}"
+      JWT_ALGORITHM: "${JWT_ALGORITHM:-HS256}"
+      JWT_EXPIRES_MINUTES: "${JWT_EXPIRES_MINUTES:-1440}"
+      AI_PROVIDER: "${AI_PROVIDER:-anthropic}"
+      AI_MODEL: "${AI_MODEL:-claude-sonnet-5}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      GOOGLE_API_KEY: "${GOOGLE_API_KEY:-}"
+      S3_BUCKET: "${S3_BUCKET:-}"
+      S3_ENDPOINT_URL: "${S3_ENDPOINT_URL:-}"
+      S3_REGION: "${S3_REGION:-}"
+      S3_ACCESS_KEY: "${S3_ACCESS_KEY:-}"
+      S3_SECRET_KEY: "${S3_SECRET_KEY:-}"
+    volumes:
+      - app_storage:/app/backend/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # Porta do host onde o proxy reverso (ou você, para testar) acessa o
+      # app. Troque APP_PORT se a 8000 já estiver ocupada no servidor.
+      - "${APP_PORT:-8000}:8000"
+
+volumes:
+  db_data:
+  app_storage:
