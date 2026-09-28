@@ -367,13 +367,9 @@ body{padding-bottom:86px}
 <label>Encaminhamento Para Exames Complementares (Caixa Cinza Da Última Página)</label><textarea id="textoEncaminhamentoExames" style="min-height:140px"></textarea>
 
 
-<h2>20. Plano De Intervenção</h2>
-<div class="aviso interno">Uso interno: esta seção não aparece no relatório final (modelo oficial do parecer).</div>
-<textarea id="planoIntervencao" style="min-height:240px">O plano de intervenção deve ser organizado de acordo com as hipóteses diagnósticas investigadas, as queixas familiares e escolares, o perfil cognitivo, comportamental, socioemocional e pedagógico observado.
-
-Para indicadores compatíveis com TEA, recomenda-se intervenção estruturada, previsibilidade de rotina, treino de comunicação funcional, ampliação de habilidades sociais, flexibilidade cognitiva e orientação familiar/escolar.
-
-Para indicadores compatíveis com TDAH, recomenda-se treino de atenção sustentada e seletiva, controle inibitório, organização de rotina, tarefas curtas, reforço positivo imediato e manejo de impulsividade.</textarea>
+<h2>20. Sugestões De Intervenção</h2>
+<div class="aviso">Aparece no relatório final, como última seção antes da assinatura. Escreva livremente ou use o botão "Gerar Com IA" na fase 22 (Considerações Finais) — as sugestões devem decorrer das necessidades, dificuldades e potencialidades <strong>deste paciente</strong>, e não só da hipótese diagnóstica marcada.</div>
+<textarea id="planoIntervencao" style="min-height:200px" placeholder="Ex.: recomenda-se treino de atenção sustentada com [detalhe do que foi observado neste paciente]..."></textarea>
 
 
 <h2>21. Encaminhamentos</h2>
@@ -390,8 +386,10 @@ Para indicadores compatíveis com TDAH, recomenda-se treino de atenção sustent
 
 
 <h2>22. Considerações Finais</h2>
-<div class="aviso">Última página do relatório, depois das hipóteses diagnósticas e antes da assinatura. Aceita a mesma marcação dos textos do parecer.</div>
-<textarea id="consideracoes" style="min-height:220px"></textarea>
+<div class="aviso">Última página do relatório, depois das hipóteses diagnósticas e antes da assinatura. Aceita a mesma marcação dos textos do parecer. Deve ser a síntese <strong>deste paciente</strong> — estudo de caso, observações, habilidades avaliadas, protocolos utilizados e hipótese selecionada —, não um texto genérico.</div>
+<button type="button" id="btnGerarConclusaoIA" onclick="gerarConclusaoEIntervencoesComIA()">Gerar Considerações Finais E Sugestões De Intervenção Com IA (Baseado Neste Paciente)</button>
+<div id="avisoConclusaoIA" class="aviso interno" style="display:none"></div>
+<textarea id="consideracoes" style="min-height:220px" placeholder="Escreva a síntese de fechamento deste paciente, ou gere com o botão acima."></textarea>
 
 
 <h2>23. Cidade E Data</h2>
@@ -1415,11 +1413,6 @@ function textosPadraoLaudo(g){
     g.O+" paciente apresenta muitos dos critérios necessários para a confirmação diagnóstica de **Transtorno do Espectro Autista (TEA)**, evidenciando características consistentes em diferentes contextos de avaliação. Dessa forma, recomenda-se que a família, em momento oportuno, realize uma avaliação complementar, preferencialmente de natureza **Neuropsicológica**, a fim de mensurar com maior precisão o funcionamento das **Funções Executivas Superiores** "+g.do+" paciente. Considerando, porém, a idade atual e a condição social e financeira da família, compreende-se que tal encaminhamento não é viável no momento, tornando pertinente e necessária, neste estágio, !!a emissão do laudo confirmatório de TEA, como medida prioritária para garantir acesso aos direitos e intervenções adequadas.!!"
   ].join("\n");
   t.textoEncaminhamentoExames = "Encaminhei também "+g.o+" paciente para avaliação complementar com exames de Audiometria, Teste de Processamento Auditivo Central (TPAC) e P300, com o objetivo de confirmar o diagnóstico de possíveis alterações no Processamento Auditivo Central. A realização desses exames se fez necessária devido às características apresentadas "+g.pelo+" paciente, como dificuldades de atenção sustentada, organização e memória auditiva, além de comportamentos de desatenção e impulsividade. A investigação diagnóstica será essencial para melhor entendimento do quadro e definição das intervenções adequadas.";
-  t.consideracoes = [
-    "Vale ressaltar que não se deve rejeitar nenhuma mudança por menor que seja e oferecer "+g.ao+" paciente atendimento psicológico logo que se observe algum comportamento fora do esperado, tais como: **Isolamento social, sono exagerado, insônia, tristeza, falta de motivação para realizar atividades antes interessantes, choro sem motivo aparente e etc...**",
-    "**OBSERVAÇÃO: Este relatório tem como objetivo resguardar o direito "+g.do+" paciente/aprendente a um acompanhamento terapêutico e avaliação médica com um Neuropediatra o quanto antes. Este documento** ==NÃO== **configura um laudo médico e não "+g.o+" isenta de reavaliação se houver necessidade. A emissão de um laudo final é de responsabilidade do profissional competente e autorizado por lei.**",
-    "Desde já, coloco-me à disposição para maiores esclarecimentos e estudo do caso, se necessário."
-  ].join("\n");
   t.fe_manif_0 = "Observa-se comprometimento acentuado no monitoramento da própria conduta. "+g.O+" paciente demonstra pouca percepção das consequências de suas ações e reduzida capacidade de reconhecer espontaneamente quando um comportamento é inadequado, perigoso ou prejudicial ao outro. Mesmo após orientações, pode repetir a mesma resposta, necessitando de mediação constante para interromper, compreender o ocorrido e reorganizar sua conduta.";
   t.fe_manif_1 = "Apresenta importante dificuldade para organizar ações de maneira antecipada e funcional. Seu comportamento tende a ser imediato e guiado pelo desejo do momento, com pouca previsão das etapas ou consequências. Necessita de elevada estruturação externa para iniciar, permanecer e concluir propostas, apresentando dificuldade para sustentar sequências, seguir uma organização previamente estabelecida e ajustar o próprio comportamento diante das demandas.";
   t.fe_manif_2 = "Esta função mostra-se severamente comprometida. "+g.O+" paciente apresenta grande dificuldade para esperar, aceitar negativas, interromper ações e conter impulsos. Diante de limites ou frustrações, pode responder com agressividade, fuga, autoagressão ou intensa desorganização comportamental. Comandos de interrupção frequentemente não produzem resposta imediata, inclusive em situações de risco, evidenciando necessidade de supervisão e intervenção externa constantes.";
@@ -1427,6 +1420,19 @@ function textosPadraoLaudo(g){
   t.fe_manif_4 = "Demonstra dificuldade para manter e utilizar informações durante a execução das tarefas. Orientações precisam ser repetidas, simplificadas e apresentadas em comandos curtos e segmentados. Pode perder rapidamente a informação necessária para continuar uma ação ou deixar de aplicar regras já trabalhadas, sobretudo quando há distrações, maior exigência atencional ou necessidade de controlar impulsos, exigindo retomadas frequentes pelo adulto.";
   t.fe_manif_5 = "Constitui uma área de comprometimento expressivo. "+g.O+" paciente apresenta rigidez acentuada diante de negativas, mudanças, interrupções ou impedimentos relacionados ao que deseja. Demonstra dificuldade intensa para abandonar uma intenção inicial e considerar outras possibilidades, podendo evoluir para oposição, agressividade, fuga ou desregulação importante. Necessita de mediação intensa para realizar transições, aceitar alternativas e reorganizar-se diante de novas demandas.";
   return t;
+}
+
+// Aviso de fechamento fixo (esclarecimento de que o laudo não é um
+// documento médico + disponibilidade para contato) — sempre impresso, não
+// é mais o texto-padrão do campo "Considerações Finais" (ponto 2 da
+// revisão: esse campo passou a ser a síntese individualizada do
+// paciente, gerada por IA ou escrita pela psicóloga, não um texto fixo).
+function avisoLegalFechamento(g){
+  return [
+    "Vale ressaltar que não se deve rejeitar nenhuma mudança por menor que seja e oferecer "+g.ao+" paciente atendimento psicológico logo que se observe algum comportamento fora do esperado, tais como: **Isolamento social, sono exagerado, insônia, tristeza, falta de motivação para realizar atividades antes interessantes, choro sem motivo aparente e etc...**",
+    "**OBSERVAÇÃO: Este relatório tem como objetivo resguardar o direito "+g.do+" paciente/aprendente a um acompanhamento terapêutico e avaliação médica com um Neuropediatra o quanto antes. Este documento** ==NÃO== **configura um laudo médico e não "+g.o+" isenta de reavaliação se houver necessidade. A emissão de um laudo final é de responsabilidade do profissional competente e autorizado por lei.**",
+    "Desde já, coloco-me à disposição para maiores esclarecimentos e estudo do caso, se necessário."
+  ].join("\n");
 }
 
 // Preenche os campos de texto com o texto-padrão do modelo. `preencherVazios`
@@ -1927,6 +1933,88 @@ function atualizarOpcoesHipoteseSelecionada(){
   if(opcoes.includes(atual))sel.value=atual;
 }
 
+/* ------------------------------------------------- IA: considerações finais e sugestões (pontos 2, 3 e 10) */
+
+// Monta o resumo curado DESTE paciente (nunca o catálogo completo de
+// hipóteses/protocolos/intervenções) a ser enviado à IA — só os campos que
+// de fato têm dado preenchido entram no resumo.
+function montarResumoParaIA(){
+  const resumo = {};
+
+  const estudo = valor("estudoCaso").trim();
+  if(estudo)resumo.estudo_de_caso = estudo;
+  const obs = valor("observacoesClinicas").trim();
+  if(obs)resumo.observacoes_clinicas = obs;
+
+  const linhasHabilidades = [];
+  HABILIDADES_LAUDO.forEach(gr=>{
+    gr.itens.forEach((it,i)=>{
+      const v = valor("hab_"+gr.id+"_"+i);
+      if(v)linhasHabilidades.push(it[0]+": "+v);
+    });
+  });
+  FE_LAUDO.forEach((f,i)=>{
+    const perc = valor("fe_perc_"+i), manif = valor("fe_manif_"+i).trim();
+    if(perc!==""||manif)linhasHabilidades.push(f.nome+(perc!==""?" (indicador de dificuldade: "+perc+"%)":"")+(manif?" — "+manif:""));
+  });
+  if(linhasHabilidades.length)resumo.habilidades_avaliadas = linhasHabilidades.join("\n");
+
+  const linhasProtocolos = [];
+  if(valor("cars")!=="")linhasProtocolos.push("CARS: "+valor("cars")+" pontos"+(valor("carsPercentualFalhas")!==""?" ("+valor("carsPercentualFalhas")+"% de falhas para a idade)":""));
+  if(valor("ata")!=="")linhasProtocolos.push("ATA: "+valor("ata")+" pontos"+(valor("ataPercentual")?" ("+valor("ataPercentual")+"% de características)":""));
+  const snapResumo = analisarSNAP();
+  if(snapResumo.pre>0)linhasProtocolos.push("SNAP-IV: "+snapResumo.des+"/9 itens de desatenção, "+snapResumo.hip+"/9 itens de hiperatividade/impulsividade"+(snapResumo.completo?"":" (protocolo incompleto)"));
+  const todResumo = analisarTOD();
+  if(todResumo.pre>0)linhasProtocolos.push("TOD: "+todResumo.pos+"/"+todItens.length+" comportamentos identificados"+(todResumo.completo?" ("+todResumo.perc+"%)":" (protocolo incompleto)"));
+  const portageResumo = portagePorArea();
+  if(portageResumo)linhasProtocolos.push("Portage: "+portageResumo.areas.map(a=>a.rotulo+" "+a.anos+" anos").join(", ")+(idadeForaDaFaixaPortage(idadeMeses())?" (paciente fora da faixa etária do instrumento — usado só como referência de repertório, não comparação normativa)":""));
+  const itensMCHATResumo = mchatItens.map((t,i)=>({resp:valor("mchat_"+i)})).filter(x=>x.resp!=="");
+  if(itensMCHATResumo.length)linhasProtocolos.push("M-CHAT: "+itensMCHATResumo.filter(x=>x.resp==="nao").length+"/"+itensMCHATResumo.length+" itens respondidos como ausentes/atípicos");
+  if(linhasProtocolos.length)resumo.protocolos_utilizados = linhasProtocolos.join("\n");
+
+  const hip = valor("hipoteseSelecionada").trim();
+  if(hip)resumo.hipotese_selecionada = hip;
+
+  return resumo;
+}
+
+async function gerarConclusaoEIntervencoesComIA(){
+  const btn = document.getElementById("btnGerarConclusaoIA");
+  const aviso = document.getElementById("avisoConclusaoIA");
+  if(aviso){aviso.style.display = "none";}
+  const reportId = typeof window.obterLaudoAtualId === "function" ? window.obterLaudoAtualId() : null;
+  if(!reportId){
+    notificar("Salve o protocolo no sistema pelo menos uma vez (botão \"Salvar Protocolo\") antes de gerar com IA.","aviso");
+    return;
+  }
+  const resumo = montarResumoParaIA();
+  if(!resumo.estudo_de_caso&&!resumo.observacoes_clinicas&&!resumo.habilidades_avaliadas&&!resumo.protocolos_utilizados){
+    notificar("Preencha o estudo de caso, as observações clínicas, as habilidades avaliadas ou algum protocolo deste paciente antes de gerar com IA.","aviso");
+    return;
+  }
+  const textoOriginal = btn?btn.textContent:"";
+  if(btn){btn.disabled = true; btn.textContent = "Gerando com IA…";}
+  try{
+    const resultado = await window.apiFetch("/reports/"+reportId+"/generate-conclusion", {
+      method: "POST",
+      body: JSON.stringify(Object.assign({patient_name: valor("nomePaciente")||"Paciente"}, resumo))
+    });
+    setValor("consideracoes", resultado.consideracoes_finais);
+    setValor("planoIntervencao", resultado.sugestoes_intervencao);
+    const taConsideracoes = document.getElementById("consideracoes"), taPlano = document.getElementById("planoIntervencao");
+    if(taConsideracoes)taConsideracoes.dispatchEvent(new Event("input",{bubbles:true}));
+    if(taPlano)taPlano.dispatchEvent(new Event("input",{bubbles:true}));
+    notificar("Considerações finais e sugestões de intervenção geradas — revise antes de salvar.","sucesso");
+  }catch(e){
+    if(aviso){
+      aviso.textContent = (e&&e.message)||"Não foi possível gerar o texto com IA. Configure o provedor em \"Configurações\" ou escreva manualmente.";
+      aviso.style.display = "block";
+    }
+  }finally{
+    if(btn){btn.disabled = false; btn.textContent = textoOriginal;}
+  }
+}
+
 // Perfil da profissional responsável (bio + credenciais da assinatura),
 // buscado uma vez em /api/auth/me e usado no bloco "Sobre A Profissional
 // Responsável" e na assinatura do laudo. Editável pela própria psicóloga
@@ -2168,9 +2256,21 @@ async function gerarDocumentoLaudoHTML(){
     partes.push(texto("textoConclusaoTEA"));
   }
 
-  /* Página final: encaminhamento, hipóteses, considerações e assinatura */
+  /* Página final: encaminhamento, estudo de caso, hipótese, considerações
+     finais, sugestões de intervenção e assinatura (ordem do ponto 10 da
+     revisão: ... protocolos/resultados/gráficos -> estudo de caso ->
+     hipótese selecionada -> considerações finais -> sugestões de
+     intervenção -> assinatura). */
   partes.push(QUEBRA);
   if(valor("textoEncaminhamentoExames").trim())partes.push('<div class="caixa-cinza clara">'+blocoDeTexto(valor("textoEncaminhamentoExames"),opcoesTexto)+"</div>");
+
+  const estudoDeCaso=valor("estudoCaso").trim(), observacoesClinicas=valor("observacoesClinicas").trim();
+  if(estudoDeCaso||observacoesClinicas){
+    partes.push('<h3><mark class="cinza">Estudo De Caso E Observações Clínicas</mark></h3>');
+    if(estudoDeCaso)partes.push(blocoDeTexto(estudoDeCaso,opcoesTexto));
+    if(observacoesClinicas)partes.push(blocoDeTexto(observacoesClinicas,opcoesTexto));
+  }
+
   // O relatório mostra só a hipótese selecionada em #hipoteseSelecionada,
   // nunca a lista completa de hipóteses investigadas (ver
   // atualizarOpcoesHipoteseSelecionada()). Se por algum motivo não houver
@@ -2181,7 +2281,19 @@ async function gerarDocumentoLaudoHTML(){
     const formatarHipotese=h=>{const m=h.match(/^(.*?)\s*(\((?:CID)[^)]*\))\s*$/i);return m?"<li><strong>"+esc(m[1])+'</strong> <mark class="cinza"><strong>'+esc(m[2])+"</strong></mark></li>":"<li><strong>"+esc(h)+"</strong></li>";};
     partes.push('<h3><mark class="cinza">Hipótese Diagnóstica:</mark></h3><ul class="bullets">'+formatarHipotese(hipoteseSelecionada)+"</ul>");
   }
-  partes.push(texto("consideracoes"));
+
+  if(valor("consideracoes").trim()){
+    partes.push('<h3><mark class="cinza">Considerações Finais</mark></h3>');
+    partes.push(texto("consideracoes"));
+  }
+  if(valor("planoIntervencao").trim()){
+    partes.push('<h3><mark class="cinza">Sugestões De Intervenção</mark></h3>');
+    partes.push(texto("planoIntervencao"));
+  }
+  // Aviso de fechamento fixo — sempre impresso, não depende do que a
+  // psicóloga escreveu em Considerações Finais (ver avisoLegalFechamento()).
+  partes.push(blocoDeTexto(avisoLegalFechamento(g),opcoesTexto));
+
   const perfil=await perfilProfissional();
   partes.push(QUEBRA+'<div class="caixa-cinza clara"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>'+esc(perfil.bio)+"</p></div>");
   const dataRel=dataRelatorioObj();
@@ -2376,6 +2488,7 @@ function mostrarPreviaDoLaudo(html){
   let laudoAtual = null;
   let templateAtual = null;
   let temporizadorAutosaveBanco = null;
+  window.obterLaudoAtualId = () => (laudoAtual ? laudoAtual.id : null);
 
   // estado: 'salvando' | 'salvo' | 'erro' | undefined (neutro)
   function definirStatus(texto, estado) {
@@ -2648,7 +2761,7 @@ function mostrarPreviaDoLaudo(html){
     "Habilidades Cognitivas, Socioemocionais E Motoras": { grupos: [["select[id^='hab_cog_'],select[id^='hab_soc_'],select[id^='hab_mot_']", "habilidades sem resposta"]] },
     "Distribuição Das Dificuldades Por Domínio": { campos: ["dom_atencao", "dom_sociais", "dom_comportamento", "dom_aprendizagem", "dom_fe"] },
     "Textos Do Parecer (Modelo Oficial Do Relatório)": { especial: "textos", revisar: true },
-    "Plano De Intervenção": { campos: ["planoIntervencao"], revisar: true },
+    "Sugestões De Intervenção": { campos: ["planoIntervencao"], revisar: true },
     "Encaminhamentos": { especial: "encaminhamentos" },
     "Considerações Finais": { campos: ["consideracoes"], revisar: true },
     "Cidade E Data": { campos: ["cidade", "dataRelatorio"] },

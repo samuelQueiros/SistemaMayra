@@ -16,6 +16,27 @@ class ReportTextUpdate(BaseModel):
     generated_text: str
 
 
+class ConclusionRequest(BaseModel):
+    """Dados curados de UM paciente (já filtrados/selecionados pelo
+    formulário), enviados à IA para compor as Considerações Finais e as
+    Sugestões De Intervenção — pontos 2 e 3 da revisão de relatórios. Cada
+    campo é o resumo textual já pronto (o formulário standalone monta esse
+    resumo a partir do que a psicóloga preencheu; nada aqui é recalculado
+    no backend)."""
+
+    patient_name: str
+    estudo_de_caso: str | None = None
+    observacoes_clinicas: str | None = None
+    habilidades_avaliadas: str | None = None
+    protocolos_utilizados: str | None = None
+    hipotese_selecionada: str | None = None
+
+
+class ConclusionResponse(BaseModel):
+    consideracoes_finais: str
+    sugestoes_intervencao: str
+
+
 class ReportAnswersUpdate(BaseModel):
     """Autosave das respostas de um laudo em edição (ver formulário
     standalone `formulario-novo-paciente.html`): cada campo alterado

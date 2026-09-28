@@ -16,6 +16,8 @@ from app.models.ai_settings import AISettings
 from app.rules_engine import RulesEngineError, calculate_report
 from app.schemas.report import (
     ClinicalSections,
+    ConclusionRequest,
+    ConclusionResponse,
     ConsolidatedPdfRequest,
     ConsolidatedReportOut,
     ReportAnswersUpdate,
@@ -27,6 +29,7 @@ from app.schemas.report import (
 )
 from app.services.ai import (
     AIConfigurationError,
+    generate_conclusion_and_interventions,
     generate_consolidated_report_text,
     generate_report_text,
     resolve_ai_credentials,
@@ -161,6 +164,56 @@ def generate_text(
     db.commit()
     db.refresh(report)
     return report
+
+
+@router.post("/api/reports/{report_id}/generate-conclusion", response_model=ConclusionResponse)
+def generate_conclusion(
+    report_id: UUID,
+    data: ConclusionRequest,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> ConclusionResponse:
+    """Gera, com IA, as Considerações Finais e as Sugestões De Intervenção
+    individualizadas a partir dos dados deste paciente (pontos 2 e 3 da
+    revisão de relatórios) — usado pelo formulário standalone
+    (formulario-novo-paciente.html), que monta o resumo curado enviado em
+    `data` a partir do que a psicóloga já preencheu para este atendimento.
+    Só confirma que o laudo pertence à psicóloga logada; não lê nem grava
+    `answers_json`/`generated_text` — o formulário decide onde usar o
+    texto retornado."""
+
+    _get_report_do_psicologo(report_id, db, current)
+    ai_settings = db.query(AISettings).filter(AISettings.owner_id == current.id).first()
+
+    try:
+        provider, model, api_key = resolve_ai_credentials(ai_settings)
+        secoes = generate_conclusion_and_interventions(
+            provider=provider,
+            model=model,
+            api_key=api_key,
+            patient_name=data.patient_name,
+            estudo_de_caso=data.estudo_de_caso,
+            observacoes_clinicas=data.observacoes_clinicas,
+            habilidades_avaliadas=data.habilidades_avaliadas,
+            protocolos_utilizados=data.protocolos_utilizados,
+            hipotese_selecionada=data.hipotese_selecionada,
+        )
+    except AIConfigurationError as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=(
+                "Não foi possível gerar o texto com o provedor de IA configurado "
+                f"({provider}/{model}). Verifique a chave de API e o modelo em "
+                f"\"Configurações\". Detalhe técnico: {exc}"
+            ),
+        ) from exc
+
+    return ConclusionResponse(
+        consideracoes_finais=secoes.como_texto_consideracoes(),
+        sugestoes_intervencao=secoes.como_texto_sugestoes(),
+    )
 
 
 @router.put("/api/reports/{report_id}/text", response_model=ReportOut)

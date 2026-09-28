@@ -46,3 +46,24 @@ def test_truncar_corta_texto_longo_e_adiciona_reticencias():
 
     assert resultado == "a" * 10 + "…"
     assert len(resultado) == 11
+
+
+def test_truncar_remove_html_antes_de_cortar():
+    # Ponto 10 da revisão: laudos criados pelo formulário standalone salvam
+    # o HTML inteiro do relatório em `generated_text` — truncar sem tirar
+    # as tags arrisca mandar markup quebrado pra IA como se fosse texto
+    # clínico. `_truncar` precisa extrair só o texto visível primeiro.
+    html = "<h2>Conclusão</h2><p>O paciente <strong>apresenta</strong> boa evolução.</p>"
+
+    resultado = _truncar(html, limite=1000)
+
+    assert "<" not in resultado and ">" not in resultado
+    assert "O paciente apresenta boa evolução." in resultado
+
+
+def test_truncar_corta_no_limite_mesmo_apos_remover_html():
+    html = "<p>" + "a" * 50 + "</p>"
+
+    resultado = _truncar(html, limite=10)
+
+    assert resultado == "a" * 10 + "…"
