@@ -971,12 +971,38 @@ function textoProb(p){return p<30?"baixa probabilidade":p<60?"probabilidade mode
 function selecionados(classe){return Array.from(document.querySelectorAll("."+classe+":checked")).map(i=>i.value).join(", ")||"Não informado.";}
 function dataBR(){const d=valor("dataRelatorio");if(!d)return"____/____/______";const p=d.split("-");return p[2]+"/"+p[1]+"/"+p[0];}
 
+// Ponto 5 da revisão: o texto de "Manifestação Observada" de cada Função
+// Executiva vem pré-preenchido com um texto-padrão que sempre descreve
+// comprometimento severo (ver t.fe_manif_0..5 em textosPadraoLaudo()). Se a
+// psicóloga não personalizar esse texto mas o indicador de dificuldade
+// (fe_perc, que alimenta o gráfico) for baixo, gráfico e texto passam a
+// contar histórias diferentes para a mesma função. Sinaliza — não bloqueia,
+// pois é a psicóloga quem decide se o texto ainda se aplica.
+function divergenciasFuncoesExecutivas(){
+  const LIMIAR_BAIXO=40;
+  const masc=textosPadraoLaudo(formasGenero("Masculino")), fem=textosPadraoLaudo(formasGenero("Feminino"));
+  const divergencias=[];
+  FE_LAUDO.forEach((f,i)=>{
+    const manif=valor("fe_manif_"+i), perc=valor("fe_perc_"+i);
+    if(perc===""||manif.trim()==="")return;
+    const ehTextoPadraoNaoEditado=manif===masc["fe_manif_"+i]||manif===fem["fe_manif_"+i];
+    if(ehTextoPadraoNaoEditado&&Number(perc)<LIMIAR_BAIXO){
+      divergencias.push(f.nome+" (indicador de "+perc+"%, mas a manifestação observada ainda é o texto-padrão de comprometimento severo)");
+    }
+  });
+  return divergencias;
+}
+
 async function gerarRelatorio(){
   const previa=document.getElementById("btnPrevia"), textoPrevia=previa?previa.textContent:"";
   if(previa){previa.disabled=true;previa.textContent="Montando pré-visualização…";}
   let html;
   try{html=await gerarDocumentoLaudoHTML();}
   finally{if(previa){previa.disabled=false;previa.textContent=textoPrevia;}}
+  const divergencias=divergenciasFuncoesExecutivas();
+  if(divergencias.length){
+    notificar("Possível divergência entre gráfico e texto em Funções Executivas — revise antes de enviar: "+divergencias.join("; ")+".","aviso",{duracao:0});
+  }
   mostrarPreviaDoLaudo(html);
   const rel=document.getElementById("relatorio");
   if(rel)rel.scrollIntoView({behavior:"smooth"});
