@@ -1914,6 +1914,7 @@ async function gerarDocumentoLaudoHTML(){
   ].filter(l=>l[1]);
   partes.push('<table class="cab-paciente"><tr><td class="cab-foto">'+(fotoCabecalho?'<img src="'+fotoCabecalho+'" data-mm="42" style="width:42mm;height:52mm">':"")+'</td><td class="cab-espaco"></td><td class="cab-info"><div class="cab-box">'+linhasCabecalho.map(l=>"<p>"+esc(l[0])+": "+esc(l[1])+"</p>").join("")+"</div></td></tr></table>");
   partes.push('<div class="faixa centro">PARECER NEUROPSICOPEDAGÓGICO<br>ANÁLISE COMPORTAMENTAL</div>');
+  partes.push('<div class="caixa-cinza clara"><p><strong>NOTA SOBRE OS RESULTADOS:</strong> Os percentuais apresentados neste relatório possuem caráter descritivo e clínico-observacional, sendo construídos a partir do desempenho apresentado nas atividades propostas, dos registros realizados durante os atendimentos e da análise qualitativa dos dados obtidos. Esses valores não correspondem a percentis normativos, índices psicométricos ou escores provenientes de testes padronizados restritos a outras categorias profissionais. Constituem recurso de organização e representação visual dos achados e devem ser interpretados conjuntamente com as demais informações apresentadas neste relatório.</p></div>');
   partes.push(blocoDeTexto(valor("metodologia"),Object.assign({primeiroSemRecuo:/^\s*\*\*METODOLOGIA/i.test(valor("metodologia"))},opcoesTexto)));
   partes.push(texto("parecerContexto"));
 
@@ -2023,7 +2024,7 @@ async function gerarDocumentoLaudoHTML(){
   if(imgPortage||valor("textoPortage").trim()){
     partes.push(QUEBRA);
     if(imgPortage){
-      partes.push('<p class="recuo">Com base no resultado dos protocolos aplicados durante o período da avaliação e respeitando as particularidades, tempo e limitações '+g.do+" paciente/aprendente segue abaixo percentil de estímulos em áreas específicas: Comportamentos: <strong>Socialização, Linguagem, Autocuidados, Cognição e Desenvolvimento Motor.</strong></p>");
+      partes.push('<p class="recuo">Com base no resultado dos protocolos aplicados durante o período da avaliação e respeitando as particularidades, tempo e limitações '+g.do+" paciente/aprendente segue abaixo percentual descritivo de repertório observado em áreas específicas: Comportamentos: <strong>Socialização, Linguagem, Autocuidados, Cognição e Desenvolvimento Motor.</strong></p>");
       partes.push('<div class="grafico"><img src="'+imgPortage+'" data-mm="165" style="width:165mm"></div>');
     }
     partes.push(texto("textoPortage"));
@@ -2060,7 +2061,6 @@ async function gerarDocumentoLaudoHTML(){
     if(imgFE){
       partes.push('<div class="grafico"><img src="'+imgFE+'" data-mm="160" style="width:160mm"></div>');
       partes.push('<p class="compacto"><span style="color:#c00000">✚</span> Legenda:</p><p class="compacto" style="padding-left:6mm"><span style="color:#ed7d31"><strong>Indicadores de dificuldade observados</strong></span></p><p style="padding-left:6mm"><span style="color:#1f3864"><strong>Indicadores de desempenho funcional observado</strong></span></p>');
-      partes.push('<div class="caixa-cinza"><p>Os percentuais apresentados possuem caráter descritivo e clínico-observacional, sendo elaborados a partir do desempenho '+g.do+" paciente nas atividades propostas, das observações realizadas durante os atendimentos neuropsicopedagógicos e da análise qualitativa de suas respostas e estratégias. Não correspondem a percentis, escores normativos, índices diagnósticos ou resultados provenientes de testes neuropsicológicos padronizados. Os valores são utilizados como recurso de organização e representação visual dos achados observados durante o processo avaliativo, devendo ser analisados em conjunto com os demais dados obtidos na avaliação.</p></div>");
     }
   }
 
