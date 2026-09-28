@@ -260,6 +260,31 @@ def _secoes_clinicas_html(report) -> str:
     return "".join(blocos)
 
 
+# Texto padrão do bloco "Sobre A Profissional Responsável" — usado quando
+# `Psychologist.bio_profissional` ainda não foi configurado (mesmo padrão
+# do formulário standalone, ver perfilProfissional() em
+# formulario-novo-paciente.html). Editável por psicólogo via PUT /auth/me.
+_BIO_PROFISSIONAL_PADRAO = (
+    "Este relatório foi elaborado por Mayra Vanessa Andrade da Cunha, "
+    "Neuropsicopedagoga Clínica (CBO 2394-40) e Institucional (CBO "
+    "2394-45), com formação especializada em Análise do Comportamento "
+    "Aplicada (ABA) e atuação profissional voltada ao desenvolvimento, "
+    "aprendizagem e acompanhamento de crianças neurodivergentes. Possui "
+    "mais de 25 anos de experiência profissional na área educacional e "
+    "mais de 15 anos de atuação com crianças com Transtorno do Espectro "
+    "Autista (TEA), integrando experiência educacional, conhecimento "
+    "técnico e prática clínica neuropsicopedagógica na análise "
+    "individualizada de cada caso."
+)
+
+
+def _sobre_a_profissional_html(psychologist) -> str:
+    if psychologist is None:
+        return ""
+    bio = psychologist.bio_profissional or _BIO_PROFISSIONAL_PADRAO
+    return f"<h2>Sobre A Profissional Responsável</h2><p>{bio}</p>"
+
+
 def _assinatura_html(psychologist, report) -> str:
     if psychologist is None:
         return ""
@@ -305,6 +330,7 @@ def _montar_html(patient, template, report, grafico_data_uri: str | None, psycho
 
     fotos_html = _fotos_html(patient)
     secoes_clinicas_html = _secoes_clinicas_html(report)
+    sobre_profissional_html = _sobre_a_profissional_html(psychologist)
     assinatura_html = _assinatura_html(psychologist, report)
 
     return f"""<!DOCTYPE html>
@@ -345,6 +371,8 @@ def _montar_html(patient, template, report, grafico_data_uri: str | None, psycho
   {secoes_clinicas_html}
 
   {texto_html}
+
+  {sobre_profissional_html}
 
   {assinatura_html}
 
