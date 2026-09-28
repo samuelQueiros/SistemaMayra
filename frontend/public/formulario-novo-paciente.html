@@ -873,6 +873,12 @@ function atualizarIdadeEstimadaPortage(){
   campo.value = m===null ? "" : textoIdadeMeses(m)+" | Intervalo De Referência: "+textoIntervaloDoisMeses(m);
 }
 function faixaPortage(m){if(m===null||m<0)return null;if(m<=12)return"0-12";if(m<=24)return"13-24";if(m<=36)return"25-36";if(m<=48)return"37-48";if(m<=60)return"49-60";return"61-72";}
+// Faixa etária de referência do Inventário Portage Operacionalizado (IPO):
+// 0 a 6 anos (72 meses). Acima disso, o resultado deixa de ser comparação
+// normativa e passa a ser só referência de repertório — ver
+// idadeForaDaFaixaPortage()/avisoFaixaEtariaPortage() [ponto 7 da revisão].
+const PORTAGE_IDADE_MAX_MESES=72;
+function idadeForaDaFaixaPortage(m){return m!==null&&m!==undefined&&m>PORTAGE_IDADE_MAX_MESES;}
 
 function selecionarSimNao(campo,resposta){
   setValor(campo,resposta);
@@ -1540,7 +1546,14 @@ function atualizarIdadeCognitivaDoCabecalho(){
   const p=portagePorArea(); if(!p)return;
   const valores=p.areas.map(a=>a.anos);
   const min=Math.min(...valores), max=Math.max(...valores);
-  preencherAutomatico("idadeCognitivaRelatorio",min===max?anosDecimaisParaTexto(min):anosDecimaisParaTexto(min)+" à "+anosDecimaisParaTexto(max));
+  const faixa=min===max?anosDecimaisParaTexto(min):anosDecimaisParaTexto(min)+" à "+anosDecimaisParaTexto(max);
+  // Fora da faixa etária do Portage (>6 anos): não apresenta a idade
+  // equivalente como se fosse comparação normativa — deixa explícito que é
+  // repertório de referência (ponto 7 da revisão).
+  const texto=idadeForaDaFaixaPortage(idadeMeses())
+    ?"Repertório de referência pelo Portage: "+faixa+" (fora da faixa etária do instrumento — não é comparação normativa)"
+    :faixa;
+  preencherAutomatico("idadeCognitivaRelatorio",texto);
 }
 
 /* ---------------------------------------------------------------- utilitários de texto */
@@ -2056,6 +2069,9 @@ async function gerarDocumentoLaudoHTML(){
   const imgPortage=graficoPortage(portage,idadeAnos);
   if(imgPortage||valor("textoPortage").trim()){
     partes.push(QUEBRA);
+    if(idadeForaDaFaixaPortage(idadeMeses())){
+      partes.push('<div class="caixa-cinza clara"><p><strong>Observação sobre a faixa etária do Portage:</strong> o paciente encontra-se fora da faixa etária de referência do Inventário Portage Operacionalizado (0 a 6 anos). Os resultados apresentados foram utilizados exclusivamente como referência de repertório e levantamento de habilidades observadas, e não como parâmetro de comparação normativa para a idade cronológica atual.</p></div>');
+    }
     if(imgPortage){
       partes.push('<p class="recuo">Com base no resultado dos protocolos aplicados durante o período da avaliação e respeitando as particularidades, tempo e limitações '+g.do+" paciente/aprendente segue abaixo percentual descritivo de repertório observado em áreas específicas: Comportamentos: <strong>Socialização, Linguagem, Autocuidados, Cognição e Desenvolvimento Motor.</strong></p>");
       partes.push('<div class="grafico"><img src="'+imgPortage+'" data-mm="165" style="width:165mm"></div>');
