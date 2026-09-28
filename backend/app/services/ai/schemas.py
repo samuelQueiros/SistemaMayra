@@ -64,6 +64,35 @@ class ExtractedTemplateDraft(BaseModel):
     chart_type: str = Field(default="bar", description="Tipo de gráfico mais adequado: 'bar', 'radar' ou 'pie'.")
 
 
+class ConclusionAndInterventions(BaseModel):
+    """Saída estruturada da IA para as "Considerações Finais" e as
+    "Sugestões De Intervenção" individualizadas de um laudo (pontos 2 e 3
+    da revisão de relatórios). Vem em duas seções nomeadas — não um texto
+    único — porque o relatório as imprime em blocos separados."""
+
+    consideracoes_finais: str = Field(
+        description=(
+            "Síntese clínica de fechamento construída a partir do estudo de "
+            "caso, das observações clínicas, das habilidades avaliadas, dos "
+            "protocolos efetivamente utilizados e da hipótese diagnóstica "
+            "selecionada para ESTE paciente — nunca um texto genérico."
+        )
+    )
+    sugestoes_intervencao: str = Field(
+        description=(
+            "Sugestões de intervenção que decorrem das necessidades, "
+            "dificuldades e potencialidades registradas para ESTE paciente — "
+            "nunca uma lista fixa associada apenas à hipótese diagnóstica."
+        )
+    )
+
+    def como_texto_consideracoes(self) -> str:
+        return self.consideracoes_finais
+
+    def como_texto_sugestoes(self) -> str:
+        return self.sugestoes_intervencao
+
+
 class ReportSections(BaseModel):
     """Saída estruturada da IA para o texto descritivo do laudo (SPEC.md
     seção 5). Seções nomeadas em vez de um texto único solto, para casar

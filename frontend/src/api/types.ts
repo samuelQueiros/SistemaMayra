@@ -103,6 +103,8 @@ export interface ComputedResult {
 export interface DiagnosticHypothesis {
   label: string
   cid?: string | null
+  // Só a hipótese marcada como selecionada aparece no PDF final.
+  selected?: boolean
 }
 
 export interface ClinicalSections {
@@ -120,6 +122,26 @@ export interface ClinicalSections {
 export interface CidCode {
   label: string
   cid: string
+}
+
+// Ponto 4 da revisão de relatórios: registro de um formulário preenchido
+// pelos responsáveis/família fora do sistema (papel, verbal), preservado
+// como anexo e sujeito a validação da psicóloga antes de virar dado usável
+// no laudo — ver GuardianFormSubmission no backend.
+export interface GuardianFormSubmission {
+  id: string
+  patient_id: string
+  kind: string
+  respondent_name: string
+  respondent_relation?: string | null
+  filled_at: string
+  file_path?: string | null
+  notes?: string | null
+  status: 'pendente' | 'validado' | 'rejeitado'
+  validated_by_id?: string | null
+  validated_at?: string | null
+  created_by_id: string
+  created_at: string
 }
 
 export interface Report {

@@ -1,10 +1,11 @@
+import re
 import time
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
 from app.services.ai.provider import get_chat_model
-from app.services.ai.schemas import ExtractedTemplateDraft, ReportSections
+from app.services.ai.schemas import ConclusionAndInterventions, ExtractedTemplateDraft, ReportSections
 
 # Tamanho máximo do texto já redigido de cada laudo de origem, ao montar o
 # resumo para o parecer consolidado. Sem isso, selecionar vários laudos com
@@ -64,15 +65,29 @@ ESTILO_DE_ESCRITA = (
     "tratado fora do texto, pela interface do sistema."
 )
 
+# Ponto 10 da revisão de relatórios: limites explícitos do que a IA pode e
+# não pode fazer, compartilhados por todos os prompts deste módulo. A IA
+# pode organizar, integrar e redigir os dados fornecidos — nunca criar
+# achados clínicos que não estejam nos registros.
+LIMITES_DA_IA = (
+    "Use SOMENTE os dados fornecidos abaixo — nunca invente sintomas, "
+    "comportamentos, diagnósticos, instrumentos/escalas ou qualquer outro "
+    "dado que não esteja explicitamente informado. Não infira ou afirme um "
+    "diagnóstico fechado: descreva os achados e deixe claro que a "
+    "interpretação final e a conduta são de responsabilidade do "
+    "profissional responsável pelo caso. Nunca cite um instrumento, "
+    "protocolo ou escala que não apareça nos dados fornecidos. Os "
+    "percentuais/percentuais que aparecerem nos dados são descritivos e "
+    "clínico-observacionais, não percentis normativos — nunca use a "
+    "palavra 'percentil' ao se referir a eles. Se um dado necessário para "
+    "alguma parte do texto não estiver disponível, sinalize a lacuna "
+    "explicitamente (ex.: 'não há registro suficiente sobre X') em vez de "
+    "preenchê-la com suposições."
+)
+
 SYSTEM_PROMPT = (
-    f"{PERSONA} Use SOMENTE as informações fornecidas abaixo (nome da "
-    "escala, respostas marcadas, pontuações calculadas e classificação) — "
-    "nunca invente sintomas, comportamentos, diagnósticos ou dados que não "
-    "estejam explicitamente informados. Escreva em português do Brasil, em "
-    "tom clínico, objetivo e respeitoso. Não afirme um diagnóstico fechado: "
-    "descreva os achados calculados e deixe claro que a interpretação final "
-    "e a conduta são de responsabilidade do profissional responsável pelo "
-    f"caso. {ESTILO_DE_ESCRITA}"
+    f"{PERSONA} {LIMITES_DA_IA} Escreva em português do Brasil, em tom "
+    f"clínico, objetivo e respeitoso. {ESTILO_DE_ESCRITA}"
 )
 
 HUMAN_TEMPLATE = """Escala/modelo utilizado: {template_name}
@@ -139,19 +154,79 @@ def _montar_resumo(schema: dict, answers: dict, computed: dict) -> str:
     return "\n".join(linhas)
 
 
+# Pontos 2 e 3 da revisão de relatórios: considerações finais e sugestões
+# de intervenção deixam de ser texto-padrão fixo (potencialmente vinculado
+# só à hipótese diagnóstica) e passam a ser compostas pela IA a partir do
+# conjunto de dados individuais do paciente — usado pelo formulário
+# standalone (formulario-novo-paciente.html) ao gerar o laudo.
+CONCLUSION_SYSTEM_PROMPT = (
+    f"{PERSONA} Sua tarefa agora é escrever DUAS seções de fechamento de um "
+    "parecer neuropsicopedagógico — as \"Considerações Finais\" e as "
+    "\"Sugestões De Intervenção\" — construídas a partir do conjunto de "
+    "dados específicos deste paciente (estudo de caso, observações "
+    f"clínicas, habilidades avaliadas, protocolos utilizados e a hipótese "
+    "diagnóstica selecionada). As sugestões de intervenção devem decorrer "
+    "das necessidades, dificuldades e potencialidades registradas para "
+    "este paciente — nunca ser uma lista fixa que você associa apenas por "
+    f"causa da hipótese diagnóstica informada. {LIMITES_DA_IA} Escreva em "
+    f"português do Brasil, em tom clínico, objetivo e respeitoso. {ESTILO_DE_ESCRITA}"
+)
+
+CONCLUSION_HUMAN_TEMPLATE = """Paciente: {patient_name}
+
+Dados registrados para este paciente (fonte única de verdade — não use \
+nada além disso):
+{resumo}
+
+Escreva as "Considerações Finais" (síntese clínica de fechamento que \
+integra o estudo de caso, as observações, as habilidades avaliadas, os \
+protocolos utilizados e a hipótese selecionada) e as "Sugestões De \
+Intervenção" (recomendações que decorrem diretamente das necessidades, \
+dificuldades e potencialidades descritas acima para este paciente)."""
+
+_conclusion_prompt = ChatPromptTemplate.from_messages(
+    [("system", CONCLUSION_SYSTEM_PROMPT), ("human", CONCLUSION_HUMAN_TEMPLATE)]
+)
+
+
+def generate_conclusion_and_interventions(
+    *,
+    provider: str,
+    model: str,
+    api_key: str,
+    patient_name: str,
+    estudo_de_caso: str | None,
+    observacoes_clinicas: str | None,
+    habilidades_avaliadas: str | None,
+    protocolos_utilizados: str | None,
+    hipotese_selecionada: str | None,
+) -> ConclusionAndInterventions:
+    partes = []
+    if estudo_de_caso:
+        partes.append(f"Estudo de caso:\n{estudo_de_caso}")
+    if observacoes_clinicas:
+        partes.append(f"Observações clínicas:\n{observacoes_clinicas}")
+    if habilidades_avaliadas:
+        partes.append(f"Habilidades avaliadas:\n{habilidades_avaliadas}")
+    if protocolos_utilizados:
+        partes.append(f"Protocolos efetivamente utilizados e resultados:\n{protocolos_utilizados}")
+    if hipotese_selecionada:
+        partes.append(f"Hipótese diagnóstica selecionada para este paciente:\n{hipotese_selecionada}")
+    resumo = "\n\n".join(partes) if partes else "(nenhum dado adicional registrado até o momento)"
+
+    chat_model = get_chat_model(provider, model, api_key).with_structured_output(ConclusionAndInterventions)
+    messages = _conclusion_prompt.format_messages(patient_name=patient_name, resumo=resumo)
+    return _invocar_com_retentativas(chat_model, messages)
+
+
 CONSOLIDATED_SYSTEM_PROMPT = (
     f"{PERSONA} Você vai ler os resultados de VÁRIAS avaliações já "
     "realizadas com o mesmo paciente (escalas/modelos diferentes ou a "
     "mesma escala em datas diferentes) e produzir um ÚNICO parecer "
     "consolidado, integrando os achados de todas elas numa visão clínica "
     "coerente — apontando convergências, divergências e evolução ao longo "
-    "do tempo quando houver mais de uma data. Use SOMENTE as informações "
-    "fornecidas abaixo; nunca invente sintomas, comportamentos, "
-    "diagnósticos ou dados que não estejam explicitamente informados. "
-    "Escreva em português do Brasil, em tom clínico, objetivo e "
-    "respeitoso. Não afirme um diagnóstico fechado: descreva os achados e "
-    "deixe claro que a interpretação final e a conduta são de "
-    f"responsabilidade do profissional responsável pelo caso. {ESTILO_DE_ESCRITA}"
+    f"do tempo quando houver mais de uma data. {LIMITES_DA_IA} Escreva em "
+    f"português do Brasil, em tom clínico, objetivo e respeitoso. {ESTILO_DE_ESCRITA}"
 )
 
 CONSOLIDATED_HUMAN_TEMPLATE = """Paciente: {patient_name}
@@ -196,7 +271,24 @@ def generate_consolidated_report_text(
     return _invocar_com_retentativas(chat_model, messages)
 
 
+_TAG_HTML = re.compile(r"<[^>]+>")
+_ESPACOS_REPETIDOS = re.compile(r"[ \t]+")
+_LINHAS_EM_BRANCO_REPETIDAS = re.compile(r"\n{3,}")
+
+
+def _remover_html(texto: str) -> str:
+    """O texto de laudos criados pelo formulário standalone
+    (`gerarDocumentoLaudoHTML()`) é o HTML inteiro do laudo, não texto
+    corrido — mandar isso direto pra IA (ponto 10 da revisão) arrisca
+    truncar no meio de uma tag e passar markup quebrado como se fosse
+    conteúdo clínico. Extrai só o texto visível antes de truncar/enviar."""
+    sem_tags = _TAG_HTML.sub(" ", texto)
+    sem_espacos = _ESPACOS_REPETIDOS.sub(" ", sem_tags)
+    return _LINHAS_EM_BRANCO_REPETIDAS.sub("\n\n", sem_espacos).strip()
+
+
 def _truncar(texto: str, limite: int = _TAMANHO_MAXIMO_TEXTO_POR_LAUDO) -> str:
+    texto = _remover_html(texto)
     if len(texto) <= limite:
         return texto
     return texto[:limite].rstrip() + "…"

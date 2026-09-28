@@ -69,9 +69,12 @@ def update_me(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Psychologist:
-    """Atualiza dados do próprio perfil — hoje só o registro profissional
-    (ex.: CRP), usado no bloco de assinatura do PDF completo."""
+    """Atualiza dados do próprio perfil: registro profissional (ex.: CRP),
+    bio exibida no bloco "Sobre A Profissional Responsável" e as linhas de
+    credencial da assinatura — todos usados na geração do laudo."""
     current.professional_registration = data.professional_registration
+    current.bio_profissional = data.bio_profissional
+    current.credenciais_assinatura = data.credenciais_assinatura
     db.commit()
     db.refresh(current)
     return current
