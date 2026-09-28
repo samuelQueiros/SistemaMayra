@@ -1,0 +1,64 @@
+# Deploy de produção em uma VPS genérica (Docker + Docker Compose).
+# Sobe 3 serviços: banco Postgres, a aplicação (Dockerfile na raiz, já
+# empacota backend + build do frontend num único serviço) e Caddy como
+# proxy reverso com HTTPS automático (Let's Encrypt) para o domínio
+# configurado em DOMAIN (ver .env.example / DEPLOY.md seção 3-4).
+#
+# Uso:
+#   cp .env.example .env   # preencher de verdade, ver DEPLOY.md
+#   docker compose up -d --build
+#
+# Repare: DATABASE_URL não vem do .env aqui — é montado a partir de
+# POSTGRES_PASSWORD para sempre apontar pro serviço "db" deste compose.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: formpsico
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}"
+      POSTGRES_DB: formpsico
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U formpsico"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql+psycopg://formpsico:${POSTGRES_PASSWORD}@db:5432/formpsico"
+    volumes:
+      - app_storage:/app/backend/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: "${DOMAIN:?defina DOMAIN no .env, ex: laudos.suaclinica.com.br}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  db_data:
+  app_storage:
+  caddy_data:
+  caddy_config:

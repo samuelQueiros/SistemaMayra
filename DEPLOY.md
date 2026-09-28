@@ -58,13 +58,55 @@ Copie `.env.example` e preencha de verdade antes de subir o serviço
       bibliotecas de sistema do WeasyPrint instaladas no `Dockerfile`
       funcionam corretamente dentro do container).
 
+### 3.1 Runbook para uma VPS genérica (Docker Compose + Caddy)
+
+`docker-compose.yml` e `Caddyfile` na raiz do projeto sobem os 3 serviços
+juntos: Postgres, a aplicação e Caddy como proxy reverso com HTTPS
+automático (Let's Encrypt) para o domínio configurado — não precisa
+configurar TLS na mão.
+
+Pré-requisito: um registro DNS tipo A do seu domínio (ex.:
+`laudos.suaclinica.com.br`) apontando para o IP público da VPS, propagado
+*antes* de subir o Caddy (senão a emissão do certificado falha).
+
+Na VPS (Ubuntu/Debian; ajuste para outra distro):
+
+```bash
+# 1. Docker + Docker Compose, se ainda não tiver
+curl -fsSL https://get.docker.com | sh
+
+# 2. Copiar o projeto para a VPS (git clone do seu repositório, ou
+#    `rsync`/`scp` a partir da sua máquina)
+git clone <url-do-seu-repositorio> formpsico
+cd formpsico
+
+# 3. Configurar variáveis de ambiente
+cp .env.example .env
+nano .env   # preencha JWT_SECRET (openssl rand -hex 32), POSTGRES_PASSWORD,
+            # DOMAIN, e a chave de IA se for usar geração por IA
+
+# 4. Subir tudo (build da imagem + Postgres + Caddy)
+docker compose up -d --build
+
+# 5. Acompanhar os logs até o Caddy confirmar o certificado emitido
+docker compose logs -f caddy
+```
+
+Depois disso o sistema fica em `https://SEU_DOMINIO`, com renovação de
+certificado automática pelo Caddy. Para atualizar após um novo commit:
+`git pull && docker compose up -d --build`.
+
+- [ ] Executado numa VPS real (o checklist acima ainda não foi rodado
+      fora deste ambiente de desenvolvimento — confirme cada passo ao
+      subir pela primeira vez).
+
 ## 4. HTTPS
 
-- [ ] O serviço roda hoje só em HTTP simples (`uvicorn`), sem HTTPS
-      embutido. Em produção, colocar atrás de um proxy reverso (ex.:
-      Caddy, Nginx, ou o HTTPS gerenciado da própria plataforma de
-      hospedagem) que termine o TLS e encaminhe para a porta 8000 do
-      container.
+- [x] Resolvido pelo runbook da seção 3.1 (Caddy com HTTPS automático) —
+      única exigência é o DNS do domínio já apontando para a VPS antes de
+      subir o `docker compose`. Alternativa equivalente: Nginx + certbot,
+      ou o HTTPS gerenciado da própria plataforma de hospedagem, caso não
+      use o `docker-compose.yml` deste repositório.
 - [ ] Sem HTTPS, o token de login (JWT) trafega em texto puro pela rede —
       inaceitável para dados de saúde. Não colocar no ar sem isso.
 
