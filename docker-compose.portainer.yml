@@ -1,16 +1,17 @@
 # Stack para o Portainer (Stacks > Add stack). Ver DEPLOY.md seção 3.2.
 #
-# Diferenças em relação ao docker-compose.yml (VPS "crua"):
+# Diferenças em relação ao docker-compose.yml (VPS "crua", sem Portainer):
 #   - Usa a imagem pronta publicada no GHCR pelo GitHub Actions
 #     (.github/workflows/docker-publish.yml) em vez de "build: .", então
 #     funciona tanto colando no Web editor quanto via Repository.
 #   - Não usa env_file nem bind mount de arquivos do repositório (o
-#     Portainer não tem esses arquivos no Web editor). Todas as variáveis
-#     vêm da seção "Environment variables" da stack (dá pra carregar o
-#     portainer.env.example com "Load variables from .env file").
-#   - Não sobe Caddy: servidores com Portainer normalmente já têm um proxy
-#     reverso (Traefik, Nginx Proxy Manager, Caddy...) ocupando 80/443. O
-#     app é publicado em APP_PORT e o proxy existente aponta pra ele.
+#     Portainer não tem esses arquivos). Todas as variáveis vêm da seção
+#     "Environment variables" da stack (dá pra carregar o
+#     portainer.env.example com "Load variables from .env file"), e o
+#     Caddy é configurado pela linha de comando em vez do Caddyfile.
+#
+# Obrigatórias: POSTGRES_PASSWORD, JWT_SECRET e DOMAIN (com o DNS do
+# domínio já apontando para a VPS, e as portas 80/443 livres).
 
 services:
   db:
@@ -35,6 +36,10 @@ services:
       ENV: production
       DATABASE_URL: "postgresql+psycopg://formpsico:${POSTGRES_PASSWORD}@db:5432/formpsico"
       JWT_SECRET: "${JWT_SECRET:?defina JWT_SECRET nas variáveis da stack}"
+      # Login da psicóloga, criado/atualizado a cada start (app/seed_admin.py).
+      ADMIN_NAME: "${ADMIN_NAME:-}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
       JWT_ALGORITHM: "${JWT_ALGORITHM:-HS256}"
       JWT_EXPIRES_MINUTES: "${JWT_EXPIRES_MINUTES:-1440}"
       AI_PROVIDER: "${AI_PROVIDER:-anthropic}"
@@ -52,11 +57,39 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    # HTTPS automático (Let's Encrypt) para DOMAIN, repassando para o app.
+    # Mesmo papel do Caddyfile do docker-compose.yml, sem precisar do arquivo.
+    command:
+      - caddy
+      - reverse-proxy
+      - --from
+      - "${DOMAIN:?defina DOMAIN nas variáveis da stack, ex: laudos.suaclinica.com.br}"
+      - --to
+      - app:8000
+      - --header-down
+      - "Strict-Transport-Security: max-age=31536000; includeSubDomains"
+      - --header-down
+      - "X-Content-Type-Options: nosniff"
+      - --header-down
+      - "X-Frame-Options: DENY"
     ports:
-      # Porta do host onde o proxy reverso (ou você, para testar) acessa o
-      # app. Troque APP_PORT se a 8000 já estiver ocupada no servidor.
-      - "${APP_PORT:-8000}:8000"
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
 
 volumes:
   db_data:
   app_storage:
+  caddy_data:
+  caddy_config:

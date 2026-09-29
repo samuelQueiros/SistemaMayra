@@ -39,9 +39,10 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4)" || exit 1
 
-# Aplica migrations pendentes e sobe o serviço. Variáveis de ambiente
+# Aplica migrations pendentes, cria/atualiza a conta ADMIN_* (se definida,
+# ver app/seed_admin.py) e sobe o serviço. Variáveis de ambiente
 # (DATABASE_URL, JWT_SECRET, ANTHROPIC_API_KEY, ...) vêm de fora do
 # container (docker run -e / docker-compose / secrets da plataforma) —
 # ver DEPLOY.md. --proxy-headers faz o app enxergar https/IP real quando
 # roda atrás de proxy reverso (Caddy, Traefik, Nginx Proxy Manager).
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers '--forwarded-allow-ips=*'"]
+CMD ["sh", "-c", "alembic upgrade head && python -m app.seed_admin && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers '--forwarded-allow-ips=*'"]

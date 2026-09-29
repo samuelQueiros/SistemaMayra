@@ -107,9 +107,12 @@ Arquivos usados: `docker-compose.portainer.yml` (a stack),
 `.github/workflows/docker-publish.yml` (publica a imagem).
 
 A stack usa uma **imagem pronta** no GitHub Container Registry, em vez de
-buildar no servidor, e não sobe Caddy — servidores com Portainer
-normalmente já têm um proxy reverso (Traefik, Nginx Proxy Manager...) em
-80/443.
+buildar no servidor, e sobe o Caddy (HTTPS automático) configurado só por
+variáveis — sem precisar do `Caddyfile`. Ocupa as portas 80/443 da VPS.
+
+**Atenção:** não use o `docker-compose.yml` no Portainer — ele depende do
+arquivo `.env` e do `Caddyfile` em disco e falha com
+`required variable DOMAIN is missing a value`.
 
 **1. Publicar a imagem (uma vez, e depois automático)**
 
@@ -131,19 +134,21 @@ normalmente já têm um proxy reverso (Traefik, Nginx Proxy Manager...) em
   informe as credenciais do GitHub.)
 - *Environment variables > Load variables from .env file*: carregue uma
   cópia preenchida de `portainer.env.example`. Obrigatórias:
-  `POSTGRES_PASSWORD` e `JWT_SECRET` (`openssl rand -hex 32`). Se a porta
-  8000 já estiver em uso no servidor, troque `APP_PORT`.
+  `POSTGRES_PASSWORD`, `JWT_SECRET` (`openssl rand -hex 32`) e `DOMAIN`.
+  Para já criar o
+  login da psicóloga, preencha `ADMIN_EMAIL`, `ADMIN_PASSWORD` (mín. 8
+  caracteres) e `ADMIN_NAME` — ver seção 6.
 - *Deploy the stack*. O container `app` roda as migrations sozinho e fica
   `healthy` quando `/api/health` responde.
 
 **3. HTTPS / domínio**
 
-- No proxy reverso existente, crie o host do domínio (ex.:
-  `laudos.suaclinica.com.br`) apontando para `http://IP_DO_SERVIDOR:APP_PORT`
-  (ou para `app:8000`, se o proxy estiver na mesma rede Docker da stack),
-  com certificado Let's Encrypt. Não exponha o app sem HTTPS (seção 4).
-- Se não houver proxy nenhum no servidor, use o `docker-compose.yml` com
-  Caddy da seção 3.1.
+- Antes do deploy: registro DNS tipo A de `DOMAIN` apontando para o IP da
+  VPS, e portas 80 e 443 liberadas no firewall. O Caddy emite e renova o
+  certificado sozinho — acompanhe nos logs do container `caddy`.
+- Se a VPS já tiver outro proxy ocupando 80/443, remova o serviço `caddy`
+  da stack, publique a porta do app (`ports: ["8000:8000"]`) e aponte o
+  proxy existente para ela.
 
 **4. Atualizar após um novo commit**
 
@@ -153,7 +158,9 @@ normalmente já têm um proxy reverso (Traefik, Nginx Proxy Manager...) em
 
 - [x] Stack testada localmente com `docker compose -f
       docker-compose.portainer.yml` (2026-09-28): migrations aplicadas,
-      container `healthy`, API e frontend respondendo.
+      container `healthy`, API e frontend respondendo via Caddy (HTTPS,
+      redirect http→https, cabeçalhos de segurança), login criado por
+      `ADMIN_*`.
 - [ ] Executado num Portainer real.
 - [ ] Backup: os dados ficam nos volumes `<stack>_db_data` e
       `<stack>_app_storage` — configure o backup (seção 2) apontando para
@@ -194,7 +201,12 @@ segurança", Prompt 4.3, para o detalhamento do que já foi revisado)
 
 ## 6. Depois de subir
 
-- [ ] Cadastrar a primeira conta de psicóloga (`POST /api/auth/register`).
+- [ ] Cadastrar a primeira conta de psicóloga. Jeito recomendado: definir
+      `ADMIN_EMAIL`, `ADMIN_PASSWORD` (e `ADMIN_NAME`) no `.env` / nas
+      variáveis da stack do Portainer. A cada start o container cria essa
+      conta se ela não existir e, se `ADMIN_PASSWORD` mudou, redefine a
+      senha (`backend/app/seed_admin.py`) — serve também para recuperar
+      acesso. Alternativa: `POST /api/auth/register`.
 - [ ] Nada mais a semear: desde 2026-09-20 o sistema usa um protocolo fixo
       (`frontend/public/formulario-novo-paciente.html`), não mais templates
       configuráveis por escala. O `ReportTemplate` interno
