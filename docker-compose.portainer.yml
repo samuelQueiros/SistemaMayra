@@ -57,8 +57,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    expose:
-      - "8000"
+    ports:
+      # Por padrão o app só fica acessível pela própria VPS (o Caddy é quem
+      # expõe pra internet). Para acessar direto, sem Caddy/HTTPS (teste, ou
+      # atrás de outro proxy), defina APP_PORT=8000 (ou outra porta livre).
+      - "${APP_PORT:-127.0.0.1:8000}:8000"
 
   caddy:
     image: caddy:2-alpine
@@ -79,9 +82,12 @@ services:
       - --header-down
       - "X-Frame-Options: DENY"
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+      # Troque HTTP_PORT/HTTPS_PORT se 80/443 já estiverem ocupadas na VPS.
+      # Atenção: o certificado automático precisa de pelo menos uma das duas
+      # na porta padrão (80 ou 443) — com as duas trocadas, o HTTPS não sai.
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
     volumes:
       - caddy_data:/data
       - caddy_config:/config
