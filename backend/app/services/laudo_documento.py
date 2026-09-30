@@ -7,12 +7,12 @@ no formulário), seguindo o modelo oficial da psicóloga (relatório
 converte esse HTML:
 
 - PDF: WeasyPrint, com o CSS de página (A4, moldura, logo e rodapé em
-  todas as páginas) que já vem embutido no próprio HTML;
+  todas as páginas, exceto na capa) que já vem embutido no próprio HTML;
 - DOCX: python-docx, percorrendo o vocabulário fechado de blocos que o
   formulário gera (classes CSS abaixo) e reproduzindo a mesma estrutura em
-  Word — moldura da página, cabeçalho com logo, rodapé com contatos,
-  tabelas, gráficos e destaques —, para a psicóloga poder editar o laudo
-  no Word mantendo o layout.
+  Word — capa de página inteira numa seção própria, moldura da página,
+  cabeçalho com logo, rodapé com contatos, tabelas, gráficos e destaques
+  —, para a psicóloga poder editar o laudo no Word mantendo o layout.
 
 Imagens só são aceitas como `data:` URI (o formulário embute tudo em
 base64): nenhuma URL externa é buscada, nem pelo WeasyPrint.
@@ -23,6 +23,7 @@ import io
 import re
 
 from docx import Document
+from docx.enum.section import WD_SECTION
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_COLOR_INDEX, WD_LINE_SPACING
 from docx.oxml import OxmlElement
@@ -35,6 +36,10 @@ from weasyprint.urls import URLFetcher
 FONTE_PADRAO = "Arial"
 TAMANHO_PADRAO = 10
 RECUO_PRIMEIRA_LINHA_MM = 12.5
+# A capa já vem composta pelo formulário (arte + nome) numa imagem A4. No
+# Word ela fica um pouco menor que a página para a linha da imagem nunca
+# transbordar e criar uma página em branco.
+LARGURA_CAPA_DOCX_MM = 208
 
 _DESTAQUES = {"cinza": WD_COLOR_INDEX.GRAY_25, "amarelo": WD_COLOR_INDEX.YELLOW}
 _ALINHAMENTOS = {
@@ -250,8 +255,43 @@ class _ConversorDocx:
         secao.footer_distance = Mm(10)
         _moldura_da_pagina(secao)
 
+    def _capa(self, raiz) -> None:
+        """Primeira seção do documento: só a imagem da capa, sem margens,
+        moldura, cabeçalho nem rodapé. O laudo começa na seção seguinte."""
+        achados = raiz.xpath('//*[contains(concat(" ", normalize-space(@class), " "), " capa ")]//img')
+        if not achados or _imagem_bytes(achados[0].get("src")) is None:
+            return
+        paragrafo = self.doc.add_paragraph()
+        paragrafo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        formato = paragrafo.paragraph_format
+        formato.space_before = Pt(0)
+        formato.space_after = Pt(0)
+        formato.line_spacing = 1.0
+        if not _adicionar_imagem(paragrafo.add_run(), achados[0].get("src"), LARGURA_CAPA_DOCX_MM):
+            paragrafo._p.getparent().remove(paragrafo._p)
+            return
+        self.doc.add_section(WD_SECTION.NEW_PAGE)
+        # add_section cria um parágrafo vazio só para guardar a quebra de
+        # seção; ele não cabe na página da capa. A quebra passa para o
+        # parágrafo da imagem e o vazio é removido.
+        quebra = self.doc.paragraphs[-1]._p
+        sect_pr_capa = quebra.pPr.find(qn("w:sectPr"))
+        paragrafo._p.get_or_add_pPr().append(sect_pr_capa)
+        quebra.getparent().remove(quebra)
+
+        capa = self.doc.sections[0]
+        for margem in ("top_margin", "bottom_margin", "left_margin", "right_margin", "header_distance", "footer_distance"):
+            setattr(capa, margem, Mm(0))
+        bordas = capa._sectPr.find(qn("w:pgBorders"))
+        if bordas is not None:
+            capa._sectPr.remove(bordas)
+
     def _cabecalho_e_rodape(self, raiz) -> None:
-        secao = self.doc.sections[0]
+        secao = self.doc.sections[-1]
+        if len(self.doc.sections) > 1:
+            # Depois da capa: cabeçalho/rodapé próprios, não herdados.
+            secao.header.is_linked_to_previous = False
+            secao.footer.is_linked_to_previous = False
         for classe, destino, largura in (
             ("cabecalho-pagina", secao.header, 19),
             ("rodape-pagina", secao.footer, 78),
@@ -552,7 +592,7 @@ class _ConversorDocx:
 
         if "quebra" in classes:
             self.quebra_pendente = True
-        elif "cabecalho-pagina" in classes or "rodape-pagina" in classes or "moldura" in classes:
+        elif classes & {"cabecalho-pagina", "rodape-pagina", "moldura", "capa"}:
             return
         elif "cab-paciente" in classes:
             self._cabecalho_paciente(el)
@@ -601,6 +641,7 @@ class _ConversorDocx:
         corpo = raiz.xpath('//*[contains(concat(" ", normalize-space(@class), " "), " documento ")]')
         if not corpo:
             raise DocumentoInvalidoError("HTML do laudo não contém o bloco .documento.")
+        self._capa(raiz)
         self._cabecalho_e_rodape(raiz)
         for filho in corpo[0]:
             self.bloco(filho)

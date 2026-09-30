@@ -1,5 +1,9 @@
+import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { PageHeader } from '../components/ds'
+
+const MENSAGEM_SAIDA =
+  'Há alterações no protocolo que ainda não foram salvas no sistema.\n\nSair mesmo assim?'
 
 export default function NovoAtendimento() {
   const [params] = useSearchParams()
@@ -7,6 +11,51 @@ export default function NovoAtendimento() {
   const src = pacienteId
     ? `/formulario-novo-paciente.html?paciente=${pacienteId}`
     : '/formulario-novo-paciente.html'
+
+  // O formulário (iframe) avisa quando há alterações ainda não gravadas no
+  // banco. Enquanto houver, fechar/recarregar a aba ou sair pelo menu pede
+  // confirmação — o iframe sozinho não consegue impedir a troca de rota.
+  const alteracoesPendentes = useRef(false)
+
+  useEffect(() => {
+    alteracoesPendentes.current = false
+
+    function onMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return
+      const dados = event.data as { tipo?: string; pendente?: boolean } | null
+      if (dados?.tipo === 'protocolo:alteracoes-pendentes') {
+        alteracoesPendentes.current = Boolean(dados.pendente)
+      }
+    }
+
+    function onBeforeUnload(event: BeforeUnloadEvent) {
+      if (!alteracoesPendentes.current) return
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    function onClickCaptura(event: MouseEvent) {
+      if (!alteracoesPendentes.current) return
+      const alvo = event.target as Element | null
+      const saida = alvo?.closest('a[href]:not([target="_blank"]), [data-confirmar-saida]')
+      if (!saida) return
+      if (window.confirm(MENSAGEM_SAIDA)) {
+        alteracoesPendentes.current = false
+        return
+      }
+      event.preventDefault()
+      event.stopPropagation()
+    }
+
+    window.addEventListener('message', onMessage)
+    window.addEventListener('beforeunload', onBeforeUnload)
+    document.addEventListener('click', onClickCaptura, true)
+    return () => {
+      window.removeEventListener('message', onMessage)
+      window.removeEventListener('beforeunload', onBeforeUnload)
+      document.removeEventListener('click', onClickCaptura, true)
+    }
+  }, [src])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>

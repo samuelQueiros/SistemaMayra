@@ -89,6 +89,51 @@ def test_exporta_docx_com_estrutura_do_modelo(client):
     assert titulo.paragraph_format.page_break_before
 
 
+HTML_COM_CAPA = HTML_LAUDO.replace(
+    "@page{{size:A4;margin:30mm 20mm 27mm 20mm}}".replace("{{", "{").replace("}}", "}"),
+    "@page{size:A4;margin:30mm 20mm 27mm 20mm;@top-center{content:'CABECALHO'}}"
+    "@page capa{margin:0;@top-center{content:none}}"
+    ".moldura{position:fixed}.capa{page:capa;width:210mm;height:297mm;break-after:page}"
+    ".capa img{width:210mm;height:297mm}",
+).replace(
+    '<div class="moldura"></div>',
+    f'<div class="moldura"></div><div class="capa"><img src="{PNG_1X1}" data-mm="210"></div>',
+)
+
+
+def test_pdf_comeca_pela_capa_sem_cabecalho():
+    from pypdf import PdfReader
+
+    from app.services.laudo_documento import html_para_pdf
+
+    leitor = PdfReader(io.BytesIO(html_para_pdf(HTML_COM_CAPA)))
+    assert len(leitor.pages) == 2
+    capa, segunda = leitor.pages[0].extract_text(), leitor.pages[1].extract_text()
+    assert "CABECALHO" not in capa and "PARECER" not in capa
+    assert "CABECALHO" in segunda and "PARECER NEUROPSICOPEDAG" in segunda
+
+
+def test_docx_tem_capa_em_secao_propria():
+    doc = Document(io.BytesIO(html_para_docx(HTML_COM_CAPA)))
+    assert len(doc.sections) == 2
+    capa, laudo = doc.sections
+    # Capa: página inteira, sem margens, moldura, cabeçalho ou rodapé.
+    assert capa.top_margin == 0 and capa.left_margin == 0
+    assert capa._sectPr.find(qn("w:pgBorders")) is None
+    assert not capa.header._element.xpath(".//pic:pic")
+    primeiro = doc.paragraphs[0]
+    assert primeiro._p.xpath(".//pic:pic") and not primeiro.text.strip()
+    # A quebra de seção fica no próprio parágrafo da imagem (sem parágrafo
+    # vazio extra que empurraria uma página em branco).
+    assert primeiro._p.pPr.find(qn("w:sectPr")) is not None
+    # Laudo: configuração de sempre a partir da 2ª página.
+    assert laudo._sectPr.find(qn("w:pgBorders")) is not None
+    assert not laudo.header.is_linked_to_previous
+    assert laudo.header._element.xpath(".//pic:pic")
+    assert laudo.footer._element.xpath(".//pic:pic")
+    assert any("PARECER NEUROPSICOPEDAGÓGICO" in p.text for p in doc.paragraphs[1:])
+
+
 def test_docx_preserva_destaques():
     doc = Document(io.BytesIO(html_para_docx(HTML_LAUDO)))
     runs = [r for p in doc.paragraphs for r in p.runs]

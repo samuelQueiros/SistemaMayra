@@ -152,6 +152,79 @@ body{padding-bottom:86px}
 .status-salvamento.erro{border-left-color:#c0392b;background:#fdecea;color:#a12a1e}
 @media(max-width:780px){.acoes{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.acoes button,.acoes .mais-opcoes{flex:0 0 auto;width:auto}.mais-opcoes .menu{right:auto;left:0;position:fixed;bottom:70px}#notificacoes{left:12px;right:12px;max-width:none}.wizard-cabecalho{margin:0 -24px 10px}button.pendencia{width:auto}}
 @media print{.wizard-cabecalho,#notificacoes,.pendencias{display:none!important}body{padding-bottom:0}}
+
+/* Stepper compacto, campos condicionais, espaçamento e acessibilidade
+   (camada de UX — não muda regras nem dados do protocolo). */
+:root{--altura-acoes:72px;--altura-cabecalho:150px;--texto-suave:#5f5f6e}
+html{scroll-padding-top:calc(var(--altura-cabecalho) + 12px);scroll-padding-bottom:calc(var(--altura-acoes) + 12px)}
+body{padding-bottom:calc(var(--altura-acoes) + 16px)}
+#notificacoes{bottom:calc(var(--altura-acoes) + 12px)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+.wizard-cabecalho{padding:8px 24px 4px}
+.wizard-linha-status{margin-bottom:6px;gap:4px 14px}
+.wizard-cabecalho .wizard-texto{font-size:13px;white-space:nowrap}
+.wizard-legenda{display:flex;flex-wrap:wrap;gap:2px 12px;margin:0;padding:0;list-style:none;font-size:11.5px;color:var(--texto-suave)}
+.wizard-legenda li{display:flex;align-items:center;gap:5px}
+.wizard-legenda .amostra{width:12px;height:12px;border-radius:50%;border:2px solid #c8c8d0;background:#eee;display:inline-block}
+.wizard-legenda .amostra.atual{background:var(--roxo);border-color:var(--roxo);box-shadow:0 0 0 2px #c9c3ee}
+.wizard-legenda .amostra.completo{background:#3f9a5c;border-color:#3f9a5c}
+.wizard-legenda .amostra.parcial{background:#fff4d6;border-color:#e0a800}
+#wizardStatusHolder{flex:1 1 240px;min-width:0;display:flex;justify-content:flex-end}
+#wizardStatusHolder .status-salvamento{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 10px;font-size:12px}
+.wizard-cabecalho .wizard-barra{height:6px}
+.wizard-trilho{display:flex;align-items:stretch;gap:4px;margin-top:6px}
+button.wizard-seta{flex:0 0 32px;width:32px;padding:0;background:#fff;color:var(--roxo);border:1px solid #d9d5ef;border-radius:8px;font-size:22px;line-height:1}
+button.wizard-seta:disabled{opacity:.35;cursor:default}
+.wizard-janela{position:relative;flex:1;min-width:0}
+.wizard-janela::before,.wizard-janela::after{content:"";position:absolute;top:0;bottom:0;width:40px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:1}
+.wizard-janela::before{left:0;background:linear-gradient(90deg,#fff 20%,rgba(255,255,255,0))}
+.wizard-janela::after{right:0;background:linear-gradient(270deg,#fff 20%,rgba(255,255,255,0))}
+.wizard-janela.tem-antes::before,.wizard-janela.tem-depois::after{opacity:1}
+.wizard-cabecalho .wizard-steps{display:flex;gap:2px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x proximity;scrollbar-width:none;padding:4px 2px 6px;margin:0;border:0}
+.wizard-cabecalho .wizard-steps::-webkit-scrollbar{display:none}
+.wizard-cabecalho .wizard-step{flex:0 0 104px;width:104px;max-width:none;height:72px;justify-content:flex-start;scroll-snap-align:center;color:var(--texto-suave);font-size:11.5px;padding:4px}
+.wizard-step .nome{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.25;overflow-wrap:anywhere}
+.wizard-step .circulo{flex:0 0 auto;width:28px;height:28px;border-color:#c8c8d0;color:var(--texto-suave)}
+.wizard-step.parcial{color:#7a5200}
+.wizard-seletor{display:none}
+.wizard-seletor select{margin:0;font-weight:bold;color:#4d4295;background:#f5f2ff;border-color:#c9c3ee}
+@media(max-width:700px){
+  .wizard-trilho,.wizard-legenda{display:none}
+  .wizard-seletor{display:block;margin:6px 0 4px}
+  body{padding:8px 8px calc(var(--altura-acoes) + 16px)}
+  .container{padding:14px}
+  .wizard-cabecalho{margin:0 -14px 10px;padding:6px 14px 4px}
+  .simnao button{width:auto;flex:1 1 0}
+  .etapa-form .grid.par-idade{grid-template-columns:1fr 1fr;gap:10px}
+  .wizard-cabecalho .wizard-texto{white-space:normal}
+}
+
+/* Campos que só aparecem conforme outra resposta (transição sem salto). */
+.condicional{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .28s ease,opacity .28s ease}
+.condicional.visivel{grid-template-rows:1fr;opacity:1}
+.condicional-conteudo{overflow:hidden;min-height:0;padding:0 3px 3px;margin:0 -3px}
+.condicional .condicional-conteudo>label{margin-top:12px}
+@media print{.condicional:not(.visivel){display:none}}
+.detalhe-sim{animation:etapaEntrada .25s ease}
+
+/* Espaçamento, hierarquia e foco consistentes entre as fases. */
+.etapa-form .grid{gap:16px 22px;align-items:start;margin-bottom:6px}
+.etapa-form .grid>div>label:first-child{margin-top:0}
+.etapa-form h2{margin:8px 0 18px}
+.etapa-form label{color:#2b2b38}
+input,select,textarea{border-color:#a9a9b8;min-height:40px}
+textarea{min-height:80px}
+input[readonly],textarea[readonly]{background:#f6f6f9;color:#3b3b48}
+.dica-campo{font-size:12px;color:var(--texto-suave);margin-top:4px}
+.simnao button{min-height:40px;min-width:64px}
+.simnao.campo-erro{outline:2px solid #c0392b;outline-offset:3px;border-radius:8px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid #7466b5;outline-offset:2px}
+input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
+.wizard-nav-etapa{align-items:center}
+.wizard-nav-posicao{font-size:13px;color:var(--texto-suave);font-weight:bold;text-align:center}
+@media(max-width:780px){.wizard-nav-etapa{flex-direction:row;flex-wrap:wrap}.wizard-nav-etapa button{flex:1 1 140px}.wizard-nav-posicao{order:-1;flex-basis:100%}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
@@ -162,7 +235,7 @@ body{padding-bottom:86px}
 </div>
 
 <div class="aviso no-print">
-<strong>Como preencher o protocolo:</strong> percorra as fases na ordem que preferir. O número da fase fica <strong style="color:#2f7a47">verde ✓</strong> quando todos os campos essenciais (<span style="color:#c0392b">*</span>) dela estão preenchidos, e <strong style="color:#8a5a06">amarelo</strong> enquanto está pela metade — no fim de cada fase aparece o que ainda falta. Depois do primeiro <strong>Salvar Protocolo</strong>, cada alteração é salva sozinha.
+<strong>Como preencher o protocolo:</strong> percorra as fases na ordem que preferir. No topo, a fase atual fica <strong style="color:#4d4295">roxa</strong>, a fase concluída fica <strong style="color:#2f7a47">verde ✓</strong> (todos os campos essenciais <span style="color:#c0392b">*</span> preenchidos), a fase começada mas com pendências fica <strong style="color:#8a5a06">amarela</strong> e a fase ainda não iniciada fica cinza — no fim de cada fase aparece o que ainda falta. Depois do primeiro <strong>Salvar Protocolo</strong>, cada alteração é salva sozinha.
 <div class="legenda-essencial">Atalhos: <kbd>Ctrl</kbd>+<kbd>S</kbd> salva · <kbd>Alt</kbd>+<kbd>→</kbd> / <kbd>Alt</kbd>+<kbd>←</kbd> trocam de fase.</div>
 </div>
 
@@ -172,7 +245,7 @@ body{padding-bottom:86px}
 <div><label>Nome Completo Do Paciente</label><input id="nomePaciente"></div>
 <div><label>Sexo</label><select id="sexo"><option></option><option>Feminino</option><option>Masculino</option><option>Outro/Não Informado</option></select></div>
 <div><label>Data De Nascimento</label><input id="dataNascimento" placeholder="dd/mm/aaaa"></div>
-<div><label>Idade Cronológica</label><input id="idadeCronologica" readonly></div>
+<div><label>Idade Cronológica</label><input id="idadeCronologica" readonly aria-describedby="dicaIdadeCronologica"><div class="dica-campo" id="dicaIdadeCronologica">Calculada automaticamente a partir da data de nascimento.</div></div>
 <div><label>Idade Estimada Para O Portage</label><input id="idadeEstimadaPortage" readonly></div>
 <div><label>Idade Cognitiva Pelo Portage</label><input id="idadeCognitiva" readonly></div>
 <div><label>Marco De Desenvolvimento Infantil De Referência</label><input id="marcoReferencia" readonly></div>
@@ -207,7 +280,7 @@ body{padding-bottom:86px}
 <div><label>Convivência Social</label><input type="hidden" id="convivenciaSocial"><div class="simnao" data-campo="convivenciaSocial"><button type="button" onclick="selecionarSimNao('convivenciaSocial','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('convivenciaSocial','Não')">Não</button></div><textarea id="convivenciaSocialDescricao" class="detalhe-sim" placeholder="Se sim, descreva como ocorre a convivência social, frequência e contexto."></textarea></div>
 <div><label>Andou Com</label><div class="grid"><select id="andouAno"><option value="">Ano</option><option>Antes de 1 ano</option><option>1 ano</option><option>2 anos</option><option>3 anos</option><option>4 anos ou mais</option><option>Não informado</option></select><select id="andouMes"><option value="">Mês</option><option>0 meses</option><option>1 mês</option><option>2 meses</option><option>3 meses</option><option>4 meses</option><option>5 meses</option><option>6 meses</option><option>7 meses</option><option>8 meses</option><option>9 meses</option><option>10 meses</option><option>11 meses</option><option>Não informado</option></select></div><textarea id="desenvolvimentoMotor" placeholder="Observações sobre desenvolvimento motor, marcha, equilíbrio ou coordenação."></textarea></div>
 <div><label>Falou Com</label><div class="grid"><select id="falouAno"><option value="">Ano</option><option>Antes de 1 ano</option><option>1 ano</option><option>2 anos</option><option>3 anos</option><option>4 anos ou mais</option><option>Não informado</option></select><select id="falouMes"><option value="">Mês</option><option>0 meses</option><option>1 mês</option><option>2 meses</option><option>3 meses</option><option>4 meses</option><option>5 meses</option><option>6 meses</option><option>7 meses</option><option>8 meses</option><option>9 meses</option><option>10 meses</option><option>11 meses</option><option>Não informado</option></select></div><textarea id="desenvolvimentoFala" placeholder="Observações sobre primeiras palavras, frases, compreensão ou comunicação."></textarea></div>
-<div><label>Desfralde</label><select id="desfralde"><option value="">Selecione</option><option>Controle Total</option><option>Controle Diurno</option><option>Em Processo</option><option>Escapes</option><option>Não Informado</option></select><label>Idade Do Desfralde</label><div class="grid"><select id="desfraldeAno"><option value="">Ano</option><option>Antes de 1 ano</option><option>1 ano</option><option>2 anos</option><option>3 anos</option><option>4 anos</option><option>5 anos</option><option>6 anos ou mais</option><option>Não informado</option></select><select id="desfraldeMes"><option value="">Mês</option><option>0 meses</option><option>1 mês</option><option>2 meses</option><option>3 meses</option><option>4 meses</option><option>5 meses</option><option>6 meses</option><option>7 meses</option><option>8 meses</option><option>9 meses</option><option>10 meses</option><option>11 meses</option><option>Não informado</option></select></div></div>
+<div><label>Desfralde</label><select id="desfralde"><option value="">Selecione</option><option>Controle Total</option><option>Controle Diurno</option><option>Em Processo</option><option>Escapes</option><option>Não Informado</option></select><div class="condicional" data-depende="desfralde" data-quando="Controle Total|Controle Diurno|Escapes"><div class="condicional-conteudo"><label>Idade Do Desfralde</label><div class="grid"><select id="desfraldeAno"><option value="">Ano</option><option>Antes de 1 ano</option><option>1 ano</option><option>2 anos</option><option>3 anos</option><option>4 anos</option><option>5 anos</option><option>6 anos ou mais</option><option>Não informado</option></select><select id="desfraldeMes"><option value="">Mês</option><option>0 meses</option><option>1 mês</option><option>2 meses</option><option>3 meses</option><option>4 meses</option><option>5 meses</option><option>6 meses</option><option>7 meses</option><option>8 meses</option><option>9 meses</option><option>10 meses</option><option>11 meses</option><option>Não informado</option></select></div></div></div></div>
 </div>
 
 
@@ -215,8 +288,7 @@ body{padding-bottom:86px}
 <div class="grid">
 <div><label>Quem Encaminhou?</label><select id="encaminhamento"><option></option><option>Médico</option><option>Escola</option><option>Família</option><option>Médico E Escola</option><option>Outro</option></select></div>
 <div><label>Possui Diagnóstico Atual?</label><input type="hidden" id="diagnosticoAtual"><div class="simnao" data-campo="diagnosticoAtual"><button type="button" onclick="selecionarSimNao('diagnosticoAtual','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('diagnosticoAtual','Não')">Não</button></div><textarea id="diagnosticoAtualDescricao" class="detalhe-sim" placeholder="Se sim, descreva qual diagnóstico, profissional e data aproximada."></textarea></div>
-<div><label>Possui Laudo Anterior?</label><input type="hidden" id="laudoAnterior"><div class="simnao" data-campo="laudoAnterior"><button type="button" onclick="selecionarSimNao('laudoAnterior','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('laudoAnterior','Não')">Não</button></div><textarea id="laudoAnteriorDescricao" class="detalhe-sim" placeholder="Se sim, descreva qual laudo, profissional e data aproximada."></textarea></div>
-<div><label>Desde Qual Idade Possui Laudo?</label><div class="grid"><select id="idadeLaudoAno"><option value="">Ano</option><option>Antes de 1 ano</option><option>1 ano</option><option>2 anos</option><option>3 anos</option><option>4 anos</option><option>5 anos</option><option>6 anos ou mais</option><option>Não informado</option></select><select id="idadeLaudoMes"><option value="">Mês</option><option>0 meses</option><option>1 mês</option><option>2 meses</option><option>3 meses</option><option>4 meses</option><option>5 meses</option><option>6 meses</option><option>7 meses</option><option>8 meses</option><option>9 meses</option><option>10 meses</option><option>11 meses</option><option>Não informado</option></select></div></div>
+<div><label>Possui Laudo Anterior?</label><input type="hidden" id="laudoAnterior"><div class="simnao" data-campo="laudoAnterior"><button type="button" onclick="selecionarSimNao('laudoAnterior','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('laudoAnterior','Não')">Não</button></div><textarea id="laudoAnteriorDescricao" class="detalhe-sim" placeholder="Se sim, descreva qual laudo, profissional e data aproximada."></textarea><div class="condicional" data-depende="laudoAnterior" data-quando="Sim"><div class="condicional-conteudo"><label>Desde Qual Idade Possui Laudo?</label><div class="grid"><select id="idadeLaudoAno"><option value="">Ano</option><option>Antes de 1 ano</option><option>1 ano</option><option>2 anos</option><option>3 anos</option><option>4 anos</option><option>5 anos</option><option>6 anos ou mais</option><option>Não informado</option></select><select id="idadeLaudoMes"><option value="">Mês</option><option>0 meses</option><option>1 mês</option><option>2 meses</option><option>3 meses</option><option>4 meses</option><option>5 meses</option><option>6 meses</option><option>7 meses</option><option>8 meses</option><option>9 meses</option><option>10 meses</option><option>11 meses</option><option>Não informado</option></select></div></div></div></div>
 <div><label>Tem Familiares Laudados?</label><input type="hidden" id="familiaLaudo"><div class="simnao" data-campo="familiaLaudo"><button type="button" onclick="selecionarSimNao('familiaLaudo','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('familiaLaudo','Não')">Não</button></div><textarea id="familiaLaudoDescricao" class="detalhe-sim" placeholder="Se sim, descreva quem e qual laudo/diagnóstico."></textarea></div>
 <div><label>Há Histórico De Transtorno Na Família?</label><input type="hidden" id="transtornoFamilia"><div class="simnao" data-campo="transtornoFamilia"><button type="button" onclick="selecionarSimNao('transtornoFamilia','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('transtornoFamilia','Não')">Não</button></div><textarea id="transtornoFamiliaDescricao" class="detalhe-sim" placeholder="Se sim, descreva o transtorno, grau de parentesco e informações relevantes."></textarea></div>
 <div><label>Possui Irmãos Com Diagnóstico?</label><input type="hidden" id="irmaosDiagnostico"><div class="simnao" data-campo="irmaosDiagnostico"><button type="button" onclick="selecionarSimNao('irmaosDiagnostico','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('irmaosDiagnostico','Não')">Não</button></div><textarea id="irmaosDiagnosticoDescricao" class="detalhe-sim" placeholder="Se sim, descreva o diagnóstico, idade e vínculo familiar."></textarea></div>
@@ -1682,12 +1754,89 @@ async function prepararFoto(src,proporcao){
   }catch(e){return null;}
 }
 
+/* ---------------------------------------------------------------- capa */
+
+// Capa obrigatória de todo relatório (pré-visualização, PDF e Word). A arte
+// oficial (capa-relatorio.png, A4 em pé, sem o nome) recebe o nome do
+// paciente em maiúsculas na faixa roxa e vira uma única imagem A4 de 300 dpi,
+// que os três formatos usam sem nenhuma adaptação — este é o único lugar do
+// sistema que monta a capa.
+const CAPA_ARTE_URL="capa-relatorio.png";
+const CAPA_FONTE_URL="fonts/Fredoka.ttf";
+const CAPA_LARGURA_PX=2480, CAPA_ALTURA_PX=3508;
+// Área útil do nome dentro da faixa roxa (entre os corações), em frações da
+// largura/altura da arte. Se a arte mudar, ajuste só estes números.
+const CAPA_FAIXA={x:0.285,y:0.4287,largura:0.466,altura:0.039};
+let fonteDaCapa=null, capaEmCache={nome:null,dataUrl:null};
+function carregarFonteDaCapa(){
+  if(!fonteDaCapa)fonteDaCapa=(async()=>{
+    try{const f=new FontFace("FredokaCapa","url("+CAPA_FONTE_URL+")",{weight:"300 700"});await f.load();document.fonts.add(f);return '"FredokaCapa",';}
+    catch(e){return "";}
+  })();
+  return fonteDaCapa;
+}
+// Maior fonte em que o nome cabe na faixa: uma linha se der; senão, duas
+// linhas equilibradas (quebra entre palavras que deixa a linha mais longa
+// o mais curta possível).
+function ajustarNomeNaFaixa(ctx,nome,larguraMax,alturaMax,familia){
+  const fonte=t=>"600 "+t+"px "+familia+"Arial,Helvetica,sans-serif";
+  const largura=(texto,t)=>{ctx.font=fonte(t);return ctx.measureText(texto).width;};
+  for(let t=Math.round(alturaMax*0.72);t>=Math.round(alturaMax*0.5);t-=2){
+    if(largura(nome,t)<=larguraMax)return {tamanho:t,linhas:[nome],fonte:fonte(t)};
+  }
+  const palavras=nome.split(" ");
+  let melhor=[nome];
+  if(palavras.length>1){
+    let menor=Infinity;
+    for(let i=1;i<palavras.length;i++){
+      const linhas=[palavras.slice(0,i).join(" "),palavras.slice(i).join(" ")];
+      const maior=Math.max(largura(linhas[0],100),largura(linhas[1],100));
+      if(maior<menor){menor=maior;melhor=linhas;}
+    }
+  }
+  let t=Math.floor(alturaMax/(melhor.length*1.08));
+  while(t>12&&Math.max(...melhor.map(l=>largura(l,t)))>larguraMax)t-=1;
+  return {tamanho:t,linhas:melhor,fonte:fonte(t)};
+}
+async function gerarCapaRelatorio(nomePaciente){
+  const nome=String(nomePaciente||"").trim().replace(/\s+/g," ").toLocaleUpperCase("pt-BR");
+  if(capaEmCache.dataUrl&&capaEmCache.nome===nome)return capaEmCache.dataUrl;
+  try{
+    const [arte,familia]=await Promise.all([carregarImagem(CAPA_ARTE_URL),carregarFonteDaCapa()]);
+    const canvas=document.createElement("canvas");
+    canvas.width=CAPA_LARGURA_PX;canvas.height=CAPA_ALTURA_PX;
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.imageSmoothingQuality="high";
+    ctx.drawImage(arte,0,0,canvas.width,canvas.height);
+    if(nome){
+      const larguraMax=CAPA_FAIXA.largura*canvas.width, alturaMax=CAPA_FAIXA.altura*canvas.height;
+      const ajuste=ajustarNomeNaFaixa(ctx,nome,larguraMax,alturaMax,familia);
+      ctx.font=ajuste.fonte;ctx.fillStyle="#fff";ctx.textAlign="center";ctx.textBaseline="middle";
+      const centroX=(CAPA_FAIXA.x+CAPA_FAIXA.largura/2)*canvas.width;
+      const centroY=(CAPA_FAIXA.y+CAPA_FAIXA.altura/2)*canvas.height;
+      const entrelinha=ajuste.tamanho*1.08;
+      ajuste.linhas.forEach((linha,i)=>ctx.fillText(linha,centroX,centroY+(i-(ajuste.linhas.length-1)/2)*entrelinha));
+    }
+    const dataUrl=canvas.toDataURL("image/jpeg",0.92);
+    capaEmCache={nome,dataUrl};
+    return dataUrl;
+  }catch(e){
+    const mensagem="Não foi possível montar a capa do relatório (arquivo "+CAPA_ARTE_URL+" indisponível). Verifique a conexão e tente novamente.";
+    if(typeof notificar==="function")notificar(mensagem,"erro");
+    throw new Error(mensagem);
+  }
+}
+
 /* ---------------------------------------------------------------- documento */
 
 const CSS_LAUDO = `
 @page{size:A4;margin:30mm 20mm 27mm 20mm;
   @top-center{content:element(cabecalhoPagina);vertical-align:bottom;padding-bottom:4mm}
   @bottom-center{content:element(rodapePagina);vertical-align:top;padding-top:1mm}}
+@page capa{margin:0;@top-center{content:none}@bottom-center{content:none}}
+.capa{page:capa;width:210mm;height:297mm;margin:0;padding:0;overflow:hidden;break-after:page;page-break-after:always}
+.capa img{display:block;width:210mm;height:297mm}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:#fff}
 body{font-family:Arial,"Liberation Sans",Helvetica,FreeSans,"DejaVu Sans",sans-serif;font-size:10pt;line-height:1.5;color:#000}
@@ -1753,6 +1902,8 @@ td.cab-espaco{width:8mm}
   .cabecalho-pagina{background:#fff;max-width:210mm;margin:0 auto;padding-top:8mm}
   .documento{background:#fff;max-width:210mm;margin:0 auto;padding:6mm 20mm 14mm;box-shadow:0 2px 10px rgba(0,0,0,.15)}
   .quebra{border-top:2px dashed #c9c3ee;margin:8mm -20mm}
+  .capa{width:auto;height:auto;max-width:210mm;margin:0 auto 14px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  .capa img{width:100%;height:auto}
 }`;
 
 async function gerarDocumentoLaudoHTML(){
@@ -1766,6 +1917,7 @@ async function gerarDocumentoLaudoHTML(){
   const texto=(id,opcoes)=>blocoDeTexto(valor(id),Object.assign({},opcoesTexto,opcoes||{}));
   const QUEBRA='<div class="quebra"></div>';
   const partes=[];
+  const capa=await gerarCapaRelatorio(valor("nomePaciente"));
 
   // Fotos: 1ª no cabeçalho; 2ª a 4ª depois das escalas; demais (ou a 1ª de
   // novo, como no modelo) depois da análise por área.
@@ -1964,6 +2116,7 @@ async function gerarDocumentoLaudoHTML(){
   const titulo="Relatório - "+(valor("nomePaciente")||"Paciente");
   return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>'+esc(titulo)+"</title><style>"+CSS_LAUDO+"</style></head><body>"+
     '<div class="moldura"></div>'+
+    '<div class="capa"><img src="'+capa+'" data-mm="210" alt="Capa do relatório"></div>'+
     '<div class="cabecalho-pagina"><img src="'+LOGO_CABECALHO+'" data-mm="19" alt=""></div>'+
     '<div class="rodape-pagina"><img src="'+FOOTER+'" data-mm="78" alt=""></div>'+
     '<main class="documento">'+partes.join("")+"</main></body></html>";
@@ -2252,6 +2405,7 @@ function mostrarPreviaDoLaudo(html){
       });
 
       definirStatus('✓ Protocolo salvo às ' + horaAgora() + '. Novas alterações são salvas automaticamente.', 'salvo');
+      marcarPendente(false);
       notificar(primeiraVez
         ? 'Protocolo salvo no histórico do paciente. A partir de agora, cada alteração é salva sozinha.'
         : 'Protocolo e relatório atualizados no sistema.', 'sucesso');
@@ -2296,6 +2450,7 @@ function mostrarPreviaDoLaudo(html){
     } catch (e) {
       if (!confirm('A última alteração ainda não foi salva no sistema (' + e.message + ').\n\nSair mesmo assim?')) return;
     }
+    marcarPendente(false);
     // Quando aberto dentro do iframe do app (rota /atendimento/novo),
     // navega a janela de verdade (pai), não o próprio iframe.
     (window.top || window).location.href = '/pacientes/' + pacienteAtual.id + '/historico';
@@ -2340,14 +2495,42 @@ function mostrarPreviaDoLaudo(html){
   // "Salvar No Sistema"), qualquer alteração de campo sincroniza sozinha,
   // com um pequeno debounce — igual ao autosave original no localStorage,
   // só que agora persistindo de verdade no banco de dados do sistema.
+  // Alterações ainda não gravadas no banco (antes do primeiro "Salvar
+  // Protocolo", ou autosave pendente/com erro). A página do sistema que
+  // embute este formulário usa o aviso para confirmar antes de sair.
+  let alteracoesPendentes = false;
+  let versaoAlteracoes = 0;
+  function marcarPendente(pendente) {
+    if (!token || alteracoesPendentes === pendente) return;
+    alteracoesPendentes = pendente;
+    try {
+      if (window.parent !== window) window.parent.postMessage({ tipo: 'protocolo:alteracoes-pendentes', pendente }, location.origin);
+    } catch (e) { /* janela pai de outra origem */ }
+  }
+  window.addEventListener('beforeunload', (e) => {
+    if (!alteracoesPendentes || window.parent !== window) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+
   function ativarAutosaveNoBanco() {
-    function agendar() {
-      if (!laudoAtual) return;
+    function agendar(e) {
+      // Abrir uma fase com texto-padrão só registra que ela foi revisada:
+      // antes do primeiro salvamento isso não é uma alteração do usuário.
+      if (!laudoAtual) {
+        if (!(e && e.target && e.target.id === 'fasesRevisadas')) marcarPendente(true);
+        return;
+      }
+      marcarPendente(true);
+      const versao = ++versaoAlteracoes;
       clearTimeout(temporizadorAutosaveBanco);
       definirStatus('Salvando alterações…', 'salvando');
       temporizadorAutosaveBanco = setTimeout(() => {
         salvarRespostasNoBanco()
-          .then(() => definirStatus('✓ Alterações salvas às ' + horaAgora() + '.', 'salvo'))
+          .then(() => {
+            definirStatus('✓ Alterações salvas às ' + horaAgora() + '.', 'salvo');
+            if (versao === versaoAlteracoes) marcarPendente(false);
+          })
           .catch((e) => {
             // Sem conexão/instabilidade: avisa e tenta de novo sozinho.
             if (e.status === 401) {
@@ -2362,11 +2545,11 @@ function mostrarPreviaDoLaudo(html){
     }
     document.addEventListener('input', (e) => {
       if (!e.target || !e.target.matches('input, textarea, select')) return;
-      agendar();
+      agendar(e);
     }, true);
     document.addEventListener('change', (e) => {
       if (!e.target || !e.target.matches('input, textarea, select')) return;
-      agendar();
+      agendar(e);
     }, true);
   }
 
@@ -2497,6 +2680,13 @@ function mostrarPreviaDoLaudo(html){
       if (ta.style.display === "block") exigir(preenchido(ta), "Descrição: " + rotuloDoCampo(ta), ta);
     });
 
+    // Campos dependentes (ex.: "Desde qual idade possui laudo?"): só são
+    // essenciais enquanto estão visíveis. O mês continua opcional.
+    etapa.querySelectorAll(".condicional.visivel").forEach((bloco) => {
+      const el = bloco.querySelector("select,input,textarea");
+      if (el) exigir(preenchido(el), rotuloDoCampo(el), el);
+    });
+
     // Fases que já vêm com o texto-padrão do modelo só ficam verdes depois
     // de abertas ao menos uma vez (o texto precisa ser revisado para cada paciente).
     if (regra.revisar && !fasesRevisadas().includes(etapa.dataset.titulo)) {
@@ -2550,6 +2740,100 @@ function mostrarPreviaDoLaudo(html){
     }));
   }
 
+
+  /* ------------------------------------------------ campos condicionais */
+
+  // Blocos `.condicional` só aparecem quando o campo de controle
+  // (data-depende) tem um dos valores de data-quando. Quando o usuário muda
+  // a resposta e o bloco some, os valores são apagados e o evento "change"
+  // leva a limpeza ao salvamento automático (navegador e banco).
+  function atualizarCondicionais(limparOcultos, idControle) {
+    document.querySelectorAll(".condicional[data-depende]").forEach((bloco) => {
+      const controle = document.getElementById(bloco.dataset.depende);
+      const visivel = Boolean(controle) && bloco.dataset.quando.split("|").includes(controle.value);
+      bloco.classList.toggle("visivel", visivel);
+      bloco.toggleAttribute("inert", !visivel);
+      bloco.setAttribute("aria-hidden", visivel ? "false" : "true");
+      if (visivel || !limparOcultos || (idControle && idControle !== bloco.dataset.depende)) return;
+      bloco.querySelectorAll("select,input,textarea").forEach((el) => {
+        if (!el.value) return;
+        el.value = "";
+        limparErro(el);
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    });
+  }
+
+  // Os botões Sim/Não gravam num <input hidden> sem disparar eventos; sem
+  // isso o salvamento automático no banco não percebia a resposta.
+  function instrumentarSimNao() {
+    const original = window.selecionarSimNao;
+    if (typeof original !== "function" || original.instrumentado) return;
+    const instrumentado = function (campo, resposta) {
+      original(campo, resposta);
+      const el = document.getElementById(campo);
+      const grupo = document.querySelector('.simnao[data-campo="' + campo + '"]');
+      if (grupo) limparErro(grupo);
+      if (el) el.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    instrumentado.instrumentado = true;
+    window.selecionarSimNao = instrumentado;
+  }
+
+  /* ------------------------------------------------ acessibilidade */
+
+  // Liga cada rótulo ao seu campo (clique no rótulo foca o campo e leitores
+  // de tela anunciam o nome certo) e agrupa os botões Sim/Não.
+  let contadorRotulos = 0;
+  function ligarRotulos() {
+    document.querySelectorAll("#formulario label:not([data-ligado])").forEach((rotulo) => {
+      rotulo.dataset.ligado = "1";
+      if (rotulo.htmlFor || rotulo.querySelector("input,select,textarea")) return;
+      const alvo = rotulo.nextElementSibling;
+      if (!alvo) return;
+      const nome = rotulo.textContent.trim();
+      if (alvo.matches("input[type=hidden]")) {
+        const grupo = alvo.nextElementSibling;
+        if (grupo && grupo.classList.contains("simnao")) {
+          rotulo.id = rotulo.id || "rotulo_" + ++contadorRotulos;
+          grupo.setAttribute("role", "group");
+          grupo.setAttribute("aria-labelledby", rotulo.id);
+        }
+      } else if (alvo.classList.contains("grid")) {
+        const selects = Array.from(alvo.children).filter((c) => c.tagName === "SELECT");
+        if (selects.length === 2 && selects.length === alvo.children.length) {
+          alvo.classList.add("par-idade");
+          selects[0].setAttribute("aria-label", nome + " — anos");
+          selects[1].setAttribute("aria-label", nome + " — meses");
+        }
+      } else if (alvo.matches("input,select,textarea") && alvo.id) {
+        rotulo.htmlFor = alvo.id;
+      }
+    });
+  }
+  function sincronizarSimNaoAcessivel() {
+    document.querySelectorAll(".simnao button").forEach((b) => b.setAttribute("aria-pressed", b.classList.contains("ativo") ? "true" : "false"));
+  }
+
+  // Ao avançar, marca junto de cada campo essencial vazio da fase o que
+  // falta (sem bloquear: a navegação entre fases continua livre).
+  function sinalizarPendenciasDaEtapa(i) {
+    const r = avaliarEtapa(etapas[i]);
+    let marcados = 0;
+    r.pendentes.forEach((p) => {
+      let el = p.el;
+      if (!el || !el.matches || !el.matches("input,select,textarea")) return;
+      if (el.type === "hidden") el = document.querySelector('.simnao[data-campo="' + el.id + '"]');
+      if (!el || el.id === "dataNascimento") return;
+      if (!el.id) el.id = "grupo_" + el.dataset.campo;
+      marcarErro(el, "Campo essencial: preencha para concluir a fase.");
+      marcados++;
+    });
+    if (marcados && typeof notificar === "function") {
+      notificar("A fase " + (i + 1) + " ficou com " + r.pendentes.length + (r.pendentes.length === 1 ? " pendência" : " pendências") + ". Você pode voltar a ela quando quiser.", "aviso", { duracao: 4500 });
+    }
+  }
+
   /* ------------------------------------------------ montagem das fases */
 
   function dividirFormularioEmEtapas(form) {
@@ -2579,30 +2863,83 @@ function mostrarPreviaDoLaudo(html){
     const cabecalho = document.createElement("div");
     cabecalho.className = "wizard-cabecalho no-print";
     cabecalho.innerHTML =
-      '<div class="wizard-linha-status"><div class="wizard-texto" id="wizardTextoProgresso" aria-live="polite"></div><div id="wizardStatusHolder"></div></div>' +
-      '<div class="wizard-barra" role="progressbar" aria-label="Progresso do protocolo" aria-valuemin="0" aria-valuemax="100"><div class="wizard-barra-preenchida" id="wizardBarraPreenchida"></div></div>' +
-      '<nav class="wizard-steps" id="wizardSteps" aria-label="Fases do protocolo"></nav>';
+      '<div class="wizard-linha-status"><div class="wizard-texto" id="wizardTextoProgresso" aria-live="polite"></div>' +
+      '<ul class="wizard-legenda" aria-label="Legenda das fases">' +
+      '<li><span class="amostra atual"></span>Atual</li><li><span class="amostra completo"></span>Concluída</li>' +
+      '<li><span class="amostra parcial"></span>Com pendências</li><li><span class="amostra"></span>Não iniciada</li></ul>' +
+      '<div id="wizardStatusHolder"></div></div>' +
+      '<div class="wizard-barra" role="progressbar" aria-label="Fases concluídas do protocolo" aria-valuemin="0" aria-valuemax="100"><div class="wizard-barra-preenchida" id="wizardBarraPreenchida"></div></div>' +
+      '<div class="wizard-trilho">' +
+      '<button type="button" class="wizard-seta" id="wizardSetaAntes" aria-label="Ver fases anteriores">‹</button>' +
+      '<div class="wizard-janela" id="wizardJanela"><nav class="wizard-steps" id="wizardSteps" aria-label="Fases do protocolo"></nav></div>' +
+      '<button type="button" class="wizard-seta" id="wizardSetaDepois" aria-label="Ver próximas fases">›</button>' +
+      "</div>" +
+      '<label class="wizard-seletor"><span class="sr-only">Ir para a fase</span><select id="wizardSeletorFase"></select></label>';
     const nav = cabecalho.querySelector("#wizardSteps");
+    const seletor = cabecalho.querySelector("#wizardSeletorFase");
     etapas.forEach((etapa, i) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "wizard-step";
       btn.dataset.step = String(i);
-      btn.innerHTML = '<span class="circulo">' + (i + 1) + '</span><span class="nome">' + etapa.dataset.titulo + "</span>";
+      btn.innerHTML = '<span class="circulo" aria-hidden="true">' + (i + 1) + '</span><span class="nome">' + etapa.dataset.titulo + "</span>";
       btn.onclick = () => irParaEtapa(i);
       nav.appendChild(btn);
+      seletor.appendChild(new Option(textoOpcaoFase(i, ""), String(i)));
     });
+    seletor.addEventListener("change", () => irParaEtapa(Number(seletor.value)));
+    cabecalho.querySelector("#wizardSetaAntes").onclick = () => nav.scrollBy({ left: -nav.clientWidth * 0.8, behavior: "smooth" });
+    cabecalho.querySelector("#wizardSetaDepois").onclick = () => nav.scrollBy({ left: nav.clientWidth * 0.8, behavior: "smooth" });
+    nav.addEventListener("scroll", atualizarBordasDoTrilho, { passive: true });
     form.parentNode.insertBefore(cabecalho, form);
     moverStatusParaCabecalho();
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => {
+        document.documentElement.style.setProperty("--altura-cabecalho", cabecalho.offsetHeight + "px");
+        atualizarBordasDoTrilho();
+      }).observe(cabecalho);
+    }
+    atualizarBordasDoTrilho();
+  }
+
+  function textoOpcaoFase(i, marca) {
+    return (marca ? marca + " " : "") + "Fase " + (i + 1) + " de " + etapas.length + " · " + etapas[i].dataset.titulo;
+  }
+
+  // Sombras nas bordas e setas indicam que há mais fases fora da área visível.
+  function atualizarBordasDoTrilho() {
+    const nav = document.getElementById("wizardSteps");
+    const janela = document.getElementById("wizardJanela");
+    if (!nav || !janela) return;
+    const antes = nav.scrollLeft > 2;
+    const depois = nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 2;
+    janela.classList.toggle("tem-antes", antes);
+    janela.classList.toggle("tem-depois", depois);
+    document.getElementById("wizardSetaAntes").disabled = !antes;
+    document.getElementById("wizardSetaDepois").disabled = !depois;
+  }
+
+  // Centraliza a fase ativa no trilho sem rolar a página na vertical.
+  function centralizarPasso(i) {
+    const nav = document.getElementById("wizardSteps");
+    const passo = nav && nav.querySelector('.wizard-step[data-step="' + i + '"]');
+    if (!passo || !nav.clientWidth) return;
+    nav.scrollTo({ left: passo.offsetLeft - nav.offsetLeft - (nav.clientWidth - passo.offsetWidth) / 2, behavior: carregado ? "smooth" : "auto" });
   }
 
   // Status de salvamento sempre visível no topo (antes ficava escondido
-  // no fim do formulário, só na última fase).
+  // no fim do formulário, só na última fase). Em uma linha: o texto
+  // completo fica no title.
   function moverStatusParaCabecalho() {
     const holder = document.getElementById("wizardStatusHolder");
     if (!holder) return;
     const status = document.getElementById("statusBanco") || document.getElementById("statusSalvamento");
-    if (status && status.parentNode !== holder) holder.appendChild(status);
+    if (status && status.parentNode !== holder) {
+      holder.appendChild(status);
+      status.title = status.textContent;
+      new MutationObserver(() => { if (status.title !== status.textContent) status.title = status.textContent; })
+        .observe(status, { childList: true, characterData: true, subtree: true });
+    }
     const local = document.getElementById("statusSalvamento");
     if (document.getElementById("statusBanco") && local) local.style.display = "none";
   }
@@ -2626,8 +2963,16 @@ function mostrarPreviaDoLaudo(html){
       proximo.className = "avancar";
       const ultima = i === etapas.length - 1;
       proximo.textContent = ultima ? "Pré-Visualizar Relatório" : "Próxima Fase →";
-      proximo.onclick = () => (ultima ? gerarRelatorio() : irParaEtapa(i + 1));
+      proximo.onclick = () => {
+        if (ultima) { gerarRelatorio(); return; }
+        sinalizarPendenciasDaEtapa(i);
+        irParaEtapa(i + 1);
+      };
+      const posicao = document.createElement("div");
+      posicao.className = "wizard-nav-posicao";
+      posicao.textContent = "Fase " + (i + 1) + " de " + etapas.length;
       nav.appendChild(anterior);
+      nav.appendChild(posicao);
       nav.appendChild(proximo);
       etapa.appendChild(nav);
     });
@@ -2642,8 +2987,10 @@ function mostrarPreviaDoLaudo(html){
       btn.classList.toggle("ativo", idx === i);
       if (idx === i) btn.setAttribute("aria-current", "step"); else btn.removeAttribute("aria-current");
     });
-    const ativo = document.querySelector(".wizard-step.ativo");
-    if (ativo && ativo.scrollIntoView) ativo.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    centralizarPasso(i);
+    const seletor = document.getElementById("wizardSeletorFase");
+    if (seletor) seletor.value = String(i);
+    atualizarTextoProgresso();
     if (!(opcoes && opcoes.semRolagem)) {
       const cab = document.querySelector(".wizard-cabecalho");
       const topo = etapas[i].getBoundingClientRect().top + window.scrollY - (cab ? cab.offsetHeight : 0) - 10;
@@ -2673,14 +3020,24 @@ function mostrarPreviaDoLaudo(html){
 
   /* ------------------------------------------------ progresso */
 
+  // Estado de cada fase, calculado uma única vez por recálculo: a barra, o
+  // contador, os círculos do trilho e o seletor do celular leem daqui.
+  let estadosDasFases = [];
+
   function atualizarProgresso(silencioso) {
-    let total = 0, feitos = 0, concluidas = 0;
-    etapas.forEach((etapa, i) => {
+    atualizarCondicionais(false);
+    ligarRotulos();
+    sincronizarSimNaoAcessivel();
+    estadosDasFases = etapas.map((etapa) => {
       const r = avaliarEtapa(etapa);
-      total += r.total; feitos += r.feitos;
-      const completo = r.total > 0 && r.feitos === r.total;
-      const parcial = !completo && r.feitos > 0;
-      if (completo) concluidas++;
+      r.completo = r.total > 0 && r.feitos === r.total;
+      r.parcial = !r.completo && r.feitos > 0;
+      return r;
+    });
+    const seletor = document.getElementById("wizardSeletorFase");
+    estadosDasFases.forEach((r, i) => {
+      const etapa = etapas[i];
+      const { completo, parcial } = r;
       const jaEstava = etapa.dataset.completo === "1";
       etapa.dataset.completo = completo ? "1" : "0";
 
@@ -2689,10 +3046,11 @@ function mostrarPreviaDoLaudo(html){
         btn.classList.toggle("completo", completo);
         btn.classList.toggle("parcial", parcial);
         btn.querySelector(".circulo").textContent = completo ? "✓" : String(i + 1);
-        const situacao = r.naoSeAplica ? "não se aplica (idade acima de 30 meses)" : completo ? "concluída" : r.pendentes.length + (r.pendentes.length === 1 ? " pendência" : " pendências");
+        const situacao = r.naoSeAplica ? "não se aplica (idade acima de 30 meses)" : completo ? "concluída" : parcial ? r.pendentes.length + (r.pendentes.length === 1 ? " pendência" : " pendências") : "não iniciada";
         btn.title = "Fase " + (i + 1) + " — " + etapa.dataset.titulo + ": " + situacao;
         btn.setAttribute("aria-label", btn.title);
       }
+      if (seletor && seletor.options[i]) seletor.options[i].text = textoOpcaoFase(i, completo ? "✓" : parcial ? "!" : "•");
 
       const painel = document.getElementById("pendencias_" + i);
       if (painel) {
@@ -2719,13 +3077,28 @@ function mostrarPreviaDoLaudo(html){
         notificar("✓ Fase " + (i + 1) + " concluída: " + etapa.dataset.titulo, "sucesso", { duracao: 2600 });
       }
     });
-    const pct = total ? Math.round((feitos / total) * 100) : 0;
+    atualizarTextoProgresso();
+  }
+
+  // Barra = média do preenchimento de cada fase (todas pesam igual), então
+  // ela só chega a 100% quando as 23 fases estão concluídas — o mesmo
+  // critério do contador "N de 23 concluídas" e dos ✓ do trilho.
+  function atualizarTextoProgresso() {
+    if (!estadosDasFases.length) return;
+    const concluidas = estadosDasFases.filter((r) => r.completo).length;
+    const soma = estadosDasFases.reduce((s, r) => s + (r.total ? r.feitos / r.total : 0), 0);
+    const pct = concluidas === etapas.length ? 100 : Math.min(99, Math.round((soma / etapas.length) * 100));
     const barra = document.getElementById("wizardBarraPreenchida");
     if (barra) barra.style.width = pct + "%";
     const progresso = document.querySelector(".wizard-barra");
-    if (progresso) progresso.setAttribute("aria-valuenow", String(pct));
+    if (progresso) {
+      progresso.setAttribute("aria-valuenow", String(pct));
+      progresso.setAttribute("aria-valuetext", concluidas + " de " + etapas.length + " fases concluídas");
+      progresso.title = pct + "% do protocolo preenchido";
+    }
     const texto = document.getElementById("wizardTextoProgresso");
-    if (texto) texto.textContent = pct + "% do protocolo preenchido · " + concluidas + " de " + etapas.length + " fases concluídas";
+    const html = "Fase " + (etapaAtual + 1) + " de " + etapas.length + " · <span>" + concluidas + " de " + etapas.length + " concluídas</span>";
+    if (texto && texto.innerHTML !== html) texto.innerHTML = html;
   }
   function agendarRecalculo(silencioso) {
     clearTimeout(temporizadorRecalculo);
@@ -2749,7 +3122,9 @@ function mostrarPreviaDoLaudo(html){
     msg.setAttribute("role", "alert");
     msg.textContent = mensagem;
     el.setAttribute("aria-describedby", msg.id);
-    el.insertAdjacentElement("afterend", msg);
+    // Pares Ano/Mês ficam num .grid: a mensagem vai abaixo do par, não numa célula dele.
+    const ancora = el.parentElement && el.parentElement.classList.contains("grid") && el.tagName === "SELECT" ? el.parentElement : el;
+    ancora.insertAdjacentElement("afterend", msg);
   }
   function limparErro(el) {
     el.classList.remove("campo-erro");
@@ -2815,6 +3190,15 @@ function mostrarPreviaDoLaudo(html){
 
   /* ------------------------------------------------ montagem */
 
+  // A barra de ações fixa no rodapé muda de altura (quebra de linha no
+  // tablet, botão "Concluir" que aparece depois): o espaço reservado no fim
+  // da página acompanha, para ela nunca cobrir o formulário.
+  function observarBarraDeAcoes() {
+    const acoes = document.querySelector(".acoes");
+    if (!acoes || !window.ResizeObserver) return;
+    new ResizeObserver(() => document.documentElement.style.setProperty("--altura-acoes", acoes.offsetHeight + "px")).observe(acoes);
+  }
+
   function montar() {
     const form = document.getElementById("formulario");
     if (!form) return;
@@ -2833,6 +3217,10 @@ function mostrarPreviaDoLaudo(html){
     montarCabecalho();
     montarPainelENavegacao();
     marcarEssenciais();
+    document.querySelectorAll(".condicional .condicional-conteudo > label").forEach((l) => l.classList.add("essencial"));
+    instrumentarSimNao();
+    atualizarCondicionais(false);
+    observarBarraDeAcoes();
 
     document.addEventListener("input", (e) => {
       if (!e.target || !e.target.matches || !e.target.matches("input,textarea,select")) return;
@@ -2844,6 +3232,7 @@ function mostrarPreviaDoLaudo(html){
     document.addEventListener("change", (e) => {
       if (!e.target || !e.target.matches || !e.target.matches("input,textarea,select")) return;
       if (e.target.id === "dataNascimento") validarDataNascimento(false);
+      if (e.target.id && document.querySelector('.condicional[data-depende="' + e.target.id + '"]')) atualizarCondicionais(true, e.target.id);
       agendarRecalculo(false);
     }, true);
     const dn = document.getElementById("dataNascimento");

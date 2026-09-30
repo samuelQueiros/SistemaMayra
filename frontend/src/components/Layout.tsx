@@ -24,7 +24,7 @@ export default function Layout() {
   const footer = (
     <div className={styles.footer}>
       {psychologist && <span className={styles.userName}>{psychologist.name}</span>}
-      <button type="button" className={styles.logoutButton} onClick={handleLogout}>
+      <button type="button" className={styles.logoutButton} onClick={handleLogout} data-confirmar-saida>
         <LogOut size={16} /> Sair
       </button>
     </div>

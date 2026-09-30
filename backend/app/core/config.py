@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,6 +26,17 @@ class Settings(BaseSettings):
     s3_region: str | None = None
     s3_access_key: str | None = None
     s3_secret_key: str | None = None
+
+    @field_validator("database_url")
+    @classmethod
+    def _usar_driver_psycopg(cls, valor: str) -> str:
+        # Railway/Heroku/Render entregam "postgres://" ou "postgresql://",
+        # que o SQLAlchemy liga ao driver psycopg2 (não instalado). O projeto
+        # usa psycopg 3: troca o esquema para "postgresql+psycopg://".
+        for prefixo in ("postgres://", "postgresql://"):
+            if valor.startswith(prefixo):
+                return "postgresql+psycopg://" + valor[len(prefixo):]
+        return valor
 
 
 settings = Settings()

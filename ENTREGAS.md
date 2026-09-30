@@ -1950,3 +1950,53 @@ quadro que tinham.
 `frontend/src/api/client.ts`, `frontend/src/pages/{Login,Dashboard,HistoricoPaciente,NovoAtendimento,Configuracoes}.tsx`,
 `backend/app/core/errors.py` (novo), `backend/app/main.py`, `backend/app/api/{deps,reports,patients}.py`,
 `backend/tests/test_error_messages.py` (novo).
+
+## Stepper das fases, campos condicionais, UX do formulário e capa dos relatórios
+
+**Status:** 🟡 Parcial (2026-09-30) — tudo implementado e testado; falta só
+trocar a arte **provisória** da capa (`frontend/public/capa-relatorio.png`,
+recortada de um print, baixa resolução) pela arte oficial em alta resolução.
+
+- **Stepper das 23 fases:** trilho com rolagem suave, setas ‹ › e sombra nas
+  bordas indicando que há mais fases; a fase ativa é centralizada
+  automaticamente; itens do mesmo tamanho, rótulos em no máximo 2 linhas (nome
+  completo no tooltip); legenda (Atual / Concluída / Com pendências / Não
+  iniciada); cabeçalho fixo e mais baixo. Contador ("Fase X de 23 · N de 23
+  concluídas"), barra e ✓ agora vêm do mesmo cálculo (a barra só chega a 100%
+  com as 23 fases concluídas). No celular vira um seletor "Fase 4 de 23 · …".
+- **Campos condicionais:** "Desde qual idade possui laudo?" só aparece com
+  "Possui laudo anterior?" = Sim (transição suave), é essencial só quando
+  visível e é apagado — inclusive no banco — ao voltar para Não. O mesmo para
+  "Idade do desfralde" (só com Controle Total, Controle Diurno ou Escapes). Os
+  demais pares Sim/Não ("Tem familiares laudados?", "Há histórico de transtorno
+  na família?", terapias etc.) já escondiam, limpavam e só exigiam a descrição
+  com Sim — conferidos, sem mudança. O relatório continua sem esses dados
+  (decisão: ficam só na Fase 4).
+- **Bug corrigido:** clicar em Sim/Não não disparava o salvamento automático no
+  banco (só era salvo na próxima digitação).
+- **UX:** espaçamento uniforme; rótulos ligados aos campos (clique e leitores
+  de tela); Sim/Não com estado acessível; foco visível; "Próxima fase" marca
+  junto de cada campo essencial vazio o que falta (sem bloquear); "Fase X de
+  23" entre Anterior/Próxima; a barra de ações nunca cobre o formulário (altura
+  medida); aviso ao sair do Novo Atendimento (menu, Sair, fechar/recarregar a
+  aba) enquanto houver alterações não salvas no sistema; animações desligadas
+  para quem prefere menos movimento; layout ajustado para celular.
+- **Capa obrigatória:** pré-visualização, PDF (botão e Histórico) e Word
+  começam com a capa em página inteira, sem cabeçalho/rodapé/moldura, e o
+  conteúdo começa na página 2. O nome do paciente sai em maiúsculas na faixa
+  roxa (fonte reduzida ou 2 linhas para nomes longos), numa imagem A4 de 300
+  dpi montada num único ponto (`gerarCapaRelatorio()` no formulário). Laudos
+  antigos ganham capa ao serem salvos de novo.
+
+**Arquivos:** `frontend/public/formulario-novo-paciente.html`,
+`frontend/public/capa-relatorio.png` (provisória), `frontend/public/fonts/`
+(Fredoka, licença OFL), `frontend/src/pages/NovoAtendimento.tsx`,
+`frontend/src/components/Layout.tsx`, `backend/app/services/laudo_documento.py`,
+`backend/tests/test_documents_export.py`.
+
+**Como testar:** Novo Atendimento → navegar pelas fases (setas, Alt+←/→,
+celular); Fase 4: Sim → escolher idade → Não (campo some e é limpo);
+Pré-Visualizar / Gerar PDF / Gerar Word → 1ª página é a capa com o nome.
+Para trocar a arte: substituir `frontend/public/capa-relatorio.png` (A4 em pé,
+2480×3508, sem o nome), ajustar `CAPA_FAIXA` no formulário se a faixa mudar de
+lugar e rodar `npm run build`.
