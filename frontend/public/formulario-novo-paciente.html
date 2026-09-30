@@ -31,6 +31,11 @@ textarea{min-height:80px}
 .simnao{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
 .simnao button{padding:8px 12px;font-size:14px;background:#eee;color:#222;border:1px solid #bbb}
 .simnao button.ativo{background:var(--roxo);color:#fff;border-color:var(--roxo)}
+.escalas-toggle{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.escala-icone{display:flex;align-items:center;gap:6px;padding:7px 12px;font-size:13px;font-weight:bold;background:#eee;color:#444;border:1px solid #bbb;border-radius:20px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.escala-icone svg{width:16px;height:16px;flex:none;stroke:currentColor}
+.escala-icone.ativo{background:var(--roxo);color:#fff;border-color:var(--roxo)}
+.escala-icone:not(.ativo){opacity:.75}
 .acoes{display:flex;flex-wrap:wrap;gap:10px;position:sticky;bottom:0;background:#fff;border-top:2px solid #ddd;padding:14px 0;margin-top:24px;z-index:10}
 
 .status-salvamento{font-size:13px;color:#4d4295;background:#f5f2ff;border-left:5px solid var(--roxo);padding:10px;border-radius:8px;margin-top:10px}
@@ -301,6 +306,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 
 <h2>5. Metodologia</h2>
 <div class="aviso">Os textos abaixo já vêm com o <strong>texto-padrão do modelo oficial</strong> do relatório (ajustado automaticamente para "o paciente"/"a paciente" conforme o sexo). Edite livremente. Cada linha vira um parágrafo; use <code>**texto**</code> para <strong>negrito</strong>, <code>==texto==</code> para <mark style="background:#d9d9d9"><strong>destaque cinza</strong></mark>, <code>!!texto!!</code> para <mark style="background:#ffff00"><strong>destaque amarelo</strong></mark> e comece a linha com ✔ ou • para lista. Deixe um campo vazio para retirar aquele bloco do relatório.</div>
+<label>Escalas E Protocolos Incluídos No Texto (Clique Para Ligar/Desligar)</label>
+<div class="escalas-toggle" id="escalasMetodologiaToggle"></div>
 <textarea id="metodologia" style="min-height:420px"></textarea>
 
 
@@ -345,6 +352,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 <label><input type="checkbox" class="hipotese" value="TPAC – Transtorno Do Processamento Auditivo Central"> TPAC – Transtorno Do Processamento Auditivo Central</label>
 </div>
 <label>Hipóteses Como Devem Sair No Relatório (Opcional — Uma Por Linha; Substitui As Marcadas Acima)</label><textarea id="hipotesesTexto" placeholder="Ex.:&#10;TDAH - Transtorno de Déficit de Atenção Hiperatividade, combinada (CID 11 6A05.2)&#10;TPAC - Transtorno do Processamento Auditivo Central (CID 10 H93)"></textarea>
+<label>Hipótese Diagnóstica Selecionada Para Este Paciente</label>
+<select id="hipoteseSelecionada"><option value="">Marque/digite as hipóteses investigadas acima e selecione aqui a que se aplica</option></select>
+<div class="aviso">O relatório final exibe <strong>somente</strong> a hipótese selecionada aqui — nunca a lista completa das hipóteses investigadas acima.</div>
 
 
 <h2>11. Pontuações ATA E CARS</h2>
@@ -429,13 +439,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 <label>Encaminhamento Para Exames Complementares (Caixa Cinza Da Última Página)</label><textarea id="textoEncaminhamentoExames" style="min-height:140px"></textarea>
 
 
-<h2>20. Plano De Intervenção</h2>
-<div class="aviso interno">Uso interno: esta seção não aparece no relatório final (modelo oficial do parecer).</div>
-<textarea id="planoIntervencao" style="min-height:240px">O plano de intervenção deve ser organizado de acordo com as hipóteses diagnósticas investigadas, as queixas familiares e escolares, o perfil cognitivo, comportamental, socioemocional e pedagógico observado.
-
-Para indicadores compatíveis com TEA, recomenda-se intervenção estruturada, previsibilidade de rotina, treino de comunicação funcional, ampliação de habilidades sociais, flexibilidade cognitiva e orientação familiar/escolar.
-
-Para indicadores compatíveis com TDAH, recomenda-se treino de atenção sustentada e seletiva, controle inibitório, organização de rotina, tarefas curtas, reforço positivo imediato e manejo de impulsividade.</textarea>
+<h2>20. Sugestões De Intervenção</h2>
+<div class="aviso">Aparece no relatório final, como última seção antes da assinatura. Escreva livremente ou use o botão "Gerar Com IA" na fase 22 (Considerações Finais) — as sugestões devem decorrer das necessidades, dificuldades e potencialidades <strong>deste paciente</strong>, e não só da hipótese diagnóstica marcada.</div>
+<textarea id="planoIntervencao" style="min-height:200px" placeholder="Ex.: recomenda-se treino de atenção sustentada com [detalhe do que foi observado neste paciente]..."></textarea>
 
 
 <h2>21. Encaminhamentos</h2>
@@ -452,8 +458,10 @@ Para indicadores compatíveis com TDAH, recomenda-se treino de atenção sustent
 
 
 <h2>22. Considerações Finais</h2>
-<div class="aviso">Última página do relatório, depois das hipóteses diagnósticas e antes da assinatura. Aceita a mesma marcação dos textos do parecer.</div>
-<textarea id="consideracoes" style="min-height:220px"></textarea>
+<div class="aviso">Última página do relatório, depois das hipóteses diagnósticas e antes da assinatura. Aceita a mesma marcação dos textos do parecer. Deve ser a síntese <strong>deste paciente</strong> — estudo de caso, observações, habilidades avaliadas, protocolos utilizados e hipótese selecionada —, não um texto genérico.</div>
+<button type="button" id="btnGerarConclusaoIA" onclick="gerarConclusaoEIntervencoesComIA()">Gerar Considerações Finais E Sugestões De Intervenção Com IA (Baseado Neste Paciente)</button>
+<div id="avisoConclusaoIA" class="aviso interno" style="display:none"></div>
+<textarea id="consideracoes" style="min-height:220px" placeholder="Escreva a síntese de fechamento deste paciente, ou gere com o botão acima."></textarea>
 
 
 <h2>23. Cidade E Data</h2>
@@ -850,6 +858,12 @@ function gerarQuadroResumidoEscolar(){
 function montarFormulario(){
   renderizarQuadroObservacao(obsBase);
   montarSecoesDoModelo();
+  inicializarEscalasMetodologia();
+  perfilProfissional(); // aquece o cache cedo, para o bloco final do laudo
+  document.querySelectorAll(".hipotese").forEach(cb=>cb.addEventListener("change",atualizarOpcoesHipoteseSelecionada));
+  const hipTextarea=document.getElementById("hipotesesTexto");
+  if(hipTextarea)hipTextarea.addEventListener("input",atualizarOpcoesHipoteseSelecionada);
+  atualizarOpcoesHipoteseSelecionada();
   document.getElementById("tod").innerHTML = todItens.map((t,i)=>'<label>'+(i+1)+'. '+t+'</label><select id="tod_'+i+'"><option value="">Selecione</option><option value="1">Sim</option><option value="0">Não</option></select>').join("");
   document.getElementById("snap").innerHTML = snapItens.map((t,i)=>'<label>'+(i+1)+'. '+t+'</label><select id="snap_'+i+'"><option value="">Selecione</option><option value="0">0 - Nem Um Pouco</option><option value="1">1 - Só Um Pouco</option><option value="2">2 - Bastante</option><option value="3">3 - Demais</option></select>').join("");
   document.getElementById("carsItensContainer").innerHTML = carsItens.map((item,i)=>{
@@ -929,6 +943,12 @@ function atualizarIdadeEstimadaPortage(){
   campo.value = m===null ? "" : textoIdadeMeses(m)+" | Intervalo De Referência: "+textoIntervaloDoisMeses(m);
 }
 function faixaPortage(m){if(m===null||m<0)return null;if(m<=12)return"0-12";if(m<=24)return"13-24";if(m<=36)return"25-36";if(m<=48)return"37-48";if(m<=60)return"49-60";return"61-72";}
+// Faixa etária de referência do Inventário Portage Operacionalizado (IPO):
+// 0 a 6 anos (72 meses). Acima disso, o resultado deixa de ser comparação
+// normativa e passa a ser só referência de repertório — ver
+// idadeForaDaFaixaPortage()/avisoFaixaEtariaPortage() [ponto 7 da revisão].
+const PORTAGE_IDADE_MAX_MESES=72;
+function idadeForaDaFaixaPortage(m){return m!==null&&m!==undefined&&m>PORTAGE_IDADE_MAX_MESES;}
 
 function selecionarSimNao(campo,resposta){
   setValor(campo,resposta);
@@ -1021,12 +1041,38 @@ function textoProb(p){return p<30?"baixa probabilidade":p<60?"probabilidade mode
 function selecionados(classe){return Array.from(document.querySelectorAll("."+classe+":checked")).map(i=>i.value).join(", ")||"Não informado.";}
 function dataBR(){const d=valor("dataRelatorio");if(!d)return"____/____/______";const p=d.split("-");return p[2]+"/"+p[1]+"/"+p[0];}
 
+// Ponto 5 da revisão: o texto de "Manifestação Observada" de cada Função
+// Executiva vem pré-preenchido com um texto-padrão que sempre descreve
+// comprometimento severo (ver t.fe_manif_0..5 em textosPadraoLaudo()). Se a
+// psicóloga não personalizar esse texto mas o indicador de dificuldade
+// (fe_perc, que alimenta o gráfico) for baixo, gráfico e texto passam a
+// contar histórias diferentes para a mesma função. Sinaliza — não bloqueia,
+// pois é a psicóloga quem decide se o texto ainda se aplica.
+function divergenciasFuncoesExecutivas(){
+  const LIMIAR_BAIXO=40;
+  const masc=textosPadraoLaudo(formasGenero("Masculino")), fem=textosPadraoLaudo(formasGenero("Feminino"));
+  const divergencias=[];
+  FE_LAUDO.forEach((f,i)=>{
+    const manif=valor("fe_manif_"+i), perc=valor("fe_perc_"+i);
+    if(perc===""||manif.trim()==="")return;
+    const ehTextoPadraoNaoEditado=manif===masc["fe_manif_"+i]||manif===fem["fe_manif_"+i];
+    if(ehTextoPadraoNaoEditado&&Number(perc)<LIMIAR_BAIXO){
+      divergencias.push(f.nome+" (indicador de "+perc+"%, mas a manifestação observada ainda é o texto-padrão de comprometimento severo)");
+    }
+  });
+  return divergencias;
+}
+
 async function gerarRelatorio(){
   const previa=document.getElementById("btnPrevia"), textoPrevia=previa?previa.textContent:"";
   if(previa){previa.disabled=true;previa.textContent="Montando pré-visualização…";}
   let html;
   try{html=await gerarDocumentoLaudoHTML();}
   finally{if(previa){previa.disabled=false;previa.textContent=textoPrevia;}}
+  const divergencias=divergenciasFuncoesExecutivas();
+  if(divergencias.length){
+    notificar("Possível divergência entre gráfico e texto em Funções Executivas — revise antes de enviar: "+divergencias.join("; ")+".","aviso",{duracao:0});
+  }
   mostrarPreviaDoLaudo(html);
   const rel=document.getElementById("relatorio");
   if(rel)rel.scrollIntoView({behavior:"smooth"});
@@ -1052,6 +1098,10 @@ function aplicarDados(dados){
   if(chaves.some(k=>k.startsWith("portage_")))carregarPortage();
   if(chaves.some(k=>k.startsWith("mchat_")))carregarMCHAT();
   Object.keys(dados).forEach(key=>{if(key.startsWith("__"))return;const el=document.getElementById(key);if(!el)return;if(el.type==="checkbox"||el.type==="radio")el.checked=!!dados[key];else el.value=dados[key];});
+  if(document.getElementById("hipoteseSelecionada")){
+    atualizarOpcoesHipoteseSelecionada();
+    if(typeof dados.hipoteseSelecionada==="string")setValor("hipoteseSelecionada",dados.hipoteseSelecionada);
+  }
   atualizarRotulosDoQuadro();
   Object.keys(dados.__auto||{}).forEach(id=>{const el=document.getElementById(id);if(el)el.dataset.auto=dados.__auto[id];});
   atualizarCamposBasePaciente();
@@ -1292,6 +1342,25 @@ const TOPICOS_LAUDO = [
   ["topico_desempenhoEscolar","Desempenho Escolar"]
 ];
 
+// Ícones (liga/desliga) das escalas/protocolos citados no texto-padrão da
+// Metodologia — ver textosPadraoLaudo()/paragrafosMetodologia() e
+// alternarEscalaMetodologia().
+const ESCALAS_METODOLOGIA = [
+  {id:"CARS",    label:"CARS",     marcador:"**Escala CARS**",
+    svg:'<path d="M9 3h6a1 1 0 0 1 1 1v1h1a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1V4a1 1 0 0 1 1-1Z"/><path d="M9 11h6M9 15h6M9 7h6"/>'},
+  {id:"ATA",     label:"ATA",      marcador:"**Escala ATA**",
+    svg:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".5" fill="currentColor"/>'},
+  {id:"SNAPIV",  label:"SNAP-IV",  marcador:"Escala **SNAP-IV**",
+    svg:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>'},
+  {id:"PORTAGE", label:"Portage",  marcador:"**Escala Portage - O Inventário Portage Operacionalizado (IPO)**",
+    svg:'<path d="M4 20V14h4v6M11 20V10h4v10M18 20V6h4v14"/>'},
+  {id:"TOD",     label:"TOD",      marcador:"**Protocolo TOD** - **O Transtorno Opositor Desafiador (TOD)**",
+    svg:'<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4"/><path d="M12 17h.01"/>'},
+  {id:"MCHAT",   label:"M-CHAT",   marcador:"**O M-CHAT (Modified Checklist for Autism in Toddlers)**",
+    svg:'<circle cx="10" cy="10" r="7"/><path d="m20 20-4.35-4.35"/>'}
+];
+const FECHAMENTO_METODOLOGIA_MARCADOR = "A avaliação em questão é de natureza predominantemente qualitativa";
+
 // Campos preenchidos automaticamente (enquanto a psicóloga não os edita à mão).
 const CAMPOS_AUTOMATICOS = ["idadeCognitivaRelatorio","marcoRelatorio","carsPercentualFalhas","ataPercentual"];
 
@@ -1309,28 +1378,41 @@ function formasGenero(sexo){
 // calculado a partir das escalas ATA/CARS.
 function textosPadraoLaudo(g){
   const t = {};
+  const paragrafosMetodologia = {
+    intro: "**METODOLOGIA**: Realizada análise dos comportamentos quanto ao desenvolvimento sócio comunicativo e cognitivo, baseado no **DSM - V**, registrado a partir de observações clínicas e escalas de avaliação **(ATA, CARS, SNAP IV, TOD e PORTAGE),** a depender da necessidade do processo da avaliação e da suspeita apresentada.",
+    CARS: "**Escala CARS** - **(Childhood Autism Rating Scale)**, em português escala de pontuação para Autismo na infância, é um questionário frequentemente utilizado por profissionais da área da saúde para averiguar a possibilidade da presença de Autismo em crianças e adolescentes **(2 anos de idade e adolescentes até 17 anos e 11 meses)** e é considerada uma ferramenta pré-diagnóstica bastante confiável. Dentre todas as escalas de avaliação do Autismo, a **CARS** é a de maior validação e preferência.",
+    ATA: "**Escala ATA** - Escala de avaliação de Traços Autísticos **(ATA)** validade e confiabilidade de uma escala para a detecção de condutas autísticas Francisco B. Assumpção Jr., Evelyn Kuczynski, Marcia Rego Gabriel, Cristiane Castanho Rocca. Sua aplicação é indicada em **crianças a partir de 2 anos de idade** (Assumpção et al., 2008). O estudo de validade e confiabilidade da **ATA** foi realizado em amostra brasileira com idades entre **2 e 18 anos.**",
+    SNAPIV: "Escala **SNAP-IV** é composta pela descrição de 18 sintomas do **TDAH** e entre os sintomas de desatenção **(9 primeiros itens)** e hiperatividade/impulsividade **(itens 10 ao 18)**, os quais devem ser pontuados por pais e/ou professores, em uma escala de quatro níveis de gravidade. Existem chances de "+g.o+" paciente ser portador"+g.r+" de **TDAH** caso seja identificado pelo menos **6** em cada uma das partes “bastante” e/ou “demais”.",
+    PORTAGE: "**Escala Portage - O Inventário Portage Operacionalizado (IPO)** é um guia de descrição e levantamento de comportamentos que abrange as áreas de Socialização, Linguagem, Autocuidados, Cognição e desenvolvimento Motor **de crianças de 0 a 6 anos**. O Inventário consiste em uma listagem de 580 habilidades de crianças de 0 a 6 anos ou desenvolvimento compatível com essa faixa etária.",
+    TOD: "**Protocolo TOD** - **O Transtorno Opositor Desafiador (TOD)** é um distúrbio que ocorre na infância e adolescência e provoca sintomas como comportamento desafiador e impulsivo, dificuldade de lidar com frustrações, teimosia, entre outros. Ele geralmente **surge antes dos 8 anos de idade**, mas também pode ser diagnosticado em crianças mais velhas ou adolescentes.",
+    MCHAT: "**O M-CHAT (Modified Checklist for Autism in Toddlers)** é um questionário que pode ser aplicado em crianças entre **16 e 30 meses de idade**. O objetivo é identificar sinais precoces de autismo, como alterações no desenvolvimento social, comunicativo e motor.",
+    fechamento: [
+      "A avaliação em questão é de natureza predominantemente qualitativa, não se baseia apenas em dados numéricos ou testes padronizados, mas em uma análise aprofundada do comportamento, desenvolvimento e contexto "+g.do+" paciente. Foi conduzida a partir de diversas observações diretas e indiretas, além de um estudo detalhado do caso, considerando informações fornecidas pela família, escola e demais envolvidos na rotina da criança. Ressaltamos que os protocolos utilizados são abertos e acessíveis a profissionais da área, e, além disso, foi aplicada uma metodologia própria desenvolvida pela equipe responsável, visando ampliar a compreensão do perfil individual "+g.do+" paciente.",
+      "Objetivando a socialização das informações, segue abaixo resultado de ==Avaliação Neuropsicopedagógica== e ==Análise dos Comportamentos== "+g.do+" paciente supracitad"+g.e+" encaminhad"+g.e+" por médico e a partir das observações dos comportamentos e não evolução do seu processo de ensino aprendizagem formal/ informal.",
+      "Partindo de uma hipótese diagnóstica de **TEA - Transtorno do Espectro Autista** a ==Análise dos Comportamentos== foi realizada com as expectativas na queixa apresentada. Entretanto, outras características cognitivas foram observadas durante o processo. Essas foram realizadas com a utilização de recursos lúdicos e gráficos com ênfase nas observações ao desenvolvimento das Funções Executivas e Cognitivas **(Planejamento, Monitoramento, Controle inibitório, Atenção Seletiva, Memória de Trabalho, Flexibilidade Cognitiva e comportamental).**",
+      "Durante o período de trinta dias foram planejados encontros semanais de (1) uma vez por semana com duração de 45 minutos, os seguintes recursos avaliativos:",
+      "✔ Sessões lúdicas **(Dinâmicas e Brincadeiras Simbólicas);**",
+      "✔ Provas para sondagem das Funções Executivas/Cognitivas",
+      "✔ Anamnese;",
+      "✔ Entrevista com a família;",
+      "✔ Provas projetivas;",
+      "✔ Provas pedagógicas;",
+      "✔ Estudo de caso a partir dos protocolos do corpo docente e queixas da família",
+      "✔ Protocolos de Rastreio **ATA, CARS, SNAP IV**",
+      "Os instrumentos de rastreio e de observação, foram utilizados com fins de ==Avaliação Neuropsicopedagógica== e ==Análise dos Comportamentos== constituem recursos protocolos específicos na investigação das habilidades cognitivas, emocionais, comportamentais e funções executivas. A avaliação dos resultados obtidos tem como referência a faixa etária, ano escolar e o marco de desenvolvimento "+g.do+" paciente.",
+      "A avaliação busca descrever por meio dos testes e protocolos não restritos aplicados, o desempenho e desenvolvimento da criança em foco, assim como relacionar os resultados obtidos com possíveis hipóteses diagnósticas quando o caso se fizer necessário."
+    ].join("\n")
+  };
+  t._metodologiaPartes = paragrafosMetodologia;
   t.metodologia = [
-    "**METODOLOGIA**: Realizada análise dos comportamentos quanto ao desenvolvimento sócio comunicativo e cognitivo, baseado no **DSM - V**, registrado a partir de observações clínicas e escalas de avaliação **(ATA, CARS, SNAP IV, TOD e PORTAGE),** a depender da necessidade do processo da avaliação e da suspeita apresentada.",
-    "**Escala CARS** - **(Childhood Autism Rating Scale)**, em português escala de pontuação para Autismo na infância, é um questionário frequentemente utilizado por profissionais da área da saúde para averiguar a possibilidade da presença de Autismo em crianças e adolescentes **(2 anos de idade e adolescentes até 17 anos e 11 meses)** e é considerada uma ferramenta pré-diagnóstica bastante confiável. Dentre todas as escalas de avaliação do Autismo, a **CARS** é a de maior validação e preferência.",
-    "**Escala ATA** - Escala de avaliação de Traços Autísticos **(ATA)** validade e confiabilidade de uma escala para a detecção de condutas autísticas Francisco B. Assumpção Jr., Evelyn Kuczynski, Marcia Rego Gabriel, Cristiane Castanho Rocca. Sua aplicação é indicada em **crianças a partir de 2 anos de idade** (Assumpção et al., 2008). O estudo de validade e confiabilidade da **ATA** foi realizado em amostra brasileira com idades entre **2 e 18 anos.**",
-    "Escala **SNAP-IV** é composta pela descrição de 18 sintomas do **TDAH** e entre os sintomas de desatenção **(9 primeiros itens)** e hiperatividade/impulsividade **(itens 10 ao 18)**, os quais devem ser pontuados por pais e/ou professores, em uma escala de quatro níveis de gravidade. Existem chances de "+g.o+" paciente ser portador"+g.r+" de **TDAH** caso seja identificado pelo menos **6** em cada uma das partes “bastante” e/ou “demais”.",
-    "**Escala Portage - O Inventário Portage Operacionalizado (IPO)** é um guia de descrição e levantamento de comportamentos que abrange as áreas de Socialização, Linguagem, Autocuidados, Cognição e desenvolvimento Motor **de crianças de 0 a 6 anos**. O Inventário consiste em uma listagem de 580 habilidades de crianças de 0 a 6 anos ou desenvolvimento compatível com essa faixa etária.",
-    "**Protocolo TOD** - **O Transtorno Opositor Desafiador (TOD)** é um distúrbio que ocorre na infância e adolescência e provoca sintomas como comportamento desafiador e impulsivo, dificuldade de lidar com frustrações, teimosia, entre outros. Ele geralmente **surge antes dos 8 anos de idade**, mas também pode ser diagnosticado em crianças mais velhas ou adolescentes.",
-    "**O M-CHAT (Modified Checklist for Autism in Toddlers)** é um questionário que pode ser aplicado em crianças entre **16 e 30 meses de idade**. O objetivo é identificar sinais precoces de autismo, como alterações no desenvolvimento social, comunicativo e motor.",
-    "A avaliação em questão é de natureza predominantemente qualitativa, não se baseia apenas em dados numéricos ou testes padronizados, mas em uma análise aprofundada do comportamento, desenvolvimento e contexto "+g.do+" paciente. Foi conduzida a partir de diversas observações diretas e indiretas, além de um estudo detalhado do caso, considerando informações fornecidas pela família, escola e demais envolvidos na rotina da criança. Ressaltamos que os protocolos utilizados são abertos e acessíveis a profissionais da área, e, além disso, foi aplicada uma metodologia própria desenvolvida pela equipe responsável, visando ampliar a compreensão do perfil individual "+g.do+" paciente.",
-    "Objetivando a socialização das informações, segue abaixo resultado de ==Avaliação Neuropsicopedagógica== e ==Análise dos Comportamentos== "+g.do+" paciente supracitad"+g.e+" encaminhad"+g.e+" por médico e a partir das observações dos comportamentos e não evolução do seu processo de ensino aprendizagem formal/ informal.",
-    "Partindo de uma hipótese diagnóstica de **TEA - Transtorno do Espectro Autista** a ==Análise dos Comportamentos== foi realizada com as expectativas na queixa apresentada. Entretanto, outras características cognitivas foram observadas durante o processo. Essas foram realizadas com a utilização de recursos lúdicos e gráficos com ênfase nas observações ao desenvolvimento das Funções Executivas e Cognitivas **(Planejamento, Monitoramento, Controle inibitório, Atenção Seletiva, Memória de Trabalho, Flexibilidade Cognitiva e comportamental).**",
-    "Durante o período de trinta dias foram planejados encontros semanais de (1) uma vez por semana com duração de 45 minutos, os seguintes recursos avaliativos:",
-    "✔ Sessões lúdicas **(Dinâmicas e Brincadeiras Simbólicas);**",
-    "✔ Provas para sondagem das Funções Executivas/Cognitivas",
-    "✔ Anamnese;",
-    "✔ Entrevista com a família;",
-    "✔ Provas projetivas;",
-    "✔ Provas pedagógicas;",
-    "✔ Estudo de caso a partir dos protocolos do corpo docente e queixas da família",
-    "✔ Protocolos de Rastreio **ATA, CARS, SNAP IV**",
-    "Os instrumentos de rastreio e de observação, foram utilizados com fins de ==Avaliação Neuropsicopedagógica== e ==Análise dos Comportamentos== constituem recursos protocolos específicos na investigação das habilidades cognitivas, emocionais, comportamentais e funções executivas. A avaliação dos resultados obtidos tem como referência a faixa etária, ano escolar e o marco de desenvolvimento "+g.do+" paciente.",
-    "A avaliação busca descrever por meio dos testes e protocolos não restritos aplicados, o desempenho e desenvolvimento da criança em foco, assim como relacionar os resultados obtidos com possíveis hipóteses diagnósticas quando o caso se fizer necessário."
+    paragrafosMetodologia.intro,
+    paragrafosMetodologia.CARS,
+    paragrafosMetodologia.ATA,
+    paragrafosMetodologia.SNAPIV,
+    paragrafosMetodologia.PORTAGE,
+    paragrafosMetodologia.TOD,
+    paragrafosMetodologia.MCHAT,
+    paragrafosMetodologia.fechamento
   ].join("\n");
   t.parecerContexto = "As dificuldades "+g.do+" paciente podem estar relacionadas ao fato de ser laudad"+g.e+" com **TDAH e TOD** e por estar em fase de adaptação a novas rotinas, regras escolares e sociais constantemente, "+g.o+" paciente está em processo de estímulo e desenvolvimento de habilidades necessárias para o ambiente escolar, como atenção, disciplina e interação social desde sempre.";
   t.aspectosComportamentais = [
@@ -1403,11 +1485,6 @@ function textosPadraoLaudo(g){
     g.O+" paciente apresenta muitos dos critérios necessários para a confirmação diagnóstica de **Transtorno do Espectro Autista (TEA)**, evidenciando características consistentes em diferentes contextos de avaliação. Dessa forma, recomenda-se que a família, em momento oportuno, realize uma avaliação complementar, preferencialmente de natureza **Neuropsicológica**, a fim de mensurar com maior precisão o funcionamento das **Funções Executivas Superiores** "+g.do+" paciente. Considerando, porém, a idade atual e a condição social e financeira da família, compreende-se que tal encaminhamento não é viável no momento, tornando pertinente e necessária, neste estágio, !!a emissão do laudo confirmatório de TEA, como medida prioritária para garantir acesso aos direitos e intervenções adequadas.!!"
   ].join("\n");
   t.textoEncaminhamentoExames = "Encaminhei também "+g.o+" paciente para avaliação complementar com exames de Audiometria, Teste de Processamento Auditivo Central (TPAC) e P300, com o objetivo de confirmar o diagnóstico de possíveis alterações no Processamento Auditivo Central. A realização desses exames se fez necessária devido às características apresentadas "+g.pelo+" paciente, como dificuldades de atenção sustentada, organização e memória auditiva, além de comportamentos de desatenção e impulsividade. A investigação diagnóstica será essencial para melhor entendimento do quadro e definição das intervenções adequadas.";
-  t.consideracoes = [
-    "Vale ressaltar que não se deve rejeitar nenhuma mudança por menor que seja e oferecer "+g.ao+" paciente atendimento psicológico logo que se observe algum comportamento fora do esperado, tais como: **Isolamento social, sono exagerado, insônia, tristeza, falta de motivação para realizar atividades antes interessantes, choro sem motivo aparente e etc...**",
-    "**OBSERVAÇÃO: Este relatório tem como objetivo resguardar o direito "+g.do+" paciente/aprendente a um acompanhamento terapêutico e avaliação médica com um Neuropediatra o quanto antes. Este documento** ==NÃO== **configura um laudo médico e não "+g.o+" isenta de reavaliação se houver necessidade. A emissão de um laudo final é de responsabilidade do profissional competente e autorizado por lei.**",
-    "Desde já, coloco-me à disposição para maiores esclarecimentos e estudo do caso, se necessário."
-  ].join("\n");
   t.fe_manif_0 = "Observa-se comprometimento acentuado no monitoramento da própria conduta. "+g.O+" paciente demonstra pouca percepção das consequências de suas ações e reduzida capacidade de reconhecer espontaneamente quando um comportamento é inadequado, perigoso ou prejudicial ao outro. Mesmo após orientações, pode repetir a mesma resposta, necessitando de mediação constante para interromper, compreender o ocorrido e reorganizar sua conduta.";
   t.fe_manif_1 = "Apresenta importante dificuldade para organizar ações de maneira antecipada e funcional. Seu comportamento tende a ser imediato e guiado pelo desejo do momento, com pouca previsão das etapas ou consequências. Necessita de elevada estruturação externa para iniciar, permanecer e concluir propostas, apresentando dificuldade para sustentar sequências, seguir uma organização previamente estabelecida e ajustar o próprio comportamento diante das demandas.";
   t.fe_manif_2 = "Esta função mostra-se severamente comprometida. "+g.O+" paciente apresenta grande dificuldade para esperar, aceitar negativas, interromper ações e conter impulsos. Diante de limites ou frustrações, pode responder com agressividade, fuga, autoagressão ou intensa desorganização comportamental. Comandos de interrupção frequentemente não produzem resposta imediata, inclusive em situações de risco, evidenciando necessidade de supervisão e intervenção externa constantes.";
@@ -1415,6 +1492,19 @@ function textosPadraoLaudo(g){
   t.fe_manif_4 = "Demonstra dificuldade para manter e utilizar informações durante a execução das tarefas. Orientações precisam ser repetidas, simplificadas e apresentadas em comandos curtos e segmentados. Pode perder rapidamente a informação necessária para continuar uma ação ou deixar de aplicar regras já trabalhadas, sobretudo quando há distrações, maior exigência atencional ou necessidade de controlar impulsos, exigindo retomadas frequentes pelo adulto.";
   t.fe_manif_5 = "Constitui uma área de comprometimento expressivo. "+g.O+" paciente apresenta rigidez acentuada diante de negativas, mudanças, interrupções ou impedimentos relacionados ao que deseja. Demonstra dificuldade intensa para abandonar uma intenção inicial e considerar outras possibilidades, podendo evoluir para oposição, agressividade, fuga ou desregulação importante. Necessita de mediação intensa para realizar transições, aceitar alternativas e reorganizar-se diante de novas demandas.";
   return t;
+}
+
+// Aviso de fechamento fixo (esclarecimento de que o laudo não é um
+// documento médico + disponibilidade para contato) — sempre impresso, não
+// é mais o texto-padrão do campo "Considerações Finais" (ponto 2 da
+// revisão: esse campo passou a ser a síntese individualizada do
+// paciente, gerada por IA ou escrita pela psicóloga, não um texto fixo).
+function avisoLegalFechamento(g){
+  return [
+    "Vale ressaltar que não se deve rejeitar nenhuma mudança por menor que seja e oferecer "+g.ao+" paciente atendimento psicológico logo que se observe algum comportamento fora do esperado, tais como: **Isolamento social, sono exagerado, insônia, tristeza, falta de motivação para realizar atividades antes interessantes, choro sem motivo aparente e etc...**",
+    "**OBSERVAÇÃO: Este relatório tem como objetivo resguardar o direito "+g.do+" paciente/aprendente a um acompanhamento terapêutico e avaliação médica com um Neuropediatra o quanto antes. Este documento** ==NÃO== **configura um laudo médico e não "+g.o+" isenta de reavaliação se houver necessidade. A emissão de um laudo final é de responsabilidade do profissional competente e autorizado por lei.**",
+    "Desde já, coloco-me à disposição para maiores esclarecimentos e estudo do caso, se necessário."
+  ].join("\n");
 }
 
 // Preenche os campos de texto com o texto-padrão do modelo. `preencherVazios`
@@ -1430,6 +1520,65 @@ function aplicarTextosPadrao(preencherVazios){
     const v=el.value;
     if((preencherVazios&&!v.trim())||v===masc[id]||v===fem[id])el.value=atual[id];
   });
+  atualizarBotoesEscalasMetodologia();
+}
+
+/* ------------------------------------------------- ícones de escalas (Metodologia) */
+
+// Texto-padrão (no gênero atual do paciente) do parágrafo de uma escala,
+// usado ao ligar o ícone correspondente.
+function paragrafoEscala(escalaId){
+  return textosPadraoLaudo(formasGenero(valor("sexo")))._metodologiaPartes[escalaId];
+}
+
+// Um ícone fica "ativo" quando o parágrafo daquela escala está presente no
+// texto atual do campo Metodologia (o estado nunca é guardado à parte —
+// é sempre lido do próprio texto, então sobrevive a reload/rascunho salvo).
+function escalaAtivaNoTexto(escalaId){
+  const cfg=ESCALAS_METODOLOGIA.find(e=>e.id===escalaId);
+  const ta=document.getElementById("metodologia");
+  if(!cfg||!ta)return false;
+  return ta.value.split(/\r?\n/).some(linha=>linha.trim().startsWith(cfg.marcador));
+}
+
+function alternarEscalaMetodologia(escalaId){
+  const cfg=ESCALAS_METODOLOGIA.find(e=>e.id===escalaId);
+  const ta=document.getElementById("metodologia");
+  if(!cfg||!ta)return;
+  const linhas=ta.value.split(/\r?\n/);
+  const idxAtual=linhas.findIndex(linha=>linha.trim().startsWith(cfg.marcador));
+  if(idxAtual>=0){
+    linhas.splice(idxAtual,1);
+  }else{
+    let idxFechamento=linhas.findIndex(linha=>linha.trim().startsWith(FECHAMENTO_METODOLOGIA_MARCADOR));
+    if(idxFechamento<0)idxFechamento=linhas.length;
+    linhas.splice(idxFechamento,0,paragrafoEscala(escalaId));
+  }
+  ta.value=linhas.join("\n");
+  atualizarBotoesEscalasMetodologia();
+  ta.dispatchEvent(new Event("input",{bubbles:true}));
+}
+
+function atualizarBotoesEscalasMetodologia(){
+  ESCALAS_METODOLOGIA.forEach(cfg=>{
+    const btn=document.getElementById("escalaBtn_"+cfg.id);
+    if(btn)btn.classList.toggle("ativo",escalaAtivaNoTexto(cfg.id));
+  });
+}
+
+function inicializarEscalasMetodologia(){
+  const cont=document.getElementById("escalasMetodologiaToggle");
+  if(!cont)return;
+  cont.innerHTML=ESCALAS_METODOLOGIA.map(cfg=>
+    '<button type="button" class="escala-icone" id="escalaBtn_'+cfg.id+'" '+
+    'title="Incluir/remover o parágrafo padrão da escala '+cfg.label+' no texto" '+
+    'onclick="alternarEscalaMetodologia(\''+cfg.id+'\')">'+
+    '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+cfg.svg+'</svg>'+
+    '<span>'+cfg.label+'</span></button>'
+  ).join("");
+  const ta=document.getElementById("metodologia");
+  if(ta)ta.addEventListener("input",atualizarBotoesEscalasMetodologia);
+  atualizarBotoesEscalasMetodologia();
 }
 
 /* ---------------------------------------------------------------- seções novas do formulário */
@@ -1501,7 +1650,14 @@ function atualizarIdadeCognitivaDoCabecalho(){
   const p=portagePorArea(); if(!p)return;
   const valores=p.areas.map(a=>a.anos);
   const min=Math.min(...valores), max=Math.max(...valores);
-  preencherAutomatico("idadeCognitivaRelatorio",min===max?anosDecimaisParaTexto(min):anosDecimaisParaTexto(min)+" à "+anosDecimaisParaTexto(max));
+  const faixa=min===max?anosDecimaisParaTexto(min):anosDecimaisParaTexto(min)+" à "+anosDecimaisParaTexto(max);
+  // Fora da faixa etária do Portage (>6 anos): não apresenta a idade
+  // equivalente como se fosse comparação normativa — deixa explícito que é
+  // repertório de referência (ponto 7 da revisão).
+  const texto=idadeForaDaFaixaPortage(idadeMeses())
+    ?"Repertório de referência pelo Portage: "+faixa+" (fora da faixa etária do instrumento — não é comparação normativa)"
+    :faixa;
+  preencherAutomatico("idadeCognitivaRelatorio",texto);
 }
 
 /* ---------------------------------------------------------------- utilitários de texto */
@@ -1906,6 +2062,139 @@ td.cab-espaco{width:8mm}
   .capa img{width:100%;height:auto}
 }`;
 
+/* ------------------------------------------------- hipótese diagnóstica selecionada */
+
+// Lista de hipóteses investigadas (o texto livre, se preenchido, substitui
+// as marcadas — mesma regra já usada na montagem do relatório).
+function listaHipotesesInvestigadas(){
+  const livres=valor("hipotesesTexto").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  return livres.length?livres:Array.from(document.querySelectorAll(".hipotese:checked")).map(i=>i.value);
+}
+
+// Recalcula as opções do seletor "Hipótese Selecionada" a partir do que
+// está marcado/digitado acima, preservando a seleção atual quando ainda
+// é uma opção válida.
+function atualizarOpcoesHipoteseSelecionada(){
+  const sel=document.getElementById("hipoteseSelecionada");
+  if(!sel)return;
+  const atual=sel.value;
+  const opcoes=listaHipotesesInvestigadas();
+  sel.innerHTML='<option value="">Selecione a hipótese deste paciente...</option>'+
+    opcoes.map(h=>'<option value="'+esc(h)+'">'+esc(h)+"</option>").join("");
+  if(opcoes.includes(atual))sel.value=atual;
+}
+
+/* ------------------------------------------------- IA: considerações finais e sugestões (pontos 2, 3 e 10) */
+
+// Monta o resumo curado DESTE paciente (nunca o catálogo completo de
+// hipóteses/protocolos/intervenções) a ser enviado à IA — só os campos que
+// de fato têm dado preenchido entram no resumo.
+function montarResumoParaIA(){
+  const resumo = {};
+
+  const estudo = valor("estudoCaso").trim();
+  if(estudo)resumo.estudo_de_caso = estudo;
+  const obs = valor("observacoesClinicas").trim();
+  if(obs)resumo.observacoes_clinicas = obs;
+
+  const linhasHabilidades = [];
+  HABILIDADES_LAUDO.forEach(gr=>{
+    gr.itens.forEach((it,i)=>{
+      const v = valor("hab_"+gr.id+"_"+i);
+      if(v)linhasHabilidades.push(it[0]+": "+v);
+    });
+  });
+  FE_LAUDO.forEach((f,i)=>{
+    const perc = valor("fe_perc_"+i), manif = valor("fe_manif_"+i).trim();
+    if(perc!==""||manif)linhasHabilidades.push(f.nome+(perc!==""?" (indicador de dificuldade: "+perc+"%)":"")+(manif?" — "+manif:""));
+  });
+  if(linhasHabilidades.length)resumo.habilidades_avaliadas = linhasHabilidades.join("\n");
+
+  const linhasProtocolos = [];
+  if(valor("cars")!=="")linhasProtocolos.push("CARS: "+valor("cars")+" pontos"+(valor("carsPercentualFalhas")!==""?" ("+valor("carsPercentualFalhas")+"% de falhas para a idade)":""));
+  if(valor("ata")!=="")linhasProtocolos.push("ATA: "+valor("ata")+" pontos"+(valor("ataPercentual")?" ("+valor("ataPercentual")+"% de características)":""));
+  const snapResumo = analisarSNAP();
+  if(snapResumo.pre>0)linhasProtocolos.push("SNAP-IV: "+snapResumo.des+"/9 itens de desatenção, "+snapResumo.hip+"/9 itens de hiperatividade/impulsividade"+(snapResumo.completo?"":" (protocolo incompleto)"));
+  const todResumo = analisarTOD();
+  if(todResumo.pre>0)linhasProtocolos.push("TOD: "+todResumo.pos+"/"+todItens.length+" comportamentos identificados"+(todResumo.completo?" ("+todResumo.perc+"%)":" (protocolo incompleto)"));
+  const portageResumo = portagePorArea();
+  if(portageResumo)linhasProtocolos.push("Portage: "+portageResumo.areas.map(a=>a.rotulo+" "+a.anos+" anos").join(", ")+(idadeForaDaFaixaPortage(idadeMeses())?" (paciente fora da faixa etária do instrumento — usado só como referência de repertório, não comparação normativa)":""));
+  const itensMCHATResumo = mchatItens.map((t,i)=>({resp:valor("mchat_"+i)})).filter(x=>x.resp!=="");
+  if(itensMCHATResumo.length)linhasProtocolos.push("M-CHAT: "+itensMCHATResumo.filter(x=>x.resp==="nao").length+"/"+itensMCHATResumo.length+" itens respondidos como ausentes/atípicos");
+  if(linhasProtocolos.length)resumo.protocolos_utilizados = linhasProtocolos.join("\n");
+
+  const hip = valor("hipoteseSelecionada").trim();
+  if(hip)resumo.hipotese_selecionada = hip;
+
+  return resumo;
+}
+
+async function gerarConclusaoEIntervencoesComIA(){
+  const btn = document.getElementById("btnGerarConclusaoIA");
+  const aviso = document.getElementById("avisoConclusaoIA");
+  if(aviso){aviso.style.display = "none";}
+  const reportId = typeof window.obterLaudoAtualId === "function" ? window.obterLaudoAtualId() : null;
+  if(!reportId){
+    notificar("Salve o protocolo no sistema pelo menos uma vez (botão \"Salvar Protocolo\") antes de gerar com IA.","aviso");
+    return;
+  }
+  const resumo = montarResumoParaIA();
+  if(!resumo.estudo_de_caso&&!resumo.observacoes_clinicas&&!resumo.habilidades_avaliadas&&!resumo.protocolos_utilizados){
+    notificar("Preencha o estudo de caso, as observações clínicas, as habilidades avaliadas ou algum protocolo deste paciente antes de gerar com IA.","aviso");
+    return;
+  }
+  const textoOriginal = btn?btn.textContent:"";
+  if(btn){btn.disabled = true; btn.textContent = "Gerando com IA…";}
+  try{
+    const resultado = await window.apiFetch("/reports/"+reportId+"/generate-conclusion", {
+      method: "POST",
+      body: JSON.stringify(Object.assign({patient_name: valor("nomePaciente")||"Paciente"}, resumo))
+    });
+    setValor("consideracoes", resultado.consideracoes_finais);
+    setValor("planoIntervencao", resultado.sugestoes_intervencao);
+    const taConsideracoes = document.getElementById("consideracoes"), taPlano = document.getElementById("planoIntervencao");
+    if(taConsideracoes)taConsideracoes.dispatchEvent(new Event("input",{bubbles:true}));
+    if(taPlano)taPlano.dispatchEvent(new Event("input",{bubbles:true}));
+    notificar("Considerações finais e sugestões de intervenção geradas — revise antes de salvar.","sucesso");
+  }catch(e){
+    if(aviso){
+      aviso.textContent = (e&&e.message)||"Não foi possível gerar o texto com IA. Configure o provedor em \"Configurações\" ou escreva manualmente.";
+      aviso.style.display = "block";
+    }
+  }finally{
+    if(btn){btn.disabled = false; btn.textContent = textoOriginal;}
+  }
+}
+
+// Perfil da profissional responsável (bio + credenciais da assinatura),
+// buscado uma vez em /api/auth/me e usado no bloco "Sobre A Profissional
+// Responsável" e na assinatura do laudo. Editável pela própria psicóloga
+// (não hardcoded) — se o perfil não tiver bio/credenciais configuradas,
+// cai no texto padrão abaixo.
+let _perfilProfissionalCache=null;
+async function perfilProfissional(){
+  if(_perfilProfissionalCache)return _perfilProfissionalCache;
+  const padrao={
+    nome:"Mayra Vanessa Andrade da Cunha",
+    bio:"Este relatório foi elaborado por Mayra Vanessa Andrade da Cunha, Neuropsicopedagoga Clínica (CBO 2394-40) e Institucional (CBO 2394-45), com formação especializada em Análise do Comportamento Aplicada (ABA) e atuação profissional voltada ao desenvolvimento, aprendizagem e acompanhamento de crianças neurodivergentes. Possui mais de 25 anos de experiência profissional na área educacional e mais de 15 anos de atuação com crianças com Transtorno do Espectro Autista (TEA), integrando experiência educacional, conhecimento técnico e prática clínica neuropsicopedagógica na análise individualizada de cada caso.",
+    credenciais:["Neuropsicopedagoga Clínica","com formação especializada em Análise do Comportamento Aplicada (ABA)","Especialista em Educação Inclusiva"]
+  };
+  try{
+    if(typeof window.apiFetch!=="function")return _perfilProfissionalCache=padrao;
+    const dados=await window.apiFetch("/auth/me");
+    _perfilProfissionalCache={
+      nome:(dados&&dados.name)||padrao.nome,
+      bio:(dados&&dados.bio_profissional&&dados.bio_profissional.trim())||padrao.bio,
+      credenciais:(dados&&dados.credenciais_assinatura&&dados.credenciais_assinatura.trim())
+        ?dados.credenciais_assinatura.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)
+        :padrao.credenciais
+    };
+  }catch(e){
+    _perfilProfissionalCache=padrao;
+  }
+  return _perfilProfissionalCache;
+}
+
 async function gerarDocumentoLaudoHTML(){
   atualizarInterpretacoes();
   calcularCARS();
@@ -1937,6 +2226,7 @@ async function gerarDocumentoLaudoHTML(){
   ].filter(l=>l[1]);
   partes.push('<table class="cab-paciente"><tr><td class="cab-foto">'+(fotoCabecalho?'<img src="'+fotoCabecalho+'" data-mm="42" style="width:42mm;height:52mm">':"")+'</td><td class="cab-espaco"></td><td class="cab-info"><div class="cab-box">'+linhasCabecalho.map(l=>"<p>"+esc(l[0])+": "+esc(l[1])+"</p>").join("")+"</div></td></tr></table>");
   partes.push('<div class="faixa centro">PARECER NEUROPSICOPEDAGÓGICO<br>ANÁLISE COMPORTAMENTAL</div>');
+  partes.push('<div class="caixa-cinza clara"><p><strong>NOTA SOBRE OS RESULTADOS:</strong> Os percentuais apresentados neste relatório possuem caráter descritivo e clínico-observacional, sendo construídos a partir do desempenho apresentado nas atividades propostas, dos registros realizados durante os atendimentos e da análise qualitativa dos dados obtidos. Esses valores não correspondem a percentis normativos, índices psicométricos ou escores provenientes de testes padronizados restritos a outras categorias profissionais. Constituem recurso de organização e representação visual dos achados e devem ser interpretados conjuntamente com as demais informações apresentadas neste relatório.</p></div>');
   partes.push(blocoDeTexto(valor("metodologia"),Object.assign({primeiroSemRecuo:/^\s*\*\*METODOLOGIA/i.test(valor("metodologia"))},opcoesTexto)));
   partes.push(texto("parecerContexto"));
 
@@ -2045,8 +2335,11 @@ async function gerarDocumentoLaudoHTML(){
   const imgPortage=graficoPortage(portage,idadeAnos);
   if(imgPortage||valor("textoPortage").trim()){
     partes.push(QUEBRA);
+    if(idadeForaDaFaixaPortage(idadeMeses())){
+      partes.push('<div class="caixa-cinza clara"><p><strong>Observação sobre a faixa etária do Portage:</strong> o paciente encontra-se fora da faixa etária de referência do Inventário Portage Operacionalizado (0 a 6 anos). Os resultados apresentados foram utilizados exclusivamente como referência de repertório e levantamento de habilidades observadas, e não como parâmetro de comparação normativa para a idade cronológica atual.</p></div>');
+    }
     if(imgPortage){
-      partes.push('<p class="recuo">Com base no resultado dos protocolos aplicados durante o período da avaliação e respeitando as particularidades, tempo e limitações '+g.do+" paciente/aprendente segue abaixo percentil de estímulos em áreas específicas: Comportamentos: <strong>Socialização, Linguagem, Autocuidados, Cognição e Desenvolvimento Motor.</strong></p>");
+      partes.push('<p class="recuo">Com base no resultado dos protocolos aplicados durante o período da avaliação e respeitando as particularidades, tempo e limitações '+g.do+" paciente/aprendente segue abaixo percentual descritivo de repertório observado em áreas específicas: Comportamentos: <strong>Socialização, Linguagem, Autocuidados, Cognição e Desenvolvimento Motor.</strong></p>");
       partes.push('<div class="grafico"><img src="'+imgPortage+'" data-mm="165" style="width:165mm"></div>');
     }
     partes.push(texto("textoPortage"));
@@ -2073,6 +2366,27 @@ async function gerarDocumentoLaudoHTML(){
     partes.push(texto("textoSNAP"));
   }
 
+  /* Protocolo TOD — só entra no relatório se algum item foi respondido */
+  const tod=analisarTOD();
+  if(tod.pre>0){
+    partes.push(QUEBRA+'<h3><mark class="cinza">Protocolo TOD — Transtorno Opositor Desafiador</mark></h3>');
+    if(tod.completo){
+      partes.push('<p class="recuo">Foram identificados <strong>'+tod.pos+" de "+todItens.length+"</strong> comportamentos compatíveis com o "+"Transtorno Opositor Desafiador (TOD), o que corresponde a <strong>"+tod.perc+'%</strong> dos itens do protocolo.</p>');
+    }else{
+      partes.push('<p class="recuo">Protocolo TOD respondido parcialmente ('+tod.pre+" de "+todItens.length+' itens) — resultado percentual não calculado por falta de preenchimento completo.</p>');
+    }
+  }
+
+  /* M-CHAT — tabela descritiva dos itens respondidos, sem escore clínico
+     automático (o instrumento não tem algoritmo de pontuação implementado
+     neste sistema; a interpretação cabe à profissional). */
+  const itensMCHAT=mchatItens.map((t,i)=>({item:t,resp:valor("mchat_"+i)})).filter(x=>x.resp!=="");
+  if(itensMCHAT.length){
+    const linhasMCHAT=itensMCHAT.map(x=>"<tr><td>"+esc(x.item)+"</td><td>"+(x.resp==="sim"?"Sim":"Não")+"</td></tr>").join("");
+    partes.push(QUEBRA+'<h3><mark class="cinza">M-CHAT — Modified Checklist For Autism In Toddlers</mark></h3>');
+    partes.push('<table class="tabela dupla compacta" data-larguras="130,40" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:130mm"><col style="width:40mm"></colgroup><tr><th>Item</th><th>Resposta</th></tr>'+linhasMCHAT+"</table>");
+  }
+
   /* Síntese clínica */
   if(valor("textoSintese").trim())partes.push(QUEBRA+texto("textoSintese"));
 
@@ -2083,7 +2397,6 @@ async function gerarDocumentoLaudoHTML(){
     if(imgFE){
       partes.push('<div class="grafico"><img src="'+imgFE+'" data-mm="160" style="width:160mm"></div>');
       partes.push('<p class="compacto"><span style="color:#c00000">✚</span> Legenda:</p><p class="compacto" style="padding-left:6mm"><span style="color:#ed7d31"><strong>Indicadores de dificuldade observados</strong></span></p><p style="padding-left:6mm"><span style="color:#1f3864"><strong>Indicadores de desempenho funcional observado</strong></span></p>');
-      partes.push('<div class="caixa-cinza"><p>Os percentuais apresentados possuem caráter descritivo e clínico-observacional, sendo elaborados a partir do desempenho '+g.do+" paciente nas atividades propostas, das observações realizadas durante os atendimentos neuropsicopedagógicos e da análise qualitativa de suas respostas e estratégias. Não correspondem a percentis, escores normativos, índices diagnósticos ou resultados provenientes de testes neuropsicológicos padronizados. Os valores são utilizados como recurso de organização e representação visual dos achados observados durante o processo avaliativo, devendo ser analisados em conjunto com os demais dados obtidos na avaliação.</p></div>");
     }
   }
 
@@ -2095,23 +2408,53 @@ async function gerarDocumentoLaudoHTML(){
     partes.push(texto("textoConclusaoTEA"));
   }
 
-  /* Página final: encaminhamento, hipóteses, considerações e assinatura */
+  /* Página final: encaminhamento, estudo de caso, hipótese, considerações
+     finais, sugestões de intervenção e assinatura (ordem do ponto 10 da
+     revisão: ... protocolos/resultados/gráficos -> estudo de caso ->
+     hipótese selecionada -> considerações finais -> sugestões de
+     intervenção -> assinatura). */
   partes.push(QUEBRA);
   if(valor("textoEncaminhamentoExames").trim())partes.push('<div class="caixa-cinza clara">'+blocoDeTexto(valor("textoEncaminhamentoExames"),opcoesTexto)+"</div>");
-  const hipotesesLivres=valor("hipotesesTexto").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-  const hipoteses=hipotesesLivres.length?hipotesesLivres:Array.from(document.querySelectorAll(".hipotese:checked")).map(i=>i.value);
-  if(hipoteses.length){
-    const formatarHipotese=h=>{const m=h.match(/^(.*?)\s*(\((?:CID)[^)]*\))\s*$/i);return m?"<li><strong>"+esc(m[1])+'</strong> <mark class="cinza"><strong>'+esc(m[2])+"</strong></mark></li>":"<li><strong>"+esc(h)+"</strong></li>";};
-    partes.push('<h3><mark class="cinza">Hipóteses Diagnósticas:</mark></h3><ul class="bullets">'+hipoteses.map(formatarHipotese).join("")+"</ul>");
+
+  const estudoDeCaso=valor("estudoCaso").trim(), observacoesClinicas=valor("observacoesClinicas").trim();
+  if(estudoDeCaso||observacoesClinicas){
+    partes.push('<h3><mark class="cinza">Estudo De Caso E Observações Clínicas</mark></h3>');
+    if(estudoDeCaso)partes.push(blocoDeTexto(estudoDeCaso,opcoesTexto));
+    if(observacoesClinicas)partes.push(blocoDeTexto(observacoesClinicas,opcoesTexto));
   }
-  partes.push(texto("consideracoes"));
+
+  // O relatório mostra só a hipótese selecionada em #hipoteseSelecionada,
+  // nunca a lista completa de hipóteses investigadas (ver
+  // atualizarOpcoesHipoteseSelecionada()). Se por algum motivo não houver
+  // seleção salva (ex.: laudo criado antes deste campo existir), cai para
+  // a primeira hipótese investigada, sem listar as demais.
+  const hipoteseSelecionada=valor("hipoteseSelecionada").trim()||listaHipotesesInvestigadas()[0]||"";
+  if(hipoteseSelecionada){
+    const formatarHipotese=h=>{const m=h.match(/^(.*?)\s*(\((?:CID)[^)]*\))\s*$/i);return m?"<li><strong>"+esc(m[1])+'</strong> <mark class="cinza"><strong>'+esc(m[2])+"</strong></mark></li>":"<li><strong>"+esc(h)+"</strong></li>";};
+    partes.push('<h3><mark class="cinza">Hipótese Diagnóstica:</mark></h3><ul class="bullets">'+formatarHipotese(hipoteseSelecionada)+"</ul>");
+  }
+
+  if(valor("consideracoes").trim()){
+    partes.push('<h3><mark class="cinza">Considerações Finais</mark></h3>');
+    partes.push(texto("consideracoes"));
+  }
+  if(valor("planoIntervencao").trim()){
+    partes.push('<h3><mark class="cinza">Sugestões De Intervenção</mark></h3>');
+    partes.push(texto("planoIntervencao"));
+  }
+  // Aviso de fechamento fixo — sempre impresso, não depende do que a
+  // psicóloga escreveu em Considerações Finais (ver avisoLegalFechamento()).
+  partes.push(blocoDeTexto(avisoLegalFechamento(g),opcoesTexto));
+
+  const perfil=await perfilProfissional();
+  partes.push(QUEBRA+'<div class="caixa-cinza clara"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>'+esc(perfil.bio)+"</p></div>");
   const dataRel=dataRelatorioObj();
   const cidade=(valor("cidade")||"").replace(/\s*–\s*/g," - ");
   partes.push('<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>');
   partes.push('<p class="direita" style="margin-top:4mm"><strong>'+esc(cidade)+", "+dataRel.getDate()+" de "+MESES_EXTENSO[dataRel.getMonth()]+" de "+dataRel.getFullYear()+".</strong></p>");
   partes.push('<div class="linha-assinatura"></div>');
-  partes.push('<p class="centro compacto assinatura-nome">Mayra Vanessa Andrade da Cunha</p>');
-  ["Neuropsicopedagoga Clínica","Analista Comportamental - ABA","Especialista em Educação Inclusiva"].forEach(t=>partes.push('<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">'+t+"</span></strong></mark></p>"));
+  partes.push('<p class="centro compacto assinatura-nome">'+esc(perfil.nome)+"</p>");
+  perfil.credenciais.forEach(t=>partes.push('<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">'+esc(t)+"</span></strong></mark></p>"));
 
   const titulo="Relatório - "+(valor("nomePaciente")||"Paciente");
   return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>'+esc(titulo)+"</title><style>"+CSS_LAUDO+"</style></head><body>"+
@@ -2187,6 +2530,7 @@ function mostrarPreviaDoLaudo(html){
     );
     return requisitar(path, Object.assign({}, options, { headers })).then((r) => (r.status === 204 ? null : r.json()));
   }
+  window.apiFetch = apiFetch;
 
   function apiFetchArquivo(path, arquivo) {
     const formData = new FormData();
@@ -2297,6 +2641,7 @@ function mostrarPreviaDoLaudo(html){
   let laudoAtual = null;
   let templateAtual = null;
   let temporizadorAutosaveBanco = null;
+  window.obterLaudoAtualId = () => (laudoAtual ? laudoAtual.id : null);
 
   // estado: 'salvando' | 'salvo' | 'erro' | undefined (neutro)
   function definirStatus(texto, estado) {
@@ -2599,7 +2944,7 @@ function mostrarPreviaDoLaudo(html){
     "Habilidades Cognitivas, Socioemocionais E Motoras": { grupos: [["select[id^='hab_cog_'],select[id^='hab_soc_'],select[id^='hab_mot_']", "habilidades sem resposta"]] },
     "Distribuição Das Dificuldades Por Domínio": { campos: ["dom_atencao", "dom_sociais", "dom_comportamento", "dom_aprendizagem", "dom_fe"] },
     "Textos Do Parecer (Modelo Oficial Do Relatório)": { especial: "textos", revisar: true },
-    "Plano De Intervenção": { campos: ["planoIntervencao"], revisar: true },
+    "Sugestões De Intervenção": { campos: ["planoIntervencao"], revisar: true },
     "Encaminhamentos": { especial: "encaminhamentos" },
     "Considerações Finais": { campos: ["consideracoes"], revisar: true },
     "Cidade E Data": { campos: ["cidade", "dataRelatorio"] },
@@ -2708,6 +3053,7 @@ function mostrarPreviaDoLaudo(html){
       }
       case "hipoteses":
         exigir(document.querySelectorAll(".hipotese:checked").length > 0 || preenchido(document.getElementById("hipotesesTexto")), "Marque ao menos uma hipótese diagnóstica", etapa.querySelector(".hipotese"));
+        exigir(preenchido(document.getElementById("hipoteseSelecionada")), "Selecione, entre as hipóteses marcadas, qual é a hipótese deste paciente (o relatório mostra só ela)", document.getElementById("hipoteseSelecionada"));
         break;
       case "portage":
         if (!etapa.querySelector(".portageItem")) exigir(false, "Clique em \"Carregar Portage Pela Idade\"", botao("Carregar Portage"));

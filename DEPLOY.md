@@ -58,13 +58,121 @@ Copie `.env.example` e preencha de verdade antes de subir o serviço
       bibliotecas de sistema do WeasyPrint instaladas no `Dockerfile`
       funcionam corretamente dentro do container).
 
+### 3.1 Runbook para uma VPS genérica (Docker Compose + Caddy)
+
+`docker-compose.yml` e `Caddyfile` na raiz do projeto sobem os 3 serviços
+juntos: Postgres, a aplicação e Caddy como proxy reverso com HTTPS
+automático (Let's Encrypt) para o domínio configurado — não precisa
+configurar TLS na mão.
+
+Pré-requisito: um registro DNS tipo A do seu domínio (ex.:
+`laudos.suaclinica.com.br`) apontando para o IP público da VPS, propagado
+*antes* de subir o Caddy (senão a emissão do certificado falha).
+
+Na VPS (Ubuntu/Debian; ajuste para outra distro):
+
+```bash
+# 1. Docker + Docker Compose, se ainda não tiver
+curl -fsSL https://get.docker.com | sh
+
+# 2. Copiar o projeto para a VPS (git clone do seu repositório, ou
+#    `rsync`/`scp` a partir da sua máquina)
+git clone <url-do-seu-repositorio> formpsico
+cd formpsico
+
+# 3. Configurar variáveis de ambiente
+cp .env.example .env
+nano .env   # preencha JWT_SECRET (openssl rand -hex 32), POSTGRES_PASSWORD,
+            # DOMAIN, e a chave de IA se for usar geração por IA
+
+# 4. Subir tudo (build da imagem + Postgres + Caddy)
+docker compose up -d --build
+
+# 5. Acompanhar os logs até o Caddy confirmar o certificado emitido
+docker compose logs -f caddy
+```
+
+Depois disso o sistema fica em `https://SEU_DOMINIO`, com renovação de
+certificado automática pelo Caddy. Para atualizar após um novo commit:
+`git pull && docker compose up -d --build`.
+
+- [ ] Executado numa VPS real (o checklist acima ainda não foi rodado
+      fora deste ambiente de desenvolvimento — confirme cada passo ao
+      subir pela primeira vez).
+
+### 3.2 Deploy pelo Portainer
+
+Arquivos usados: `docker-compose.portainer.yml` (a stack),
+`portainer.env.example` (modelo das variáveis) e
+`.github/workflows/docker-publish.yml` (publica a imagem).
+
+A stack usa uma **imagem pronta** no GitHub Container Registry, em vez de
+buildar no servidor, e sobe o Caddy (HTTPS automático) configurado só por
+variáveis — sem precisar do `Caddyfile`. Ocupa as portas 80/443 da VPS.
+
+**Atenção:** não use o `docker-compose.yml` no Portainer — ele depende do
+arquivo `.env` e do `Caddyfile` em disco e falha com
+`required variable DOMAIN is missing a value`.
+
+**1. Publicar a imagem (uma vez, e depois automático)**
+
+- Faça push na `master`: o GitHub Actions builda o `Dockerfile` e publica
+  `ghcr.io/samuelqueiros/psicologa:latest` (e uma tag `sha-<commit>`).
+  Acompanhe em GitHub > Actions.
+- O pacote nasce **privado**. Ou torne público (GitHub > Packages >
+  psicologa > Package settings > Change visibility), ou cadastre o
+  registry no Portainer: *Registries > Add registry > Custom registry*,
+  URL `ghcr.io`, usuário do GitHub e um Personal Access Token (classic)
+  com escopo `read:packages`.
+
+**2. Criar a stack**
+
+- Portainer > *Stacks > Add stack*, nome ex.: `psicologa`.
+- *Web editor*: cole o conteúdo de `docker-compose.portainer.yml`.
+  (Alternativa: *Repository*, apontando para este repositório e
+  *Compose path* `docker-compose.portainer.yml` — se o repo for privado,
+  informe as credenciais do GitHub.)
+- *Environment variables > Load variables from .env file*: carregue uma
+  cópia preenchida de `portainer.env.example`. Obrigatórias:
+  `POSTGRES_PASSWORD`, `JWT_SECRET` (`openssl rand -hex 32`) e `DOMAIN`.
+  Para já criar o
+  login da psicóloga, preencha `ADMIN_EMAIL`, `ADMIN_PASSWORD` (mín. 8
+  caracteres) e `ADMIN_NAME` — ver seção 6.
+- *Deploy the stack*. O container `app` roda as migrations sozinho e fica
+  `healthy` quando `/api/health` responde.
+
+**3. HTTPS / domínio**
+
+- Antes do deploy: registro DNS tipo A de `DOMAIN` apontando para o IP da
+  VPS, e portas 80 e 443 liberadas no firewall. O Caddy emite e renova o
+  certificado sozinho — acompanhe nos logs do container `caddy`.
+- Se a VPS já tiver outro proxy ocupando 80/443, remova o serviço `caddy`
+  da stack, publique a porta do app (`ports: ["8000:8000"]`) e aponte o
+  proxy existente para ela.
+
+**4. Atualizar após um novo commit**
+
+- Push na `master` → espere o Actions terminar → no Portainer, abra a
+  stack e clique *Update the stack* marcando *Re-pull image and
+  redeploy*. (Para fixar uma versão, use `APP_IMAGE=ghcr.io/samuelqueiros/psicologa:sha-<commit>`.)
+
+- [x] Stack testada localmente com `docker compose -f
+      docker-compose.portainer.yml` (2026-09-28): migrations aplicadas,
+      container `healthy`, API e frontend respondendo via Caddy (HTTPS,
+      redirect http→https, cabeçalhos de segurança), login criado por
+      `ADMIN_*`.
+- [ ] Executado num Portainer real.
+- [ ] Backup: os dados ficam nos volumes `<stack>_db_data` e
+      `<stack>_app_storage` — configure o backup (seção 2) apontando para
+      o Postgres da stack.
+
 ## 4. HTTPS
 
-- [ ] O serviço roda hoje só em HTTP simples (`uvicorn`), sem HTTPS
-      embutido. Em produção, colocar atrás de um proxy reverso (ex.:
-      Caddy, Nginx, ou o HTTPS gerenciado da própria plataforma de
-      hospedagem) que termine o TLS e encaminhe para a porta 8000 do
-      container.
+- [x] Resolvido pelo runbook da seção 3.1 (Caddy com HTTPS automático) —
+      única exigência é o DNS do domínio já apontando para a VPS antes de
+      subir o `docker compose`. Alternativa equivalente: Nginx + certbot,
+      ou o HTTPS gerenciado da própria plataforma de hospedagem, caso não
+      use o `docker-compose.yml` deste repositório.
 - [ ] Sem HTTPS, o token de login (JWT) trafega em texto puro pela rede —
       inaceitável para dados de saúde. Não colocar no ar sem isso.
 
@@ -93,7 +201,12 @@ segurança", Prompt 4.3, para o detalhamento do que já foi revisado)
 
 ## 6. Depois de subir
 
-- [ ] Cadastrar a primeira conta de psicóloga (`POST /api/auth/register`).
+- [ ] Cadastrar a primeira conta de psicóloga. Jeito recomendado: definir
+      `ADMIN_EMAIL`, `ADMIN_PASSWORD` (e `ADMIN_NAME`) no `.env` / nas
+      variáveis da stack do Portainer. A cada start o container cria essa
+      conta se ela não existir e, se `ADMIN_PASSWORD` mudou, redefine a
+      senha (`backend/app/seed_admin.py`) — serve também para recuperar
+      acesso. Alternativa: `POST /api/auth/register`.
 - [ ] Nada mais a semear: desde 2026-09-20 o sistema usa um protocolo fixo
       (`frontend/public/formulario-novo-paciente.html`), não mais templates
       configuráveis por escala. O `ReportTemplate` interno
