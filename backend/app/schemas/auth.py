@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 
 class PsychologistRegister(BaseModel):
@@ -14,6 +14,28 @@ class PsychologistLogin(BaseModel):
     password: str = Field(min_length=1, max_length=72)
 
 
+class FaixaDoNome(BaseModel):
+    """Retângulo onde o nome do paciente é escrito na capa, em frações
+    (0 a 1) da largura/altura da arte."""
+
+    x: float = Field(ge=0, le=1)
+    y: float = Field(ge=0, le=1)
+    largura: float = Field(gt=0, le=1)
+    altura: float = Field(gt=0, le=1)
+
+    @model_validator(mode="after")
+    def cabe_na_capa(self) -> "FaixaDoNome":
+        if self.x + self.largura > 1.0001 or self.y + self.altura > 1.0001:
+            raise ValueError("A área do nome precisa ficar dentro da capa.")
+        return self
+
+
+class CapaConfig(BaseModel):
+    escreverNome: bool = True
+    faixa: FaixaDoNome
+    corNome: str = Field(default="#ffffff", pattern=r"^#[0-9a-fA-F]{6}$")
+
+
 class PsychologistOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -23,6 +45,8 @@ class PsychologistOut(BaseModel):
     professional_registration: str | None = None
     bio_profissional: str | None = None
     credenciais_assinatura: str | None = None
+    tem_capa_personalizada: bool = False
+    capa_config: CapaConfig | None = None
 
 
 class PsychologistProfileUpdate(BaseModel):

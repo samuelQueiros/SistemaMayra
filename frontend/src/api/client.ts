@@ -102,11 +102,18 @@ export const apiPatch = <T>(path: string, body: unknown) =>
   request<T>(path, { method: 'PATCH', body: JSON.stringify(body) })
 export const apiDelete = <T>(path: string) => request<T>(path, { method: 'DELETE' })
 
-export async function apiPostFile<T>(path: string, file: File): Promise<T> {
+export async function apiPostFile<T>(path: string, file: File, method: 'POST' | 'PUT' = 'POST'): Promise<T> {
   const formData = new FormData()
   formData.append('file', file)
-  const response = await enviar(path, { method: 'POST', headers: cabecalhos(), body: formData })
+  const response = await enviar(path, { method, headers: cabecalhos(), body: formData })
   return response.json() as Promise<T>
+}
+
+// Arquivo de rota autenticada como URL de objeto local, para usar em <img
+// src>, que não manda o token Bearer sozinho.
+export async function fetchObjectUrl(path: string): Promise<string> {
+  const response = await enviar(path, { headers: cabecalhos() })
+  return URL.createObjectURL(await response.blob())
 }
 
 function baixar(blob: Blob, fileName: string): void {

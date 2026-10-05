@@ -117,6 +117,10 @@ def get_photos_storage() -> Storage:
     return _build_storage("photos")
 
 
+def get_covers_storage() -> Storage:
+    return _build_storage("covers")
+
+
 def get_reports_storage() -> Storage:
     return _build_storage("reports")
 

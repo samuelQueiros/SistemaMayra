@@ -3,6 +3,16 @@ export interface Psychologist {
   name: string
   email: string
   professional_registration: string | null
+  tem_capa_personalizada?: boolean
+  capa_config?: CapaConfig | null
+}
+
+// Onde (frações 0–1 da arte) e com qual cor o nome do paciente é escrito
+// na capa do relatório. Mesmo formato usado em formulario-novo-paciente.html.
+export interface CapaConfig {
+  escreverNome: boolean
+  faixa: { x: number; y: number; largura: number; altura: number }
+  corNome: string
 }
 
 export interface Patient {

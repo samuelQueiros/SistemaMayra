@@ -2000,3 +2000,45 @@ Pré-Visualizar / Gerar PDF / Gerar Word → 1ª página é a capa com o nome.
 Para trocar a arte: substituir `frontend/public/capa-relatorio.png` (A4 em pé,
 2480×3508, sem o nome), ajustar `CAPA_FAIXA` no formulário se a faixa mudar de
 lugar e rodar `npm run build`.
+
+## Capa do relatório personalizável (capa padrão + capa por relatório)
+
+**Status:** ✅ Pronto (2026-10-05)
+
+- **O que mudou para a psicóloga:** a capa dos relatórios não é mais fixa.
+  - **Capa padrão (Configurações → "Capa Do Relatório"):** enviar a imagem da
+    capa (JPG, PNG ou WEBP, até 10 MB, A4 em pé — no Canva, exportar como PNG
+    tamanho A4). Ela passa a valer para todos os relatórios.
+  - **Nome do paciente opcional:** marcar "Escrever o nome do paciente na
+    capa", arrastar sobre a prévia para marcar onde o nome fica e escolher a
+    cor. Desmarcado, a capa sai exatamente como a imagem enviada.
+  - **Capa só de um relatório:** no formulário, fase "Inserção De Fotos",
+    bloco "Capa Deste Relatório (Opcional)" — a imagem enviada ali vale só
+    para aquele relatório (com as mesmas opções de nome/cor) e fica salva
+    junto com ele. "Usar A Capa Padrão" desfaz.
+  - "Voltar À Capa Padrão" (Configurações) volta para a arte do sistema.
+  - Imagem fora do formato A4 em pé é recortada ao centro (com aviso), nunca
+    esticada.
+- **Como funciona por dentro:** a capa continua sendo montada num único lugar
+  (`gerarCapaRelatorio()` no formulário), agora escolhendo a arte nesta ordem:
+  capa do relatório → capa padrão da psicóloga → `capa-relatorio.png`. PDF e
+  Word não mudaram (já recebiam a capa pronta). A capa padrão fica no storage
+  (`covers/`, local ou S3) e a posição/cor do nome em `psychologists.capa_config`;
+  a capa de um relatório fica nas respostas do laudo (`__capaRelatorio`), como
+  as fotos.
+- **Arquivos:** `backend/app/api/auth.py` (`PUT/DELETE /api/auth/me/capa`,
+  `GET /api/auth/me/capa/arquivo`, `PUT /api/auth/me/capa/config`),
+  `backend/app/models/psychologist.py`, `backend/app/schemas/auth.py`,
+  `backend/app/services/storage.py`, migration `b7c3e1f2a9d4`,
+  `backend/tests/test_capa_personalizada.py`,
+  `frontend/src/components/EditorCapa.tsx` (+ teste),
+  `frontend/src/pages/Configuracoes.tsx`, `frontend/src/api/{auth,client,types}.ts`,
+  `frontend/public/formulario-novo-paciente.html`.
+- **Como testar:** `alembic upgrade head`; Configurações → enviar capa, marcar
+  nome, desenhar a área, Salvar Capa; Novo Atendimento → Pré-Visualizar /
+  Gerar PDF / Gerar Word: 1ª página é a capa nova com o nome na área marcada.
+  Na fase de fotos, enviar outra capa só para esse relatório e recarregar a
+  página: a capa continua lá.
+- **Pendências/observações:** a arte provisória `capa-relatorio.png` só é
+  usada por quem não enviou capa própria — trocá-la deixou de ser obrigatório.
+  PDF como capa não é aceito (exportar a capa como imagem).

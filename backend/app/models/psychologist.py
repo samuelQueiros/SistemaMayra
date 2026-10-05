@@ -1,4 +1,4 @@
-from sqlalchemy import String, Text
+from sqlalchemy import JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -21,6 +21,16 @@ class Psychologist(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     # uma por linha (ex.: "Neuropsicopedagoga Clínica"). Se vazio, usa o
     # padrão do formulário.
     credenciais_assinatura: Mapped[str | None] = mapped_column(Text, default=None)
+    # Capa padrão dos relatórios enviada pela própria psicóloga (chave no
+    # storage "covers"). Se vazia, o formulário usa a arte capa-relatorio.png.
+    capa_arquivo: Mapped[str | None] = mapped_column(String(500), default=None)
+    # Se o nome do paciente é escrito na capa, onde (frações da arte) e com
+    # qual cor — ver `CapaConfig` em app/schemas/auth.py.
+    capa_config: Mapped[dict | None] = mapped_column(JSON, default=None)
 
     patients: Mapped[list["Patient"]] = relationship(back_populates="owner")
     templates: Mapped[list["ReportTemplate"]] = relationship(back_populates="owner")
+
+    @property
+    def tem_capa_personalizada(self) -> bool:
+        return bool(self.capa_arquivo)

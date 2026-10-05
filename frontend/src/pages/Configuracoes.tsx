@@ -5,6 +5,7 @@ import { getAISettings, updateAISettings } from '../api/aiSettings'
 import type { AISettings } from '../api/aiSettings'
 import { me as getMe, updateProfile } from '../api/auth'
 import { Alert, Badge, Button, Card, Input, PageHeader, Select } from '../components/ds'
+import { EditorCapa } from '../components/EditorCapa'
 
 type Provider = 'anthropic' | 'openai' | 'google'
 
@@ -66,10 +67,12 @@ export default function Configuracoes() {
 
   return (
     <div>
-      <PageHeader eyebrow="Preferências" title="Configurações" description="Registro profissional e integração com IA." />
+      <PageHeader eyebrow="Preferências" title="Configurações" description="Registro profissional, capa dos relatórios e integração com IA." />
 
       <div style={{ display: 'grid', gap: 'var(--np-space-5)' }}>
         <RegistroProfissional />
+
+        <EditorCapa />
 
         <Card title="Configurações Da IA">
           <p style={{ color: 'var(--np-text-muted)', marginTop: 0 }}>
