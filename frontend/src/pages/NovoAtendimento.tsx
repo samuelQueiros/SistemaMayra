@@ -1,13 +1,74 @@
-import { useEffect, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { PageHeader } from '../components/ds'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ClipboardList } from 'lucide-react'
+import { listProtocolos } from '../api/protocolos'
+import { Card, PageHeader } from '../components/ds'
+import type { Protocolo } from '../laudo/tipos'
 
 const MENSAGEM_SAIDA =
   'Há alterações no protocolo que ainda não foram salvas no sistema.\n\nSair mesmo assim?'
 
+// Novo Atendimento: se a psicóloga tem modelos de protocolo próprios
+// (Configurações), primeiro pergunta qual usar; senão (ou escolhido o
+// padrão), abre direto o protocolo padrão, como sempre.
 export default function NovoAtendimento() {
   const [params] = useSearchParams()
   const pacienteId = params.get('paciente')
+  const escolhido = params.get('protocolo')
+  const [modelos, setModelos] = useState<Protocolo[] | null>(escolhido ? [] : null)
+
+  useEffect(() => {
+    if (escolhido) return
+    listProtocolos()
+      .then(setModelos)
+      .catch(() => setModelos([]))
+  }, [escolhido])
+
+  if (modelos === null) return <p>Carregando…</p>
+  if (escolhido === 'padrao' || !modelos.length) return <ProtocoloPadrao pacienteId={pacienteId} />
+
+  const sufixoPaciente = pacienteId ? `paciente=${pacienteId}` : ''
+  return (
+    <div>
+      <PageHeader eyebrow="Atendimento" title="Novo Atendimento" description="Qual protocolo você vai usar neste atendimento?" />
+      <div style={{ display: 'grid', gap: 'var(--np-space-4)', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+        <CartaoProtocolo
+          para={`/atendimento/novo?protocolo=padrao${sufixoPaciente ? '&' + sufixoPaciente : ''}`}
+          titulo="Avaliação Neuropsicopedagógica E Análise Comportamental"
+          descricao="Protocolo padrão do sistema (CARS, ATA, SNAP-IV, Portage e demais fases)."
+        />
+        {modelos.map((m) => (
+          <CartaoProtocolo
+            key={m.id}
+            para={`/atendimento/protocolo/${m.id}${sufixoPaciente ? '?' + sufixoPaciente : ''}`}
+            titulo={m.name}
+            descricao={m.schema_json.descricao || `${m.schema_json.secoes.length} seções`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CartaoProtocolo({ para, titulo, descricao }: { para: string; titulo: string; descricao: string }) {
+  return (
+    <Link to={para} style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Card style={{ height: '100%' }}>
+        <div style={{ display: 'flex', gap: 'var(--np-space-3)', alignItems: 'flex-start' }}>
+          <ClipboardList size={22} style={{ color: 'var(--np-primary)', flex: '0 0 auto', marginTop: 2 }} />
+          <div>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>{titulo}</div>
+            <div style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-muted)' }}>{descricao}</div>
+          </div>
+        </div>
+      </Card>
+    </Link>
+  )
+}
+
+// Protocolo padrão (formulario-novo-paciente.html) embutido num iframe —
+// comportamento de sempre.
+function ProtocoloPadrao({ pacienteId }: { pacienteId: string | null }) {
   const src = pacienteId
     ? `/formulario-novo-paciente.html?paciente=${pacienteId}`
     : '/formulario-novo-paciente.html'

@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard'
 import HistoricoPaciente from './pages/HistoricoPaciente'
 import Login from './pages/Login'
 import NovoAtendimento from './pages/NovoAtendimento'
+import AtendimentoProtocolo from './pages/AtendimentoProtocolo'
+import EditorProtocolo from './pages/EditorProtocolo'
 
 function App() {
   return (
@@ -19,7 +21,9 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/atendimento/novo" element={<NovoAtendimento />} />
               <Route path="/pacientes/:id/historico" element={<HistoricoPaciente />} />
+              <Route path="/atendimento/protocolo/:modeloId" element={<AtendimentoProtocolo />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
+              <Route path="/configuracoes/protocolos/:id" element={<EditorProtocolo />} />
             </Route>
           </Route>
         </Routes>

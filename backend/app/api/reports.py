@@ -36,7 +36,7 @@ from app.services.ai import (
 )
 from app.api.documents import MIME_DOCX, nome_de_arquivo_seguro, resposta_de_arquivo
 from app.services.laudo_documento import DocumentoInvalidoError, html_para_docx
-from app.services.pdf import render_consolidated_pdf, render_report_pdf
+from app.services.pdf import RULE_TYPES_COM_HTML_PRONTO, render_consolidated_pdf, render_report_pdf
 from app.services.storage import get_reports_storage
 
 router = APIRouter(tags=["reports"])
@@ -506,7 +506,7 @@ def download_docx(
     HTML salvo em `generated_text` que gera o PDF."""
     report = _get_report_do_psicologo(report_id, db, current)
     template = db.get(ReportTemplate, report.template_id)
-    if template.schema_json.get("rule_type") != "custom_form" or not report.generated_text:
+    if template.schema_json.get("rule_type") not in RULE_TYPES_COM_HTML_PRONTO or not report.generated_text:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="O relatório deste protocolo ainda não foi gerado. Abra o protocolo e clique em \"Salvar Protocolo\".",

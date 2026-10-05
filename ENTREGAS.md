@@ -2042,3 +2042,61 @@ lugar e rodar `npm run build`.
 - **Pendências/observações:** a arte provisória `capa-relatorio.png` só é
   usada por quem não enviou capa própria — trocá-la deixou de ser obrigatório.
   PDF como capa não é aceito (exportar a capa como imagem).
+
+## Modelos de protocolo próprios (Configurações) e escolha do protocolo em Novo Atendimento
+
+**Status:** ✅ Pronto (2026-10-05)
+
+- **O que mudou para a psicóloga:**
+  - **Configurações → "Modelos De Protocolo":** botão "Novo Modelo" abre um
+    editor onde ela monta o próprio formulário, por seções:
+    - **Perguntas** (texto curto/longo, Sim/Não com "descreva", múltipla
+      escolha, caixas de seleção, data, número), com opção de marcar como
+      essencial;
+    - **Escala pontuada** (itens, respostas com pontos, faixas de
+      classificação pelo total e gráfico de barras);
+    - **Fotos** e **Texto livre**.
+  - Cada seção tem o bloco **"No Relatório"**: mostrar ou não, como mostrar as
+    respostas (lista, tabela ou só texto) e o **texto padrão** — com botões
+    que inserem o nome, a idade, o/a, a resposta de uma pergunta, a pontuação
+    e a classificação. Cada opção de resposta e cada faixa da escala pode ter
+    um trecho que entra no relatório quando é escolhida.
+  - "Pré-Visualizar Relatório" no editor mostra o relatório com respostas de
+    exemplo. Modelos podem ser editados, duplicados e arquivados (arquivar
+    não apaga nada: os relatórios já feitos continuam no histórico).
+  - **Novo Atendimento:** havendo modelos próprios, a primeira tela pergunta
+    qual protocolo usar. O protocolo padrão continua exatamente igual (o
+    arquivo do formulário não foi alterado); sem modelos próprios, nada muda.
+  - **Atendimento com um modelo próprio** funciona como o padrão: fases com
+    progresso, identificação, "Texto Do Relatório" já preenchido em cada
+    seção e atualizado pelas respostas até ela editar (depois disso não é
+    mais sobrescrito; "Voltar Ao Texto Automático" desfaz), salvamento
+    automático no sistema, capa só deste relatório, Pré-Visualizar, Gerar
+    PDF, Gerar Word e "Concluir E Ver Histórico".
+  - **Relatório no mesmo padrão visual:** capa (personalizável), cabeçalho
+    com logo, moldura, rodapé, faixa do título, seções em faixas cinza,
+    tabelas, gráfico, "Sobre a profissional" e assinatura.
+  - **Histórico:** "Abrir Protocolo" reabre o atendimento. Editar o modelo
+    depois não altera atendimentos já feitos (cada um guarda a versão do
+    modelo da época).
+- **Arquivos:** backend — `app/schemas/protocolo.py`, `app/api/protocolos.py`,
+  `app/rules_engine/engine.py`, `app/services/pdf.py`, `app/api/reports.py`,
+  `app/models/report_template.py`, migration `c4e8a2d6f1b3`,
+  `tests/test_protocolos.py`; frontend — `src/laudo/` (gerador do relatório:
+  `texto.ts`, `documento.ts`, `imagens.ts`, `grafico.ts`, `css.ts`,
+  `modelo.ts`, `tipos.ts`), `src/pages/EditorProtocolo.tsx`,
+  `src/pages/AtendimentoProtocolo.tsx`, `src/pages/NovoAtendimento.tsx`,
+  `src/components/ModelosDeProtocolo.tsx`, `src/pages/HistoricoPaciente.tsx`,
+  `public/laudo/{cabecalho,rodape}.jpg` + testes.
+- **Como testar:** Configurações → Modelos De Protocolo → abrir "Exemplo —
+  Anamnese E Atenção" (deixado no banco de dev) ou criar um novo → Novo
+  Atendimento → escolher o modelo → preencher → Salvar No Sistema →
+  Pré-Visualizar / Gerar PDF / Gerar Word → Concluir E Ver Histórico.
+- **Pendências/observações:**
+  - Fora desta entrega (dá para fazer depois): "Gerar com IA" por seção,
+    perguntas condicionais (mostrar B só se A = Sim) e importar modelo a
+    partir de um documento.
+  - O visual do relatório existe em duas cópias (protocolo padrão e
+    `src/laudo/`): mudou um, replicar no outro.
+  - Ficou no banco de dev um paciente "Paciente Teste E2E" com um
+    atendimento de exemplo (o sistema não deixa excluir paciente com laudo).

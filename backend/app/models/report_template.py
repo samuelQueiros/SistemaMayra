@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import ForeignKey, Integer, JSON, String
+from sqlalchemy import Boolean, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -18,6 +18,9 @@ class ReportTemplate(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     name: Mapped[str] = mapped_column(String(255))
     version: Mapped[int] = mapped_column(Integer, default=1)
     schema_json: Mapped[dict] = mapped_column(JSON)
+    # Modelos de protocolo (rule_type "protocolo") não são apagados, só
+    # arquivados: laudos antigos continuam apontando para eles.
+    arquivado: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
 
     owner: Mapped["Psychologist"] = relationship(back_populates="templates")
     reports: Mapped[list["Report"]] = relationship(back_populates="template")

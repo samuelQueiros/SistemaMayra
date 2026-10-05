@@ -30,6 +30,12 @@ const MENSAGEM_SEM_CONEXAO =
 // ar, arquivo grande demais).
 export function mensagemDeErro(status: number, detail: unknown): string {
   if (typeof detail === 'string' && detail.trim() && status < 500) return detail
+  // 422 do FastAPI/Pydantic: lista de erros; os validadores do projeto já
+  // escrevem a mensagem em português ("Value error, ..." na frente).
+  if (status === 422 && Array.isArray(detail) && detail.length) {
+    const primeiro = detail[0] as { msg?: unknown }
+    if (typeof primeiro?.msg === 'string') return primeiro.msg.replace(/^Value error,\s*/, '')
+  }
   if (status === 401) return 'Sua sessão expirou. Entre novamente para continuar.'
   if (status === 403) return 'Você não tem permissão para acessar este conteúdo.'
   if (status === 404) return 'O item procurado não foi encontrado. Ele pode ter sido excluído.'

@@ -94,6 +94,13 @@ export default function HistoricoPaciente() {
     return report.template_name_override ?? templates.find((t) => t.id === report.template_id)?.name ?? 'Modelo removido'
   }
 
+  // Laudo feito com um modelo de protocolo próprio (Configurações): reabre
+  // na tela do atendimento configurável.
+  function ehModeloDeProtocolo(report: Report) {
+    const template = templates.find((t) => t.id === report.template_id)
+    return (template?.schema_json as { rule_type?: string } | undefined)?.rule_type === 'protocolo'
+  }
+
   function classificacaoResumo(report: Report) {
     if (report.classification_override) return report.classification_override
     const computed = report.computed_json
@@ -286,6 +293,13 @@ export default function HistoricoPaciente() {
                             <Badge tone="brand">{classificacaoResumo(report)}</Badge>
                           </td>
                           <td style={{ whiteSpace: 'nowrap' }}>
+                            {ehModeloDeProtocolo(report) && (
+                              <>
+                                <Link className={styles.rowLink} to={`/atendimento/protocolo/${report.template_id}?laudo=${report.id}`}>
+                                  Abrir Protocolo
+                                </Link>{' '}
+                              </>
+                            )}
                             <button type="button" className={styles.rowLink} onClick={() => startEdit(report)}>
                               Editar
                             </button>{' '}

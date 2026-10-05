@@ -31,6 +31,13 @@ def calculate_report(
         # calcular aqui — o laudo pronto chega via generated_text.
         return {}
 
+    if rule_type == "protocolo":
+        # Modelo configurável pela psicóloga: o formulário e o texto são
+        # montados no navegador. Guarda uma cópia do modelo no laudo, para
+        # reabrir o atendimento com a mesma estrutura mesmo que o modelo
+        # seja editado depois.
+        return {"modelo": schema}
+
     if rule_type == "age_equivalent_percentage":
         if birth_date is None:
             raise RulesEngineError(

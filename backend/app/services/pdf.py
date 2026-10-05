@@ -15,6 +15,11 @@ _COR_PRIMARIA = "#7561ae"
 _CORES = ["#7561ae", "#d9709f", "#8fb4d6", "#f5a623", "#3fa35b", "#b3a5e2", "#e7a8c8", "#dce9f5"]
 
 
+# Laudos cujo documento final (HTML completo) é montado no navegador e salvo
+# em generated_text: o protocolo fixo e os modelos de protocolo configuráveis.
+RULE_TYPES_COM_HTML_PRONTO = {"custom_form", "protocolo"}
+
+
 def render_report_pdf(*, patient, template, report, psychologist=None) -> str:
     """Gera o PDF do laudo (dados do paciente, tabela de pontuações,
     gráfico, classificação e texto revisado — SPEC.md seção 2/Prompt 4.2),
@@ -25,7 +30,7 @@ def render_report_pdf(*, patient, template, report, psychologist=None) -> str:
 
     chave = f"{report.id}.pdf"
 
-    if template.schema_json.get("rule_type") == "custom_form":
+    if template.schema_json.get("rule_type") in RULE_TYPES_COM_HTML_PRONTO:
         # O laudo já vem pronto (HTML completo, com <style> embutido) do
         # formulário standalone, salvo em generated_text via PUT
         # /api/reports/{id}/text — não passa pelas tabelas de

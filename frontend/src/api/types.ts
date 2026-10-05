@@ -3,6 +3,8 @@ export interface Psychologist {
   name: string
   email: string
   professional_registration: string | null
+  bio_profissional?: string | null
+  credenciais_assinatura?: string | null
   tem_capa_personalizada?: boolean
   capa_config?: CapaConfig | null
 }
