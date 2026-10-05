@@ -1,0 +1,70 @@
+.trigger,
+.link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--np-space-3);
+  padding: 10px var(--np-space-3);
+  border: 0;
+  border-radius: var(--np-radius-md);
+  background: transparent;
+  color: var(--np-text-muted);
+  font: var(--np-type-body);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.trigger span {
+  flex: 1;
+}
+
+.trigger svg {
+  flex-shrink: 0;
+}
+
+.heading {
+  cursor: default;
+}
+
+.trigger:not(.heading):hover,
+.link:hover {
+  background: var(--np-surface-sunken);
+}
+
+.trigger:focus-visible,
+.link:focus-visible {
+  outline: 2px solid var(--np-primary);
+  outline-offset: 2px;
+}
+
+.active {
+  background: var(--np-surface-alt);
+  color: var(--np-text-brand);
+  font: var(--np-type-body-strong);
+}
+
+.submenu {
+  list-style: none;
+  margin: var(--np-space-1) 0 var(--np-space-2) 21px;
+  padding: 0 0 0 var(--np-space-2);
+  border-left: 1px solid var(--np-border);
+}
+
+.link {
+  font-size: var(--np-text-sm);
+}
+
+.chevron {
+  transition: transform var(--np-dur) var(--np-ease);
+}
+
+.expanded {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

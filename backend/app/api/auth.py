@@ -2,12 +2,13 @@ import mimetypes
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_psychologist
+from app.core.config import settings
 from app.core.database import get_db
-from app.core.rate_limit import esta_bloqueado, limpar_falhas, registrar_falha
+from app.core.rate_limit import MAX_TENTATIVAS_POR_IP, esta_bloqueado, limpar_falhas, registrar_falha
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.psychologist import Psychologist
 from app.schemas.auth import (
@@ -22,12 +23,18 @@ from app.services.storage import get_covers_storage
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
+_HASH_FICTICIO = hash_password("senha-ficticia-so-para-igualar-o-tempo")
 _EXTENSOES_CAPA = {".jpg", ".jpeg", ".png", ".webp"}
 _TAMANHO_MAXIMO_CAPA = 10 * 1024 * 1024
 
 
 @router.post("/register", response_model=PsychologistOut, status_code=status.HTTP_201_CREATED)
 def register(data: PsychologistRegister, db: Session = Depends(get_db)) -> Psychologist:
+    if not settings.cadastro_publico:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="O cadastro de novas contas está desativado. Fale com o administrador do sistema.",
+        )
     existing = db.query(Psychologist).filter(Psychologist.email == data.email).first()
     if existing is not None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="E-mail já cadastrado")
@@ -44,11 +51,18 @@ def register(data: PsychologistRegister, db: Session = Depends(get_db)) -> Psych
 
 
 @router.post("/login", response_model=Token)
-def login(data: PsychologistLogin, db: Session = Depends(get_db)) -> Token:
+def login(data: PsychologistLogin, request: Request, db: Session = Depends(get_db)) -> Token:
     invalid_credentials = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="E-mail ou senha inválidos"
     )
+    # IP real do cliente (o uvicorn roda com --proxy-headers atrás do Caddy).
+    chave_ip = f"ip:{request.client.host if request.client else 'desconhecido'}"
 
+    if esta_bloqueado(chave_ip, MAX_TENTATIVAS_POR_IP):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Muitas tentativas de login a partir desta rede. Aguarde alguns minutos antes de tentar novamente.",
+        )
     if esta_bloqueado(data.email):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -59,8 +73,13 @@ def login(data: PsychologistLogin, db: Session = Depends(get_db)) -> Token:
         )
 
     psychologist = db.query(Psychologist).filter(Psychologist.email == data.email).first()
-    if psychologist is None or not verify_password(data.password, psychologist.password_hash):
+    # Com e-mail inexistente também roda o bcrypt (hash fictício): o tempo de
+    # resposta não revela quais e-mails têm conta.
+    hash_conferido = psychologist.password_hash if psychologist else _HASH_FICTICIO
+    senha_ok = verify_password(data.password, hash_conferido)
+    if psychologist is None or not senha_ok:
         registrar_falha(data.email)
+        registrar_falha(chave_ip)
         raise invalid_credentials
 
     limpar_falhas(data.email)

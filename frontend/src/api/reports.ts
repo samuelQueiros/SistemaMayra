@@ -1,5 +1,5 @@
-import { apiGet, apiPatch, apiPost, apiPut, downloadBlob, downloadGet } from './client'
-import type { Answers, CidCode, ClinicalSections, ConsolidatedReport, Report, ReportChangeLog } from './types'
+import { apiGet, apiPatch, apiPost, apiPut, downloadGet } from './client'
+import type { Answers, CidCode, ClinicalSections, Report, ReportChangeLog } from './types'
 
 export const createReport = (patientId: string, templateId: string, answers: Answers) =>
   apiPost<Report>(`/patients/${patientId}/reports`, { template_id: templateId, answers })
@@ -27,16 +27,25 @@ export const downloadReportPdf = (reportId: string, fileName: string) => downloa
 export const downloadReportDocx = (reportId: string, fileName: string) =>
   downloadGet(`/reports/${reportId}/docx`, fileName)
 
-export const downloadConsolidatedPdf = (patientId: string, reportIds: string[], fileName: string) =>
-  downloadBlob(`/patients/${patientId}/consolidated-pdf`, { report_ids: reportIds }, fileName)
-
 export const updateClinicalSections = (reportId: string, data: ClinicalSections) =>
   apiPatch<Report>(`/reports/${reportId}/clinical-sections`, data)
 
 export const listCidCodes = () => apiGet<CidCode[]>('/cid-codes')
 
-export const listConsolidatedReports = (patientId: string) =>
-  apiGet<ConsolidatedReport[]>(`/patients/${patientId}/consolidated-reports`)
 
-export const downloadSavedConsolidatedPdf = (consolidatedReportId: string, fileName: string) =>
-  downloadGet(`/consolidated-reports/${consolidatedReportId}/pdf`, fileName)
+export interface LogDeEdicao {
+  id: string
+  field: string
+  old_value: string | null
+  new_value: string | null
+  created_at: string
+  psychologist_name: string
+  report_id: string
+  report_created_at: string
+  patient_id: string
+  patient_name: string
+  template_name: string
+}
+
+export const listAllLogs = (patientId?: string) =>
+  apiGet<LogDeEdicao[]>(`/logs${patientId ? `?patient_id=${patientId}` : ''}`)

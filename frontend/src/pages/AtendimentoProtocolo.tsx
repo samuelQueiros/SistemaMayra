@@ -602,12 +602,12 @@ function FaseRelatorio({
         {previa && (
           <iframe
             title="Pré-visualização do relatório"
-            srcDoc={previa}
+            sandbox="" srcDoc={previa}
             style={{ width: '100%', height: 1000, border: 0, background: '#e7e7ee', marginTop: 'var(--np-space-4)' }}
           />
         )}
         <p style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-muted)', marginBottom: 0 }}>
-          Para mudar a capa padrão, os dados da assinatura ou o texto "Sobre a profissional", vá em <Link to="/configuracoes">Configurações</Link>.
+          Para mudar a capa padrão, os dados da assinatura ou o texto "Sobre a profissional", vá em <Link to="/configuracoes/capa">Configurações</Link>.
         </p>
       </Card>
     </>

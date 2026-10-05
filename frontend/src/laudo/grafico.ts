@@ -34,26 +34,31 @@ const quebrarRotulo = (texto: string, max = 30): string[] => {
 }
 
 export function graficoDaEscala(titulo: string, escala: Escala, respostas: Record<string, number> | undefined): string | null {
+  const itens = escala.itens.filter((i) => respostas?.[i.id] !== undefined)
+  const valores = escala.opcoes.map((o) => o.valor)
+  return graficoDeBarras(
+    titulo,
+    itens.map((i) => i.rotulo),
+    itens.map((i) => escala.opcoes[respostas![i.id]]?.valor ?? 0),
+    Math.max(...valores),
+    Math.min(0, ...valores),
+  )
+}
+
+// Gráfico de barras horizontais genérico (rótulos x valores).
+export function graficoDeBarras(titulo: string, rotulos: string[], valores: number[], maximo?: number | null, minimo = 0): string | null {
   try {
-    const itens = escala.itens.filter((i) => respostas?.[i.id] !== undefined)
-    if (!itens.length) return null
+    if (!rotulos.length) return null
     const canvas = document.createElement('canvas')
-    const altura = Math.max(300, 90 + itens.length * 56)
+    const altura = Math.max(300, 90 + rotulos.length * 56)
     canvas.width = 1000
     canvas.height = altura
-    const maximo = Math.max(...escala.opcoes.map((o) => o.valor))
+    const maiorValor = Math.max(...valores, 0)
     const grafico = new Chart(canvas, {
       type: 'bar',
       data: {
-        labels: itens.map((i) => quebrarRotulo(i.rotulo)),
-        datasets: [
-          {
-            data: itens.map((i) => escala.opcoes[respostas![i.id]]?.valor ?? 0),
-            backgroundColor: '#8e7cc3',
-            borderRadius: 4,
-            barThickness: 26,
-          },
-        ],
+        labels: rotulos.map((r) => quebrarRotulo(r)),
+        datasets: [{ data: valores, backgroundColor: '#8e7cc3', borderRadius: 4, barThickness: 26 }],
       },
       options: {
         indexAxis: 'y',
@@ -65,7 +70,7 @@ export function graficoDaEscala(titulo: string, escala: Escala, respostas: Recor
           legend: { display: false },
         },
         scales: {
-          x: { min: Math.min(0, ...escala.opcoes.map((o) => o.valor)), max: maximo, ticks: { font: { size: 20 }, stepSize: 1 } },
+          x: { min: Math.min(minimo, ...valores), max: maximo && maximo >= maiorValor ? maximo : undefined, ticks: { font: { size: 20 } } },
           y: { ticks: { font: { size: 21 }, color: '#262626' } },
         },
       },

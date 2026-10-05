@@ -19,7 +19,7 @@ import {
   respostaEmTexto,
   textoAutomaticoDaSecao,
 } from './texto'
-import type { ModeloProtocolo, RespostasProtocolo, Secao } from './tipos'
+import type { Identificacao, ModeloProtocolo, RespostasProtocolo, Secao } from './tipos'
 
 export interface Perfil {
   nome: string
@@ -122,40 +122,32 @@ function htmlDaSecao(secao: Secao, modelo: ModeloProtocolo, r: RespostasProtocol
   return partes.length > 1 ? partes.join('') : ''
 }
 
-// Monta o HTML completo a partir de imagens já prontas (função pura —
-// testável sem canvas).
-export function montarDocumento(
-  modelo: ModeloProtocolo,
-  r: RespostasProtocolo,
-  perfil: Perfil,
-  imagens: ImagensDoDocumento,
-): string {
-  const id = r.identificacao
-  const partes: string[] = []
+// Partes comuns a todo relatório montado no navegador (modelos de
+// protocolo e relatório por IA a partir de PDFs).
 
-  const linhasCabecalho = [
+export function htmlCabecalhoPaciente(id: Identificacao, fotoCabecalho: string | null): string {
+  const linhas = [
     ['Paciente', id.nome],
     ['D/N', dataBR(id.data_nascimento)],
     ['Idade cronológica', idadeCronologica(id.data_nascimento, id.data_relatorio)],
     ['Responsável', id.responsavel],
   ].filter(([, v]) => v)
-  partes.push(
+  return (
     '<table class="cab-paciente"><tr><td class="cab-foto">' +
-      (imagens.fotoCabecalho ? `<img src="${imagens.fotoCabecalho}" data-mm="42" style="width:42mm;height:52mm">` : '') +
-      '</td><td class="cab-espaco"></td><td class="cab-info"><div class="cab-box">' +
-      linhasCabecalho.map(([k, v]) => `<p>${esc(k)}: ${esc(v)}</p>`).join('') +
-      '</div></td></tr></table>',
+    (fotoCabecalho ? `<img src="${fotoCabecalho}" data-mm="42" style="width:42mm;height:52mm">` : '') +
+    '</td><td class="cab-espaco"></td><td class="cab-info"><div class="cab-box">' +
+    linhas.map(([k, v]) => `<p>${esc(k)}: ${esc(v)}</p>`).join('') +
+    '</div></td></tr></table>'
   )
-  partes.push(
-    `<div class="faixa centro">${esc(modelo.titulo_relatorio).replace(/\r?\n/g, '<br>')}</div>`,
-  )
+}
 
-  for (const secao of modelo.secoes) {
-    if (!secao.relatorio.mostrar) continue
-    partes.push(htmlDaSecao(secao, modelo, r, imagens))
-  }
+export function htmlFaixaTitulo(titulo: string): string {
+  return `<div class="faixa centro">${esc(titulo).replace(/\r?\n/g, '<br>')}</div>`
+}
 
-  partes.push('<div class="quebra"></div>')
+// "Sobre a profissional", local/data e assinatura — sempre em página nova.
+export function htmlFechamento(id: Identificacao, perfil: Perfil): string {
+  const partes = ['<div class="quebra"></div>']
   if (perfil.bio) {
     partes.push(
       `<div class="caixa-cinza clara"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>${esc(perfil.bio)}</p></div>`,
@@ -169,20 +161,47 @@ export function montarDocumento(
   perfil.credenciais.forEach((t) =>
     partes.push(`<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">${esc(t)}</span></strong></mark></p>`),
   )
+  return partes.join('')
+}
 
-  const titulo = `Relatório - ${id.nome || 'Paciente'}`
+// Documento HTML completo: estilos, moldura, capa, cabeçalho/rodapé de
+// página e o corpo.
+export function htmlDocumento(
+  nomePaciente: string,
+  imagens: { capa: string | null; cabecalho: string | null; rodape: string | null },
+  corpo: string,
+): string {
+  const titulo = `Relatório - ${nomePaciente || 'Paciente'}`
   return (
     `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(titulo)}</title><style>${CSS_LAUDO}</style></head><body>` +
     '<div class="moldura"></div>' +
     (imagens.capa ? `<div class="capa"><img src="${imagens.capa}" data-mm="210" alt="Capa do relatório"></div>` : '') +
     (imagens.cabecalho ? `<div class="cabecalho-pagina"><img src="${imagens.cabecalho}" data-mm="19" alt=""></div>` : '') +
     (imagens.rodape ? `<div class="rodape-pagina"><img src="${imagens.rodape}" data-mm="78" alt=""></div>` : '') +
-    `<main class="documento">${partes.join('')}</main></body></html>`
+    `<main class="documento">${corpo}</main></body></html>`
   )
 }
 
+// Monta o HTML completo a partir de imagens já prontas (função pura —
+// testável sem canvas).
+export function montarDocumento(
+  modelo: ModeloProtocolo,
+  r: RespostasProtocolo,
+  perfil: Perfil,
+  imagens: ImagensDoDocumento,
+): string {
+  const id = r.identificacao
+  const partes = [htmlCabecalhoPaciente(id, imagens.fotoCabecalho), htmlFaixaTitulo(modelo.titulo_relatorio)]
+  for (const secao of modelo.secoes) {
+    if (!secao.relatorio.mostrar) continue
+    partes.push(htmlDaSecao(secao, modelo, r, imagens))
+  }
+  partes.push(htmlFechamento(id, perfil))
+  return htmlDocumento(id.nome, imagens, partes.join(''))
+}
+
 let imagensFixas: Promise<{ cabecalho: string | null; rodape: string | null }> | null = null
-function carregarImagensFixas() {
+export function carregarImagensFixas() {
   if (!imagensFixas) {
     imagensFixas = Promise.all([
       urlParaDataUri('/laudo/cabecalho.jpg').catch(() => null),

@@ -115,3 +115,32 @@ def test_outro_psicologo_nao_edita_nem_ve_logs_de_laudo_alheio(client):
 
     assert edit_response.status_code == 404
     assert logs_response.status_code == 404
+
+
+def test_pagina_de_logs_lista_todas_as_edicoes_com_filtro_por_paciente(client):
+    headers = registrar_e_logar(client)
+    primeiro = _criar_relatorio(client, headers)
+    segundo = _criar_relatorio(client, headers)
+    client.patch(f"/api/reports/{primeiro}", json={"classification_override": "Leve"}, headers=headers)
+    client.patch(f"/api/reports/{segundo}", json={"template_name_override": "Outro Nome"}, headers=headers)
+
+    todos = client.get("/api/logs", headers=headers).json()
+    assert [log["report_id"] for log in todos] == [segundo, primeiro]  # mais recente primeiro
+    assert todos[0]["patient_name"] == "Safira Kerolainy"
+    assert todos[0]["template_name"] == "Outro Nome"
+    assert todos[1]["field"] == "classification_override"
+    assert todos[1]["new_value"] == "Leve"
+
+    paciente = client.get(f"/api/reports/{primeiro}", headers=headers).json()["patient_id"]
+    filtrados = client.get(f"/api/logs?patient_id={paciente}", headers=headers).json()
+    assert [log["report_id"] for log in filtrados] == [primeiro]
+
+
+def test_logs_de_outra_psicologa_nao_aparecem(client):
+    headers_a = registrar_e_logar(client, email="a@example.com")
+    headers_b = registrar_e_logar(client, email="b@example.com")
+    report_id = _criar_relatorio(client, headers_a)
+    client.patch(f"/api/reports/{report_id}", json={"classification_override": "Leve"}, headers=headers_a)
+
+    assert client.get("/api/logs", headers=headers_b).json() == []
+    assert client.get("/api/logs").status_code == 401

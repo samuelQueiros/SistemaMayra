@@ -189,7 +189,7 @@ export default function EditorProtocolo() {
         description="Monte as seções do formulário e o que cada uma escreve no relatório. O protocolo padrão do sistema não é alterado."
         actions={
           <div style={{ display: 'flex', gap: 'var(--np-space-3)', flexWrap: 'wrap' }}>
-            <Button type="button" variant="outline" onClick={() => navigate('/configuracoes')}>
+            <Button type="button" variant="outline" onClick={() => navigate('/configuracoes/protocolos')}>
               Voltar
             </Button>
             <Button type="button" variant="outline" icon={<Eye size={16} />} onClick={mostrarPrevia} disabled={gerandoPrevia}>
@@ -275,7 +275,7 @@ export default function EditorProtocolo() {
           >
             <iframe
               title="Pré-visualização do relatório"
-              srcDoc={previa}
+              sandbox="" srcDoc={previa}
               style={{ width: '100%', height: 900, border: 0, background: '#e7e7ee' }}
             />
           </Card>

@@ -112,3 +112,58 @@ class ReportSections(BaseModel):
             f"{self.analise_por_area}\n\n"
             f"{self.conclusao}"
         )
+
+
+class FormularioLido(BaseModel):
+    """Um dos PDFs de respostas (Google Forms) lidos pela IA."""
+
+    arquivo: str = Field(description="Nome do arquivo PDF exatamente como informado.")
+    titulo: str = Field(description="Título do formulário, como aparece no PDF.")
+    respondente: str | None = Field(
+        default=None, description="Quem respondeu e a relação com o paciente (ex.: 'Mãe', 'Professora'), se constar no PDF."
+    )
+    data: str | None = Field(default=None, description="Data de preenchimento, se constar no PDF (DD/MM/AAAA).")
+
+
+class GraficoDaArea(BaseModel):
+    """Gráfico de barras de uma área, com valores tirados das respostas
+    marcadas nos formulários (contagem ou soma — explicada em `regua`)."""
+
+    titulo: str = Field(description="Título curto do gráfico.")
+    rotulos: list[str] = Field(description="Rótulo de cada barra (itens, domínios ou respondentes).")
+    valores: list[float] = Field(description="Valor de cada barra, na mesma ordem dos rótulos.")
+    maximo: float | None = Field(default=None, description="Valor máximo possível da escala, se houver.")
+    regua: str = Field(
+        description="Uma frase dizendo como os valores foram obtidos (ex.: 'pontos somados: Nunca=0, Às vezes=1, Frequentemente=2, Sempre=3')."
+    )
+
+
+class AreaDoRelatorio(BaseModel):
+    titulo: str = Field(description="Área/tema clínico (ex.: 'Comunicação E Linguagem', 'Atenção E Comportamento').")
+    texto: str = Field(
+        description=(
+            "Análise da área em prosa clínica, cruzando o que os diferentes formulários dizem sobre ela "
+            "(convergências e divergências entre respondentes). Pode usar **negrito** e linhas começando com • para listas."
+        )
+    )
+    fontes: list[str] = Field(description="Títulos dos formulários de onde vieram os dados desta área.")
+    grafico: GraficoDaArea | None = Field(
+        default=None,
+        description="Só quando houver respostas em escala ou contáveis nesta área. Nunca invente valores.",
+    )
+
+
+class RelatorioPorPdfs(BaseModel):
+    """Saída estruturada da IA ao ler os PDFs de respostas dos formulários
+    (Google Forms) — vira o relatório no padrão do sistema, organizado por
+    área/tema, editável pela psicóloga antes de exportar."""
+
+    formularios: list[FormularioLido] = Field(description="Um item por PDF recebido, na ordem em que foram enviados.")
+    metodologia: str = Field(
+        description="Parágrafo de metodologia: quais formulários foram aplicados, a quem e com que objetivo, sem inventar instrumentos."
+    )
+    areas: list[AreaDoRelatorio] = Field(description="Análise organizada por área/tema, cruzando os formulários.")
+    consideracoes_finais: str = Field(description="Síntese clínica de fechamento, sem diagnóstico fechado.")
+    sugestoes_intervencao: str = Field(
+        description="Sugestões de intervenção decorrentes do que foi relatado nos formulários. Linhas começando com • viram lista."
+    )

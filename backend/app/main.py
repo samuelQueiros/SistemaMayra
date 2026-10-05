@@ -5,16 +5,23 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import models  # noqa: F401 -- garante que todos os modelos sejam registrados no ORM
-from app.api import ai_settings, auth, documents, guardian_forms, patients, protocolos, reports, stats, templates
+from app.api import ai_settings, auth, documents, guardian_forms, patients, protocolos, relatorios_pdf, reports, stats, templates
+from app.core.config import settings
+from app.core.cabecalhos import registrar_cabecalhos_de_seguranca
 from app.core.errors import registrar_tratadores_de_erro
 
-app = FastAPI(title="Sistema de Relatório Automático para Psicólogos")
+# Documentação interativa da API (/docs, /redoc, /openapi.json) só fora de
+# produção — em produção ela só ajudaria quem estiver sondando o sistema.
+_docs = {} if not settings.em_producao else {"docs_url": None, "redoc_url": None, "openapi_url": None}
+app = FastAPI(title="Sistema de Relatório Automático para Psicólogos", **_docs)
 registrar_tratadores_de_erro(app)
+registrar_cabecalhos_de_seguranca(app)
 
 app.include_router(auth.router)
 app.include_router(patients.router)
 app.include_router(templates.router)
 app.include_router(protocolos.router)
+app.include_router(relatorios_pdf.router)
 app.include_router(reports.router)
 app.include_router(ai_settings.router)
 app.include_router(stats.router)
@@ -32,6 +39,8 @@ def health() -> dict[str, str]:
 # Precisa ser registrado por último: as rotas de API acima têm prioridade.
 frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
+frontend_dist_resolvido = frontend_dist.resolve()
+
 if frontend_dist.exists():
     app.mount("/assets", StaticFiles(directory=frontend_dist / "assets"), name="frontend-assets")
 
@@ -42,8 +51,11 @@ if frontend_dist.exists():
         if full_path.startswith("api/"):
             raise HTTPException(status_code=404, detail="Not Found")
 
-        candidate = frontend_dist / full_path
-        if full_path and candidate.is_file():
+        # resolve() + is_relative_to(): só arquivos de DENTRO de frontend/dist.
+        # Sem isso, "/..%2f..%2fbackend%2f.env" lia qualquer arquivo do
+        # servidor (path traversal).
+        candidate = (frontend_dist / full_path).resolve()
+        if full_path and candidate.is_relative_to(frontend_dist_resolvido) and candidate.is_file():
             return FileResponse(candidate)
 
         # Fallback de SPA: qualquer outra rota (ex.: /dashboard, recarregada

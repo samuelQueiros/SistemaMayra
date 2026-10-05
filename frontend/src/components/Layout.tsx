@@ -1,4 +1,4 @@
-import { ClipboardPlus, LogOut, Menu, Settings, Users, X } from 'lucide-react'
+import { History, LogOut, Menu, Settings, Users, X } from 'lucide-react'
 import { useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -6,9 +6,24 @@ import { IconButton, SidebarNav } from './ds'
 import styles from './Layout.module.css'
 
 const NAV_ITEMS = [
-  { to: '/dashboard', label: 'Pacientes', icon: <Users size={18} /> },
-  { to: '/atendimento/novo', label: 'Novo Atendimento', icon: <ClipboardPlus size={18} /> },
-  { to: '/configuracoes', label: 'Configurações', icon: <Settings size={18} /> },
+  {
+    to: '/pacientes', label: 'Pacientes', icon: <Users size={18} />, alwaysOpen: true,
+    children: [
+      { to: '/pacientes', label: 'Todos Os Pacientes' },
+      { to: '/atendimento/novo', label: 'Novo Atendimento' },
+      { to: '/relatorio-ia', label: 'Relatório Por IA A Partir De Formulários Google' },
+    ],
+  },
+  {
+    to: '/configuracoes', label: 'Configurações', icon: <Settings size={18} />,
+    children: [
+      { to: '/configuracoes/registro', label: 'Registro Profissional' },
+      { to: '/configuracoes/capa', label: 'Capa Dos Relatórios' },
+      { to: '/configuracoes/protocolos', label: 'Modelos De Protocolo' },
+      { to: '/configuracoes/ia', label: 'Inteligência Artificial' },
+    ],
+  },
+  { to: '/logs', label: 'Ver Logs', icon: <History size={18} /> },
 ]
 
 export default function Layout() {
@@ -43,7 +58,9 @@ export default function Layout() {
 
       {menuOpen && <div className={styles.overlay} onClick={() => setMenuOpen(false)} />}
 
-      <div className={`${styles.sidebar} ${menuOpen ? styles.open : ''}`} onClick={() => setMenuOpen(false)}>
+      <div className={`${styles.sidebar} ${menuOpen ? styles.open : ''}`} onClick={(event) => {
+        if (!event.defaultPrevented && (event.target as Element).closest('a, [data-confirmar-saida]')) setMenuOpen(false)
+      }}>
         <SidebarNav items={NAV_ITEMS} logoUrl="/logo-neuropp.png" footer={footer} />
       </div>
 

@@ -1,15 +1,7 @@
-import { Camera, Download, FileText, Trash2 } from 'lucide-react'
+import { Camera, Trash2 } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
-import {
-  createGuardianForm,
-  deleteGuardianForm,
-  listGuardianForms,
-  rejectGuardianForm,
-  uploadGuardianFormFile,
-  validateGuardianForm,
-} from '../api/guardianForms'
 import {
   deletePatientPhoto,
   fetchPatientPhotoUrl,
@@ -18,39 +10,24 @@ import {
   uploadPatientPhoto,
 } from '../api/patients'
 import {
-  downloadConsolidatedPdf,
   downloadReportDocx,
   downloadReportPdf,
-  downloadSavedConsolidatedPdf,
-  getReportLogs,
-  listCidCodes,
-  listConsolidatedReports,
   listReports,
-  updateClinicalSections,
   updateReportEdit,
 } from '../api/reports'
 import { listTemplates } from '../api/templates'
 import type {
-  CidCode,
-  ClinicalSections,
-  ConsolidatedReport,
-  GuardianFormSubmission,
   Patient,
   PatientPhoto,
   Report,
-  ReportChangeLog,
   ReportTemplate,
 } from '../api/types'
-import { Alert, Badge, Button, buttonStyle, Card, Checkbox, Input, PageHeader, Textarea } from '../components/ds'
+import { Alert, Badge, Button, buttonStyle, Card, PageHeader } from '../components/ds'
+import { EnvioDePdfsParaIA } from '../components/EnvioDePdfsParaIA'
+import { FormulariosDeResponsaveis } from '../components/pacientes/FormulariosDeResponsaveis'
+import { SecoesClinicasForm } from '../components/pacientes/SecoesClinicasForm'
 import styles from './Page.module.css'
 
-const ENCAMINHAMENTOS_SUGERIDOS = [
-  'Neuropediatra',
-  'Avaliação Neuropsicológica',
-  'Fonoaudiologia',
-  'Terapia Ocupacional',
-  'Psicopedagogia',
-]
 
 export default function HistoricoPaciente() {
   const { id } = useParams<{ id: string }>()
@@ -60,18 +37,10 @@ export default function HistoricoPaciente() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [consolidating, setConsolidating] = useState(false)
-  const [consolidateError, setConsolidateError] = useState<string | null>(null)
-
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editClassification, setEditClassification] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
-
-  const [logsOpenId, setLogsOpenId] = useState<string | null>(null)
-  const [logs, setLogs] = useState<ReportChangeLog[]>([])
-  const [loadingLogs, setLoadingLogs] = useState(false)
 
   const [clinicalOpenId, setClinicalOpenId] = useState<string | null>(null)
 
@@ -101,6 +70,11 @@ export default function HistoricoPaciente() {
     return (template?.schema_json as { rule_type?: string } | undefined)?.rule_type === 'protocolo'
   }
 
+  function ehRelatorioIA(report: Report) {
+    const template = templates.find((t) => t.id === report.template_id)
+    return (template?.schema_json as { rule_type?: string } | undefined)?.rule_type === 'relatorio_ia_pdf'
+  }
+
   function classificacaoResumo(report: Report) {
     if (report.classification_override) return report.classification_override
     const computed = report.computed_json
@@ -110,15 +84,6 @@ export default function HistoricoPaciente() {
       return Object.values(computed.classifications).filter(Boolean).join(' / ') || '—'
     }
     return '—'
-  }
-
-  function toggleSelected(reportId: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(reportId)) next.delete(reportId)
-      else next.add(reportId)
-      return next
-    })
   }
 
   function startEdit(report: Report) {
@@ -143,42 +108,8 @@ export default function HistoricoPaciente() {
     }
   }
 
-  async function toggleLogs(reportId: string) {
-    if (logsOpenId === reportId) {
-      setLogsOpenId(null)
-      return
-    }
-    setLogsOpenId(reportId)
-    setLoadingLogs(true)
-    try {
-      setLogs(await getReportLogs(reportId))
-    } catch {
-      setLogs([])
-    } finally {
-      setLoadingLogs(false)
-    }
-  }
-
   function toggleClinical(reportId: string) {
     setClinicalOpenId((prev) => (prev === reportId ? null : reportId))
-  }
-
-  const [consolidatedRefreshKey, setConsolidatedRefreshKey] = useState(0)
-
-  async function handleConsolidatedPdf() {
-    if (!id || selectedIds.size === 0) return
-    setConsolidating(true)
-    setConsolidateError(null)
-    try {
-      await downloadConsolidatedPdf(id, Array.from(selectedIds), `protocolo_consolidado_${patient?.name ?? id}.pdf`)
-      setConsolidatedRefreshKey((k) => k + 1)
-    } catch (err) {
-      setConsolidateError(
-        err instanceof ApiError ? err.message : 'Não foi possível gerar o PDF consolidado.',
-      )
-    } finally {
-      setConsolidating(false)
-    }
   }
 
   async function handleDownloadReport(report: Report, formato: 'pdf' | 'docx') {
@@ -211,6 +142,8 @@ export default function HistoricoPaciente() {
 
       {error && <Alert tone="danger">{error}</Alert>}
 
+      {id && <EnvioDePdfsParaIA patientId={id} />}
+
       <Card title="Protocolos Do Paciente" style={{ marginTop: 'var(--np-space-5)' }}>
         {!error && reports.length === 0 && (
           <p style={{ color: 'var(--np-text-muted)' }}>Nenhum protocolo registrado para este paciente ainda. Clique em "+ Novo Protocolo Para Este Paciente" para começar.</p>
@@ -218,29 +151,10 @@ export default function HistoricoPaciente() {
 
         {reports.length > 0 && (
           <>
-            <p style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-subtle)' }}>
-              Marque um ou mais protocolos abaixo para gerar um único PDF consolidado, escrito por IA a
-              partir de todos eles.
-            </p>
-            <div style={{ marginBottom: 'var(--np-space-3)' }}>
-              <Button
-                type="button"
-                onClick={handleConsolidatedPdf}
-                disabled={selectedIds.size === 0 || consolidating}
-                icon={<FileText size={16} />}
-              >
-                {consolidating
-                  ? 'Gerando PDF Consolidado...'
-                  : `Gerar PDF Consolidado (${selectedIds.size} Selecionado${selectedIds.size === 1 ? '' : 's'})`}
-              </Button>
-            </div>
-            {consolidateError && <Alert tone="danger" style={{ marginBottom: 'var(--np-space-3)' }}>{consolidateError}</Alert>}
-
             <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th></th>
                   <th>Data</th>
                   <th>Modelo Usado</th>
                   <th>Classificação</th>
@@ -251,13 +165,6 @@ export default function HistoricoPaciente() {
                 {reports.map((report) => (
                   <Fragment key={report.id}>
                     <tr>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(report.id)}
-                          onChange={() => toggleSelected(report.id)}
-                        />
-                      </td>
                       <td>{new Date(report.created_at).toLocaleString('pt-BR')}</td>
 
                       {editingId === report.id ? (
@@ -293,6 +200,13 @@ export default function HistoricoPaciente() {
                             <Badge tone="brand">{classificacaoResumo(report)}</Badge>
                           </td>
                           <td style={{ whiteSpace: 'nowrap' }}>
+                            {ehRelatorioIA(report) && (
+                              <>
+                                <Link className={styles.rowLink} to={`/pacientes/${id}/relatorio-ia/${report.id}`}>
+                                  Abrir Relatório
+                                </Link>{' '}
+                              </>
+                            )}
                             {ehModeloDeProtocolo(report) && (
                               <>
                                 <Link className={styles.rowLink} to={`/atendimento/protocolo/${report.template_id}?laudo=${report.id}`}>
@@ -302,9 +216,6 @@ export default function HistoricoPaciente() {
                             )}
                             <button type="button" className={styles.rowLink} onClick={() => startEdit(report)}>
                               Editar
-                            </button>{' '}
-                            <button type="button" className={styles.rowLink} onClick={() => toggleLogs(report.id)}>
-                              {logsOpenId === report.id ? 'Ocultar Logs' : 'Ver Logs'}
                             </button>{' '}
                             <button type="button" className={styles.rowLink} onClick={() => toggleClinical(report.id)}>
                               {clinicalOpenId === report.id ? 'Ocultar Seções Clínicas' : 'Seções Clínicas'}
@@ -327,31 +238,8 @@ export default function HistoricoPaciente() {
                         </>
                       )}
                     </tr>
-                    {logsOpenId === report.id && (
-                      <tr>
-                        <td></td>
-                        <td colSpan={4}>
-                          <Card tone="sunken" style={{ boxShadow: 'none' }}>
-                            {loadingLogs && <p>Carregando logs...</p>}
-                            {!loadingLogs && logs.length === 0 && <p>Nenhuma edição registrada para este protocolo.</p>}
-                            {!loadingLogs && logs.length > 0 && (
-                              <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
-                                {logs.map((log) => (
-                                  <li key={log.id}>
-                                    {new Date(log.created_at).toLocaleString('pt-BR')} — {log.psychologist_name}{' '}
-                                    alterou <strong>{log.field === 'template_name_override' ? 'Modelo' : 'Classificação'}</strong>:{' '}
-                                    "{log.old_value ?? '(vazio)'}" → "{log.new_value}"
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </Card>
-                        </td>
-                      </tr>
-                    )}
                     {clinicalOpenId === report.id && (
                       <tr>
-                        <td></td>
                         <td colSpan={4}>
                           <SecoesClinicasForm
                             report={report}
@@ -371,56 +259,7 @@ export default function HistoricoPaciente() {
         )}
       </Card>
 
-      {id && patient && (
-        <ListaDeConsolidados patientId={id} patientName={patient.name} refreshKey={consolidatedRefreshKey} />
-      )}
     </div>
-  )
-}
-
-function ListaDeConsolidados({
-  patientId,
-  patientName,
-  refreshKey,
-}: {
-  patientId: string
-  patientName: string
-  refreshKey: number
-}) {
-  const [consolidados, setConsolidados] = useState<ConsolidatedReport[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    listConsolidatedReports(patientId)
-      .then(setConsolidados)
-      .catch(() => setConsolidados([]))
-      .finally(() => setLoading(false))
-  }, [patientId, refreshKey])
-
-  if (loading || consolidados.length === 0) return null
-
-  return (
-    <Card title="Pareceres Consolidados Já Gerados" style={{ marginTop: 'var(--np-space-5)' }}>
-      <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'grid', gap: 'var(--np-space-3)' }}>
-        {consolidados.map((c) => (
-          <li key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--np-space-3)' }}>
-            <span style={{ font: 'var(--np-type-body)', color: 'var(--np-text-muted)' }}>
-              {new Date(c.created_at).toLocaleString('pt-BR')} — {c.report_ids.length} protocolo
-              {c.report_ids.length === 1 ? '' : 's'} consolidado{c.report_ids.length === 1 ? '' : 's'}
-            </span>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              icon={<Download size={14} />}
-              onClick={() => downloadSavedConsolidatedPdf(c.id, `protocolo_consolidado_${patientName}.pdf`)}
-            >
-              Baixar PDF
-            </Button>
-          </li>
-        ))}
-      </ul>
-    </Card>
   )
 }
 
@@ -524,390 +363,6 @@ function FotosDoPaciente({ patientId }: { patientId: string }) {
         <input type="file" accept=".jpg,.jpeg,.png,.webp" ref={fileInputRef} />
         <Button type="button" size="sm" icon={<Camera size={16} />} onClick={handleUpload} disabled={uploading}>
           {uploading ? 'Enviando...' : 'Adicionar Foto'}
-        </Button>
-      </div>
-    </Card>
-  )
-}
-
-const STATUS_TONE: Record<GuardianFormSubmission['status'], 'warning' | 'success' | 'danger'> = {
-  pendente: 'warning',
-  validado: 'success',
-  rejeitado: 'danger',
-}
-const STATUS_LABEL: Record<GuardianFormSubmission['status'], string> = {
-  pendente: 'Pendente De Validação',
-  validado: 'Validado',
-  rejeitado: 'Rejeitado',
-}
-
-// Ponto 4 da revisão de relatórios: registro de formulários preenchidos
-// pelos responsáveis/família fora do sistema (papel, verbal). Preserva o
-// original como anexo, quem preencheu e quando, e exige validação
-// explícita da psicóloga antes de ela considerar os dados confiáveis para
-// lançar no laudo/gráficos — nada aqui alimenta o laudo automaticamente.
-function FormulariosDeResponsaveis({ patientId }: { patientId: string }) {
-  const [itens, setItens] = useState<GuardianFormSubmission[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [salvando, setSalvando] = useState(false)
-  const [form, setForm] = useState({ kind: '', respondent_name: '', respondent_relation: '', filled_at: '', notes: '' })
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
-
-  function carregar() {
-    setLoading(true)
-    listGuardianForms(patientId)
-      .then(setItens)
-      .catch(() => setError('Não foi possível carregar os formulários dos responsáveis.'))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(carregar, [patientId])
-
-  async function handleCriar() {
-    if (!form.kind.trim() || !form.respondent_name.trim() || !form.filled_at) {
-      setError('Preencha ao menos o formulário, quem preencheu e a data.')
-      return
-    }
-    setSalvando(true)
-    setError(null)
-    try {
-      const criado = await createGuardianForm(patientId, {
-        kind: form.kind.trim(),
-        respondent_name: form.respondent_name.trim(),
-        respondent_relation: form.respondent_relation.trim() || undefined,
-        filled_at: form.filled_at,
-        notes: form.notes.trim() || undefined,
-      })
-      setItens((prev) => [criado, ...prev])
-      setForm({ kind: '', respondent_name: '', respondent_relation: '', filled_at: '', notes: '' })
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Não foi possível registrar o formulário.')
-    } finally {
-      setSalvando(false)
-    }
-  }
-
-  async function handleUploadArquivo(submissionId: string) {
-    const file = fileInputRefs.current[submissionId]?.files?.[0]
-    if (!file) return
-    try {
-      const atualizado = await uploadGuardianFormFile(patientId, submissionId, file)
-      setItens((prev) => prev.map((i) => (i.id === submissionId ? atualizado : i)))
-    } catch {
-      setError('Não foi possível anexar o formulário original.')
-    }
-  }
-
-  async function handleValidar(submissionId: string) {
-    try {
-      const atualizado = await validateGuardianForm(patientId, submissionId)
-      setItens((prev) => prev.map((i) => (i.id === submissionId ? atualizado : i)))
-    } catch {
-      setError('Não foi possível validar este formulário.')
-    }
-  }
-
-  async function handleRejeitar(submissionId: string) {
-    try {
-      const atualizado = await rejectGuardianForm(patientId, submissionId)
-      setItens((prev) => prev.map((i) => (i.id === submissionId ? atualizado : i)))
-    } catch {
-      setError('Não foi possível rejeitar este formulário.')
-    }
-  }
-
-  async function handleExcluir(submissionId: string) {
-    try {
-      await deleteGuardianForm(patientId, submissionId)
-      setItens((prev) => prev.filter((i) => i.id !== submissionId))
-    } catch {
-      setError('Não foi possível excluir este registro.')
-    }
-  }
-
-  if (loading) return null
-
-  return (
-    <Card
-      title="Formulários Dos Responsáveis"
-      subtitle="Registre o que a família preencheu fora do sistema (papel, verbal). Só considere validado o que já foi conferido — isto não lança nada automaticamente no laudo ou nos gráficos."
-      style={{ marginTop: 'var(--np-space-5)' }}
-    >
-      {error && <Alert tone="danger" style={{ marginBottom: 'var(--np-space-3)' }}>{error}</Alert>}
-
-      <div style={{ display: 'grid', gap: 'var(--np-space-3)' }}>
-        {itens.length === 0 && (
-          <p style={{ color: 'var(--np-text-muted)', font: 'var(--np-type-body-sm)' }}>
-            Nenhum formulário de responsável registrado ainda.
-          </p>
-        )}
-        {itens.map((item) => (
-          <Card key={item.id} tone="sunken" style={{ boxShadow: 'none', textAlign: 'left' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--np-space-2)' }}>
-              <div>
-                <strong>{item.kind}</strong>
-                <div style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-muted)' }}>
-                  Preenchido por {item.respondent_name}
-                  {item.respondent_relation ? ` (${item.respondent_relation})` : ''} em{' '}
-                  {new Date(item.filled_at + 'T00:00:00').toLocaleDateString('pt-BR')}
-                </div>
-                {item.notes && <div style={{ font: 'var(--np-type-caption)', marginTop: 4 }}>{item.notes}</div>}
-              </div>
-              <Badge tone={STATUS_TONE[item.status]}>{STATUS_LABEL[item.status]}</Badge>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--np-space-2)', flexWrap: 'wrap', marginTop: 'var(--np-space-3)' }}>
-              {item.file_path ? (
-                <a
-                  href={`/api/patients/${patientId}/guardian-forms/${item.id}/file`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ font: 'var(--np-type-caption)' }}
-                >
-                  Ver formulário original anexado
-                </a>
-              ) : (
-                <>
-                  <input
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp,.pdf"
-                    ref={(el) => {
-                      fileInputRefs.current[item.id] = el
-                    }}
-                    style={{ maxWidth: 220 }}
-                  />
-                  <Button type="button" size="sm" variant="outline" onClick={() => handleUploadArquivo(item.id)}>
-                    Anexar Original
-                  </Button>
-                </>
-              )}
-              {item.status === 'pendente' && (
-                <>
-                  <Button type="button" size="sm" onClick={() => handleValidar(item.id)}>
-                    Validar
-                  </Button>
-                  <Button type="button" size="sm" variant="outline" onClick={() => handleRejeitar(item.id)}>
-                    Rejeitar
-                  </Button>
-                </>
-              )}
-              <button
-                type="button"
-                onClick={() => handleExcluir(item.id)}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--np-danger)', font: 'var(--np-type-caption)' }}
-              >
-                <Trash2 size={12} /> Excluir
-              </button>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      <div style={{ display: 'grid', gap: 'var(--np-space-2)', gridTemplateColumns: '1fr 1fr', marginTop: 'var(--np-space-4)' }}>
-        <Input placeholder="Formulário (ex.: SNAP-IV, Anamnese)" value={form.kind} onChange={(e) => setForm((f) => ({ ...f, kind: e.target.value }))} />
-        <Input placeholder="Quem preencheu" value={form.respondent_name} onChange={(e) => setForm((f) => ({ ...f, respondent_name: e.target.value }))} />
-        <Input placeholder="Relação (ex.: mãe, pai)" value={form.respondent_relation} onChange={(e) => setForm((f) => ({ ...f, respondent_relation: e.target.value }))} />
-        <Input type="date" value={form.filled_at} onChange={(e) => setForm((f) => ({ ...f, filled_at: e.target.value }))} />
-        <Input
-          placeholder="Observações (opcional)"
-          value={form.notes}
-          onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-          style={{ gridColumn: '1 / -1' }}
-        />
-      </div>
-      <Button type="button" size="sm" onClick={handleCriar} disabled={salvando} style={{ marginTop: 'var(--np-space-3)' }}>
-        {salvando ? 'Registrando...' : 'Registrar Formulário Preenchido Pelos Responsáveis'}
-      </Button>
-    </Card>
-  )
-}
-
-function SecoesClinicasForm({
-  report,
-  onSaved,
-}: {
-  report: Report
-  onSaved: (updated: Report) => void
-}) {
-  const atuais = report.clinical_sections_json ?? {}
-  const [form, setForm] = useState<ClinicalSections>(atuais)
-  const [cidCodes, setCidCodes] = useState<CidCode[]>([])
-  const [outraHipotese, setOutraHipotese] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-
-  useEffect(() => {
-    listCidCodes()
-      .then(setCidCodes)
-      .catch(() => setCidCodes([]))
-  }, [])
-
-  function setCampo<K extends keyof ClinicalSections>(campo: K, valor: ClinicalSections[K]) {
-    setForm((prev) => ({ ...prev, [campo]: valor }))
-  }
-
-  function toggleEncaminhamento(nome: string) {
-    setForm((prev) => {
-      const atuais = prev.encaminhamentos ?? []
-      const proximos = atuais.includes(nome) ? atuais.filter((e) => e !== nome) : [...atuais, nome]
-      return { ...prev, encaminhamentos: proximos }
-    })
-  }
-
-  function toggleHipotese(label: string, cid: string | null) {
-    setForm((prev) => {
-      const atuais = prev.diagnostic_hypotheses ?? []
-      const jaMarcada = atuais.some((h) => h.label === label)
-      const proximas = jaMarcada
-        ? atuais.filter((h) => h.label !== label)
-        : [...atuais, { label, cid, selected: atuais.length === 0 }]
-      return { ...prev, diagnostic_hypotheses: proximas }
-    })
-  }
-
-  // Só a hipótese marcada aqui aparece no PDF final — as demais ficam
-  // registradas como "investigadas", mas não impressas no relatório.
-  function selecionarHipotesePrincipal(label: string) {
-    setForm((prev) => ({
-      ...prev,
-      diagnostic_hypotheses: (prev.diagnostic_hypotheses ?? []).map((h) => ({ ...h, selected: h.label === label })),
-    }))
-  }
-
-  function adicionarOutraHipotese() {
-    if (!outraHipotese.trim()) return
-    toggleHipotese(outraHipotese.trim(), null)
-    setOutraHipotese('')
-  }
-
-  async function handleSalvar() {
-    setSaving(true)
-    setError(null)
-    setSuccess(false)
-    try {
-      const updated = await updateClinicalSections(report.id, form)
-      onSaved(updated)
-      setSuccess(true)
-    } catch {
-      setError('Não foi possível salvar as seções clínicas.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const hipotesesMarcadas = new Set((form.diagnostic_hypotheses ?? []).map((h) => h.label))
-
-  return (
-    <Card tone="sunken" style={{ boxShadow: 'none', textAlign: 'left' }}>
-      <div style={{ display: 'grid', gap: 'var(--np-space-4)' }}>
-        <Textarea label="Anamnese Inicial" value={form.anamnese ?? ''} onChange={(e) => setCampo('anamnese', e.target.value)} rows={3} />
-        <Textarea
-          label="Histórico De Desenvolvimento"
-          value={form.historico_desenvolvimento ?? ''}
-          onChange={(e) => setCampo('historico_desenvolvimento', e.target.value)}
-          rows={3}
-        />
-        <Textarea
-          label="Encaminhamento, Histórico E Queixas"
-          value={form.encaminhamento_queixas ?? ''}
-          onChange={(e) => setCampo('encaminhamento_queixas', e.target.value)}
-          rows={3}
-        />
-        <Textarea label="Metodologia" value={form.metodologia ?? ''} onChange={(e) => setCampo('metodologia', e.target.value)} rows={2} />
-        <Textarea
-          label="Estudo De Caso E Observações Clínicas"
-          value={form.estudo_de_caso ?? ''}
-          onChange={(e) => setCampo('estudo_de_caso', e.target.value)}
-          rows={4}
-        />
-
-        <div>
-          <span style={{ font: 'var(--np-type-label)', color: 'var(--np-text)', display: 'block', marginBottom: 'var(--np-space-2)' }}>
-            Hipóteses Diagnósticas Investigadas
-          </span>
-          <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
-            {cidCodes.map((c) => (
-              <Checkbox
-                key={c.label}
-                label={`${c.label} (CID: ${c.cid})`}
-                checked={hipotesesMarcadas.has(c.label)}
-                onChange={() => toggleHipotese(c.label, c.cid)}
-              />
-            ))}
-            {(form.diagnostic_hypotheses ?? [])
-              .filter((h) => !cidCodes.some((c) => c.label === h.label))
-              .map((h) => (
-                <Checkbox key={h.label} label={h.label} checked onChange={() => toggleHipotese(h.label, h.cid ?? null)} />
-              ))}
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--np-space-2)', marginTop: 'var(--np-space-3)' }}>
-            <Input placeholder="Outra hipótese..." value={outraHipotese} onChange={(e) => setOutraHipotese(e.target.value)} style={{ flex: 1 }} />
-            <Button type="button" variant="outline" onClick={adicionarOutraHipotese}>
-              Adicionar
-            </Button>
-          </div>
-
-          {(form.diagnostic_hypotheses ?? []).length > 0 && (
-            <div style={{ marginTop: 'var(--np-space-4)' }}>
-              <span style={{ font: 'var(--np-type-label)', color: 'var(--np-text)', display: 'block', marginBottom: 'var(--np-space-2)' }}>
-                Hipótese Selecionada Para Este Paciente (única que aparece no PDF)
-              </span>
-              <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
-                {(form.diagnostic_hypotheses ?? []).map((h) => (
-                  <label key={h.label} style={{ display: 'flex', gap: 'var(--np-space-2)', alignItems: 'center', cursor: 'pointer' }}>
-                    <input
-                      type="radio"
-                      name="hipotese-principal"
-                      checked={!!h.selected}
-                      onChange={() => selecionarHipotesePrincipal(h.label)}
-                    />
-                    <span>
-                      {h.label}
-                      {h.cid ? ` (CID: ${h.cid})` : ''}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <Textarea
-          label="Plano De Intervenção"
-          value={form.plano_intervencao ?? ''}
-          onChange={(e) => setCampo('plano_intervencao', e.target.value)}
-          rows={3}
-        />
-
-        <div>
-          <span style={{ font: 'var(--np-type-label)', color: 'var(--np-text)', display: 'block', marginBottom: 'var(--np-space-2)' }}>
-            Encaminhamentos
-          </span>
-          <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
-            {ENCAMINHAMENTOS_SUGERIDOS.map((nome) => (
-              <Checkbox
-                key={nome}
-                label={nome}
-                checked={(form.encaminhamentos ?? []).includes(nome)}
-                onChange={() => toggleEncaminhamento(nome)}
-              />
-            ))}
-          </div>
-        </div>
-
-        <Textarea
-          label="Considerações Finais"
-          value={form.consideracoes_finais ?? ''}
-          onChange={(e) => setCampo('consideracoes_finais', e.target.value)}
-          rows={3}
-        />
-
-        {error && <Alert tone="danger">{error}</Alert>}
-        {success && <Alert tone="success">Seções clínicas salvas com sucesso.</Alert>}
-        <Button type="button" onClick={handleSalvar} disabled={saving} style={{ justifySelf: 'start' }}>
-          {saving ? 'Salvando...' : 'Salvar Seções Clínicas'}
         </Button>
       </div>
     </Card>

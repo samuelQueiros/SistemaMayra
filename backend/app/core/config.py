@@ -1,5 +1,10 @@
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+# Valores de exemplo dos arquivos .env.example / portainer.env.example — o
+# servidor de produção se recusa a subir com eles.
+_SEGREDOS_DE_EXEMPLO = {"change-me", "troque-por-um-segredo-forte", "gere-com-openssl-rand-hex-32"}
 
 
 class Settings(BaseSettings):
@@ -33,6 +38,31 @@ class Settings(BaseSettings):
     admin_name: str | None = None
     admin_email: str | None = None
     admin_password: str | None = None
+
+    # Cadastro público (/api/auth/register). Em produção fica desligado por
+    # padrão: a conta da psicóloga vem do ADMIN_* (seed_admin.py). Sem isso,
+    # qualquer pessoa na internet criaria conta — e usaria a chave de IA do
+    # servidor (fallback do .env).
+    allow_registration: bool | None = None
+
+    @property
+    def em_producao(self) -> bool:
+        return self.env.strip().lower() in ("production", "producao", "prod")
+
+    @property
+    def cadastro_publico(self) -> bool:
+        return self.allow_registration if self.allow_registration is not None else not self.em_producao
+
+    @model_validator(mode="after")
+    def _exigir_segredo_forte_em_producao(self) -> "Settings":
+        if self.em_producao:
+            fraco = self.jwt_secret in _SEGREDOS_DE_EXEMPLO or len(self.jwt_secret) < 32
+            if fraco:
+                raise ValueError(
+                    "JWT_SECRET fraco ou de exemplo em produção. Gere um com "
+                    "`openssl rand -hex 32` e defina no .env / variáveis da stack."
+                )
+        return self
 
     @field_validator("database_url")
     @classmethod

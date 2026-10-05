@@ -8,7 +8,7 @@ matplotlib.use("Agg")  # backend sem interface gráfica, seguro em servidor
 import matplotlib.pyplot as plt
 from weasyprint import HTML
 
-from app.services.laudo_documento import html_para_pdf
+from app.services.laudo_documento import _buscador_somente_data_uri, html_para_pdf
 from app.services.storage import get_photos_storage, get_reports_storage
 
 _COR_PRIMARIA = "#7561ae"
@@ -16,8 +16,9 @@ _CORES = ["#7561ae", "#d9709f", "#8fb4d6", "#f5a623", "#3fa35b", "#b3a5e2", "#e7
 
 
 # Laudos cujo documento final (HTML completo) é montado no navegador e salvo
-# em generated_text: o protocolo fixo e os modelos de protocolo configuráveis.
-RULE_TYPES_COM_HTML_PRONTO = {"custom_form", "protocolo"}
+# em generated_text: o protocolo fixo, os modelos de protocolo configuráveis
+# e o relatório por IA a partir de PDFs de formulários.
+RULE_TYPES_COM_HTML_PRONTO = {"custom_form", "protocolo", "relatorio_ia_pdf"}
 
 
 def render_report_pdf(*, patient, template, report, psychologist=None) -> str:
@@ -42,7 +43,9 @@ def render_report_pdf(*, patient, template, report, psychologist=None) -> str:
     grafico_data_uri = _gerar_grafico(template.schema_json, report.computed_json or {})
     html = _montar_html(patient, template, report, grafico_data_uri, psychologist)
 
-    pdf_bytes = HTML(string=html).write_pdf()
+    # Só imagens embutidas (data:): o texto do laudo vem do usuário e não pode
+    # puxar arquivos do servidor (file://) nem URLs externas para dentro do PDF.
+    pdf_bytes = HTML(string=html, url_fetcher=_buscador_somente_data_uri()).write_pdf()
     get_reports_storage().save(chave, pdf_bytes)
     return chave
 
@@ -392,78 +395,3 @@ def _montar_html(patient, template, report, grafico_data_uri: str | None, psycho
 </html>"""
 
 
-def render_consolidated_pdf(*, patient, reports: list[tuple], sections) -> bytes:
-    """Gera um único PDF sintetizando vários laudos já existentes do
-    histórico do paciente, com o parecer consolidado escrito por IA
-    (`sections`) e um resumo (tabela + gráfico) de cada laudo de origem.
-    Devolve os bytes do PDF — quem chama decide onde/como persistir (ver
-    `api/reports.py`, que salva um registro `ConsolidatedReport` e só
-    então grava o arquivo com a chave baseada no id desse registro)."""
-
-    blocos_por_laudo = []
-    for report, template in reports:
-        computed = report.computed_json or {}
-        nome_modelo = report.template_name_override or template.name
-        classification = report.classification_override or computed.get("classification")
-        grafico_data_uri = _gerar_grafico(template.schema_json, computed)
-        grafico_html = f'<img src="{grafico_data_uri}" style="max-width:100%">' if grafico_data_uri else ""
-        classificacao_html = f"<p><strong>Classificação:</strong> {classification}</p>" if classification else ""
-
-        blocos_por_laudo.append(
-            f"""
-            <div class="bloco-laudo">
-              <h3>{nome_modelo} — {_formatar_data(report.created_at)}</h3>
-              <table>
-                {_cabecalho_tabela_pontuacao(computed)}
-                {_linhas_pontuacao(template.schema_json, computed)}
-              </table>
-              {classificacao_html}
-              {grafico_html}
-            </div>
-            """
-        )
-
-    paragrafos_sintese = "".join(f"<p>{p}</p>" for p in sections.como_texto().split("\n\n") if p.strip())
-
-    html = f"""<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<style>
-  body {{ font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #222; }}
-  h1 {{ color: #5d52a5; font-size: 16pt; text-align: center; }}
-  h2 {{ color: #443b91; background: #f5f2ff; border-left: 6px solid #7466b5; padding: 6px 10px; font-size: 12pt; }}
-  h3 {{ color: #5d52a5; font-size: 11pt; margin-top: 20px; }}
-  table {{ width: 100%; border-collapse: collapse; margin: 10px 0; }}
-  th, td {{ border: 1px solid #999; padding: 6px; text-align: left; font-size: 10pt; }}
-  th {{ background: #f5f2ff; }}
-  .cabecalho {{ border-bottom: 3px solid #7466b5; padding-bottom: 10px; margin-bottom: 16px; }}
-  .bloco-laudo {{ page-break-inside: avoid; border: 1px solid #eee; border-radius: 8px; padding: 10px; margin: 14px 0; }}
-  .rodape {{ margin-top: 30px; font-size: 8pt; color: #666; border-top: 1px solid #ccc; padding-top: 8px; }}
-</style>
-</head>
-<body>
-  <div class="cabecalho">
-    <h1>Parecer Consolidado</h1>
-    <p><strong>Paciente:</strong> {patient.name}</p>
-    <p><strong>Data de nascimento:</strong> {_formatar_data(patient.birth_date)}</p>
-    <p><strong>Avaliações consideradas:</strong> {len(reports)}</p>
-  </div>
-
-  <h2>Parecer Integrado</h2>
-  {paragrafos_sintese}
-
-  <h2>Resumo Das Avaliações De Origem</h2>
-  {"".join(blocos_por_laudo)}
-
-  <div class="rodape">
-    <p>OBSERVAÇÃO: Este documento consolidado é gerado automaticamente com
-    apoio de inteligência artificial a partir de laudos já existentes no
-    histórico do paciente e não substitui avaliação, diagnóstico ou laudo
-    médico. A responsabilidade final pelo conteúdo é do profissional que
-    assina o laudo.</p>
-  </div>
-</body>
-</html>"""
-
-    return HTML(string=html).write_pdf()

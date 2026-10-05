@@ -7,7 +7,8 @@ from app.core.database import get_db
 from app.core.security import decrypt_secret, encrypt_secret
 from app.models.ai_settings import AISettings
 from app.models.psychologist import Psychologist
-from app.schemas.ai_settings import AISettingsOut, AISettingsUpdate
+from app.schemas.ai_settings import AISettingsOut, AISettingsUpdate, ProvedorOut
+from app.services.ai.provedores import PROVEDORES
 
 router = APIRouter(prefix="/api/settings/ai", tags=["ai-settings"])
 
@@ -16,6 +17,23 @@ def _mask(api_key: str) -> str:
     if len(api_key) <= 4:
         return "*" * len(api_key)
     return f"{'*' * 6}{api_key[-4:]}"
+
+
+@router.get("/provedores", response_model=list[ProvedorOut])
+def listar_provedores(_: Psychologist = Depends(get_current_psychologist)) -> list[ProvedorOut]:
+    """Provedores aceitos, com modelos sugeridos e como cada um lê os PDFs
+    do Relatório Por IA (ver services/ai/provedores.py)."""
+    return [
+        ProvedorOut(
+            id=p.id,
+            nome=p.nome,
+            leitura_pdf=p.leitura_pdf,
+            modelos=p.modelos,
+            link_chave=p.link_chave,
+            observacao=p.observacao,
+        )
+        for p in PROVEDORES.values()
+    ]
 
 
 @router.get("", response_model=AISettingsOut)

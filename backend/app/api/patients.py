@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_psychologist
 from app.core.database import get_db
+from app.core.uploads import ler_upload
 from app.models.patient import Patient
 from app.models.patient_photo import PatientPhoto
 from app.models.psychologist import Psychologist
@@ -115,7 +116,7 @@ def upload_patient_photo(
         )
 
     chave = f"{patient.id}/{uuid.uuid4()}{extensao}"
-    get_photos_storage().save(chave, file.file.read())
+    get_photos_storage().save(chave, ler_upload(file))
 
     photo = PatientPhoto(patient_id=patient.id, file_path=chave)
     db.add(photo)

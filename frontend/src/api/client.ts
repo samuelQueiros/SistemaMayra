@@ -115,6 +115,12 @@ export async function apiPostFile<T>(path: string, file: File, method: 'POST' | 
   return response.json() as Promise<T>
 }
 
+// Envio multipart (vários arquivos + campos), ex.: PDFs do relatório por IA.
+export async function enviarFormulario<T>(path: string, dados: FormData): Promise<T> {
+  const response = await enviar(path, { method: 'POST', headers: cabecalhos(), body: dados })
+  return response.json() as Promise<T>
+}
+
 // Arquivo de rota autenticada como URL de objeto local, para usar em <img
 // src>, que não manda o token Bearer sozinho.
 export async function fetchObjectUrl(path: string): Promise<string> {

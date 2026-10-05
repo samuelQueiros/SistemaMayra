@@ -95,6 +95,23 @@ class ReportOut(BaseModel):
     created_at: datetime
 
 
+class LogDeEdicaoOut(BaseModel):
+    """Uma edição de relatório na página "Ver Logs" (todas as edições da
+    psicóloga, de todos os pacientes)."""
+
+    id: UUID
+    field: str
+    old_value: str | None
+    new_value: str | None
+    created_at: datetime
+    psychologist_name: str
+    report_id: UUID
+    report_created_at: datetime
+    patient_id: UUID
+    patient_name: str
+    template_name: str
+
+
 class ReportChangeLogOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -106,15 +123,3 @@ class ReportChangeLogOut(BaseModel):
     psychologist_name: str
 
 
-class ConsolidatedPdfRequest(BaseModel):
-    report_ids: list[UUID]
-
-
-class ConsolidatedReportOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: UUID
-    patient_id: UUID
-    report_ids: list[str]
-    generated_text: str
-    created_at: datetime

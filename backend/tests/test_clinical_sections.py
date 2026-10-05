@@ -18,7 +18,8 @@ def _criar_relatorio(client, headers):
 
 
 def test_lista_codigos_cid(client):
-    response = client.get("/api/cid-codes")
+    assert client.get("/api/cid-codes").status_code == 401
+    response = client.get("/api/cid-codes", headers=registrar_e_logar(client))
 
     assert response.status_code == 200
     body = response.json()

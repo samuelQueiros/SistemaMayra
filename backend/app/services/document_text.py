@@ -2,6 +2,8 @@ import io
 
 from fastapi import UploadFile
 
+from app.core.uploads import ler_upload
+
 
 class DocumentTextError(Exception):
     """Formato de arquivo não suportado ou falha ao extrair texto do
@@ -15,10 +17,10 @@ def extract_text(upload: UploadFile) -> str:
     extract_template_from_document)."""
 
     nome = (upload.filename or "").lower()
-    conteudo = upload.file.read()
+    conteudo = ler_upload(upload)
 
     if nome.endswith(".pdf"):
-        return _extrair_pdf(conteudo)
+        return extrair_texto_pdf(conteudo)
     if nome.endswith(".docx"):
         return _extrair_docx(conteudo)
     if nome.endswith(".txt"):
@@ -29,7 +31,7 @@ def extract_text(upload: UploadFile) -> str:
     )
 
 
-def _extrair_pdf(conteudo: bytes) -> str:
+def extrair_texto_pdf(conteudo: bytes) -> str:
     from pypdf import PdfReader
     from pypdf.errors import PdfReadError
 
@@ -56,3 +58,28 @@ def _extrair_docx(conteudo: bytes) -> str:
         for linha_tabela in tabela.rows:
             linhas.append(" | ".join(celula.text for celula in linha_tabela.cells))
     return "\n".join(linhas)
+
+
+# Limites para mandar páginas como imagem à IA (6 PDFs × 10 páginas no máximo).
+_MAXIMO_DE_PAGINAS_POR_PDF = 10
+_ESCALA_DAS_PAGINAS = 1.4  # ~100 dpi: legível para a IA, sem pesar demais
+
+
+def paginas_em_png(conteudo: bytes, maximo: int = _MAXIMO_DE_PAGINAS_POR_PDF) -> list[bytes]:
+    """Páginas do PDF como imagens PNG, para IAs que enxergam imagem mas não
+    aceitam PDF (ver services/ai/provedores.py, leitura "imagens")."""
+    import pypdfium2 as pdfium
+
+    pdf = pdfium.PdfDocument(conteudo)
+    try:
+        imagens = []
+        for indice in range(min(len(pdf), maximo)):
+            pagina = pdf[indice]
+            imagem = pagina.render(scale=_ESCALA_DAS_PAGINAS).to_pil()
+            saida = io.BytesIO()
+            imagem.save(saida, format="PNG", optimize=True)
+            imagens.append(saida.getvalue())
+            pagina.close()
+        return imagens
+    finally:
+        pdf.close()

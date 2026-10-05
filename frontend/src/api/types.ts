@@ -170,14 +170,6 @@ export interface Report {
   created_at: string
 }
 
-export interface ConsolidatedReport {
-  id: string
-  patient_id: string
-  report_ids: string[]
-  generated_text: string
-  created_at: string
-}
-
 export interface StatsByTemplate {
   template_name: string
   count: number

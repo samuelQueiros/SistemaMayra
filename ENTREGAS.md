@@ -2100,3 +2100,201 @@ lugar e rodar `npm run build`.
     `src/laudo/`): mudou um, replicar no outro.
   - Ficou no banco de dev um paciente "Paciente Teste E2E" com um
     atendimento de exemplo (o sistema não deixa excluir paciente com laudo).
+
+## Configurações com submenu e páginas próprias
+
+**Status:** ✅ Pronto (2026-10-05)
+
+- Configurações no menu lateral agora expande/recolhe quatro subopções:
+  Registro Profissional, Capa Dos Relatórios, Modelos De Protocolo e
+  Inteligência Artificial. Cada opção abre uma página própria, carregando
+  apenas a configuração correspondente.
+- A opção atual fica destacada; abrir uma página de configuração diretamente
+  também abre o submenu. No celular, expandir Configurações mantém o menu
+  aberto, e selecionar uma opção fecha o menu lateral.
+- O endereço anterior `/configuracoes` redireciona para Registro Profissional.
+  O botão de voltar do editor de protocolos retorna à lista de modelos.
+- Arquivos: `frontend/src/App.tsx`, `components/Layout.tsx`,
+  `components/ds/SidebarNav.tsx`, `components/ds/SidebarNav.module.css`,
+  `pages/Configuracoes{Registro,Capa,Protocolos,IA}.tsx` e
+  `pages/EditorProtocolo.tsx`. A antiga página única foi substituída.
+- Validação: build de produção e 28 testes existentes do frontend aprovados.
+- Como conferir: clicar em Configurações, navegar pelas quatro opções e abrir
+  um modelo de protocolo; usar Voltar para retornar à lista. Repetir com o
+  menu móvel, verificando que expandir o grupo não fecha a navegação.
+
+## Relatório por IA a partir de PDFs dos formulários (substitui o PDF consolidado)
+
+**Status:** ✅ Pronto (2026-10-05)
+
+- **O que mudou para a psicóloga:**
+  - No **Histórico do paciente**, o antigo "PDF consolidado" (marcar
+    protocolos e a IA juntar) saiu. No lugar, o botão **"Relatório Por IA
+    (PDFs)"**: anexar (ou arrastar) de **1 a 6 PDFs** com as respostas dos
+    formulários — no Google Forms: aba Respostas → Individual → impressora →
+    Salvar como PDF — e, se quiser, escrever observações para a IA.
+  - A IA lê cada pergunta e a **opção marcada** (inclusive quando a marcação
+    é só um círculo preenchido no PDF) e monta o relatório **por área/tema**,
+    cruzando os formulários (ex.: o que a mãe e a professora dizem sobre
+    atenção), com **gráficos** quando há respostas em escala — sempre
+    dizendo como os valores foram contados — e as fontes de cada área.
+  - Abre uma **tela de revisão** onde tudo é editável: metodologia, cada área
+    (título, texto, gráfico com os valores), considerações finais, sugestões
+    de intervenção, cidade/data, capa. Salva sozinho. Dá para
+    Pré-Visualizar, **Gerar PDF**, **Gerar Word** e "Salvar E Voltar Ao
+    Histórico". O relatório fica no histórico ("Abrir Relatório"), com PDF e
+    Word, e os PDFs originais continuam disponíveis para baixar.
+  - Mesmo visual dos demais relatórios (capa, cabeçalho, moldura, rodapé,
+    faixas, "Sobre a profissional", assinatura).
+- **Testado com IA de verdade** (Gemini configurado na conta de
+  demonstração), com dois PDFs fictícios no estilo do Google Forms: leu as
+  opções marcadas corretamente (somas 9 e 8 conferidas à mão) e levou cerca
+  de 1 minuto e meio.
+- **Arquivos:** backend — `app/api/relatorios_pdf.py`,
+  `app/services/ai/{chains,schemas,__init__}.py`, `app/services/storage.py`
+  (`form_pdfs`), `app/services/document_text.py`, `app/services/pdf.py`,
+  `app/api/reports.py` (consolidado removido), `tests/test_relatorios_pdf.py`
+  (e `tests/test_consolidated_pdf.py` removido); frontend —
+  `src/components/EnvioDePdfsParaIA.tsx`, `src/pages/RelatorioPorPdfs.tsx`,
+  `src/laudo/relatorioIA.ts`, `src/laudo/documento.ts` (partes comuns),
+  `src/laudo/grafico.ts` (gráfico genérico), `src/api/relatoriosPdf.ts`,
+  `src/pages/HistoricoPaciente.tsx` + testes.
+- **Como testar:** Pacientes → Histórico → "Relatório Por IA (PDFs)" →
+  anexar PDFs → Gerar Relatório → revisar → Gerar PDF/Word → Salvar E
+  Voltar Ao Histórico.
+- **Pendências/observações:**
+  - O modelo de IA configurado em Configurações → Inteligência Artificial
+    precisa aceitar PDF (Claude, GPT-5 e Gemini aceitam).
+  - Os PDFs vão ao provedor de IA (dados sensíveis — LGPD), como já
+    acontecia com o consolidado.
+  - Os pareceres consolidados antigos não aparecem mais na tela; os dados
+    continuam no banco (tabela `consolidated_reports`).
+  - No banco de dev ficou um relatório de teste no "Paciente Teste E2E".
+
+## Menu Pacientes, página Todos Os Pacientes e Ver Logs
+
+**Status:** ✅ Pronto (2026-10-05)
+
+- **Menu lateral:** "Pacientes" agora mostra sempre as subopções **Todos Os
+  Pacientes**, **Novo Atendimento** e **Relatório Por IA A Partir De
+  Formulários Google**. Abaixo de Configurações entrou **Ver Logs**.
+- **Todos Os Pacientes:** cada paciente tem **Histórico**, **Novo
+  Atendimento**, **Formulário Dos Responsáveis**, **Seções Clínicas** e
+  **PDF / Word** — que abre a lista de relatórios do paciente (o mais recente
+  destacado) para escolher qual baixar e em qual formato.
+- **Formulário Dos Responsáveis** e **Seções Clínicas** ganharam página
+  própria por paciente. As seções clínicas continuam sendo de cada relatório:
+  a página mostra um seletor de relatório (começa no mais recente).
+- **Relatório Por IA** pelo menu: escolher o paciente e anexar os PDFs (o
+  mesmo envio do Histórico).
+- **Ver Logs:** todas as edições feitas nos relatórios (data, paciente,
+  relatório, o que mudou e quem alterou), com filtro por paciente. O botão
+  "Ver Logs" de dentro do Histórico saiu.
+- O endereço antigo `/dashboard` redireciona para Todos Os Pacientes.
+- **Arquivos:** `components/Layout.tsx`, `components/ds/SidebarNav.tsx` (+css,
+  teste), `pages/Dashboard.tsx` (+teste), `pages/{FormulariosResponsaveisPaciente,
+  SecoesClinicasPaciente,RelatorioIA,Logs}.tsx`,
+  `components/pacientes/{BaixarRelatorioDialog,CabecalhoDoPaciente,
+  FormulariosDeResponsaveis,SecoesClinicasForm}.tsx` (os dois últimos saíram de
+  dentro do Histórico, sem mudança de comportamento), `pages/HistoricoPaciente.tsx`,
+  `App.tsx`, `pages/Login.tsx`, `api/reports.ts`; backend `GET /api/logs` em
+  `app/api/reports.py` (+ testes em `tests/test_reports_edit_log.py`).
+
+## Pesquisa de pacientes, opções em botões e cadastro no Relatório Por IA
+
+**Status:** ✅ Pronto (2026-10-05)
+
+- **Todos Os Pacientes:** campo de **pesquisa** (por nome — sem diferenciar
+  acentos e maiúsculas — ou data de nascimento, ex.: "15/03"), com contador
+  "X de Y pacientes". As opções de cada paciente viraram **botões** com ícone
+  (Novo Atendimento em destaque; Histórico, Formulário Dos Responsáveis,
+  Seções Clínicas e PDF / Word). O quadro "Protocolos Por Modelo" foi
+  removido.
+- **Relatório Por IA:** botão **Novo Paciente** ao lado da escolha do
+  paciente; sem nenhum paciente cadastrado, o cadastro (nome, nascimento,
+  sexo) já aparece direto. Ao cadastrar, o paciente fica selecionado e o
+  envio dos PDFs abre em seguida.
+- **Correção no celular:** a barra superior (logo e botão do menu) aparecia
+  como uma faixa branca ao lado do conteúdo, em vez de em cima. Corrigido
+  (`components/Layout.module.css`).
+- **Arquivos:** `pages/Dashboard.tsx` (+teste), `pages/RelatorioIA.tsx`
+  (+teste), `components/pacientes/NovoPacienteForm.tsx`,
+  `components/Layout.module.css`.
+
+## IA: todos os principais provedores do mercado
+
+**Status:** ✅ Pronto (2026-10-05)
+
+- **Configurações → Inteligência Artificial** agora aceita: **Anthropic
+  (Claude)**, **OpenAI (ChatGPT/GPT)**, **Google (Gemini)**, **OpenRouter**
+  (uma chave só para modelos de quase todas as empresas), **xAI (Grok)**,
+  **Mistral AI**, **Meta Llama (via Groq)**, **Alibaba (Qwen)**, **DeepSeek**
+  e **Cohere**. Cada um traz modelos sugeridos (pode digitar outro) e o link
+  de onde gerar a chave.
+- A tela mostra **como cada IA lê os PDFs** do Relatório Por IA:
+  - por inteiro (Claude, GPT, Gemini, OpenRouter) — o ideal;
+  - como imagens das páginas (Grok, Mistral, Llama, Qwen) — ainda enxerga a
+    opção marcada; se o modelo escolhido não aceitar imagens, o sistema tenta
+    de novo só com o texto;
+  - só o texto (DeepSeek, Cohere) — aviso em destaque: pode não identificar a
+    opção marcada no Google Forms; a IA é instruída a dizer isso em vez de
+    supor.
+- **O relatório continua saindo no padrão do sistema com qualquer IA:** a IA
+  só devolve o conteúdo (textos, valores dos gráficos, etc.) em campos fixos;
+  capa, cabeçalho, layout, gráficos, PDF e Word são sempre montados pelo
+  próprio sistema.
+- **Implantação:** dependência nova `pypdfium2` (em `requirements.txt`) —
+  precisa reconstruir a imagem Docker.
+- **Testado** com a IA real só no Gemini (a única chave disponível aqui); os
+  demais provedores foram testados com a IA simulada (endereço, formato de
+  envio dos PDFs, volta para só texto).
+- **Arquivos:** `backend/app/services/ai/{provedores,provider,chains}.py`,
+  `app/services/document_text.py` (`paginas_em_png`),
+  `app/schemas/ai_settings.py`, `app/api/ai_settings.py`
+  (`GET /api/settings/ai/provedores`), `requirements.txt`, testes;
+  frontend `pages/ConfiguracoesIA.tsx` (+teste), `api/aiSettings.ts`.
+
+## Auditoria de segurança e preparação para o deploy na VPS
+
+**Status:** ✅ Pronto (2026-10-05)
+
+- **Falha crítica corrigida — leitura de arquivos do servidor sem login:**
+  um endereço como `/..%2f..%2fbackend%2f.env` devolvia o `.env` (com o
+  segredo dos logins) e até o banco de desenvolvimento inteiro. Agora a rota
+  só entrega arquivos do próprio site. Testado contra o servidor real e com
+  testes automáticos.
+- **Imagem Docker sem segredos nem dados:** o `.dockerignore` deixava entrar
+  o `backend/.env` e um backup do banco com dados de pacientes na imagem
+  publicada no GitHub. Corrigido e conferido dentro da imagem.
+- **Produção mais fechada:** o sistema se recusa a subir com `JWT_SECRET`
+  fraco/de exemplo; cadastro público desligado (a conta vem do ADMIN_*);
+  documentação da API escondida.
+- **Login:** bloqueio também por IP (20 erros em 15 min, além dos 5 por
+  e-mail) e tempo de resposta igual para e-mail existente ou não.
+- **PDF:** nenhum PDF busca arquivos do servidor ou da internet (havia um
+  caminho antigo que permitia).
+- **Uploads limitados** (fotos, formulários dos responsáveis, importação de
+  modelos: 15 MB; 100 MB por envio no Caddy).
+- **Cabeçalhos de segurança** em todas as respostas (CSP, nosniff,
+  SAMEORIGIN, Referrer/Permissions-Policy, sem cache na API). Corrigido
+  também o `X-Frame-Options: DENY` do Caddy, que **quebraria o Novo
+  Atendimento em produção** (o protocolo abre num iframe).
+- **Sem recursos de terceiros:** Chart.js (antes vinha de um CDN sem versão
+  fixa — 1 linha alterada no protocolo padrão) e as fontes da marca (antes
+  Google Fonts) agora são servidos pelo próprio sistema.
+- **Dependências:** FastAPI/Starlette, python-multipart, cryptography,
+  uvicorn, pypdf e python-dotenv atualizados; `python-jose` (sem manutenção)
+  trocado por `PyJWT`. `pip-audit` e `npm audit`: 0 vulnerabilidades.
+- **Container sem root**; pré-visualizações em iframe com `sandbox`.
+- **Deploy:** `DEPLOY.md` reescrito como passo a passo para a VPS;
+  scripts `scripts/gerar-env.sh` (gera o `.env` com segredos fortes),
+  `scripts/backup.sh` (banco + arquivos, com rotação) e
+  `scripts/atualizar.sh` (backup → atualização → conferência).
+- **Testado:** imagem de produção construída e executada com Postgres em
+  modo produção — migrations, conta admin, login pela tela, protocolo padrão
+  no iframe, Chart.js, fontes, PDF, cadastro bloqueado, ataques de leitura
+  de arquivo bloqueados, nenhum erro de política de segurança no navegador.
+- **Pendências/observações:** se já havia versão no ar, seguir a seção 7 do
+  `DEPLOY.md` (trocar `JWT_SECRET`, senhas e chaves; revisar a imagem no
+  GHCR). O token de login continua no `localStorage` do navegador (risco
+  residual baixo com a CSP atual).

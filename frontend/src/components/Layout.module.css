@@ -53,6 +53,11 @@
 }
 
 @media (max-width: 860px) {
+  /* Barra do celular em cima do conteúdo, não ao lado. */
+  .wrapper {
+    flex-direction: column;
+  }
+
   .sidebar {
     display: none;
   }

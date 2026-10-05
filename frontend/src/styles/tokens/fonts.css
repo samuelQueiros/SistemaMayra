@@ -1,4 +1,15 @@
 /* Fontes: arquivos binarios nao foram fornecidos pela marca.
    Substituicao aproximada do lettering arredondado do feed (@neuroppmayravanessa):
-   Baloo 2 (display) + Nunito (texto). Servidas via Google Fonts. */
-@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap");
+   Baloo 2 (display) + Nunito (texto). Servidas pelo proprio sistema
+   (@fontsource, subconjunto latin) — sem Google Fonts: a politica de
+   seguranca (CSP) so permite recursos do proprio dominio, e o IP das
+   usuarias nao vai para terceiros. */
+@import "@fontsource/baloo-2/latin-500.css";
+@import "@fontsource/baloo-2/latin-600.css";
+@import "@fontsource/baloo-2/latin-700.css";
+@import "@fontsource/baloo-2/latin-800.css";
+@import "@fontsource/nunito/latin-400.css";
+@import "@fontsource/nunito/latin-400-italic.css";
+@import "@fontsource/nunito/latin-600.css";
+@import "@fontsource/nunito/latin-700.css";
+@import "@fontsource/nunito/latin-800.css";

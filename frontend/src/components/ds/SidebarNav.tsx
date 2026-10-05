@@ -1,5 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import { useId, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
+import { NavLink, useLocation } from 'react-router-dom'
+import styles from './SidebarNav.module.css'
 
 interface SidebarNavItem {
   to: string
@@ -9,6 +12,9 @@ interface SidebarNavItem {
    * (ex.: o formulário standalone) e abre em nova aba, em vez de navegação
    * client-side do React Router. */
   external?: boolean
+  children?: SidebarNavItem[]
+  /** Grupo com as subopções sempre visíveis (sem recolher). */
+  alwaysOpen?: boolean
 }
 
 interface SidebarNavProps {
@@ -19,6 +25,7 @@ interface SidebarNavProps {
 }
 
 export function SidebarNav({ items, logoUrl, footer, style }: SidebarNavProps) {
+  const { pathname } = useLocation()
   return (
     <nav
       style={{
@@ -36,7 +43,9 @@ export function SidebarNav({ items, logoUrl, footer, style }: SidebarNavProps) {
       {logoUrl && <img src={logoUrl} alt="Neuropsicopedagoga Mayra Vanessa" style={{ width: 132, alignSelf: 'center' }} />}
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 'var(--np-space-1)' }}>
         {items.map((it) =>
-          it.external ? (
+          it.children ? (
+            <SidebarGroup key={`${it.to}:${pathname}`} item={it} />
+          ) : it.external ? (
             <li key={it.to}>
               <a
                 href={it.to}
@@ -97,5 +106,57 @@ export function SidebarNav({ items, logoUrl, footer, style }: SidebarNavProps) {
       </ul>
       <div style={{ marginTop: 'auto' }}>{footer}</div>
     </nav>
+  )
+}
+
+function SidebarGroup({ item }: { item: SidebarNavItem }) {
+  const { pathname } = useLocation()
+  const active = [item.to, ...(item.children ?? []).map((c) => c.to)].some((to) => pathname === to || pathname.startsWith(to + '/'))
+  const [expanded, setExpanded] = useState(active)
+  const id = useId()
+
+  if (item.alwaysOpen) {
+    return (
+      <li>
+        <div className={`${styles.trigger} ${styles.heading} ${active ? styles.active : ''}`} id={id}>
+          {item.icon}
+          <span>{item.label}</span>
+        </div>
+        <ul aria-labelledby={id} className={styles.submenu}>
+          {item.children?.map((child) => (
+            <li key={child.to}>
+              <NavLink to={child.to} className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
+                {child.label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </li>
+    )
+  }
+
+  return (
+    <li>
+      <button
+        type="button"
+        className={`${styles.trigger} ${active ? styles.active : ''}`}
+        aria-expanded={expanded}
+        aria-controls={id}
+        onClick={() => setExpanded((value) => !value)}
+      >
+        {item.icon}
+        <span>{item.label}</span>
+        <ChevronDown size={16} className={`${styles.chevron} ${expanded ? styles.expanded : ''}`} />
+      </button>
+      <ul id={id} hidden={!expanded} className={styles.submenu}>
+        {item.children?.map((child) => (
+          <li key={child.to}>
+            <NavLink to={child.to} className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}>
+              {child.label}
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </li>
   )
 }

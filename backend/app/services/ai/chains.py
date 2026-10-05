@@ -1,11 +1,15 @@
+import base64
 import re
 import time
 
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from app.services.ai.provider import get_chat_model
-from app.services.ai.schemas import ConclusionAndInterventions, ExtractedTemplateDraft, ReportSections
+from app.services.ai.provedores import provedor
+from app.services.ai.provider import get_structured_model
+from app.services.document_text import paginas_em_png
+from app.services.ai.schemas import ConclusionAndInterventions, ExtractedTemplateDraft, RelatorioPorPdfs, ReportSections
 
 # Tamanho máximo do texto já redigido de cada laudo de origem, ao montar o
 # resumo para o parecer consolidado. Sem isso, selecionar vários laudos com
@@ -118,7 +122,7 @@ def generate_report_text(
     computed: dict,
 ) -> ReportSections:
     resumo = _montar_resumo(schema, answers, computed)
-    chat_model = get_chat_model(provider, model, api_key).with_structured_output(ReportSections)
+    chat_model = get_structured_model(provider, model, api_key, ReportSections)
     messages = _prompt.format_messages(
         template_name=template_name, patient_name=patient_name, resumo=resumo
     )
@@ -214,60 +218,8 @@ def generate_conclusion_and_interventions(
         partes.append(f"Hipótese diagnóstica selecionada para este paciente:\n{hipotese_selecionada}")
     resumo = "\n\n".join(partes) if partes else "(nenhum dado adicional registrado até o momento)"
 
-    chat_model = get_chat_model(provider, model, api_key).with_structured_output(ConclusionAndInterventions)
+    chat_model = get_structured_model(provider, model, api_key, ConclusionAndInterventions)
     messages = _conclusion_prompt.format_messages(patient_name=patient_name, resumo=resumo)
-    return _invocar_com_retentativas(chat_model, messages)
-
-
-CONSOLIDATED_SYSTEM_PROMPT = (
-    f"{PERSONA} Você vai ler os resultados de VÁRIAS avaliações já "
-    "realizadas com o mesmo paciente (escalas/modelos diferentes ou a "
-    "mesma escala em datas diferentes) e produzir um ÚNICO parecer "
-    "consolidado, integrando os achados de todas elas numa visão clínica "
-    "coerente — apontando convergências, divergências e evolução ao longo "
-    f"do tempo quando houver mais de uma data. {LIMITES_DA_IA} Escreva em "
-    f"português do Brasil, em tom clínico, objetivo e respeitoso. {ESTILO_DE_ESCRITA}"
-)
-
-CONSOLIDATED_HUMAN_TEMPLATE = """Paciente: {patient_name}
-
-Avaliações consideradas nesta síntese (fonte única de verdade — não use \
-nada além disso):
-{resumo}
-
-Escreva um parecer consolidado único com base exclusivamente nesses dados, \
-dividido em: introdução (contextualiza que se trata de uma síntese de \
-múltiplas avaliações), análise por área (integra os achados de todas as \
-avaliações, destacando convergências, divergências e evolução ao longo do \
-tempo quando aplicável) e conclusão (fecha o parecer com recomendações \
-gerais, sem diagnóstico fechado)."""
-
-_consolidated_prompt = ChatPromptTemplate.from_messages(
-    [("system", CONSOLIDATED_SYSTEM_PROMPT), ("human", CONSOLIDATED_HUMAN_TEMPLATE)]
-)
-
-
-def generate_consolidated_report_text(
-    *,
-    provider: str,
-    model: str,
-    api_key: str,
-    patient_name: str,
-    reports: list[dict],
-) -> ReportSections:
-    resumo = "\n\n".join(
-        f"=== Avaliação de {r['created_at'].strftime('%d/%m/%Y')} — "
-        f"{r['template_name']} ===\n"
-        f"{_montar_resumo(r['schema'], r['answers'], r['computed'])}"
-        + (
-            f"\n\nTexto já redigido para esta avaliação: {_truncar(r['generated_text'])}"
-            if r.get("generated_text")
-            else ""
-        )
-        for r in reports
-    )
-    chat_model = get_chat_model(provider, model, api_key).with_structured_output(ReportSections)
-    messages = _consolidated_prompt.format_messages(patient_name=patient_name, resumo=resumo)
     return _invocar_com_retentativas(chat_model, messages)
 
 
@@ -292,6 +244,103 @@ def _truncar(texto: str, limite: int = _TAMANHO_MAXIMO_TEXTO_POR_LAUDO) -> str:
     if len(texto) <= limite:
         return texto
     return texto[:limite].rstrip() + "…"
+
+
+FORM_PDFS_SYSTEM_PROMPT = (
+    f"{PERSONA} Você vai receber de 1 a 6 PDFs com as RESPOSTAS de "
+    "formulários (geralmente exportados do Google Forms) preenchidos por "
+    "familiares, cuidadores, professores ou pelo próprio paciente. Leia com "
+    "atenção cada pergunta e a opção efetivamente MARCADA — no PDF do Google "
+    "Forms a opção escolhida aparece como círculo/caixa preenchida ou "
+    "destacada; as demais opções listadas NÃO foram escolhidas. Organize o "
+    "relatório por ÁREA/TEMA clínico, cruzando o que os formulários dizem "
+    "sobre cada área e indicando as fontes. Gráficos só com valores "
+    "efetivamente contados ou somados a partir das respostas marcadas, "
+    "dizendo a régua usada; sem dados em escala, não há gráfico. "
+    f"{LIMITES_DA_IA} Escreva em português do Brasil, em tom clínico, "
+    f"objetivo e respeitoso. {ESTILO_DE_ESCRITA}"
+)
+
+# Texto extraído de cada PDF vai junto como apoio (ajuda em PDFs digitais),
+# limitado para não estourar o prompt com 6 arquivos.
+_TAMANHO_MAXIMO_TEXTO_POR_PDF = 12000
+
+
+def generate_report_from_form_pdfs(
+    *,
+    provider: str,
+    model: str,
+    api_key: str,
+    patient_name: str,
+    idade: str | None,
+    pdfs: list[dict],
+    observacoes: str | None = None,
+) -> RelatorioPorPdfs:
+    """Gera o relatório por área/tema a partir dos PDFs de respostas. Cada
+    item de `pdfs` tem `nome`, `conteudo` (bytes) e `texto` (extraído). A
+    forma de entregar os PDFs depende do provedor (`provedores.py`): inteiros
+    (bloco `file`), como imagens das páginas, ou só o texto — porque a opção
+    marcada no Google Forms costuma ser só um desenho, que o texto extraído
+    não mostra. Se o modelo recusar as imagens (modelo sem visão), tenta de
+    novo só com o texto."""
+
+    info = provedor(provider)
+    leitura = info.leitura_pdf if info else "nativa"
+    messages = _mensagens_dos_pdfs(patient_name, idade, pdfs, observacoes, leitura)
+    chat_model = get_structured_model(provider, model, api_key, RelatorioPorPdfs)
+    if leitura != "imagens":
+        return _invocar_com_retentativas(chat_model, messages)
+    try:
+        return _invocar_com_retentativas(chat_model, messages, tentativas=1)
+    except Exception:  # noqa: BLE001 - modelo sem visão: cai para só texto
+        texto = _mensagens_dos_pdfs(patient_name, idade, pdfs, observacoes, "texto")
+        return _invocar_com_retentativas(chat_model, texto)
+
+
+def _mensagens_dos_pdfs(patient_name, idade, pdfs, observacoes, leitura) -> list:
+    instrucoes = (
+        f"Paciente: {patient_name}" + (f" ({idade})" if idade else "") + "\n"
+        f"Formulários anexados ({len(pdfs)}): " + ", ".join(p["nome"] for p in pdfs) + "\n"
+    )
+    if observacoes and observacoes.strip():
+        instrucoes += f"Observações da profissional para esta análise: {observacoes.strip()}\n"
+    instrucoes += (
+        "\nLeia os PDFs a seguir (fonte única de verdade) e produza o relatório "
+        "estruturado: formulários lidos, metodologia, análise por área/tema com "
+        "fontes e gráficos quando houver dados em escala, considerações finais e "
+        "sugestões de intervenção."
+    )
+    if leitura == "imagens":
+        instrucoes += " Cada página dos PDFs vem como imagem: veja nela qual opção está marcada."
+    if leitura == "texto":
+        instrucoes += (
+            " Os PDFs chegam só como texto extraído: se não for possível saber qual "
+            "opção foi marcada numa pergunta, diga isso no relatório em vez de supor."
+        )
+    conteudo: list[dict] = [{"type": "text", "text": instrucoes}]
+    for pdf in pdfs:
+        conteudo.append({"type": "text", "text": f"=== Arquivo: {pdf['nome']} ==="})
+        if leitura == "nativa":
+            conteudo.append(
+                {
+                    "type": "file",
+                    "base64": base64.b64encode(pdf["conteudo"]).decode("ascii"),
+                    "mime_type": "application/pdf",
+                    "filename": pdf["nome"],
+                }
+            )
+        elif leitura == "imagens":
+            for numero, png in enumerate(paginas_em_png(pdf["conteudo"]), start=1):
+                conteudo.append({"type": "text", "text": f"Página {numero}:"})
+                conteudo.append({"type": "image", "base64": base64.b64encode(png).decode("ascii"), "mime_type": "image/png"})
+        if pdf.get("texto", "").strip():
+            rotulo = (
+                "Texto extraído deste PDF:\n"
+                if leitura == "texto"
+                else "Texto extraído deste PDF (apoio — a opção marcada pode não aparecer aqui):\n"
+            )
+            conteudo.append({"type": "text", "text": rotulo + _truncar(pdf["texto"], _TAMANHO_MAXIMO_TEXTO_POR_PDF)})
+    return [SystemMessage(content=FORM_PDFS_SYSTEM_PROMPT), HumanMessage(content=conteudo)]
 
 
 TEMPLATE_EXTRACTION_SYSTEM_PROMPT = (
@@ -328,6 +377,6 @@ _template_extraction_prompt = ChatPromptTemplate.from_messages(
 def extract_template_from_document(
     *, provider: str, model: str, api_key: str, document_text: str
 ) -> ExtractedTemplateDraft:
-    chat_model = get_chat_model(provider, model, api_key).with_structured_output(ExtractedTemplateDraft)
+    chat_model = get_structured_model(provider, model, api_key, ExtractedTemplateDraft)
     messages = _template_extraction_prompt.format_messages(document_text=document_text)
     return _invocar_com_retentativas(chat_model, messages)

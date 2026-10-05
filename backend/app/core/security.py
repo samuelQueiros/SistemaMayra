@@ -6,7 +6,7 @@ from uuid import UUID
 
 import bcrypt
 from cryptography.fernet import Fernet, InvalidToken
-from jose import JWTError, jwt
+import jwt
 
 from app.core.config import settings
 
@@ -28,7 +28,7 @@ def create_access_token(psychologist_id: UUID) -> str:
 def decode_access_token(token: str) -> UUID | None:
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
-    except JWTError:
+    except jwt.PyJWTError:
         return None
     subject = payload.get("sub")
     if subject is None:

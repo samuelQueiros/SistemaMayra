@@ -121,6 +121,10 @@ def get_covers_storage() -> Storage:
     return _build_storage("covers")
 
 
+def get_form_pdfs_storage() -> Storage:
+    return _build_storage("form_pdfs")
+
+
 def get_reports_storage() -> Storage:
     return _build_storage("reports")
 

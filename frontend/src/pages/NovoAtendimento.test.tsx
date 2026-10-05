@@ -24,7 +24,9 @@ function renderizar(url = '/atendimento/novo') {
 }
 
 describe('NovoAtendimento', () => {
-  beforeEach(() => vi.mocked(api.listProtocolos).mockReset())
+  beforeEach(() => {
+    vi.mocked(api.listProtocolos).mockReset()
+  })
 
   it('sem modelos próprios abre direto o protocolo padrão', async () => {
     vi.mocked(api.listProtocolos).mockResolvedValue([])

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_psychologist
 from app.api.patients import get_patient_or_404
 from app.core.database import get_db
+from app.core.uploads import ler_upload
 from app.models.guardian_form_submission import GuardianFormSubmission
 from app.models.psychologist import Psychologist
 from app.schemas.guardian_form_submission import (
@@ -89,7 +90,7 @@ def upload_guardian_form_file(
         )
 
     chave = f"{patient_id}/{submission.id}/{uuid.uuid4()}{extensao}"
-    get_guardian_forms_storage().save(chave, file.file.read())
+    get_guardian_forms_storage().save(chave, ler_upload(file))
 
     submission.file_path = chave
     db.commit()
