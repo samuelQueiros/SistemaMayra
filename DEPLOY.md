@@ -1,216 +1,173 @@
-# DEPLOY.md — Checklist de implantação
+# DEPLOY.md — Colocar o sistema no ar numa VPS
 
-Este arquivo é o roteiro para colocar o sistema no ar. Ninguém deve pular
-um item sem anotar por quê. Nada aqui foi executado em produção — é só a
-preparação (Prompt 4.4 do PROMPTS.md).
+Passo a passo para subir o sistema numa VPS própria (Ubuntu/Debian) com
+Docker Compose: **Postgres + aplicação + Caddy (HTTPS automático)**.
+Revisado após a auditoria de segurança de 2026-10-05 (ver `ENTREGAS.md`).
 
-## 1. Variáveis de ambiente obrigatórias
+> **Já existe uma versão no ar?** A versão anterior tinha uma falha que
+> permitia baixar arquivos do servidor (incluindo o `.env` e o banco SQLite
+> de desenvolvimento) sem login. Depois de atualizar, faça a
+> [seção 7 — Se já havia uma versão no ar](#7-se-já-havia-uma-versão-no-ar).
 
-Copie `.env.example` e preencha de verdade antes de subir o serviço
-(local, com Docker, ou na plataforma de hospedagem escolhida):
+## 1. Antes de começar
 
-| Variável | O que é | Observação |
-|---|---|---|
-| `ENV` | `production` em produção | Usado só como referência; não muda comportamento hoje. |
-| `DATABASE_URL` | Conexão com o Postgres | Formato `postgresql+psycopg://usuario:senha@host:5432/banco`. Nunca usar SQLite em produção (CLAUDE.md seção 2 permite SQLite só em dev local). |
-| `JWT_SECRET` | Segredo para assinar o login | **Trocar o valor de exemplo.** Gerar algo aleatório e forte (ex.: `openssl rand -hex 32`). Se vazar, qualquer um pode forjar login de qualquer psicóloga. |
-| `JWT_ALGORITHM` | Algoritmo do token | Manter `HS256` (padrão já testado). |
-| `JWT_EXPIRES_MINUTES` | Validade do login | Ajustar conforme a política da clínica (hoje: 1440 = 24h). |
-| `AI_PROVIDER` | `anthropic` ou `openai` | Ver SPEC.md seção 5. |
-| `AI_MODEL` | Nome do modelo | Ex.: `claude-sonnet-5`. |
-| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | Chave do provedor de IA escolhido | Sem isso, a geração de texto por IA falha com erro claro (não trava o resto do sistema). |
-| `S3_BUCKET` | Nome do bucket (opcional) | Sem preencher, fotos/PDFs ficam em disco local do servidor (`backend/storage/`) — funciona, mas some se o disco não for persistente entre deploys/reinícios. Preenchendo, passam a ir para um bucket compatível com S3. |
-| `S3_ENDPOINT_URL` | Endpoint do provedor (opcional) | Só necessário para provedores que não sejam a AWS S3 "de verdade" — ex.: Cloudflare R2, Backblaze B2, MinIO. Deixe vazio para AWS S3. |
-| `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` | Credenciais do bucket (opcional) | Geradas no painel do provedor escolhido. |
+- VPS com **2 GB de RAM** ou mais (a geração de PDF e o build usam memória),
+  Ubuntu 22.04/24.04 ou Debian 12.
+- Um **domínio** (ex.: `laudos.suaclinica.com.br`) com registro **DNS tipo
+  A** apontando para o IP da VPS. Confira com `dig +short SEU_DOMINIO`
+  antes de subir — o certificado HTTPS só sai com o DNS já certo.
+- Acesso SSH à VPS com um usuário que tenha `sudo`.
 
-## 2. Banco de dados (Postgres)
-
-- [ ] Banco Postgres criado e acessível a partir de onde o serviço vai
-      rodar.
-- [ ] Rodar as migrations antes do primeiro uso (o `Dockerfile` já faz
-      isso automaticamente todo start: `alembic upgrade head`).
-- [ ] Backup automático configurado — dados de pacientes/laudos são dados
-      de saúde (LGPD, CLAUDE.md seção 5); perder isso é um problema sério,
-      não só um inconveniente técnico. Use `backend/scripts/backup_db.sh`
-      (faz um `pg_dump` compactado) agendado via cron, ou o backup
-      gerenciado da própria plataforma de hospedagem, se houver (Render/
-      Railway oferecem no plano pago). Exemplo de cron diário às 3h:
-      `0 3 * * * DATABASE_URL="..." /caminho/backend/scripts/backup_db.sh /backups/$(date +\%F).sql.gz`
-- [ ] Se for guardar fotos/PDFs em disco local (sem configurar
-      `S3_BUCKET`), confirme que o volume onde `backend/storage/` vive é
-      persistente entre deploys/reinícios — em muitas plataformas o disco
-      é apagado a cada novo deploy. Se não for, configure `S3_BUCKET` (ver
-      seção 1) para um bucket compatível com S3.
-
-## 3. Build e implantação
-
-- [x] `docker build -t formpsico .` a partir da raiz do projeto (o
-      `Dockerfile` já compila o frontend e empacota tudo num único
-      serviço, seguindo a decisão de arquitetura do CLAUDE.md seção 2).
-      **Testado com sucesso em 2026-09-13** (build completo, sem erros).
-- [x] Rodar com as variáveis de ambiente da seção 1, ex.:
-      `docker run -p 8000:8000 --env-file .env formpsico`. **Testado com
-      sucesso**: container sobe, roda as migrations sozinho, serve a API
-      e o frontend na mesma porta.
-- [x] Testado de ponta a ponta dentro do container: cadastro de
-      psicóloga, login, seed dos templates (CARS/ATA/SNAP-IV), criação de
-      paciente, geração de laudo e **download de PDF** (confirma que as
-      bibliotecas de sistema do WeasyPrint instaladas no `Dockerfile`
-      funcionam corretamente dentro do container).
-
-### 3.1 Runbook para uma VPS genérica (Docker Compose + Caddy)
-
-`docker-compose.yml` e `Caddyfile` na raiz do projeto sobem os 3 serviços
-juntos: Postgres, a aplicação e Caddy como proxy reverso com HTTPS
-automático (Let's Encrypt) para o domínio configurado — não precisa
-configurar TLS na mão.
-
-Pré-requisito: um registro DNS tipo A do seu domínio (ex.:
-`laudos.suaclinica.com.br`) apontando para o IP público da VPS, propagado
-*antes* de subir o Caddy (senão a emissão do certificado falha).
-
-Na VPS (Ubuntu/Debian; ajuste para outra distro):
+## 2. Preparar a VPS (uma vez)
 
 ```bash
-# 1. Docker + Docker Compose, se ainda não tiver
-curl -fsSL https://get.docker.com | sh
+# Atualizações e firewall: só SSH, HTTP e HTTPS abertos
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y ufw git openssl
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 443/udp
+sudo ufw enable
 
-# 2. Copiar o projeto para a VPS (git clone do seu repositório, ou
-#    `rsync`/`scp` a partir da sua máquina)
-git clone <url-do-seu-repositorio> formpsico
-cd formpsico
+# Atualizações de segurança automáticas do sistema
+sudo apt install -y unattended-upgrades
+sudo dpkg-reconfigure -plow unattended-upgrades
 
-# 3. Configurar variáveis de ambiente
-cp .env.example .env
-nano .env   # preencha JWT_SECRET (openssl rand -hex 32), POSTGRES_PASSWORD,
-            # DOMAIN, e a chave de IA se for usar geração por IA
+# Docker + plugin compose (script oficial)
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker "$USER"   # saia e entre de novo no SSH depois disso
+```
 
-# 4. Subir tudo (build da imagem + Postgres + Caddy)
+Recomendado também: entrar no SSH só com chave (desligar senha em
+`/etc/ssh/sshd_config`: `PasswordAuthentication no`) e instalar
+`fail2ban` (`sudo apt install -y fail2ban`).
+
+> Atenção: o Docker publica portas **por fora** do `ufw`. Por isso o
+> `docker-compose.yml` só publica as portas 80/443 do Caddy — o app
+> (8000) e o Postgres (5432) ficam só na rede interna do Docker. Não
+> adicione `ports:` neles.
+
+## 3. Instalar o sistema
+
+```bash
+sudo mkdir -p /opt/psicologa && sudo chown "$USER" /opt/psicologa
+git clone <URL-DO-SEU-REPOSITORIO> /opt/psicologa
+cd /opt/psicologa
+
+# Gera o .env com segredos aleatórios fortes e a senha inicial da psicóloga
+./scripts/gerar-env.sh
+
+# Sobe tudo (build da imagem + Postgres + Caddy)
 docker compose up -d --build
 
-# 5. Acompanhar os logs até o Caddy confirmar o certificado emitido
+# Acompanhe até aparecer "certificate obtained successfully" no Caddy
 docker compose logs -f caddy
 ```
 
-Depois disso o sistema fica em `https://SEU_DOMINIO`, com renovação de
-certificado automática pelo Caddy. Para atualizar após um novo commit:
-`git pull && docker compose up -d --build`.
+Abra `https://SEU_DOMINIO` e entre com o e-mail e a senha mostrados pelo
+`gerar-env.sh`. Depois, em **Configurações → Inteligência Artificial**,
+escolha o provedor e cole a chave de API (ela fica criptografada no banco).
 
-- [ ] Executado numa VPS real (o checklist acima ainda não foi rodado
-      fora deste ambiente de desenvolvimento — confirme cada passo ao
-      subir pela primeira vez).
+O que o `.env` gerado já traz:
 
-### 3.2 Deploy pelo Portainer
+| Variável | Valor | Por quê |
+|---|---|---|
+| `ENV` | `production` | Liga as proteções de produção (abaixo). |
+| `JWT_SECRET` | 64 caracteres aleatórios | Assina os logins e criptografa as chaves de IA. **O sistema se recusa a subir em produção com um segredo fraco ou de exemplo.** |
+| `POSTGRES_PASSWORD` | aleatória | Senha do banco (só acessível dentro do Docker). |
+| `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | o que você informou / senha aleatória | Conta da psicóloga, criada/atualizada a cada start. Para trocar a senha: edite `ADMIN_PASSWORD` e rode `docker compose up -d`. |
+| `ALLOW_REGISTRATION` | `false` | Ninguém consegue criar conta pela internet. |
+| `JWT_EXPIRES_MINUTES` | `720` (12 h) | Validade do login. |
 
-Arquivos usados: `docker-compose.portainer.yml` (a stack),
-`portainer.env.example` (modelo das variáveis) e
-`.github/workflows/docker-publish.yml` (publica a imagem).
+O `.env` fica com permissão `600` (só o seu usuário lê). Nunca o commite
+nem envie por e-mail/WhatsApp.
 
-A stack usa uma **imagem pronta** no GitHub Container Registry, em vez de
-buildar no servidor, e sobe o Caddy (HTTPS automático) configurado só por
-variáveis — sem precisar do `Caddyfile`. Ocupa as portas 80/443 da VPS.
+## 4. Backups (obrigatório — dados de saúde, LGPD)
 
-**Atenção:** não use o `docker-compose.yml` no Portainer — ele depende do
-arquivo `.env` e do `Caddyfile` em disco e falha com
-`required variable DOMAIN is missing a value`.
+```bash
+./scripts/backup.sh          # banco + arquivos enviados → ./backups/
+```
 
-**1. Publicar a imagem (uma vez, e depois automático)**
+Agende todo dia às 3h (`crontab -e`):
 
-- Faça push na `master`: o GitHub Actions builda o `Dockerfile` e publica
-  `ghcr.io/samuelqueiros/psicologa:latest` (e uma tag `sha-<commit>`).
-  Acompanhe em GitHub > Actions.
-- O pacote nasce **privado**. Ou torne público (GitHub > Packages >
-  psicologa > Package settings > Change visibility), ou cadastre o
-  registry no Portainer: *Registries > Add registry > Custom registry*,
-  URL `ghcr.io`, usuário do GitHub e um Personal Access Token (classic)
-  com escopo `read:packages`.
+```
+0 3 * * * cd /opt/psicologa && ./scripts/backup.sh >> backups/backup.log 2>&1
+```
 
-**2. Criar a stack**
+Mantém os 14 últimos. **Copie os backups para fora da VPS** (outro
+servidor, Drive, S3…) — um backup só na própria VPS some junto com ela.
+Teste a restauração pelo menos uma vez (seção 6).
 
-- Portainer > *Stacks > Add stack*, nome ex.: `psicologa`.
-- *Web editor*: cole o conteúdo de `docker-compose.portainer.yml`.
-  (Alternativa: *Repository*, apontando para este repositório e
-  *Compose path* `docker-compose.portainer.yml` — se o repo for privado,
-  informe as credenciais do GitHub.)
-- *Environment variables > Load variables from .env file*: carregue uma
-  cópia preenchida de `portainer.env.example`. Obrigatórias:
-  `POSTGRES_PASSWORD`, `JWT_SECRET` (`openssl rand -hex 32`) e `DOMAIN`.
-  Para já criar o
-  login da psicóloga, preencha `ADMIN_EMAIL`, `ADMIN_PASSWORD` (mín. 8
-  caracteres) e `ADMIN_NAME` — ver seção 6.
-- *Deploy the stack*. O container `app` roda as migrations sozinho e fica
-  `healthy` quando `/api/health` responde.
+## 5. Atualizar o sistema
 
-**3. HTTPS / domínio**
+```bash
+cd /opt/psicologa
+./scripts/atualizar.sh   # backup → git pull → rebuild → confere a saúde do app
+```
 
-- Antes do deploy: registro DNS tipo A de `DOMAIN` apontando para o IP da
-  VPS, e portas 80 e 443 liberadas no firewall. O Caddy emite e renova o
-  certificado sozinho — acompanhe nos logs do container `caddy`.
-- Se a VPS já tiver outro proxy ocupando 80/443, remova o serviço `caddy`
-  da stack, publique a porta do app (`ports: ["8000:8000"]`) e aponte o
-  proxy existente para ela.
+As migrations do banco rodam sozinhas no start do container.
 
-**4. Atualizar após um novo commit**
+## 6. Restaurar um backup
 
-- Push na `master` → espere o Actions terminar → no Portainer, abra a
-  stack e clique *Update the stack* marcando *Re-pull image and
-  redeploy*. (Para fixar uma versão, use `APP_IMAGE=ghcr.io/samuelqueiros/psicologa:sha-<commit>`.)
+```bash
+cd /opt/psicologa
+gunzip -c backups/banco_AAAAMMDD_HHMMSS.sql.gz | docker compose exec -T db psql -U formpsico formpsico
+docker compose exec -T app sh -c 'rm -rf /app/backend/storage/*'
+docker compose exec -T app tar -C /app/backend -xzf - < backups/arquivos_AAAAMMDD_HHMMSS.tar.gz
+docker compose restart app
+```
 
-- [x] Stack testada localmente com `docker compose -f
-      docker-compose.portainer.yml` (2026-09-28): migrations aplicadas,
-      container `healthy`, API e frontend respondendo via Caddy (HTTPS,
-      redirect http→https, cabeçalhos de segurança), login criado por
-      `ADMIN_*`.
-- [ ] Executado num Portainer real.
-- [ ] Backup: os dados ficam nos volumes `<stack>_db_data` e
-      `<stack>_app_storage` — configure o backup (seção 2) apontando para
-      o Postgres da stack.
+## 7. Se já havia uma versão no ar
 
-## 4. HTTPS
+A versão anterior permitia ler arquivos do servidor pela URL, sem login.
+Depois de atualizar (`./scripts/atualizar.sh`):
 
-- [x] Resolvido pelo runbook da seção 3.1 (Caddy com HTTPS automático) —
-      única exigência é o DNS do domínio já apontando para a VPS antes de
-      subir o `docker compose`. Alternativa equivalente: Nginx + certbot,
-      ou o HTTPS gerenciado da própria plataforma de hospedagem, caso não
-      use o `docker-compose.yml` deste repositório.
-- [ ] Sem HTTPS, o token de login (JWT) trafega em texto puro pela rede —
-      inaceitável para dados de saúde. Não colocar no ar sem isso.
+1. **Troque o `JWT_SECRET`** (`openssl rand -hex 32`) no `.env` e rode
+   `docker compose up -d`. Todos precisarão entrar de novo. As chaves de IA
+   salvas ficam ilegíveis (eram criptografadas com o segredo antigo):
+   **cadastre a chave de IA de novo** em Configurações.
+2. **Troque o `ADMIN_PASSWORD`** e as **chaves de API** dos provedores de
+   IA que estavam no `.env` do servidor (gere novas no painel de cada
+   provedor e apague as antigas).
+3. A senha do Postgres só era usada dentro do Docker; troque-a se quiser
+   ficar 100% seguro (exige recriar o banco a partir de um backup).
+4. **Imagem Docker publicada (GHCR):** as imagens antigas podiam conter o
+   `backend/.env` e um backup do banco de desenvolvimento. Se o pacote no
+   GitHub for **público**, torne-o privado e apague as versões antigas em
+   GitHub → Packages.
+5. **Pasta de arquivos enviados:** o container agora roda sem ser root. Se
+   os arquivos já existiam, ajuste o dono uma vez:
+   `docker compose run --rm --user root app chown -R 10001:10001 /app/backend/storage`
 
-## 5. Checklist de segurança antes de ir ao ar
+## 8. Proteções de segurança ativas
 
-(ver também `ENTREGAS.md`, entrada "Testes finais e revisão de
-segurança", Prompt 4.3, para o detalhamento do que já foi revisado)
+- Rota do frontend só serve arquivos de `frontend/dist` (corrigido o
+  *path traversal*).
+- Em produção: sem cadastro público, sem documentação da API (`/docs`),
+  segredo JWT forte obrigatório.
+- Login: bloqueio após 5 erros por e-mail ou 20 por IP em 15 minutos;
+  tempo de resposta igual para e-mail existente ou não.
+- Cabeçalhos: CSP (só recursos do próprio domínio), HSTS, `nosniff`,
+  `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`,
+  `Cache-Control: no-store` na API.
+- PDFs gerados nunca buscam arquivos do servidor nem URLs externas.
+- Uploads limitados (15 MB por arquivo; 100 MB por requisição no Caddy).
+- Container sem root; imagem sem `.env`, bancos ou backups
+  (`.dockerignore`).
+- Chart.js e fontes servidos pelo próprio sistema (sem CDN de terceiros).
+- Dependências sem vulnerabilidades conhecidas (`pip-audit` e `npm audit`
+  em 2026-10-05). Rode de novo de tempos em tempos:
+  `cd backend && pip install pip-audit && pip-audit -r requirements.txt`.
+- Chaves de IA criptografadas no banco; senhas com bcrypt; cada psicóloga
+  só acessa os próprios dados.
 
-- [x] Toda rota de dados de paciente/laudo exige login (revisado).
-- [x] Cada psicóloga só acessa os próprios pacientes/laudos/templates
-      (revisado).
-- [x] Senhas com hash (bcrypt), nunca em texto puro (revisado).
-- [x] Exclusão de paciente com histórico de laudos é bloqueada (corrigido
-      no Prompt 4.3).
-- [x] Chave de IA de cada psicóloga fica criptografada no banco (não em
-      texto puro) — ver `ENTREGAS.md`, "Bloco de segurança".
-- [x] Login tem limite de tentativas (bloqueio temporário após 5 erradas
-      em 15 minutos) — ver `ENTREGAS.md`, "Bloco de segurança".
-- [ ] `JWT_SECRET` trocado para um valor forte e único de produção (não o
-      do `.env.example`).
-- [ ] HTTPS configurado (ver seção 4).
-- [ ] Backup do banco de dados configurado (ver seção 2).
-- [ ] Considerar, se o sistema for exposto publicamente: limite de
-      tentativas de login (proteção contra força bruta) — não implementado
-      ainda, fora da lista mínima do SPEC.md, mas recomendável.
+## 9. Alternativa: Portainer
 
-## 6. Depois de subir
-
-- [ ] Cadastrar a primeira conta de psicóloga. Jeito recomendado: definir
-      `ADMIN_EMAIL`, `ADMIN_PASSWORD` (e `ADMIN_NAME`) no `.env` / nas
-      variáveis da stack do Portainer. A cada start o container cria essa
-      conta se ela não existir e, se `ADMIN_PASSWORD` mudou, redefine a
-      senha (`backend/app/seed_admin.py`) — serve também para recuperar
-      acesso. Alternativa: `POST /api/auth/register`.
-- [ ] Nada mais a semear: desde 2026-09-20 o sistema usa um protocolo fixo
-      (`frontend/public/formulario-novo-paciente.html`), não mais templates
-      configuráveis por escala. O `ReportTemplate` interno
-      (`rule_type="custom_form"`) é criado sozinho, de forma idempotente,
-      na primeira vez que a psicóloga salvar um atendimento pelo
-      formulário — não é preciso rodar `seed_templates` (ver `CLAUDE.md`
-      seção 9).
+Se a VPS usa Portainer, use `docker-compose.portainer.yml` (imagem
+publicada no GHCR pelo GitHub Actions) com as variáveis de
+`portainer.env.example`. Mesmas regras: `ENV=production`, `JWT_SECRET`
+forte (`openssl rand -hex 32`), `ALLOW_REGISTRATION=false`, e os backups da
+seção 4 (troque `docker compose exec` por `docker exec <container>`).
+Deixe o pacote do GHCR **privado** (dados de saúde: a imagem não contém
+dados, mas não há motivo para ser pública).

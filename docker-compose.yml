@@ -33,6 +33,7 @@ services:
     env_file:
       - .env
     environment:
+      ENV: production
       DATABASE_URL: "postgresql+psycopg://formpsico:${POSTGRES_PASSWORD}@db:5432/formpsico"
     volumes:
       - app_storage:/app/backend/storage

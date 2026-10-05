@@ -14,3 +14,8 @@ frontend/.vite/
 
 # Cópia preenchida das variáveis da stack do Portainer
 portainer.env
+
+# Backups gerados por scripts/backup.sh (dados de pacientes)
+backups/
+*.sql.gz
+*.db.*

@@ -1,11 +1,27 @@
+# Nada de segredos, bancos ou dados de pacientes dentro da imagem Docker
+# (a imagem é publicada no GHCR pelo GitHub Actions).
+**/.env
+**/.env.*
+!**/.env.example
+**/*.db
+**/*.db.*
+**/*.sqlite*
+**/*.bak*
+backend/storage
+**/storage/
+portainer.env
+
+# Dependências/artefatos locais (reinstalados/gerados no build)
 **/node_modules
 **/.venv
 **/venv
 **/__pycache__
 **/*.pyc
-backend/dev.db
-backend/storage
+**/.pytest_cache
 frontend/dist
+frontend/.vite
+
+# Repositório e documentos que não vão para produção
 .git
-.env
+.github
 referencia_cliente

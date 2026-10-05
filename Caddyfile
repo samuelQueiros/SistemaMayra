@@ -1,13 +1,22 @@
 {$DOMAIN} {
 	# Caddy emite e renova o certificado HTTPS sozinho (Let's Encrypt) —
 	# não precisa configurar nada além do domínio apontando pra esta VPS.
+
+	# Uploads maiores que isso são recusados antes de chegar ao app (o app
+	# também limita cada arquivo — ver backend/app/core/uploads.py). 100 MB
+	# cobre 6 PDFs de 15 MB do Relatório Por IA.
+	request_body {
+		max_size 100MB
+	}
+
 	reverse_proxy app:8000
 
 	encode gzip
 
+	# Os demais cabeçalhos de segurança (CSP, X-Frame-Options...) vêm do
+	# próprio app (backend/app/core/cabecalhos.py).
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		X-Content-Type-Options "nosniff"
-		X-Frame-Options "DENY"
+		-Server
 	}
 }

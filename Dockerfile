@@ -31,7 +31,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./
 COPY --from=frontend-build /app/frontend/dist /app/frontend/dist
 
-ENV PYTHONUNBUFFERED=1
+# Roda sem ser root: se alguém explorar uma falha no app, não ganha o
+# container inteiro. O usuário só escreve na pasta de arquivos enviados.
+RUN useradd --system --uid 10001 --home-dir /app --shell /usr/sbin/nologin formpsico \
+    && mkdir -p /app/backend/storage \
+    && chown -R formpsico:formpsico /app/backend/storage
+USER formpsico
+
+ENV PYTHONUNBUFFERED=1 \
+    ENV=production \
+    XDG_CACHE_HOME=/tmp/cache
 EXPOSE 8000
 
 # Usado pelo Docker/Portainer para mostrar o container como "healthy".
@@ -45,4 +54,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
 # container (docker run -e / docker-compose / secrets da plataforma) —
 # ver DEPLOY.md. --proxy-headers faz o app enxergar https/IP real quando
 # roda atrás de proxy reverso (Caddy, Traefik, Nginx Proxy Manager).
-CMD ["sh", "-c", "alembic upgrade head && python -m app.seed_admin && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers '--forwarded-allow-ips=*'"]
+CMD ["sh", "-c", "alembic upgrade head && python -m app.seed_admin && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers '--forwarded-allow-ips=*' --no-server-header"]

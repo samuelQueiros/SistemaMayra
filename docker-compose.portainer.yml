@@ -40,6 +40,7 @@ services:
       ADMIN_NAME: "${ADMIN_NAME:-}"
       ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
+      ALLOW_REGISTRATION: "${ALLOW_REGISTRATION:-false}"
       JWT_ALGORITHM: "${JWT_ALGORITHM:-HS256}"
       JWT_EXPIRES_MINUTES: "${JWT_EXPIRES_MINUTES:-1440}"
       AI_PROVIDER: "${AI_PROVIDER:-anthropic}"
@@ -77,10 +78,8 @@ services:
       - app:8000
       - --header-down
       - "Strict-Transport-Security: max-age=31536000; includeSubDomains"
-      - --header-down
-      - "X-Content-Type-Options: nosniff"
-      - --header-down
-      - "X-Frame-Options: DENY"
+      # Os demais cabeçalhos de segurança (CSP, X-Frame-Options SAMEORIGIN —
+      # o Novo Atendimento usa <iframe>) vêm do próprio app.
     ports:
       # Troque HTTP_PORT/HTTPS_PORT se 80/443 já estiverem ocupadas na VPS.
       # Atenção: o certificado automático precisa de pelo menos uma das duas
