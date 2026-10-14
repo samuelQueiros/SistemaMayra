@@ -2366,3 +2366,19 @@ lugar e rodar `npm run build`.
 - **Pendências/observações:**
   - A etiqueta de status do último laudo na tabela de pacientes não foi incluída: a lista de pacientes não traz essa informação, e incluí-la exigiria mudar a API (fora do escopo de "só aparência").
   - No formulário do protocolo padrão, os rótulos dos campos e os títulos das seções continuam com Iniciais Maiúsculas no código, porque as regras das fases e a IA leem esses textos. Os nomes das fases e os títulos mostrados na tela já aparecem só com a primeira letra maiúscula.
+
+## Varredura de desempenho (banco, servidor, capa e processos)
+
+**Status:** ✅ Pronto (2026-10-14) — branch `otimizacao-desempenho`
+
+- **Sem mudança de comportamento:** pontuação, classificação, textos do laudo e layout do PDF/Word continuam iguais; isolamento entre psicólogas inalterado.
+- **Registro de atividades** (`/api/logs`): 243 consultas ao banco viraram 2 (349 ms → ~50 ms no teste com 200 registros). Antes, cada linha carregava o laudo inteiro (fotos e HTML).
+- **Salvamento automático e "Salvar laudo":** cada salvamento lia o laudo inteiro do banco duas vezes (~3,5 MB); agora lê só o necessário (~0,8 MB no autosave, quase nada ao salvar o texto).
+- **Painel de números** (`/api/stats/summary`): 5 consultas → 3, sem ler as colunas pesadas (100 ms → ~45 ms).
+- **Compressão gzip no próprio servidor:** a stack do Portainer não comprimia nada; o formulário padrão cai de 570 KB para 267 KB na rede, o registro de atividades de 79 KB para 14 KB.
+- **S3:** a conexão com o bucket é reaproveitada (antes era criada a cada foto/arquivo). O PDF baixado do Histórico não é mais relido do storage logo depois de gerado.
+- **Índices novos no banco** (migração `e5f1a7c3b9d2`, aplicada sozinha ao subir o container): laudos por paciente e data; registro de atividades por data.
+- **Capa padrão** `capa-relatorio.png` (3,4 MB) → `capa-relatorio.jpg` (829 KB), diferença imperceptível (a capa final já era gravada em JPEG).
+- **2 processos do servidor** (`WEB_CONCURRENCY=2`): gerar um PDF pesado não trava as outras telas. RAM em repouso 142 → 300 MB. O limite de tentativas de login passa a contar por processo (até 10 em vez de 5 no pior caso).
+- **Como testar:** abrir Registro de atividades, Todos os pacientes e o Histórico; preencher um atendimento (autosave) e baixar PDF/Word; conferir a capa padrão no PDF.
+- **Ficou de fora (baixo impacto):** remover o pacote `langchain` não usado e o pytest da imagem, `.dockerignore` mais completo, apagar `ScoreChart.tsx`/`react-chartjs-2` órfãos.
