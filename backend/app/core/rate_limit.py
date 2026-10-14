@@ -2,9 +2,10 @@
 
 Contador em memória do próprio processo — coerente com a decisão de
 arquitetura do projeto ("um único serviço", ver CLAUDE.md seção 2).
-Limitação assumida conscientemente: reseta se o processo reiniciar, e não
-seria compartilhado entre múltiplas instâncias caso o serviço um dia deixe
-de ser único (fora do cenário atual, mas vale documentar)."""
+Limitação assumida conscientemente: reseta se o processo reiniciar, e não é
+compartilhado entre processos — com WEB_CONCURRENCY=2 (padrão da imagem
+Docker), cada processo conta à parte, então no pior caso o bloqueio vem
+depois de até 2x MAX_TENTATIVAS falhas."""
 
 from datetime import datetime, timedelta, timezone
 

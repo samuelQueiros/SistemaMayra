@@ -38,9 +38,14 @@ RUN useradd --system --uid 10001 --home-dir /app --shell /usr/sbin/nologin formp
     && chown -R formpsico:formpsico /app/backend/storage
 USER formpsico
 
+# WEB_CONCURRENCY: processos do uvicorn (ele lê essa variável sozinho). Com
+# 2, gerar um PDF pesado não deixa as outras telas esperando pela CPU.
+# Cada processo usa ~150 MB de RAM em repouso (mais ao gerar PDF);
+# ajustável no deploy.
 ENV PYTHONUNBUFFERED=1 \
     ENV=production \
-    XDG_CACHE_HOME=/tmp/cache
+    XDG_CACHE_HOME=/tmp/cache \
+    WEB_CONCURRENCY=2
 EXPOSE 8000
 
 # Usado pelo Docker/Portainer para mostrar o container como "healthy".

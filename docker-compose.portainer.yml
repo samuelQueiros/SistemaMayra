@@ -41,6 +41,8 @@ services:
       ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
       ALLOW_REGISTRATION: "${ALLOW_REGISTRATION:-false}"
+      # Processos do servidor (cada um ~150 MB de RAM em repouso). 1 em VPS bem pequena.
+      WEB_CONCURRENCY: "${WEB_CONCURRENCY:-2}"
       JWT_ALGORITHM: "${JWT_ALGORITHM:-HS256}"
       JWT_EXPIRES_MINUTES: "${JWT_EXPIRES_MINUTES:-1440}"
       AI_PROVIDER: "${AI_PROVIDER:-anthropic}"
