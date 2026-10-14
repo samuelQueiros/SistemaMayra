@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy import ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -13,6 +13,7 @@ class ReportChangeLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     guardada aqui, com quem mudou, quando, e o valor antes/depois."""
 
     __tablename__ = "report_change_logs"
+    __table_args__ = (Index("ix_report_change_logs_created_at", "created_at"),)
 
     report_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("reports.id"), index=True)
     psychologist_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("psychologists.id"), index=True)

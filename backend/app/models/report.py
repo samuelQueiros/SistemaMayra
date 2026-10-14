@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import ForeignKey, JSON, String, Text
+from sqlalchemy import ForeignKey, Index, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -12,6 +12,7 @@ class Report(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     "data do atendimento" no histórico do paciente (ver SPEC.md seção 1)."""
 
     __tablename__ = "reports"
+    __table_args__ = (Index("ix_reports_patient_id_created_at", "patient_id", "created_at"),)
 
     patient_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("patients.id"), index=True)
     template_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("report_templates.id"), index=True)
