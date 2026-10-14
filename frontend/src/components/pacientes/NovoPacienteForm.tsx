@@ -32,10 +32,10 @@ export function NovoPacienteForm({ onCriado, onCancelar }: { onCriado: (p: Patie
   }
 
   return (
-    <form onSubmit={salvar} style={{ display: 'grid', gap: 'var(--np-space-4)' }} aria-label="Cadastrar novo paciente">
-      <div style={{ display: 'grid', gap: 'var(--np-space-4)', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
-        <Input id="novo-paciente-nome" label="Nome Do Paciente" value={nome} onChange={(e) => setNome(e.target.value)} required />
-        <Input id="novo-paciente-nascimento" label="Data De Nascimento" type="date" value={nascimento} onChange={(e) => setNascimento(e.target.value)} required />
+    <form onSubmit={salvar} style={{ display: 'grid', gap: 'var(--s-4)' }} aria-label="Cadastrar novo paciente">
+      <div className="form-grid">
+        <Input id="novo-paciente-nome" label="Nome do paciente" value={nome} onChange={(e) => setNome(e.target.value)} required />
+        <Input id="novo-paciente-nascimento" label="Data de nascimento" type="date" value={nascimento} onChange={(e) => setNascimento(e.target.value)} required />
         <Select
           id="novo-paciente-sexo"
           label="Sexo"
@@ -49,9 +49,9 @@ export function NovoPacienteForm({ onCriado, onCancelar }: { onCriado: (p: Patie
         />
       </div>
       {erro && <Alert tone="danger">{erro}</Alert>}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)' }}>
-        <Button type="submit" icon={<UserPlus size={16} />} disabled={salvando}>
-          {salvando ? 'Cadastrando…' : 'Cadastrar Paciente'}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-3)' }}>
+        <Button type="submit" icon={<UserPlus />} loading={salvando} loadingLabel="Cadastrando…">
+          Cadastrar paciente
         </Button>
         {onCancelar && (
           <Button type="button" variant="ghost" onClick={onCancelar} disabled={salvando}>

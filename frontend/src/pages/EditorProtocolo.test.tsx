@@ -31,14 +31,14 @@ describe('EditorProtocolo', () => {
 
   it('não salva sem nome e explica o que falta', async () => {
     renderizar()
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar Modelo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar modelo' }))
     expect(await screen.findByText('Dê um nome ao modelo.')).toBeInTheDocument()
     expect(api.createProtocolo).not.toHaveBeenCalled()
   })
 
   it('monta perguntas, escala com faixa e texto com variável, e salva no formato do backend', async () => {
     renderizar()
-    fireEvent.change(screen.getByLabelText(/Nome Do Modelo/), { target: { value: 'Anamnese Infantil' } })
+    fireEvent.change(screen.getByLabelText(/Nome do modelo/), { target: { value: 'Anamnese Infantil' } })
     fireEvent.change(screen.getByLabelText('Pergunta 1'), { target: { value: 'Queixa principal' } })
 
     // Variável da resposta da pergunta, inserida pelo botão
@@ -46,10 +46,10 @@ describe('EditorProtocolo', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Escala pontuada' }))
     fireEvent.change(screen.getByLabelText('Item 1'), { target: { value: 'Distrai-se facilmente' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Adicionar Faixa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar faixa' }))
     fireEvent.change(screen.getByLabelText('Classificação'), { target: { value: 'Leve' } })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar Modelo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar modelo' }))
     await waitFor(() => expect(api.createProtocolo).toHaveBeenCalled())
     const modelo = vi.mocked(api.createProtocolo).mock.calls[0][0]
 

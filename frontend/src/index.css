@@ -1,33 +1,7 @@
-@import url("./styles/tokens/index.css");
-
-:root {
-  color-scheme: light;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font: var(--np-type-body);
-  color: var(--np-text);
-  background: var(--np-bg-app);
-}
-
-h1,
-h2,
-h3 {
-  font-family: var(--np-font-display);
-  color: var(--np-text);
-}
+/* Variáveis e fontes: public/identidade/tokens.css (carregado em index.html,
+   o mesmo arquivo usado pelo protocolo padrão). */
+@import url("./styles/base.css");
 
 #root {
   min-height: 100vh;
-}
-
-@keyframes np-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }

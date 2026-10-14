@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowLeft, History } from 'lucide-react'
 import { getPatient } from '../../api/patients'
 import type { Patient } from '../../api/types'
-import { Alert, buttonStyle, PageHeader } from '../ds'
+import { Alert, buttonClass, PageHeader } from '../ds'
+import { nomeParaExibicao } from '../../utils/exibicao'
 
 // Cabeçalho das páginas de um paciente (Formulário Dos Responsáveis, Seções
 // Clínicas): carrega o paciente e oferece voltar ao histórico.
@@ -28,21 +30,21 @@ export function PaginaDoPaciente({
   }, [patientId])
 
   if (erro) return <Alert tone="danger">Paciente não encontrado.</Alert>
-  if (!patient) return <p>Carregando…</p>
+  if (!patient) return <p className="text-2">Carregando…</p>
 
   return (
     <div>
       <PageHeader
-        eyebrow={`Pacientes · ${patient.name}`}
+        eyebrow={`Pacientes · ${nomeParaExibicao(patient.name)}`}
         title={titulo}
         description={descricao}
         actions={
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)' }}>
-            <Link to="/pacientes" style={buttonStyle('ghost')}>
-              Todos Os Pacientes
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-3)' }}>
+            <Link to="/pacientes" className={buttonClass('ghost')}>
+              <ArrowLeft aria-hidden="true" /> Todos os pacientes
             </Link>
-            <Link to={`/pacientes/${patient.id}/historico`} style={buttonStyle('outline')}>
-              Histórico
+            <Link to={`/pacientes/${patient.id}/historico`} className={buttonClass('secondary')}>
+              <History aria-hidden="true" /> Histórico
             </Link>
           </div>
         }

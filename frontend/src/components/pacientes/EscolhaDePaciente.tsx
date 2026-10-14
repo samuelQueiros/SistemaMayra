@@ -4,6 +4,7 @@ import { listPatients } from '../../api/patients'
 import type { Patient } from '../../api/types'
 import { Alert, Button, Card, Select } from '../ds'
 import { NovoPacienteForm } from './NovoPacienteForm'
+import { nomeParaExibicao } from '../../utils/exibicao'
 
 const porNome = (a: Patient, b: Patient) => a.name.localeCompare(b.name, 'pt-BR')
 
@@ -42,7 +43,7 @@ export function EscolhaDePaciente({
         {cadastrando || patients?.length === 0 ? (
           <>
             {patients?.length === 0 && (
-              <p style={{ marginTop: 0, color: 'var(--np-text-muted)' }}>Nenhum paciente cadastrado ainda. Cadastre o paciente abaixo para continuar.</p>
+              <p className="text-2" style={{ marginTop: 0 }}>Nenhum paciente cadastrado ainda. Cadastre o paciente abaixo para continuar.</p>
             )}
             <NovoPacienteForm
               onCriado={(novo) => {
@@ -54,19 +55,19 @@ export function EscolhaDePaciente({
             />
           </>
         ) : (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-3)', alignItems: 'flex-end' }}>
             <div style={{ flex: '1 1 280px' }}>
               <Select
                 id={id}
-                label="Selecione O Paciente"
+                label="Selecione o paciente"
                 placeholder={patients === null ? 'Carregando…' : 'Selecione o paciente'}
                 value={pacienteId}
-                options={(patients ?? []).map((p) => ({ value: p.id, label: p.name }))}
+                options={(patients ?? []).map((p) => ({ value: p.id, label: nomeParaExibicao(p.name) }))}
                 onChange={(e) => onEscolher(e.target.value)}
               />
             </div>
-            <Button type="button" variant="outline" icon={<UserPlus size={16} />} onClick={() => setCadastrando(true)} disabled={patients === null}>
-              Novo Paciente
+            <Button type="button" variant="secondary" icon={<UserPlus />} onClick={() => setCadastrando(true)} disabled={patients === null}>
+              Novo paciente
             </Button>
           </div>
         )}

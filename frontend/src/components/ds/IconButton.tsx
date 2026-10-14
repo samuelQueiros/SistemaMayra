@@ -1,46 +1,21 @@
-import type { CSSProperties, MouseEventHandler, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { buttonClass } from './buttonClass'
+import type { ButtonSize } from './buttonClass'
 
-type Variant = 'ghost' | 'soft' | 'outline'
-type Size = 'sm' | 'md' | 'lg'
+type Variant = 'ghost' | 'secondary' | 'tonal' | 'danger-ghost'
 
-interface IconButtonProps {
+interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label'> {
+  /** Obrigatório: é o nome acessível do botão (aria-label) e a dica (title). */
   label: string
   icon: ReactNode
   variant?: Variant
-  size?: Size
-  disabled?: boolean
-  onClick?: MouseEventHandler<HTMLButtonElement>
-  style?: CSSProperties
+  /** md = 44×44 (padrão); sm = 36×36 só dentro de tabelas. */
+  size?: ButtonSize
 }
 
-export function IconButton({ label, icon, variant = 'ghost', size = 'md', disabled = false, onClick, style }: IconButtonProps) {
-  const dim = size === 'sm' ? 'var(--np-control-h-sm)' : size === 'lg' ? 'var(--np-control-h-lg)' : 'var(--np-control-h)'
-  const skin: Record<Variant, CSSProperties> = {
-    ghost: { background: 'transparent', color: 'var(--np-text-muted)', border: '1px solid transparent' },
-    soft: { background: 'var(--np-surface-alt)', color: 'var(--np-text-brand)', border: '1px solid transparent' },
-    outline: { background: 'var(--np-surface)', color: 'var(--np-text-brand)', border: '1px solid var(--np-border)' },
-  }
+export function IconButton({ label, icon, variant = 'ghost', size = 'md', type = 'button', className, ...rest }: IconButtonProps) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
-      style={{
-        width: dim,
-        height: dim,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 'var(--np-radius-pill)',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.45 : 1,
-        transition: 'background var(--np-dur) var(--np-ease)',
-        ...skin[variant],
-        ...style,
-      }}
-    >
+    <button type={type} aria-label={label} title={label} className={buttonClass(variant, size, ['btn-icon', className].filter(Boolean).join(' '))} {...rest}>
       {icon}
     </button>
   )

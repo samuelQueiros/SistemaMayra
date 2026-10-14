@@ -32,10 +32,10 @@ export default function Login() {
 
   return (
     <div className={styles.page}>
-      <Card style={{ width: '100%', maxWidth: 380 }}>
-        <img src="/logo-neuropp.png" alt="Neuropp Mayra Vanessa" className={styles.logo} />
+      <Card style={{ width: '100%', maxWidth: 420 }} padding="var(--s-8)">
+        <img src="/logo-neuropp.png" alt="Neuropsicopedagoga Mayra Vanessa" className={styles.logo} />
         <h1 className={styles.title}>Entrar</h1>
-        <p className={styles.subtitle}>Sistema de Relatório Automático para Psicólogos</p>
+        <p className={styles.subtitle}>Sistema de relatório automático para psicólogos</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           {!error && sessaoExpirada && (
@@ -63,8 +63,8 @@ export default function Login() {
             required
           />
 
-          <Button type="submit" disabled={loading} fullWidth style={{ marginTop: 'var(--np-space-2)' }}>
-            {loading ? 'Entrando...' : 'Entrar'}
+          <Button type="submit" size="lg" loading={loading} loadingLabel="Entrando…" fullWidth style={{ marginTop: 'var(--s-2)' }}>
+            Entrar
           </Button>
         </form>
       </Card>

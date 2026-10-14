@@ -1,47 +1,33 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { AlertTriangle, CheckCircle2, Info, XCircle } from 'lucide-react'
 
-type Tone = 'info' | 'success' | 'warning' | 'danger' | 'consent'
+type Tone = 'info' | 'success' | 'warning' | 'danger'
 
-const tones: Record<Tone, [string, string, string]> = {
-  info: ['var(--np-info-soft)', 'var(--np-info)', '#37618a'],
-  success: ['var(--np-success-soft)', 'var(--np-success)', '#2a7342'],
-  warning: ['var(--np-warning-soft)', 'var(--np-warning)', '#8a5a06'],
-  danger: ['var(--np-danger-soft)', 'var(--np-danger)', 'var(--np-danger)'],
-  consent: ['var(--np-pink-200)', 'var(--np-pink-500)', 'var(--np-pink-600)'],
+const ICONES: Record<Tone, ReactNode> = {
+  info: <Info aria-hidden="true" />,
+  success: <CheckCircle2 aria-hidden="true" />,
+  warning: <AlertTriangle aria-hidden="true" />,
+  danger: <XCircle aria-hidden="true" />,
 }
 
 interface AlertProps {
   tone?: Tone
   title?: ReactNode
+  /** Ícone próprio; por padrão cada tom tem o seu (status nunca só por cor). */
   icon?: ReactNode
   action?: ReactNode
+  compact?: boolean
   children?: ReactNode
   style?: CSSProperties
 }
 
-export function Alert({ tone = 'info', title, icon, action, children, style }: AlertProps) {
-  const [bg, accent, fg] = tones[tone]
+export function Alert({ tone = 'info', title, icon, action, compact = false, children, style }: AlertProps) {
   return (
-    <div
-      role="status"
-      style={{
-        display: 'flex',
-        gap: 'var(--np-space-3)',
-        background: bg,
-        border: `1px solid ${accent}`,
-        borderRadius: 'var(--np-radius-md)',
-        padding: 'var(--np-space-4)',
-        ...style,
-      }}
-    >
-      {icon && <span style={{ color: fg, display: 'inline-flex', flex: '0 0 auto' }}>{icon}</span>}
-      <div style={{ flex: 1 }}>
-        {title && <p style={{ margin: 0, font: 'var(--np-type-body-strong)', color: fg }}>{title}</p>}
-        {children && (
-          <div style={{ font: 'var(--np-type-body)', fontSize: 'var(--np-text-sm)', color: 'var(--np-text-muted)', marginTop: title ? 2 : 0 }}>
-            {children}
-          </div>
-        )}
+    <div role={tone === 'danger' ? 'alert' : 'status'} className={`alert alert-${tone}${compact ? ' alert-compact' : ''}`} style={style}>
+      <span className="alert-icon">{icon ?? ICONES[tone]}</span>
+      <div className="alert-content">
+        {title && <p className="alert-title">{title}</p>}
+        {children && <div className="alert-body">{children}</div>}
       </div>
       {action}
     </div>

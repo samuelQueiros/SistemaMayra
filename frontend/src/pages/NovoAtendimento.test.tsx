@@ -31,7 +31,7 @@ describe('NovoAtendimento', () => {
   it('sem modelos próprios abre direto o protocolo padrão', async () => {
     vi.mocked(api.listProtocolos).mockResolvedValue([])
     renderizar()
-    expect(await screen.findByTitle('Formulário De Avaliação')).toHaveAttribute('src', '/formulario-novo-paciente.html')
+    expect(await screen.findByTitle('Formulário de avaliação')).toHaveAttribute('src', '/formulario-novo-paciente.html')
   })
 
   it('com modelos próprios pergunta qual protocolo usar, levando o paciente junto', async () => {
@@ -40,16 +40,16 @@ describe('NovoAtendimento', () => {
 
     expect(await screen.findByText('Qual protocolo você vai usar neste atendimento?')).toBeInTheDocument()
     expect(screen.getByText('Anamnese Infantil').closest('a')).toHaveAttribute('href', '/atendimento/protocolo/m1?paciente=p1')
-    expect(screen.getByText('Avaliação Neuropsicopedagógica E Análise Comportamental').closest('a')).toHaveAttribute(
+    expect(screen.getByText('Avaliação neuropsicopedagógica e análise comportamental').closest('a')).toHaveAttribute(
       'href',
       '/atendimento/novo?protocolo=padrao&paciente=p1',
     )
-    expect(screen.queryByTitle('Formulário De Avaliação')).not.toBeInTheDocument()
+    expect(screen.queryByTitle('Formulário de avaliação')).not.toBeInTheDocument()
   })
 
   it('escolhido o padrão, abre o formulário de sempre sem consultar modelos', async () => {
     renderizar('/atendimento/novo?protocolo=padrao&paciente=p1')
-    expect(await screen.findByTitle('Formulário De Avaliação')).toHaveAttribute('src', '/formulario-novo-paciente.html?paciente=p1')
+    expect(await screen.findByTitle('Formulário de avaliação')).toHaveAttribute('src', '/formulario-novo-paciente.html?paciente=p1')
     expect(api.listProtocolos).not.toHaveBeenCalled()
   })
 })

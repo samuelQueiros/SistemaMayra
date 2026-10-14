@@ -57,16 +57,16 @@ export default function ConfiguracoesIA() {
     }
   }
 
-  if (loading) return <p>Carregando...</p>
+  if (loading) return <p className="text-2">Carregando…</p>
 
   return (
     <div>
-      <PageHeader eyebrow="Configurações" title="Inteligência Artificial" description="Configure o provedor, o modelo e a chave de acesso para a redação assistida dos relatórios." />
+      <PageHeader eyebrow="Configurações" title="Inteligência artificial" description="Configure o provedor, o modelo e a chave de acesso para a redação assistida dos relatórios." />
 
-      <div style={{ display: 'grid', gap: 'var(--np-space-5)' }}>
-        <Card title="Configurações Da IA">
-          <p style={{ color: 'var(--np-text-muted)', marginTop: 0 }}>
-            Escolha a empresa de IA, o modelo e cole a chave de API dela. A IA é usada no Relatório Por IA a partir de formulários, nas considerações finais do protocolo
+      <div style={{ display: 'grid', gap: 'var(--s-5)' }}>
+        <Card title="Configurações da IA">
+          <p className="text-2" style={{ marginTop: 0 }}>
+            Escolha a empresa de IA, o modelo e cole a chave de API dela. A IA é usada no relatório por IA a partir de formulários, nas considerações finais do protocolo
             e na importação de modelos.
           </p>
 
@@ -83,10 +83,10 @@ export default function ConfiguracoesIA() {
             </p>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'var(--np-space-4)' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'var(--s-4)' }}>
             <Select
               id="provider"
-              label="Provedor De IA"
+              label="Provedor de IA"
               value={provider}
               onChange={(e) => {
                 const novo = provedores.find((p) => p.id === e.target.value)
@@ -97,9 +97,9 @@ export default function ConfiguracoesIA() {
             />
 
             {info && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-3)', alignItems: 'center' }}>
                 <Badge tone={LEITURA_PDF[info.leitura_pdf].tom}>{LEITURA_PDF[info.leitura_pdf].texto}</Badge>
-                <a href={info.link_chave} target="_blank" rel="noreferrer" style={{ font: 'var(--np-type-caption)' }}>
+                <a href={info.link_chave} target="_blank" rel="noreferrer" style={{ font: 'var(--type-label)' }}>
                   Onde gerar a chave de API
                 </a>
               </div>
@@ -122,7 +122,7 @@ export default function ConfiguracoesIA() {
 
             <Input
               id="api-key"
-              label="Chave De API"
+              label="Chave de API"
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
@@ -136,8 +136,8 @@ export default function ConfiguracoesIA() {
             {error && <Alert tone="danger">{error}</Alert>}
             {success && <Alert tone="success">Configuração salva com sucesso.</Alert>}
 
-            <Button type="submit" disabled={saving || !apiKey || !model} style={{ justifySelf: 'start' }}>
-              {saving ? 'Salvando...' : 'Salvar Configuração'}
+            <Button type="submit" disabled={!apiKey || !model} loading={saving} loadingLabel="Salvando…" style={{ justifySelf: 'start' }}>
+              Salvar configuração
             </Button>
           </form>
         </Card>

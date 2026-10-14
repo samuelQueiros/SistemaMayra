@@ -1,29 +1,32 @@
-import { History, LogOut, Menu, Settings, Users, X } from 'lucide-react'
+import { ClipboardList, LogOut, Menu, Settings, Users, X } from 'lucide-react'
 import { Suspense, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { IconButton, SidebarNav } from './ds'
+import { nomeParaExibicao } from '../utils/exibicao'
+import { IconButton, PatientAvatar, SidebarNav } from './ds'
 import styles from './Layout.module.css'
 
 const NAV_ITEMS = [
   {
-    to: '/pacientes', label: 'Pacientes', icon: <Users size={18} />, alwaysOpen: true,
+    section: 'Clínica',
+    to: '/pacientes', label: 'Pacientes', icon: <Users />, alwaysOpen: true,
     children: [
-      { to: '/pacientes', label: 'Todos Os Pacientes' },
-      { to: '/atendimento/novo', label: 'Novo Atendimento' },
-      { to: '/laudo-ia', label: 'Laudo Por IA' },
+      { to: '/pacientes', label: 'Todos os pacientes' },
+      { to: '/atendimento/novo', label: 'Novo atendimento' },
+      { to: '/laudo-ia', label: 'Laudo por IA' },
     ],
   },
   {
-    to: '/configuracoes', label: 'Configurações', icon: <Settings size={18} />,
+    section: 'Sistema',
+    to: '/configuracoes', label: 'Configurações', icon: <Settings />,
     children: [
-      { to: '/configuracoes/registro', label: 'Registro Profissional' },
-      { to: '/configuracoes/capa', label: 'Capa Dos Relatórios' },
-      { to: '/configuracoes/protocolos', label: 'Modelos De Protocolo' },
-      { to: '/configuracoes/ia', label: 'Inteligência Artificial' },
+      { to: '/configuracoes/registro', label: 'Registro profissional' },
+      { to: '/configuracoes/capa', label: 'Capa dos relatórios' },
+      { to: '/configuracoes/protocolos', label: 'Modelos de protocolo' },
+      { to: '/configuracoes/ia', label: 'Inteligência artificial' },
     ],
   },
-  { to: '/logs', label: 'Ver Logs', icon: <History size={18} /> },
+  { section: 'Sistema', to: '/logs', label: 'Registro de atividades', icon: <ClipboardList /> },
 ]
 
 export default function Layout() {
@@ -36,27 +39,32 @@ export default function Layout() {
     navigate('/')
   }
 
+  const nome = nomeParaExibicao(psychologist?.name)
   const footer = (
     <div className={styles.footer}>
-      {psychologist && <span className={styles.userName}>{psychologist.name}</span>}
-      <button type="button" className={styles.logoutButton} onClick={handleLogout} data-confirmar-saida>
-        <LogOut size={16} /> Sair
-      </button>
+      <PatientAvatar name={nome || '?'} size={40} />
+      <div className={styles.user}>
+        <span className={styles.userName}>{nome}</span>
+        <span className={styles.userRole}>Neuropsicopedagoga</span>
+      </div>
+      <IconButton label="Sair do sistema" icon={<LogOut />} onClick={handleLogout} data-confirmar-saida />
     </div>
   )
 
   return (
     <div className={styles.wrapper}>
       <div className={styles.mobileBar}>
-        <img src="/logo-neuropp.png" alt="Neuropp Mayra Vanessa" />
+        <span className={styles.mobileBrand}>
+          <img src="/logo-neuropp.png" alt="" />
+          Mayra Vanessa
+        </span>
         <IconButton
           label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
-          icon={menuOpen ? <X size={20} /> : <Menu size={20} />}
+          icon={menuOpen ? <X /> : <Menu />}
+          aria-expanded={menuOpen}
           onClick={() => setMenuOpen((v) => !v)}
         />
       </div>
-
-      {menuOpen && <div className={styles.overlay} onClick={() => setMenuOpen(false)} />}
 
       <div className={`${styles.sidebar} ${menuOpen ? styles.open : ''}`} onClick={(event) => {
         if (!event.defaultPrevented && (event.target as Element).closest('a, [data-confirmar-saida]')) setMenuOpen(false)
@@ -67,7 +75,7 @@ export default function Layout() {
       <main className={styles.content}>
         <div className={styles.contentInner}>
           {/* Telas carregadas sob demanda (App.tsx): o menu continua na tela enquanto a página chega. */}
-          <Suspense fallback={<p style={{ color: 'var(--np-text-muted)' }}>Carregando…</p>}>
+          <Suspense fallback={<p className="text-2">Carregando…</p>}>
             <Outlet />
           </Suspense>
         </div>

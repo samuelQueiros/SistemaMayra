@@ -2,69 +2,110 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Avaliação Neuropsicopedagógica e Análise Comportamental</title>
 <script src="vendor/chart.umd.min.js">
 </script>
+<link rel="stylesheet" href="identidade/tokens.css">
 <style>
+/* Identidade "Caderno Lilás": variáveis e fontes em identidade/tokens.css
+   (o mesmo arquivo do sistema). Aqui só a aparência da tela do protocolo —
+   regras de exibição/estrutura (fases, condicionais, impressão) mantidas. */
 :root{
+  /* Cores do documento do relatório (pré-visualização antiga/impressão): não mudar. */
   --roxo:#7561ae;
   --azul:#8fb4d6;
-  --lilas:#ede9fa;
-  --amarelo:#ffd100;
 }
 *{box-sizing:border-box}
-body{font-family:Arial,Helvetica,sans-serif;background:#f5f4fa;margin:0;padding:18px;color:#2b2740}
-.container{max-width:1150px;margin:auto;background:#fff;border-radius:14px;padding:24px;box-shadow:0 0 15px rgba(0,0,0,.12)}
-.topo{text-align:center;border-bottom:4px solid var(--roxo);padding-bottom:14px;margin-bottom:18px}
-.topo img{max-width:260px;width:70%;height:auto}
-h1{color:#5c4b92;text-align:center;font-size:24px;margin:10px 0;text-transform:capitalize}
-h2{background:linear-gradient(90deg,var(--roxo),#9a91d2);color:white;padding:10px;border-radius:8px;font-size:17px;margin-top:24px;text-transform:capitalize}
-h3,label{text-transform:capitalize}
-h3{color:#5c4b92}
-label{display:block;font-weight:bold;margin-top:10px}
-input,select,textarea{width:100%;padding:8px;margin-top:5px;border:1px solid #bbb;border-radius:6px;font-family:Arial,Helvetica,sans-serif;font-size:14px}
-textarea{min-height:80px}
+body{font-family:var(--font-body);font-size:var(--fs-body);line-height:1.5;background:var(--bg-app);margin:0;padding:18px;color:var(--text);-webkit-font-smoothing:antialiased}
+html.embutido body{padding:2px 2px 0}
+.container{max-width:1150px;margin:auto;background:var(--bg-card);border:1px solid var(--divider);border-radius:var(--r-lg);padding:24px;box-shadow:var(--sh-sm)}
+.topo{display:flex;align-items:center;gap:var(--s-4);border-bottom:1px solid var(--divider);padding-bottom:var(--s-4);margin-bottom:var(--s-4)}
+.topo img{width:72px;max-width:72px;height:auto;flex:0 0 auto;border-radius:var(--r-sm)}
+h1{font-family:var(--font-display);font-weight:700;letter-spacing:-.01em;color:var(--text);font-size:var(--fs-h2);line-height:1.25;margin:0}
+h2{font-family:var(--font-display);font-weight:700;letter-spacing:-.01em;color:var(--text);font-size:var(--fs-h2);line-height:1.3;margin-top:24px}
+h3{font-family:var(--font-display);font-weight:700;color:var(--text);font-size:var(--fs-h3);margin:24px 0 8px}
+label{display:block;font-weight:600;font-size:var(--fs-label);line-height:1.4;color:var(--text);margin-top:10px}
+input,select,textarea{width:100%;min-height:var(--h-md);padding:0 14px;margin-top:6px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--n-0);font:400 15px/1.4 var(--font-body);color:var(--text);transition:border-color var(--dur-fast) var(--ease),box-shadow var(--dur-fast) var(--ease)}
+select{appearance:none;padding-right:40px;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,var(--violeta-600) 50%),linear-gradient(135deg,var(--violeta-600) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 15px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+textarea{min-height:96px;padding:10px 14px;line-height:1.55;resize:vertical}
+input[type=file]{min-height:0;padding:0;border:0;background:none;font:var(--type-caption);color:var(--text-2)}
+input[type=file]::file-selector-button{height:var(--h-sm);margin-right:var(--s-3);padding:0 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--n-0);color:var(--violeta-700);font:600 14px var(--font-body);cursor:pointer}
+input[type=file]::file-selector-button:hover{border-color:var(--violeta-300);background:var(--n-25)}
+input[type=checkbox],input[type=radio]{accent-color:var(--primary);width:18px;height:18px;min-height:0;padding:0;margin:0;flex:0 0 auto;vertical-align:middle}
+label:has(>input[type=checkbox]),label:has(>input[type=radio]){display:flex;align-items:center;gap:10px;min-height:var(--h-md);margin-top:0;font-weight:500}
+input::placeholder,textarea::placeholder{color:var(--text-placeholder)}
+input:hover,select:hover,textarea:hover{border-color:var(--n-300)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.aviso{background:#eefaff;border-left:6px solid var(--azul);padding:12px;border-radius:8px;margin:14px 0}
-.bloco{background:#fafafa;border:1px solid #ddd;border-radius:8px;padding:12px;margin:10px 0}
-.detalhe-sim{display:none;margin-top:8px}
-.simnao{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
-.simnao button{padding:8px 12px;font-size:14px;background:#eee;color:#2b2740;border:1px solid #bbb}
-.simnao button.ativo{background:var(--roxo);color:#fff;border-color:var(--roxo)}
-.escalas-toggle{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
-.escala-icone{display:flex;align-items:center;gap:6px;padding:7px 12px;font-size:13px;font-weight:bold;background:#eee;color:#444;border:1px solid #bbb;border-radius:20px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
-.escala-icone svg{width:16px;height:16px;flex:none;stroke:currentColor}
-.escala-icone.ativo{background:var(--roxo);color:#fff;border-color:var(--roxo)}
-.escala-icone:not(.ativo){opacity:.75}
-.acoes{display:flex;flex-wrap:wrap;gap:10px;position:sticky;bottom:0;background:#fff;border-top:2px solid #ddd;padding:14px 0;margin-top:24px;z-index:10}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--n-50);border:1px solid var(--n-100);border-radius:var(--r-xs);padding:0 4px}
+kbd{display:inline-block;min-width:22px;padding:0 6px;border:1px solid var(--border);border-bottom-width:2px;border-radius:var(--r-xs);background:var(--n-0);color:var(--text);font:500 12px/1.6 var(--font-mono);text-align:center}
 
-.status-salvamento{font-size:13px;color:#43356b;background:#ede9fa;border-left:5px solid var(--roxo);padding:10px;border-radius:8px;margin-top:10px}
+/* Avisos: azul (info) compacto com ícone; "uso interno" neutro. */
+.aviso{position:relative;background:var(--info-bg);border:1px solid var(--info-bd);color:var(--info-tx);padding:10px 14px 10px 42px;border-radius:var(--r-md);margin:14px 0;font-size:14px;line-height:1.55}
+.aviso::before{content:"i";position:absolute;left:14px;top:11px;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font:700 11px/1 var(--font-body)}
+.aviso strong{color:inherit}
+.aviso.interno{background:var(--n-50);border-color:var(--n-200);color:var(--text-body);font-size:13px}
+.bloco{background:var(--bg-subtle);border:1px solid var(--divider);border-radius:var(--r-md);padding:14px;margin:10px 0}
+.detalhe-sim{display:none;margin-top:8px}
+
+/* Sim/Não e escalas: grupo de botões de alternância. */
+.simnao{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.simnao button{min-height:40px;min-width:64px;padding:0 16px;font-size:14px;background:var(--n-0);color:var(--text-body);border:1px solid var(--border);border-radius:var(--r-sm);font-weight:600}
+.simnao button:hover{border-color:var(--violeta-300);background:var(--n-25);color:var(--text)}
+.simnao button.ativo{background:var(--primary);color:var(--n-0);border-color:var(--primary)}
+.escalas-toggle{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.escala-icone{display:flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;font:600 13px var(--font-body);background:var(--n-0);color:var(--text-body);border:1px solid var(--border);border-radius:var(--r-pill);cursor:pointer;transition:background var(--dur) var(--ease),color var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+.escala-icone svg{width:16px;height:16px;flex:none;stroke:currentColor}
+.escala-icone.ativo{background:var(--violeta-50);color:var(--violeta-700);border-color:var(--violeta-300)}
+.escala-icone:not(.ativo){color:var(--text-2)}
+.acoes{display:flex;flex-wrap:wrap;gap:10px;position:sticky;bottom:0;background:var(--n-0);border-top:1px solid var(--divider);padding:14px 0;margin-top:24px;z-index:10}
+
+.status-salvamento{font-size:13px;color:var(--violeta-700);background:var(--violeta-50);border:1px solid var(--violeta-200);padding:10px;border-radius:var(--r-sm);margin-top:10px}
 .fotos-preview{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
-.foto-item{border:1px solid #ddd;border-radius:8px;padding:8px;background:#fafafa;max-width:180px}
-.foto-item img{width:160px;max-height:130px;object-fit:cover;border-radius:6px;display:block}
-.foto-item button{margin-top:6px;padding:6px 8px;font-size:12px;background:#777}
+.foto-item{border:1px solid var(--divider);border-radius:var(--r-md);padding:8px;background:var(--bg-subtle);max-width:180px}
+.foto-item img{width:160px;max-height:130px;object-fit:cover;border-radius:var(--r-xs);display:block}
+.foto-item button{margin-top:6px;min-height:var(--h-sm);padding:0 10px;font-size:13px;width:auto;background:transparent;color:var(--danger);border-color:transparent}
+.foto-item button:hover{background:var(--err-bg);color:var(--danger-hover);border-color:transparent}
 .capa-editor{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;margin-top:10px}
-.capa-preview{position:relative;width:min(100%,220px);aspect-ratio:210/297;border:1px solid #ccc;border-radius:6px;overflow:hidden;background:#fff;user-select:none}
+.capa-preview{position:relative;width:min(100%,220px);aspect-ratio:210/297;border:1px solid var(--border);border-radius:var(--r-xs);overflow:hidden;background:var(--n-0);user-select:none}
 .capa-preview.marcando{cursor:crosshair;touch-action:none}
 .capa-preview img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
-.capa-area-nome{position:absolute;outline:2px dashed #f59e0b;container-type:size;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.capa-area-nome{position:absolute;outline:2px dashed var(--sol-500);container-type:size;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .capa-area-nome span{font-weight:600;font-size:60cqh;line-height:1;white-space:nowrap}
 .capa-opcoes{flex:1 1 220px;display:grid;gap:10px;align-content:start}
-.capa-opcoes label{display:flex;align-items:center;gap:8px;margin:0;font-weight:400;text-transform:none}
+.capa-opcoes label{display:flex;align-items:center;gap:8px;margin:0;font-weight:400}
 .capa-opcoes input[type=checkbox]{width:18px;height:18px;min-height:0;margin:0;flex:0 0 auto}
 .capa-opcoes input[type=color]{width:44px;height:30px;min-height:0;margin:0;padding:2px;flex:0 0 auto}
-.capa-opcoes button{justify-self:start;background:#777}
+.capa-opcoes button{justify-self:start}
 .fotos-relatorio{display:flex;flex-wrap:wrap;gap:14px;margin:12px 0}
 .fotos-relatorio img{max-width:240px;max-height:180px;border:1px solid #ccc;border-radius:8px;padding:4px;object-fit:contain}
-.habilidades-academicas{background:#fffdf5;border:1px solid #ead27a;border-radius:8px;padding:12px;margin-top:10px}
-.habilidade-item{display:grid;grid-template-columns:1.2fr 170px 1.6fr;gap:10px;align-items:start;border-bottom:1px solid #eee;padding:8px 0}
+.habilidades-academicas{background:var(--sol-50);border:1px solid var(--warn-bd);border-radius:var(--r-md);padding:14px;margin-top:10px}
+.habilidade-item{display:grid;grid-template-columns:1.2fr 170px 1.6fr;gap:10px;align-items:start;border-bottom:1px solid var(--n-100);padding:8px 0}
 .habilidade-item:last-child{border-bottom:none}
 .habilidade-item strong{padding-top:8px}
 @media(max-width:780px){.habilidade-item{grid-template-columns:1fr}}
-button{border:none;border-radius:8px;padding:12px 16px;background:var(--roxo);color:#fff;font-size:15px;cursor:pointer}
-button:hover{opacity:.9}
-.botao-principal{background:var(--amarelo)!important;color:#2b2740!important;border:2px solid #d8b500!important;font-weight:bold}
-.botao-limpar{background:#777!important}
+
+/* Botões: secundário por padrão (só "Salvar laudo" é primário).
+   Altura 44, raio 10, Figtree 600 15px. Amarelo nunca em botão. */
+button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--h-md);border:1px solid var(--border);border-radius:var(--r-sm);padding:0 18px;background:var(--n-0);color:var(--violeta-700);font:600 15px/1.2 var(--font-body);cursor:pointer;transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease),color var(--dur) var(--ease)}
+button:hover{border-color:var(--violeta-300);background:var(--n-25)}
+button:active{border-color:var(--violeta-400);background:var(--violeta-50)}
+button:disabled,button[disabled]{background:transparent;color:var(--n-300);border-color:var(--n-100);cursor:not-allowed}
+.botao-principal{background:var(--primary);color:var(--n-0);border-color:var(--primary)}
+.botao-principal:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
+.botao-principal:active{background:var(--primary-press);border-color:var(--primary-press)}
+.botao-principal:disabled,.botao-principal[disabled]{background:var(--primary-hover);color:var(--n-0);border-color:var(--primary-hover)}
+.botao-tonal{background:var(--primary-soft);color:var(--on-primary-soft);border-color:transparent}
+.botao-tonal:hover{background:var(--primary-soft-hover);border-color:transparent}
+.botao-tonal:active{background:var(--violeta-200)}
+.botao-fantasma{background:transparent;color:var(--text-body);border-color:transparent}
+.botao-fantasma:hover{background:var(--n-50);color:var(--text);border-color:transparent}
+.botao-fantasma:disabled,.botao-fantasma[disabled]{background:transparent;border-color:transparent}
+.botao-limpar{background:transparent;color:var(--danger);border-color:transparent}
+#btnSalvarNoSistema[disabled]::before,#btnImportarEscalas[disabled]::before{content:"";width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:girar .8s linear infinite}
+@keyframes girar{to{transform:rotate(360deg)}}
+
+/* Documento do relatório (pré-visualização antiga / impressão): sem mudanças. */
 .relatorio{display:none;background:#fff;padding:30px;margin-top:28px;border-top:8px solid var(--roxo);font-family:Arial,Helvetica,sans-serif;font-size:10pt}
 .relatorio h1{font-size:16pt;text-transform:uppercase}
 .relatorio h2{color:#443b91;background:#ede9fa;border-left:6px solid var(--roxo);font-size:12pt}
@@ -87,7 +128,7 @@ button:hover{opacity:.9}
 @media(max-width:780px){.grid{grid-template-columns:1fr}button{width:100%}input,select,textarea{font-size:16px}}
 @media print{
  body{background:white;padding:0}
- .container{box-shadow:none;padding:0;max-width:100%}
+ .container{box-shadow:none;border:0;padding:0;max-width:100%}
  .no-print,.acoes{display:none!important}
  .print-report form{display:none!important}
  .print-report .relatorio{display:block!important}
@@ -100,147 +141,177 @@ button:hover{opacity:.9}
 @keyframes etapaEntrada{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .print-form .etapa-form{display:block!important;animation:none}
 @media print{.etapa-form{display:block!important}.wizard-progresso,.wizard-steps{display:none!important}}
-.wizard-progresso{position:sticky;top:0;background:#fff;z-index:20;padding:12px 0 6px;margin-bottom:2px}
-.wizard-barra{background:#eee;border-radius:20px;height:10px;overflow:hidden}
-.wizard-barra-preenchida{background:linear-gradient(90deg,var(--roxo),var(--azul));height:100%;width:0%;transition:width .4s ease;border-radius:20px}
-.wizard-texto{font-size:13px;color:#5c4b92;font-weight:bold;margin-top:6px;text-align:right}
-.wizard-steps{display:flex;overflow-x:auto;gap:6px;padding:8px 2px 14px;margin-bottom:6px;border-bottom:1px solid #eee}
-.wizard-step{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;padding:4px 6px;cursor:pointer;color:#888;font-size:10.5px;max-width:78px;text-align:center;text-transform:none;border-radius:8px}
-.wizard-step:hover{background:#ede9fa}
-.wizard-step .circulo{width:26px;height:26px;border-radius:50%;background:#eee;color:#888;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;border:2px solid #ddd;transition:all .2s ease}
-.wizard-step.ativo .circulo{background:var(--roxo);border-color:var(--roxo);color:#fff;transform:scale(1.12)}
-.wizard-step.ativo{color:var(--roxo)}
-.wizard-step.completo .circulo{background:#5fb878;border-color:#5fb878;color:#fff}
-.wizard-nav-etapa{display:flex;justify-content:space-between;gap:10px;margin-top:22px;padding-top:16px;border-top:1px dashed #ddd}
-.wizard-nav-etapa button{background:#eee;color:#2b2740}
-.wizard-nav-etapa button.avancar{background:var(--roxo);color:#fff}
-.wizard-toast{position:fixed;bottom:20px;right:20px;background:#5fb878;color:#fff;padding:14px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.22);font-weight:bold;font-size:13.5px;z-index:999;opacity:0;transform:translateY(12px) scale(.96);transition:all .3s ease;pointer-events:none;max-width:280px}
+.wizard-progresso{position:sticky;top:0;background:var(--n-0);z-index:20;padding:12px 0 6px;margin-bottom:2px}
+.wizard-barra{background:var(--n-100);border-radius:var(--r-pill);height:4px;overflow:hidden}
+.wizard-barra-preenchida{background:var(--primary);height:100%;width:0%;transition:width .4s ease;border-radius:var(--r-pill)}
+.wizard-texto{font-size:13px;color:var(--text-body);font-weight:600;margin-top:6px;text-align:right}
+.wizard-texto span{color:var(--text-2);font-weight:400}
+.wizard-steps{display:flex;overflow-x:auto;gap:6px;padding:8px 2px 14px;margin-bottom:6px;border-bottom:1px solid var(--divider)}
+.wizard-step{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:0;background:none;border:1px solid transparent;padding:4px 6px;cursor:pointer;color:var(--text-2);font:500 12px/1.25 var(--font-body);max-width:78px;text-align:center;border-radius:var(--r-sm)}
+.wizard-step:hover{background:var(--n-50);border-color:transparent}
+.wizard-step .circulo{width:28px;height:28px;border-radius:50%;background:var(--n-0);color:var(--text-2);display:flex;align-items:center;justify-content:center;font:700 12px/1 var(--font-body);border:1.5px solid var(--n-300);transition:all .2s ease}
+.wizard-step.ativo{background:var(--violeta-50);color:var(--violeta-700);font-weight:700}
+.wizard-step.ativo .circulo{background:var(--primary);border-color:var(--primary);color:var(--n-0)}
+.wizard-step.completo .circulo{background:var(--ok);border-color:var(--ok);color:var(--n-0)}
+.wizard-nav-etapa{display:flex;justify-content:space-between;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid var(--divider)}
+.wizard-nav-etapa button{background:transparent;color:var(--text-body);border-color:transparent}
+.wizard-nav-etapa button:hover{background:var(--n-50);color:var(--text)}
+.wizard-nav-etapa button.avancar{background:var(--primary-soft);color:var(--on-primary-soft);border-color:transparent}
+.wizard-nav-etapa button.avancar:hover{background:var(--primary-soft-hover)}
+.wizard-toast{position:fixed;bottom:20px;right:20px;background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-bd);padding:14px 18px;border-radius:var(--r-md);box-shadow:var(--sh-lg);font-weight:600;font-size:14px;z-index:999;opacity:0;transform:translateY(12px) scale(.96);transition:all .3s ease;pointer-events:none;max-width:280px}
 .wizard-toast.mostrar{opacity:1;transform:translateY(0) scale(1)}
-.dica{font-size:12.5px;color:#555;margin:4px 0 0}
-.aviso.interno{background:#f6f6f6;border-left-color:#bbb;color:#555;font-size:13px}
-.ata-item{display:grid;grid-template-columns:1fr 110px 130px;gap:10px;align-items:center;border-bottom:1px solid #eee;padding:6px 0}
+.dica{font-size:13px;color:var(--text-2);margin:4px 0 0}
+.ata-item{display:grid;grid-template-columns:1fr 110px 130px;gap:10px;align-items:center;border-bottom:1px solid var(--n-100);padding:6px 0}
 .ata-item select,.ata-item input{margin-top:0}
-#relatorio.relatorio{padding:0;border-top:8px solid var(--roxo)}
+#relatorio.relatorio{padding:0;border:1px solid var(--divider);border-radius:var(--r-md);overflow:hidden}
 @media(max-width:780px){.ata-item{grid-template-columns:1fr}}
-@media(max-width:780px){.wizard-step{max-width:58px;font-size:9.5px}.wizard-nav-etapa{flex-direction:column}.wizard-toast{left:16px;right:16px;max-width:none}}
+@media(max-width:780px){.wizard-step{max-width:58px;font-size:11px}.wizard-nav-etapa{flex-direction:column}.wizard-toast{left:16px;right:16px;max-width:none}}
 
-/* Fases do protocolo, pendências, validação e barra de ações (heurísticas de Nielsen) */
-.wizard-cabecalho{position:sticky;top:0;z-index:25;background:#fff;margin:0 -24px 10px;padding:10px 24px 0;border-bottom:1px solid #eee;box-shadow:0 6px 10px -8px rgba(0,0,0,.25)}
+/* Fases do protocolo, pendências, validação e barra de ações */
+.wizard-cabecalho{position:sticky;top:0;z-index:25;background:var(--n-0);margin:0 -24px 10px;padding:10px 24px 0;border-bottom:1px solid var(--divider);box-shadow:var(--sh-sm)}
 .wizard-linha-status{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
 .wizard-cabecalho .wizard-texto{margin:0;text-align:left;font-size:13px}
 #wizardStatusHolder .status-salvamento{margin:0;padding:6px 10px;font-size:12.5px;max-width:560px}
 .wizard-cabecalho .wizard-steps{border-bottom:none;margin-bottom:0;padding-bottom:10px}
-.wizard-step .nome{line-height:1.2}
-.wizard-step.parcial .circulo{background:#fff4d6;border-color:#e0a800;color:#8a5a06}
-.wizard-step.completo .circulo{background:#3fa35b;border-color:#3fa35b;color:#fff}
-.wizard-step.completo{color:#2f7a47}
-.wizard-step.ativo .circulo{box-shadow:0 0 0 3px #d6cef2}
-.wizard-step:focus-visible,.pendencia:focus-visible,.acoes button:focus-visible{outline:3px solid #ffd966;outline-offset:2px}
+.wizard-step .nome{line-height:1.25}
+.wizard-step.parcial .circulo{background:var(--sol-50);border-color:var(--warn);color:var(--warn-tx)}
+.wizard-step.completo{color:var(--ok-tx)}
+.wizard-step.ativo .circulo{box-shadow:0 0 0 3px var(--violeta-100)}
+/* Fase atual: violeta sólido com o número (mesmo se concluída ou pendente). */
+.wizard-step.ativo .circulo[data-numero]{font-size:0;background:var(--primary);border-color:var(--primary);color:var(--n-0)}
+.wizard-step.ativo .circulo[data-numero]::after{content:attr(data-numero);font-size:12px}
+.wizard-step:focus-visible,.pendencia:focus-visible,.acoes button:focus-visible{outline:none;box-shadow:var(--focus-ring)}
 .etapa-form h2:focus{outline:none}
-label.essencial::after{content:" *";color:#c8443f}
-.legenda-essencial{font-size:12.5px;color:#666;margin:4px 0 0}
-.pendencias{margin-top:18px;padding:10px 12px;border-radius:8px;background:#fff8e6;border-left:5px solid #e0a800;font-size:13.5px;line-height:1.6}
-.pendencias.ok{background:#eaf7ee;border-left-color:#3fa35b;color:#2a7342;font-weight:bold}
-button.pendencia{background:#fff;color:#7a5200;border:1px solid #e0a800;padding:3px 10px;font-size:12.5px;margin:4px 6px 0 0;width:auto;border-radius:14px;text-transform:none}
-.campo-erro{border-color:#c8443f!important;background:#fff6f5}
-.msg-erro{color:#b02a1e;font-size:12.5px;margin-top:4px;font-weight:bold}
-.campo-destacado{outline:3px solid #ffd966;outline-offset:2px}
-.soma-ok{color:#2a7342;font-weight:bold;font-size:13px;margin-top:6px}
-.soma-alerta{color:#8a5a06;font-weight:bold;font-size:13px;margin-top:6px}
+label.essencial::after{content:" *";color:var(--err-tx)}
+.legenda-essencial{font-size:13px;color:inherit;margin:6px 0 0}
+.pendencias{margin-top:18px;padding:10px 14px;border-radius:var(--r-md);background:var(--warn-bg);border:1px solid var(--warn-bd);color:var(--warn-tx);font-size:14px;line-height:1.6}
+.pendencias strong{color:var(--warn-tx)}
+.pendencias.ok{background:var(--ok-bg);border-color:var(--ok-bd);color:var(--ok-tx);font-weight:600}
+button.pendencia{display:inline-flex;min-height:32px;background:var(--n-0);color:var(--warn-tx);border:1px solid var(--warn-bd);padding:0 12px;font-size:13px;font-weight:600;margin:4px 6px 0 0;width:auto;border-radius:var(--r-pill)}
+button.pendencia:hover{background:var(--sol-50);border-color:var(--warn)}
+.campo-erro{border-color:var(--err)!important;box-shadow:0 0 0 .5px var(--err)}
+.msg-erro{display:flex;align-items:flex-start;gap:6px;color:var(--err-tx);font-size:13px;margin-top:6px;font-weight:500}
+.msg-erro::before{content:"!";flex:0 0 auto;width:16px;height:16px;margin-top:1px;border-radius:50%;border:1.5px solid currentColor;display:inline-flex;align-items:center;justify-content:center;font:700 10px/1 var(--font-body)}
+.campo-destacado{outline:3px solid var(--sol-300);outline-offset:2px}
+.soma-ok{color:var(--ok-tx);font-weight:600;font-size:13px;margin-top:6px}
+.soma-alerta{color:var(--warn-tx);font-weight:600;font-size:13px;margin-top:6px}
 body{padding-bottom:86px}
-.acoes{position:fixed;left:0;right:0;bottom:0;margin:0;padding:10px 18px;border-top:1px solid #ddd;box-shadow:0 -4px 12px rgba(0,0,0,.08);z-index:30;justify-content:center;align-items:center}
-.acoes button{padding:10px 14px;font-size:14px}
-.acoes button[disabled]{opacity:.65;cursor:progress}
+.acoes{position:fixed;left:0;right:0;bottom:0;margin:0;padding:12px max(18px,calc((100% - 1150px) / 2 + 24px));border-top:1px solid var(--divider);box-shadow:var(--sh-top);z-index:30;justify-content:flex-end;align-items:center}
+.acoes button{min-height:var(--h-md);padding:0 18px;font-size:15px}
+.acoes button[disabled]:not(#btnFaseAnterior){cursor:progress}
+.acoes .mais-opcoes{margin-right:auto}
 .mais-opcoes{position:relative}
-.mais-opcoes summary{list-style:none;cursor:pointer;padding:10px 14px;border:1px solid #bbb;border-radius:8px;font-size:14px;background:#fff;user-select:none}
+.mais-opcoes summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:var(--h-md);padding:0 18px;border-radius:var(--r-sm);font:600 15px var(--font-body);color:var(--text-body);background:transparent;user-select:none}
+.mais-opcoes summary:hover{background:var(--n-50);color:var(--text)}
 .mais-opcoes summary::-webkit-details-marker{display:none}
-.mais-opcoes .menu{position:absolute;bottom:calc(100% + 8px);right:0;background:#fff;border:1px solid #ddd;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);padding:8px;display:flex;flex-direction:column;gap:6px;min-width:280px}
-.mais-opcoes .menu button{background:#ede9fa;color:#2b2740;text-align:left}
-.mais-opcoes .menu button.botao-limpar{background:#fdecea!important;color:#a12a1e!important}
+.mais-opcoes .menu{position:absolute;bottom:calc(100% + 8px);left:0;background:var(--n-0);border:1px solid var(--divider);border-radius:var(--r-md);box-shadow:var(--sh-lg);padding:6px;display:flex;flex-direction:column;gap:2px;min-width:300px}
+.mais-opcoes .menu button{justify-content:flex-start;background:transparent;color:var(--text);border-color:transparent;text-align:left;font-weight:500}
+.mais-opcoes .menu button:hover{background:var(--violeta-50);color:var(--violeta-700)}
+.mais-opcoes .menu button.botao-limpar{color:var(--danger)}
+.mais-opcoes .menu button.botao-limpar:hover{background:var(--err-bg);color:var(--danger-hover)}
 #notificacoes{position:fixed;right:18px;bottom:92px;z-index:1000;display:flex;flex-direction:column;gap:8px;max-width:400px}
-.notificacao{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.22);font-size:13.5px;color:#fff;background:#43356b;animation:etapaEntrada .25s ease}
-.notificacao.sucesso{background:#3fa35b}.notificacao.erro{background:#b3261e}.notificacao.aviso{background:#a86a00}
+.notificacao{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:var(--r-md);border:1px solid var(--violeta-200);box-shadow:var(--sh-lg);font-size:14px;color:var(--violeta-800);background:var(--violeta-50);animation:etapaEntrada .25s ease}
+.notificacao.sucesso{background:var(--ok-bg);border-color:var(--ok-bd);color:var(--ok-tx)}
+.notificacao.erro{background:var(--err-bg);border-color:var(--err-bd);color:var(--err-tx)}
+.notificacao.aviso{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn-tx)}
 .notificacao .texto{flex:1;line-height:1.45}
-.notificacao button{background:rgba(255,255,255,.2);color:#fff;padding:4px 10px;font-size:12.5px;width:auto;white-space:nowrap}
-.notificacao button.fechar{background:none;font-size:19px;padding:0 4px;line-height:1}
-.status-salvamento.salvando{border-left-color:#e0a800;background:#fff8e6;color:#7a5200}
-.status-salvamento.salvo{border-left-color:#3fa35b;background:#eaf7ee;color:#2a7342}
-.status-salvamento.erro{border-left-color:#c8443f;background:#fdecea;color:#a12a1e}
-@media(max-width:780px){.acoes{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.acoes button,.acoes .mais-opcoes{flex:0 0 auto;width:auto}.mais-opcoes .menu{right:auto;left:0;position:fixed;bottom:70px}#notificacoes{left:12px;right:12px;max-width:none}.wizard-cabecalho{margin:0 -24px 10px}button.pendencia{width:auto}}
+.notificacao button{min-height:32px;background:var(--n-0);color:inherit;border-color:currentColor;padding:0 10px;font-size:13px;width:auto;white-space:nowrap}
+.notificacao button.fechar{min-height:32px;min-width:32px;background:none;border-color:transparent;font-size:19px;padding:0 4px;line-height:1}
+.status-salvamento.salvando{border-color:var(--warn-bd);background:var(--warn-bg);color:var(--warn-tx)}
+.status-salvamento.salvo{border-color:var(--ok-bd);background:var(--ok-bg);color:var(--ok-tx)}
+.status-salvamento.erro{border-color:var(--err-bd);background:var(--err-bg);color:var(--err-tx)}
+@media(max-width:780px){.acoes{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding:10px 12px}.acoes button,.acoes .mais-opcoes{flex:0 0 auto;width:auto}.acoes .mais-opcoes{margin-right:0}.mais-opcoes .menu{right:auto;left:0;position:fixed;bottom:70px}#notificacoes{left:12px;right:12px;max-width:none}.wizard-cabecalho{margin:0 -24px 10px}button.pendencia{width:auto}}
 @media print{.wizard-cabecalho,#notificacoes,.pendencias{display:none!important}body{padding-bottom:0}}
 
 /* Stepper compacto, campos condicionais, espaçamento e acessibilidade
    (camada de UX — não muda regras nem dados do protocolo). */
-:root{--altura-acoes:72px;--altura-cabecalho:150px;--texto-suave:#5f5f6e}
+:root{--altura-acoes:72px;--altura-cabecalho:150px}
 html{scroll-padding-top:calc(var(--altura-cabecalho) + 12px);scroll-padding-bottom:calc(var(--altura-acoes) + 12px)}
 body{padding-bottom:calc(var(--altura-acoes) + 16px)}
 #notificacoes{bottom:calc(var(--altura-acoes) + 12px)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
-.wizard-cabecalho{padding:8px 24px 4px}
-.wizard-linha-status{margin-bottom:6px;gap:4px 14px}
+.wizard-cabecalho{padding:10px 24px 4px}
+.wizard-linha-status{margin-bottom:8px;gap:4px 14px}
 .wizard-cabecalho .wizard-texto{font-size:13px;white-space:nowrap}
-.wizard-legenda{display:flex;flex-wrap:wrap;gap:2px 12px;margin:0;padding:0;list-style:none;font-size:11.5px;color:var(--texto-suave)}
+.wizard-legenda{display:flex;flex-wrap:wrap;gap:2px 12px;margin:0;padding:0;list-style:none;font-size:12px;color:var(--text-2)}
 .wizard-legenda li{display:flex;align-items:center;gap:5px}
-.wizard-legenda .amostra{width:12px;height:12px;border-radius:50%;border:2px solid #c8c8d0;background:#eee;display:inline-block}
-.wizard-legenda .amostra.atual{background:var(--roxo);border-color:var(--roxo);box-shadow:0 0 0 2px #d6cef2}
-.wizard-legenda .amostra.completo{background:#3fa35b;border-color:#3fa35b}
-.wizard-legenda .amostra.parcial{background:#fff4d6;border-color:#e0a800}
+.wizard-legenda .amostra{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--n-300);background:var(--n-0);display:inline-block}
+.wizard-legenda .amostra.atual{background:var(--primary);border-color:var(--primary);box-shadow:0 0 0 2px var(--violeta-100)}
+.wizard-legenda .amostra.completo{background:var(--ok);border-color:var(--ok)}
+.wizard-legenda .amostra.parcial{background:var(--sol-50);border-color:var(--warn)}
 #wizardStatusHolder{flex:1 1 240px;min-width:0;display:flex;justify-content:flex-end}
-#wizardStatusHolder .status-salvamento{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 10px;font-size:12px}
-.wizard-cabecalho .wizard-barra{height:6px}
-.wizard-trilho{display:flex;align-items:stretch;gap:4px;margin-top:6px}
-button.wizard-seta{flex:0 0 32px;width:32px;padding:0;background:#fff;color:var(--roxo);border:1px solid #d6cef2;border-radius:8px;font-size:22px;line-height:1}
+#wizardStatusHolder .status-salvamento{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 12px;font-size:12.5px;border-radius:var(--r-pill)}
+.wizard-cabecalho .wizard-barra{height:4px}
+.wizard-trilho{display:flex;align-items:stretch;gap:4px;margin-top:8px}
+button.wizard-seta{flex:0 0 32px;width:32px;min-height:0;padding:0;background:var(--n-0);color:var(--violeta-600);border:1px solid var(--n-200);border-radius:var(--r-sm);font-size:22px;line-height:1}
 button.wizard-seta:disabled{opacity:.35;cursor:default}
 .wizard-janela{position:relative;flex:1;min-width:0}
 .wizard-janela::before,.wizard-janela::after{content:"";position:absolute;top:0;bottom:0;width:40px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:1}
-.wizard-janela::before{left:0;background:linear-gradient(90deg,#fff 20%,rgba(255,255,255,0))}
-.wizard-janela::after{right:0;background:linear-gradient(270deg,#fff 20%,rgba(255,255,255,0))}
+.wizard-janela::before{left:0;background:linear-gradient(90deg,var(--n-0) 20%,transparent)}
+.wizard-janela::after{right:0;background:linear-gradient(270deg,var(--n-0) 20%,transparent)}
 .wizard-janela.tem-antes::before,.wizard-janela.tem-depois::after{opacity:1}
-.wizard-cabecalho .wizard-steps{display:flex;gap:2px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x proximity;scrollbar-width:none;padding:4px 2px 6px;margin:0;border:0}
+.wizard-cabecalho .wizard-steps{display:flex;gap:2px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x proximity;scrollbar-width:none;padding:4px 2px 8px;margin:0;border:0}
 .wizard-cabecalho .wizard-steps::-webkit-scrollbar{display:none}
-.wizard-cabecalho .wizard-step{flex:0 0 104px;width:104px;max-width:none;height:72px;justify-content:flex-start;scroll-snap-align:center;color:var(--texto-suave);font-size:11.5px;padding:4px}
+.wizard-cabecalho .wizard-step{flex:0 0 104px;width:104px;max-width:none;height:76px;justify-content:flex-start;scroll-snap-align:center;font-size:12px;padding:6px 4px}
 .wizard-step .nome{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.25;overflow-wrap:anywhere}
-.wizard-step .circulo{flex:0 0 auto;width:28px;height:28px;border-color:#c8c8d0;color:var(--texto-suave)}
-.wizard-step.parcial{color:#7a5200}
+.wizard-step .circulo{flex:0 0 auto}
+.wizard-step.parcial{color:var(--warn-tx)}
 .wizard-seletor{display:none}
-.wizard-seletor select{margin:0;font-weight:bold;color:#43356b;background:#ede9fa;border-color:#d6cef2}
+.wizard-seletor select{margin:0;font-weight:600;color:var(--violeta-700);background-color:var(--violeta-50);border-color:var(--violeta-200)}
 @media(max-width:700px){
   .wizard-trilho,.wizard-legenda{display:none}
   .wizard-seletor{display:block;margin:6px 0 4px}
   body{padding:8px 8px calc(var(--altura-acoes) + 16px)}
+  html.embutido body{padding:0 0 calc(var(--altura-acoes) + 16px)}
   .container{padding:14px}
   .wizard-cabecalho{margin:0 -14px 10px;padding:6px 14px 4px}
   .simnao button{width:auto;flex:1 1 0}
   .etapa-form .grid.par-idade{grid-template-columns:1fr 1fr;gap:10px}
   .wizard-cabecalho .wizard-texto{white-space:normal}
+  .topo img{width:48px}
+  .topo h1{font-size:18px}
 }
 
 /* Campos que só aparecem conforme outra resposta (transição sem salto). */
 .condicional{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .28s ease,opacity .28s ease}
 .condicional.visivel{grid-template-rows:1fr;opacity:1}
-.condicional-conteudo{overflow:hidden;min-height:0;padding:0 3px 3px;margin:0 -3px}
+.condicional-conteudo{overflow:hidden;min-height:0;padding:0 4px 4px;margin:0 -4px}
 .condicional .condicional-conteudo>label{margin-top:12px}
 @media print{.condicional:not(.visivel){display:none}}
 .detalhe-sim{animation:etapaEntrada .25s ease}
 
+/* Faixa de título da fase (sem degradê): quadrado violeta com o número,
+   título e quantos campos são obrigatórios. O <h2> original continua no
+   DOM (as regras das fases e o catálogo da IA leem o texto dele). */
+.faixa-secao{display:flex;align-items:center;gap:14px;margin:8px 0 20px;padding-bottom:16px;border-bottom:1px solid var(--divider)}
+.faixa-numero{flex:0 0 auto;width:40px;height:40px;border-radius:var(--r-sm);background:var(--primary);color:var(--n-0);display:flex;align-items:center;justify-content:center;font:700 17px/1 var(--font-display)}
+.faixa-titulo{margin:0;font:700 var(--fs-h2)/1.25 var(--font-display);letter-spacing:-.01em;color:var(--text)}
+.faixa-meta{margin:2px 0 0;font-size:13px;color:var(--text-2)}
+.etapa-form>h2{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media print{.faixa-secao{display:none}.etapa-form>h2{position:static;width:auto;height:auto;margin:24px 0 8px;overflow:visible;clip:auto;white-space:normal}}
+
 /* Espaçamento, hierarquia e foco consistentes entre as fases. */
 .etapa-form .grid{gap:16px 22px;align-items:start;margin-bottom:6px}
 .etapa-form .grid>div>label:first-child{margin-top:0}
-.etapa-form h2{margin:8px 0 18px}
-.etapa-form label{color:#2b2b38}
-input,select,textarea{border-color:#a9a9b8;min-height:40px}
-textarea{min-height:80px}
-input[readonly],textarea[readonly]{background:#f6f6f9;color:#3b3b48}
-.dica-campo{font-size:12px;color:var(--texto-suave);margin-top:4px}
-.simnao button{min-height:40px;min-width:64px}
-.simnao.campo-erro{outline:2px solid #c8443f;outline-offset:3px;border-radius:8px}
-input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid #7561ae;outline-offset:2px}
-input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
+.etapa-form label{color:var(--text)}
+input[readonly],textarea[readonly]{background:var(--n-50);border-style:dashed;color:var(--text-body)}
+.dica-campo{font-size:13px;color:var(--text-2);margin-top:4px}
+.simnao.campo-erro{outline:1.5px solid var(--err);outline-offset:3px;border-radius:var(--r-sm)}
+:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--violeta-500);box-shadow:0 0 0 .5px var(--violeta-500),var(--input-focus)}
+input[type=file]:focus{box-shadow:none}
+input[type=file]:focus-visible::file-selector-button{box-shadow:var(--focus-ring)}
 .wizard-nav-etapa{align-items:center}
-.wizard-nav-posicao{font-size:13px;color:var(--texto-suave);font-weight:bold;text-align:center}
+.wizard-nav-posicao{font-size:13px;color:var(--text-2);font-weight:600;text-align:center}
 @media(max-width:780px){.wizard-nav-etapa{flex-direction:row;flex-wrap:wrap}.wizard-nav-etapa button{flex:1 1 140px}.wizard-nav-posicao{order:-1;flex-basis:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Ajuda do topo: legenda das cores no mesmo padrão das fases. */
+.cor-atual{color:var(--violeta-700)}
+.cor-concluida{color:var(--ok-tx)}
+.cor-pendente{color:var(--warn-tx)}
+.cor-obrigatorio{color:var(--err-tx)}
 </style>
 </head>
 <body>
@@ -251,7 +322,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 </div>
 
 <div class="aviso no-print">
-<strong>Como preencher o protocolo:</strong> percorra as fases na ordem que preferir. No topo, a fase atual fica <strong style="color:#43356b">roxa</strong>, a fase concluída fica <strong style="color:#2f7a47">verde ✓</strong> (todos os campos essenciais <span style="color:#c8443f">*</span> preenchidos), a fase começada mas com pendências fica <strong style="color:#8a5a06">amarela</strong> e a fase ainda não iniciada fica cinza — no fim de cada fase aparece o que ainda falta. Depois do primeiro <strong>Salvar Laudo</strong>, cada alteração é salva sozinha.
+<strong>Como preencher o protocolo:</strong> percorra as fases na ordem que preferir. No topo, a fase atual fica <strong class="cor-atual">violeta</strong>, a concluída fica <strong class="cor-concluida">verde ✓</strong> (todos os campos obrigatórios <span class="cor-obrigatorio">*</span> preenchidos), a começada com pendências fica <strong class="cor-pendente">amarela com !</strong> e a não iniciada fica cinza — no fim de cada fase aparece o que ainda falta. Depois do primeiro <strong>Salvar laudo</strong>, cada alteração é salva sozinha.
 <div class="legenda-essencial">Atalhos: <kbd>Ctrl</kbd>+<kbd>S</kbd> salva · <kbd>Alt</kbd>+<kbd>→</kbd> / <kbd>Alt</kbd>+<kbd>←</kbd> trocam de fase.</div>
 </div>
 
@@ -326,8 +397,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 <h2>6. Estudo De Caso E Observações Clínicas</h2>
 <label>Estudo De Caso</label><textarea id="estudoCaso" style="min-height:130px" placeholder="Cole aqui o estudo de caso com as observações gerais do paciente. O sistema poderá interpretar esse texto e preencher automaticamente o quadro comportamental."></textarea>
 <label>Observações Clínicas Gerais</label><textarea id="observacoesClinicas" style="min-height:130px" placeholder="Registre aqui observações clínicas complementares, quando houver."></textarea>
-<div class="aviso">Opcional: depois de marcar as hipóteses diagnósticas, o botão abaixo preenche o quadro de cada hipótese com os comportamentos encontrados no Estudo De Caso e nas Observações Clínicas Gerais. Para voltar às linhas do modelo, use "Restaurar Linhas Do Modelo" no quadro.</div>
-<button type="button" onclick="gerarQuadroPeloEstudoCaso()">Preencher Os Quadros Pelo Estudo De Caso</button>
+<div class="aviso">Opcional: depois de marcar as hipóteses diagnósticas, o botão abaixo preenche o quadro de cada hipótese com os comportamentos encontrados no Estudo De Caso e nas Observações Clínicas Gerais. Para voltar às linhas do modelo, use "Restaurar linhas do modelo" no quadro.</div>
+<button type="button" onclick="gerarQuadroPeloEstudoCaso()">Preencher os quadros pelo estudo de caso</button>
 
 
 <h2>7. Inserção De Fotos</h2>
@@ -376,7 +447,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 <label for="pdfsEscalas">Importar Escalas De PDF (CARS, ATA, SNAP-IV, TOD, Portage)</label>
 <div class="dica">Anexe os PDFs das escalas já pontuadas: a IA transcreve item a item e os gráficos saem automaticamente no relatório. Confira os itens depois.</div>
 <input type="file" id="pdfsEscalas" accept="application/pdf,.pdf" multiple>
-<button type="button" id="btnImportarEscalas" onclick="importarEscalasDePdf()">Importar Escalas Com IA</button>
+<button type="button" id="btnImportarEscalas" onclick="importarEscalasDePdf()">Importar escalas com IA</button>
 </div>
 <div class="grid">
 <div><label>Pontuação ATA (Total — Calculada Pelos Itens Abaixo, Ou Digite)</label><input type="number" id="ata" oninput="atualizarInterpretacoes();atualizarPercentualATA()"></div>
@@ -413,15 +484,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 
 
 <h2>15. Portage</h2>
-<button type="button" class="no-print" onclick="carregarPortage()">Carregar Portage Pela Idade</button>
-<button type="button" class="no-print" onclick="calcularPortage()">Calcular Idade Cognitiva Pelo Portage</button>
+<button type="button" class="no-print" onclick="carregarPortage()">Carregar Portage pela idade</button>
+<button type="button" class="no-print" onclick="calcularPortage()">Calcular idade cognitiva pelo Portage</button>
 <div class="aviso" id="resultadoPortage">Aguardando preenchimento do Portage.</div>
 <div id="portage"></div>
 
 
 <h2>16. M-CHAT</h2>
 <div class="aviso interno">Uso interno: esta seção não aparece no relatório final (modelo oficial do parecer).</div>
-<button type="button" class="no-print" onclick="carregarMCHAT()">Verificar Idade E Carregar M-CHAT</button>
+<button type="button" class="no-print" onclick="carregarMCHAT()">Verificar idade e carregar M-CHAT</button>
 <div id="mchat"></div>
 
 
@@ -484,13 +555,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 <input type="hidden" id="fasesRevisadas">
 <div id="statusSalvamento" class="status-salvamento no-print">Salvamento automático ativo: os dados ficam guardados neste navegador enquanto você preenche.</div>
 <div class="acoes no-print" role="toolbar" aria-label="Ações do protocolo">
-<button type="button" id="btnPrevia" onclick="gerarRelatorio()">Pré-Visualizar Relatório</button>
-<button type="button" id="btnGerarPDF" onclick="imprimirRelatorioPDF()">Gerar PDF</button>
-<button type="button" id="btnGerarWord" onclick="salvarRelatorioWord()">Gerar Word (DOCX)</button>
-<details class="mais-opcoes"><summary>Mais Opções ▾</summary><div class="menu">
-<button type="button" onclick="salvarCopiaEditavelPaciente()">Baixar Cópia Do Formulário (Arquivo HTML)</button>
-<button type="button" onclick="imprimirFormularioPDF()">Imprimir Formulário</button>
-<button type="button" class="botao-limpar" onclick="gerarNovoFormulario()">Novo Protocolo (Limpar Tudo)</button>
+<button type="button" id="btnPrevia" onclick="gerarRelatorio()">Pré-visualizar</button>
+<button type="button" id="btnGerarPDF" class="botao-tonal" onclick="imprimirRelatorioPDF()" aria-label="Gerar PDF do relatório">PDF</button>
+<button type="button" id="btnGerarWord" class="botao-tonal" onclick="salvarRelatorioWord()" aria-label="Gerar Word (DOCX) do relatório">Word</button>
+<details class="mais-opcoes"><summary>Mais opções ▾</summary><div class="menu">
+<button type="button" onclick="salvarCopiaEditavelPaciente()">Baixar cópia do formulário (arquivo HTML)</button>
+<button type="button" onclick="imprimirFormularioPDF()">Imprimir formulário</button>
+<button type="button" class="botao-limpar" onclick="gerarNovoFormulario()">Novo protocolo (limpar tudo)</button>
 </div></details>
 </div>
 </form>
@@ -812,7 +883,7 @@ function processarFotosPaciente(event){
 function renderizarFotosPaciente(){
   const area=document.getElementById("previewFotosPaciente");
   if(!area)return;
-  area.innerHTML=fotosPacienteDados.map((f,i)=>'<div class="foto-item"><img src="'+f.src+'" alt="Foto '+(i+1)+'"><button type="button" onclick="removerFotoPaciente('+i+')">Remover Foto</button></div>').join("");
+  area.innerHTML=fotosPacienteDados.map((f,i)=>'<div class="foto-item"><img src="'+f.src+'" alt="Foto '+(i+1)+'"><button type="button" onclick="removerFotoPaciente('+i+')">Remover foto</button></div>').join("");
 }
 function removerFotoPaciente(i){
   fotosPacienteDados.splice(i,1);
@@ -888,8 +959,8 @@ function renderizarQuadroHipotese(chave,rotulo,linhas){
   const rotulos=["Comportamento Identificado","Caracterização Observada","Relação Com "+rotulo,"Associação Aos Critérios DSM-5-TR"];
   bloco.innerHTML='<h3>Quadro – Relação Com '+t(rotulo)+'</h3>'+linhas.map((o,i)=>'<div class="bloco"><h3>Linha '+(i+1)+'</h3>'+
     CAMPOS_QUADRO.map((campo,c)=>'<label>'+t(rotulos[c])+'</label><textarea id="'+idCelulaQuadro(chave,i,campo)+'">'+t(o[c])+'</textarea>').join("")+
-    '<button type="button" class="botao-limpar no-print" onclick="removerLinhaQuadro(\''+chave+'\','+i+')">Remover Esta Linha</button></div>').join("")+
-    '<div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 18px"><button type="button" onclick="adicionarLinhaQuadro(\''+chave+'\')">+ Adicionar Linha</button><button type="button" class="botao-limpar" onclick="restaurarQuadroDoModelo(\''+chave+'\')">Restaurar Linhas Do Modelo</button></div>';
+    '<button type="button" class="botao-limpar no-print" onclick="removerLinhaQuadro(\''+chave+'\','+i+')">Remover esta linha</button></div>').join("")+
+    '<div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 18px"><button type="button" onclick="adicionarLinhaQuadro(\''+chave+'\')">+ Adicionar linha</button><button type="button" class="botao-limpar" onclick="restaurarQuadroDoModelo(\''+chave+'\')">Restaurar linhas do modelo</button></div>';
 }
 function linhasDoQuadro(chave){
   const linhas=[];
@@ -1287,8 +1358,8 @@ function salvarDadosNoNavegador(manual=false){
     if(manual)notificar("Dados guardados neste navegador.","sucesso");
     return true;
   }catch(e){
-    atualizarStatusSalvamento("Não foi possível guardar automaticamente neste navegador. Use Mais Opções → Baixar Cópia Do Formulário.");
-    if(manual)notificar("Não foi possível guardar os dados neste navegador (armazenamento cheio ou bloqueado). Use Mais Opções → Baixar Cópia Do Formulário para não perder o que foi preenchido.","erro");
+    atualizarStatusSalvamento("Não foi possível guardar automaticamente neste navegador. Use Mais opções → Baixar cópia do formulário.");
+    if(manual)notificar("Não foi possível guardar os dados neste navegador (armazenamento cheio ou bloqueado). Use Mais opções → Baixar cópia do formulário para não perder o que foi preenchido.","erro");
     return false;
   }
 }
@@ -2210,7 +2281,7 @@ function renderizarCapaRelatorio(){
       '<div class="capa-opcoes">'+
         '<label><input type="checkbox" data-capa="escreverNome"'+(c.escreverNome?' checked':'')+'> Escrever o nome do paciente na capa</label>'+
         (c.escreverNome?'<div class="dica">Arraste sobre a prévia para marcar onde o nome fica.</div><label><input type="color" data-capa="corNome" value="'+c.corNome+'"> Cor do nome</label>':'')+
-        '<button type="button" onclick="usarCapaPadrao()">Usar A Capa Padrão</button>'+
+        '<button type="button" onclick="usarCapaPadrao()">Usar a capa padrão</button>'+
       '</div>'+
     '</div>';
   area.querySelector('[data-capa="escreverNome"]').addEventListener("change",e=>{c.escreverNome=e.target.checked;capaRelatorioAlterada();});
@@ -2660,7 +2731,7 @@ function mostrarPreviaDoLaudo(html){
   rel.innerHTML="";
   const iframe=document.createElement("iframe");
   iframe.id="previaLaudo";iframe.title="Pré-visualização do relatório";
-  iframe.style.cssText="width:100%;border:0;min-height:900px;background:#e7e7ee";
+  iframe.style.cssText="width:100%;border:0;min-height:900px;background:var(--n-100)";
   iframe.onload=()=>{try{iframe.style.height=(iframe.contentDocument.documentElement.scrollHeight+20)+"px";}catch(e){}};
   iframe.srcdoc=html;
   rel.appendChild(iframe);
@@ -2922,7 +2993,7 @@ function mostrarPreviaDoLaudo(html){
     const arquivos = Array.from((input && input.files) || []);
     if (!arquivos.length) { notificar('Escolha os PDFs das escalas primeiro.', 'aviso'); return; }
     const paciente = pacienteAtual || pacienteCarregado;
-    if (!paciente) { notificar('Salve o laudo pelo menos uma vez (botão "Salvar Laudo") antes de importar escalas com IA.', 'aviso'); return; }
+    if (!paciente) { notificar('Salve o laudo pelo menos uma vez (botão "Salvar laudo") antes de importar escalas com IA.', 'aviso'); return; }
     const catalogo = catalogoParaIA();
     catalogo.campos = catalogo.campos.filter((c) => ESCALAS_PARA_IA.test(c.id));
     catalogo.contexto = 'Portage: os itens listados são os da faixa etária do paciente.';
@@ -3062,7 +3133,7 @@ function mostrarPreviaDoLaudo(html){
       notificar(primeiraVez
         ? 'Laudo salvo no histórico do paciente. A partir de agora, cada alteração é salva sozinha.'
         : 'Laudo e relatório atualizados no sistema.', 'sucesso');
-      botao.textContent = 'Salvar Laudo';
+      botao.textContent = 'Salvar laudo';
       mostrarBotaoConcluir();
     } catch (e) {
       definirStatus('Não foi possível salvar: ' + e.message, 'erro');
@@ -3116,8 +3187,7 @@ function mostrarPreviaDoLaudo(html){
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.id = 'btnConcluirHistorico';
-    btn.className = 'botao-principal';
-    btn.textContent = 'Concluir E Ver Histórico';
+    btn.textContent = 'Concluir e ver histórico';
     btn.onclick = irParaHistorico;
     acoes.insertBefore(btn, acoes.children[1] || null);
   }
@@ -3129,7 +3199,7 @@ function mostrarPreviaDoLaudo(html){
     btn.type = 'button';
     btn.id = 'btnSalvarNoSistema';
     btn.className = 'botao-principal';
-    btn.textContent = 'Salvar Laudo';
+    btn.textContent = 'Salvar laudo';
     btn.title = 'Salva o protocolo no histórico do paciente (Ctrl+S)';
     btn.onclick = salvarNoSistema;
     acoes.insertBefore(btn, acoes.firstChild);
@@ -3138,7 +3208,7 @@ function mostrarPreviaDoLaudo(html){
     status.id = 'statusBanco';
     status.className = 'status-salvamento no-print';
     status.textContent = token
-      ? 'Laudo ainda não salvo no sistema. Preencha o nome e a data de nascimento e clique em "Salvar Laudo".'
+      ? 'Laudo ainda não salvo no sistema. Preencha o nome e a data de nascimento e clique em "Salvar laudo".'
       : 'Formulário aberto fora do sistema: os dados ficam só neste navegador. Para salvar no histórico, use o menu "Novo Atendimento" do sistema.';
     if (!token) status.classList.add('erro');
     acoes.parentNode.insertBefore(status, acoes.nextSibling);
@@ -3231,6 +3301,23 @@ function mostrarPreviaDoLaudo(html){
      pendências clicáveis, validação na hora e atalhos de teclado. -->
 <script>
 (function () {
+  // Dentro do sistema (iframe), o cartão do formulário ocupa a área toda.
+  if (window.parent !== window) document.documentElement.classList.add("embutido");
+
+  // Nome da fase só com a primeira letra maiúscula, para exibir. O texto do
+  // <h2> não muda (as REGRAS, as fases revisadas e o catálogo da IA usam
+  // ele): siglas (ATA, SNAP-IV, M-CHAT) e nomes próprios ficam como estão.
+  const NOMES_PROPRIOS = ["Portage", "Word", "Google", "Forms"];
+  function paraExibicao(titulo) {
+    let primeira = true;
+    return String(titulo).replace(/[A-Za-zÀ-ÿ0-9][A-Za-zÀ-ÿ0-9'’\/-]*/g, (palavra) => {
+      if (primeira) { primeira = false; return palavra; }
+      const sigla = palavra.split(/[\/-]/).some((parte) => parte.length >= 2 && parte === parte.toLocaleUpperCase("pt-BR"));
+      if (sigla || /\d/.test(palavra) || NOMES_PROPRIOS.includes(palavra)) return palavra;
+      return palavra.toLocaleLowerCase("pt-BR");
+    });
+  }
+
   // Campos essenciais de cada fase (pelo título do <h2>). Uma fase fica
   // verde quando todos os seus essenciais estão preenchidos; os demais
   // campos continuam opcionais. `grupos` = todos os itens de uma escala.
@@ -3363,14 +3450,14 @@ function mostrarPreviaDoLaudo(html){
         exigir(preenchido(document.getElementById("hipoteseSelecionada")), "Selecione, entre as hipóteses marcadas, qual é a hipótese deste paciente (o relatório mostra só ela)", document.getElementById("hipoteseSelecionada"));
         break;
       case "portage":
-        if (!etapa.querySelector(".portageItem")) exigir(false, "Clique em \"Carregar Portage Pela Idade\"", botao("Carregar Portage"));
+        if (!etapa.querySelector(".portageItem")) exigir(false, "Clique em \"Carregar Portage pela idade\"", botao("Carregar Portage"));
         else grupo(".portageItem", "itens do Portage sem resposta");
         break;
       case "mchat": {
         const meses = idadeMeses();
         if (meses === null) exigir(false, "Informe a Data De Nascimento (fase 1)", document.getElementById("dataNascimento"));
         else if (meses > 30) { r.naoSeAplica = true; r.total++; r.feitos++; }
-        else if (!etapa.querySelector(".mchatItem")) exigir(false, "Clique em \"Verificar Idade E Carregar M-CHAT\"", botao("M-CHAT"));
+        else if (!etapa.querySelector(".mchatItem")) exigir(false, "Clique em \"Verificar idade e carregar M-CHAT\"", botao("M-CHAT"));
         else grupo(".mchatItem", "itens do M-CHAT sem resposta");
         break;
       }
@@ -3511,6 +3598,20 @@ function mostrarPreviaDoLaudo(html){
     return lista;
   }
 
+  function montarFaixas() {
+    etapas.forEach((etapa, i) => {
+      const h2 = etapa.querySelector(":scope > h2");
+      if (!h2 || etapa.querySelector(":scope > .faixa-secao")) return;
+      const faixa = document.createElement("div");
+      faixa.className = "faixa-secao no-print";
+      faixa.setAttribute("aria-hidden", "true");
+      faixa.innerHTML = '<span class="faixa-numero"></span><div><p class="faixa-titulo"></p><p class="faixa-meta"></p></div>';
+      faixa.querySelector(".faixa-numero").textContent = String(i + 1);
+      faixa.querySelector(".faixa-titulo").textContent = paraExibicao(etapa.dataset.titulo);
+      etapa.insertBefore(faixa, h2);
+    });
+  }
+
   function montarCabecalho() {
     const form = document.getElementById("formulario");
     const cabecalho = document.createElement("div");
@@ -3535,7 +3636,8 @@ function mostrarPreviaDoLaudo(html){
       btn.type = "button";
       btn.className = "wizard-step";
       btn.dataset.step = String(i);
-      btn.innerHTML = '<span class="circulo" aria-hidden="true">' + (i + 1) + '</span><span class="nome">' + etapa.dataset.titulo + "</span>";
+      btn.innerHTML = '<span class="circulo" aria-hidden="true" data-numero="' + (i + 1) + '">' + (i + 1) + '</span><span class="nome"></span>';
+      btn.querySelector(".nome").textContent = paraExibicao(etapa.dataset.titulo);
       btn.onclick = () => irParaEtapa(i);
       nav.appendChild(btn);
       seletor.appendChild(new Option(textoOpcaoFase(i, ""), String(i)));
@@ -3556,7 +3658,7 @@ function mostrarPreviaDoLaudo(html){
   }
 
   function textoOpcaoFase(i, marca) {
-    return (marca ? marca + " " : "") + "Fase " + (i + 1) + " de " + etapas.length + " · " + etapas[i].dataset.titulo;
+    return (marca ? marca + " " : "") + "Fase " + (i + 1) + " de " + etapas.length + " · " + paraExibicao(etapas[i].dataset.titulo);
   }
 
   // Sombras nas bordas e setas indicam que há mais fases fora da área visível.
@@ -3608,14 +3710,14 @@ function mostrarPreviaDoLaudo(html){
       nav.className = "wizard-nav-etapa no-print";
       const anterior = document.createElement("button");
       anterior.type = "button";
-      anterior.textContent = "← Fase Anterior";
+      anterior.textContent = "← Fase anterior";
       anterior.onclick = () => irParaEtapa(i - 1);
       if (i === 0) anterior.style.visibility = "hidden";
       const proximo = document.createElement("button");
       proximo.type = "button";
       proximo.className = "avancar";
       const ultima = i === etapas.length - 1;
-      proximo.textContent = ultima ? "Pré-Visualizar Relatório" : "Próxima Fase →";
+      proximo.textContent = ultima ? "Pré-visualizar relatório" : "Próxima fase →";
       proximo.onclick = () => {
         if (ultima) { gerarRelatorio(); return; }
         sinalizarPendenciasDaEtapa(i);
@@ -3643,6 +3745,8 @@ function mostrarPreviaDoLaudo(html){
     centralizarPasso(i);
     const seletor = document.getElementById("wizardSeletorFase");
     if (seletor) seletor.value = String(i);
+    const anteriorNaBarra = document.getElementById("btnFaseAnterior");
+    if (anteriorNaBarra) anteriorNaBarra.disabled = i === 0;
     atualizarTextoProgresso();
     if (!(opcoes && opcoes.semRolagem)) {
       const cab = document.querySelector(".wizard-cabecalho");
@@ -3698,12 +3802,18 @@ function mostrarPreviaDoLaudo(html){
       if (btn) {
         btn.classList.toggle("completo", completo);
         btn.classList.toggle("parcial", parcial);
-        btn.querySelector(".circulo").textContent = completo ? "✓" : String(i + 1);
+        btn.querySelector(".circulo").textContent = completo ? "✓" : parcial ? "!" : String(i + 1);
         const situacao = r.naoSeAplica ? "não se aplica (idade acima de 30 meses)" : completo ? "concluída" : parcial ? r.pendentes.length + (r.pendentes.length === 1 ? " pendência" : " pendências") : "não iniciada";
-        btn.title = "Fase " + (i + 1) + " — " + etapa.dataset.titulo + ": " + situacao;
+        btn.title = "Fase " + (i + 1) + " — " + paraExibicao(etapa.dataset.titulo) + ": " + situacao;
         btn.setAttribute("aria-label", btn.title);
       }
       if (seletor && seletor.options[i]) seletor.options[i].text = textoOpcaoFase(i, completo ? "✓" : parcial ? "!" : "•");
+      const meta = etapa.querySelector(":scope > .faixa-secao .faixa-meta");
+      if (meta) {
+        meta.textContent = r.naoSeAplica ? "Não se aplica a esta idade"
+          : r.total ? r.total + (r.total === 1 ? " campo obrigatório" : " campos obrigatórios") + (r.feitos ? " · " + r.feitos + " preenchido" + (r.feitos === 1 ? "" : "s") : "")
+          : "Sem campos obrigatórios";
+      }
 
       const painel = document.getElementById("pendencias_" + i);
       if (painel) {
@@ -3727,7 +3837,7 @@ function mostrarPreviaDoLaudo(html){
         }
       }
       if (completo && !jaEstava && !silencioso && typeof notificar === "function") {
-        notificar("✓ Fase " + (i + 1) + " concluída: " + etapa.dataset.titulo, "sucesso", { duracao: 2600 });
+        notificar("✓ Fase " + (i + 1) + " concluída: " + paraExibicao(etapa.dataset.titulo), "sucesso", { duracao: 2600 });
       }
     });
     atualizarTextoProgresso();
@@ -3846,6 +3956,34 @@ function mostrarPreviaDoLaudo(html){
   // A barra de ações fixa no rodapé muda de altura (quebra de linha no
   // tablet, botão "Concluir" que aparece depois): o espaço reservado no fim
   // da página acompanha, para ela nunca cobrir o formulário.
+  // Barra de ações: à esquerda "← Fase anterior" e "Mais opções"; à direita
+  // Pré-visualizar, PDF, Word e o primário "Salvar laudo". A ordem no DOM é a
+  // mesma da tela (ordem do Tab); "Concluir", que aparece depois do primeiro
+  // salvamento, fica logo antes de "Salvar laudo".
+  function organizarBarraDeAcoes() {
+    const acoes = document.querySelector(".acoes");
+    if (!acoes) return;
+    if (!document.getElementById("btnFaseAnterior")) {
+      const anterior = document.createElement("button");
+      anterior.type = "button";
+      anterior.id = "btnFaseAnterior";
+      anterior.className = "botao-fantasma";
+      anterior.textContent = "← Fase anterior";
+      anterior.onclick = () => irParaEtapa(etapaAtual - 1);
+      acoes.prepend(anterior);
+    }
+    const mais = acoes.querySelector(".mais-opcoes");
+    if (mais) document.getElementById("btnFaseAnterior").after(mais);
+    const ordenar = () => {
+      const salvar = document.getElementById("btnSalvarNoSistema");
+      const concluir = document.getElementById("btnConcluirHistorico");
+      if (salvar && salvar !== acoes.lastElementChild) acoes.appendChild(salvar);
+      if (salvar && concluir && concluir.nextElementSibling !== salvar) salvar.before(concluir);
+    };
+    ordenar();
+    new MutationObserver(ordenar).observe(acoes, { childList: true });
+  }
+
   function observarBarraDeAcoes() {
     const acoes = document.querySelector(".acoes");
     if (!acoes || !window.ResizeObserver) return;
@@ -3867,8 +4005,10 @@ function mostrarPreviaDoLaudo(html){
       while (no) { const prox = no.nextSibling; bloco.appendChild(no); no = prox; }
       form.appendChild(bloco);
     }
+    montarFaixas();
     montarCabecalho();
     montarPainelENavegacao();
+    organizarBarraDeAcoes();
     marcarEssenciais();
     document.querySelectorAll(".condicional .condicional-conteudo > label").forEach((l) => l.classList.add("essencial"));
     instrumentarSimNao();

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ClipboardList } from 'lucide-react'
+import { CircleCheck, CircleDashed, ClipboardList } from 'lucide-react'
 import { listProtocolos } from '../api/protocolos'
-import { Card, PageHeader } from '../components/ds'
+import { Badge, Card, PageHeader } from '../components/ds'
 import type { Protocolo } from '../laudo/tipos'
 
 const MENSAGEM_SAIDA =
@@ -26,17 +26,17 @@ export default function NovoAtendimento() {
   }, [escolhido, laudoId])
 
   if (laudoId) return <ProtocoloPadrao pacienteId={null} laudoId={laudoId} />
-  if (modelos === null) return <p>Carregando…</p>
+  if (modelos === null) return <p className="text-2">Carregando…</p>
   if (escolhido === 'padrao' || !modelos.length) return <ProtocoloPadrao pacienteId={pacienteId} />
 
   const sufixoPaciente = pacienteId ? `paciente=${pacienteId}` : ''
   return (
     <div>
-      <PageHeader eyebrow="Atendimento" title="Novo Atendimento" description="Qual protocolo você vai usar neste atendimento?" />
-      <div style={{ display: 'grid', gap: 'var(--np-space-4)', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+      <PageHeader eyebrow="Atendimento" title="Novo atendimento" description="Qual protocolo você vai usar neste atendimento?" />
+      <div style={{ display: 'grid', gap: 'var(--s-4)', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))' }}>
         <CartaoProtocolo
           para={`/atendimento/novo?protocolo=padrao${sufixoPaciente ? '&' + sufixoPaciente : ''}`}
-          titulo="Avaliação Neuropsicopedagógica E Análise Comportamental"
+          titulo="Avaliação neuropsicopedagógica e análise comportamental"
           descricao="Protocolo padrão do sistema (CARS, ATA, SNAP-IV, Portage e demais fases)."
         />
         {modelos.map((m) => (
@@ -54,17 +54,38 @@ export default function NovoAtendimento() {
 
 function CartaoProtocolo({ para, titulo, descricao }: { para: string; titulo: string; descricao: string }) {
   return (
-    <Link to={para} style={{ textDecoration: 'none', color: 'inherit' }}>
-      <Card style={{ height: '100%' }}>
-        <div style={{ display: 'flex', gap: 'var(--np-space-3)', alignItems: 'flex-start' }}>
-          <ClipboardList size={22} style={{ color: 'var(--np-primary)', flex: '0 0 auto', marginTop: 2 }} />
-          <div>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>{titulo}</div>
-            <div style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-muted)' }}>{descricao}</div>
+    <Link to={para} className="card-link">
+      <Card>
+        <div className="protocolo-card">
+          <span className="stat-icon stat-icon-violeta" aria-hidden="true">
+            <ClipboardList />
+          </span>
+          <div className="protocolo-card-texto">
+            <div className="protocolo-card-titulo">{titulo}</div>
+            <div className="caption">{descricao}</div>
           </div>
         </div>
       </Card>
     </Link>
+  )
+}
+
+type Salvamento = { estado: 'nao-salvo' } | { estado: 'salvo'; hora: string | null }
+
+// Etiqueta do cabeçalho: lê o aviso de alterações pendentes que o
+// formulário (iframe) já manda para a janela pai.
+function EtiquetaDeSalvamento({ salvamento }: { salvamento: Salvamento }) {
+  if (salvamento.estado === 'nao-salvo') {
+    return (
+      <Badge tone="warning" icon={<CircleDashed aria-hidden="true" />}>
+        Ainda não salvo
+      </Badge>
+    )
+  }
+  return (
+    <Badge tone="success" icon={<CircleCheck aria-hidden="true" />}>
+      {salvamento.hora ? `Salvo às ${salvamento.hora}` : 'Laudo salvo'}
+    </Badge>
   )
 }
 
@@ -82,6 +103,7 @@ function ProtocoloPadrao({ pacienteId, laudoId = null }: { pacienteId: string | 
   // banco. Enquanto houver, fechar/recarregar a aba ou sair pelo menu pede
   // confirmação — o iframe sozinho não consegue impedir a troca de rota.
   const alteracoesPendentes = useRef(false)
+  const [salvamento, setSalvamento] = useState<Salvamento>(laudoId ? { estado: 'salvo', hora: null } : { estado: 'nao-salvo' })
 
   useEffect(() => {
     alteracoesPendentes.current = false
@@ -91,6 +113,11 @@ function ProtocoloPadrao({ pacienteId, laudoId = null }: { pacienteId: string | 
       const dados = event.data as { tipo?: string; pendente?: boolean } | null
       if (dados?.tipo === 'protocolo:alteracoes-pendentes') {
         alteracoesPendentes.current = Boolean(dados.pendente)
+        setSalvamento(
+          dados.pendente
+            ? { estado: 'nao-salvo' }
+            : { estado: 'salvo', hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) },
+        )
       }
     }
 
@@ -127,25 +154,19 @@ function ProtocoloPadrao({ pacienteId, laudoId = null }: { pacienteId: string | 
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
       <PageHeader
         eyebrow="Atendimento"
-        title={laudoId ? 'Ajustar Laudo' : 'Novo Atendimento'}
+        title={laudoId ? 'Ajustar laudo' : 'Novo atendimento'}
         description={
           laudoId
-            ? 'Revise e ajuste o protocolo deste laudo. As alterações são salvas automaticamente; clique em "Salvar Laudo" para atualizar o documento.'
+            ? 'Revise e ajuste o protocolo deste laudo. As alterações são salvas automaticamente; clique em "Salvar laudo" para atualizar o documento.'
             : 'Preencha o protocolo completo. Ao salvar, o paciente e o protocolo ficam registrados no histórico.'
         }
+        actions={<EtiquetaDeSalvamento salvamento={salvamento} />}
       />
       <iframe
         key={src}
         src={src}
-        title="Formulário De Avaliação"
-        style={{
-          flex: 1,
-          minHeight: '80vh',
-          width: '100%',
-          border: '1px solid var(--np-border)',
-          borderRadius: 'var(--np-radius-md)',
-          background: '#fff',
-        }}
+        title="Formulário de avaliação"
+        style={{ flex: 1, minHeight: '80vh', width: '100%', display: 'block', border: 0, background: 'transparent' }}
       />
     </div>
   )

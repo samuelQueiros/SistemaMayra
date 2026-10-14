@@ -1,4 +1,6 @@
 import type { CSSProperties, ChangeEventHandler, ReactNode } from 'react'
+import { useId } from 'react'
+import { CircleAlert } from 'lucide-react'
 
 interface InputProps {
   id?: string
@@ -11,12 +13,15 @@ interface InputProps {
   min?: number
   max?: number
   step?: string | number
+  /** Ícone à esquerda (ex.: lupa da busca). */
   prefix?: ReactNode
   disabled?: boolean
+  readOnly?: boolean
   required?: boolean
   onChange?: ChangeEventHandler<HTMLInputElement>
   style?: CSSProperties
   list?: string
+  'aria-label'?: string
 }
 
 export function Input({
@@ -32,57 +37,68 @@ export function Input({
   step,
   prefix,
   disabled = false,
+  readOnly = false,
   required = false,
   onChange,
   style,
   list,
+  'aria-label': ariaLabel,
 }: InputProps) {
+  const auto = useId()
+  const inputId = id ?? auto
+  const idAjuda = `${inputId}-ajuda`
+  const ajuda = error || hint
+  const comum = {
+    id: inputId,
+    type,
+    value,
+    placeholder,
+    min,
+    max,
+    step,
+    disabled,
+    readOnly,
+    required,
+    onChange,
+    list,
+    'aria-label': ariaLabel,
+    'aria-invalid': error ? true : undefined,
+    'aria-describedby': ajuda ? idAjuda : undefined,
+  }
   return (
-    <label style={{ display: 'grid', gap: 'var(--np-space-2)', ...style }}>
+    <div className="field" style={style}>
       {label && (
-        <span style={{ font: 'var(--np-type-label)', color: 'var(--np-text)' }}>
+        <label className="field-label" htmlFor={inputId}>
           {label}
-          {required && <i style={{ color: 'var(--np-secondary)', fontStyle: 'normal' }}> *</i>}
+          {required && (
+            <i className="field-required" aria-hidden="true">
+              *
+            </i>
+          )}
+        </label>
+      )}
+      {prefix ? (
+        <span className="control" data-invalid={error ? 'true' : undefined} data-disabled={disabled || readOnly ? 'true' : undefined}>
+          <span className="control-prefix" aria-hidden="true">
+            {prefix}
+          </span>
+          <input {...comum} />
         </span>
+      ) : (
+        <input className="input" {...comum} />
       )}
-      <span
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--np-space-2)',
-          height: 'var(--np-control-h)',
-          padding: '0 var(--np-field-pad-x)',
-          background: disabled ? 'var(--np-surface-sunken)' : 'var(--np-surface)',
-          border: `1px solid ${error ? 'var(--np-danger)' : 'var(--np-border-strong)'}`,
-          borderRadius: 'var(--np-radius-sm)',
-        }}
-      >
-        {prefix && <span style={{ color: 'var(--np-text-subtle)', display: 'inline-flex' }}>{prefix}</span>}
-        <input
-          id={id}
-          type={type}
-          value={value}
-          placeholder={placeholder}
-          min={min}
-          max={max}
-          step={step}
-          disabled={disabled}
-          required={required}
-          onChange={onChange}
-          list={list}
-          style={{
-            border: 0,
-            outline: 'none',
-            background: 'transparent',
-            width: '100%',
-            font: 'var(--np-type-body)',
-            color: 'var(--np-text)',
-          }}
-        />
-      </span>
-      {(error || hint) && (
-        <span style={{ font: 'var(--np-type-caption)', color: error ? 'var(--np-danger)' : 'var(--np-text-subtle)' }}>{error || hint}</span>
+      {error ? (
+        <span className="field-error" id={idAjuda}>
+          <CircleAlert aria-hidden="true" />
+          {error}
+        </span>
+      ) : (
+        hint && (
+          <span className="field-hint" id={idAjuda}>
+            {hint}
+          </span>
+        )
       )}
-    </label>
+    </div>
   )
 }

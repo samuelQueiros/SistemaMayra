@@ -25,7 +25,7 @@ vi.mock('../api/reports', () => ({
   ]),
 }))
 
-describe('Ver Logs', () => {
+describe('Registro de atividades', () => {
   it('lista as edições com paciente, relatório e o que mudou, e filtra por paciente', async () => {
     render(
       <MemoryRouter initialEntries={['/logs']}>

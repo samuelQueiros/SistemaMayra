@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowDown, ArrowUp, Eye, Plus, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowUp, Eye, Plus, Save, Trash2 } from 'lucide-react'
 import { ApiError } from '../api/client'
 import { me as getMe } from '../api/auth'
 import { createProtocolo, getProtocolo, updateProtocolo } from '../api/protocolos'
@@ -155,7 +155,7 @@ export default function EditorProtocolo() {
       const salvo = novo ? await createProtocolo(dados) : await updateProtocolo(id!, dados)
       setModelo(salvo.schema_json)
       setIdsSalvos(idsDoModelo(salvo.schema_json))
-      setSucesso('Modelo salvo. Ele já aparece em Novo Atendimento.')
+      setSucesso('Modelo salvo. Ele já aparece em “Novo atendimento”.')
       if (novo) navigate(`/configuracoes/protocolos/${salvo.id}`, { replace: true })
     } catch (e) {
       setErro(e instanceof ApiError ? e.message : 'Não foi possível salvar o modelo.')
@@ -177,56 +177,56 @@ export default function EditorProtocolo() {
     }
   }
 
-  if (carregando) return <p>Carregando...</p>
+  if (carregando) return <p className="text-2">Carregando…</p>
 
   const todasPerguntas = modelo.secoes.flatMap((s) => s.perguntas ?? [])
 
   return (
     <div>
       <PageHeader
-        eyebrow="Configurações · Modelos De Protocolo"
-        title={novo ? 'Novo Modelo De Protocolo' : modelo.name || 'Modelo De Protocolo'}
+        eyebrow="Configurações · modelos de protocolo"
+        title={novo ? 'Novo modelo de protocolo' : modelo.name || 'Modelo de protocolo'}
         description="Monte as seções do formulário e o que cada uma escreve no relatório. O protocolo padrão do sistema não é alterado."
         actions={
-          <div style={{ display: 'flex', gap: 'var(--np-space-3)', flexWrap: 'wrap' }}>
-            <Button type="button" variant="outline" onClick={() => navigate('/configuracoes/protocolos')}>
+          <div style={{ display: 'flex', gap: 'var(--s-3)', flexWrap: 'wrap' }}>
+            <Button variant="ghost" icon={<ArrowLeft />} onClick={() => navigate('/configuracoes/protocolos')}>
               Voltar
             </Button>
-            <Button type="button" variant="outline" icon={<Eye size={16} />} onClick={mostrarPrevia} disabled={gerandoPrevia}>
-              {gerandoPrevia ? 'Montando…' : 'Pré-Visualizar Relatório'}
+            <Button variant="secondary" icon={<Eye />} onClick={mostrarPrevia} loading={gerandoPrevia} loadingLabel="Montando…">
+              Pré-visualizar relatório
             </Button>
-            <Button type="button" onClick={salvar} disabled={salvando}>
-              {salvando ? 'Salvando…' : 'Salvar Modelo'}
+            <Button icon={<Save />} onClick={salvar} loading={salvando} loadingLabel="Salvando…">
+              Salvar modelo
             </Button>
           </div>
         }
       />
 
-      <div style={{ display: 'grid', gap: 'var(--np-space-5)' }}>
+      <div style={{ display: 'grid', gap: 'var(--s-5)' }}>
         {erro && <Alert tone="danger">{erro}</Alert>}
         {sucesso && <Alert tone="success">{sucesso}</Alert>}
 
-        <Card title="Dados Do Modelo">
-          <div style={{ display: 'grid', gap: 'var(--np-space-4)' }}>
+        <Card title="Dados do modelo">
+          <div style={{ display: 'grid', gap: 'var(--s-4)' }}>
             <Input
               id="nome-modelo"
-              label="Nome Do Modelo"
+              label="Nome do modelo"
               value={modelo.name}
               onChange={(e) => setModelo({ ...modelo, name: e.target.value })}
-              placeholder="Ex.: Anamnese Infantil"
+              placeholder="Ex.: Anamnese infantil"
               required
             />
             <Textarea
               id="descricao-modelo"
-              label="Descrição (Opcional)"
+              label="Descrição (opcional)"
               rows={2}
               value={modelo.descricao ?? ''}
               onChange={(e) => setModelo({ ...modelo, descricao: e.target.value })}
-              placeholder="Aparece na escolha do protocolo em Novo Atendimento."
+              placeholder="Aparece na escolha do protocolo em “Novo atendimento”."
             />
             <Textarea
               id="titulo-relatorio"
-              label="Título Do Relatório"
+              label="Título do relatório"
               rows={2}
               value={modelo.titulo_relatorio}
               onChange={(e) => setModelo({ ...modelo, titulo_relatorio: e.target.value })}
@@ -254,10 +254,10 @@ export default function EditorProtocolo() {
           />
         ))}
 
-        <Card title="Adicionar Seção" subtitle="Cada seção vira uma fase do formulário e um bloco do relatório.">
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)' }}>
+        <Card title="Adicionar seção" subtitle="Cada seção vira uma fase do formulário e um bloco do relatório.">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-3)' }}>
             {(Object.keys(ROTULOS_TIPO_SECAO) as TipoSecao[]).map((tipo) => (
-              <Button key={tipo} type="button" variant="outline" icon={<Plus size={16} />} onClick={() => adicionarSecao(tipo)}>
+              <Button key={tipo} type="button" variant="secondary" icon={<Plus size={16} />} onClick={() => adicionarSecao(tipo)}>
                 {ROTULOS_TIPO_SECAO[tipo]}
               </Button>
             ))}
@@ -266,7 +266,7 @@ export default function EditorProtocolo() {
 
         {previa && (
           <Card
-            title="Pré-Visualização (Respostas De Exemplo)"
+            title="Pré-visualização (respostas de exemplo)"
             action={
               <Button type="button" variant="ghost" size="sm" onClick={() => setPrevia(null)}>
                 Fechar
@@ -276,7 +276,8 @@ export default function EditorProtocolo() {
             <iframe
               title="Pré-visualização do relatório"
               sandbox="" srcDoc={previa}
-              style={{ width: '100%', height: 900, border: 0, background: '#e7e7ee' }}
+              className="doc-preview"
+              style={{ height: 900 }}
             />
           </Card>
         )}
@@ -321,18 +322,18 @@ function EditorSecao({ numero, total, secao, todasPerguntas, usados, onChange, o
       title={`${numero}. ${secao.titulo || 'Seção sem título'}`}
       subtitle={ROTULOS_TIPO_SECAO[secao.tipo]}
       action={
-        <div style={{ display: 'flex', gap: 'var(--np-space-2)' }}>
+        <div style={{ display: 'flex', gap: 'var(--s-2)' }}>
           <IconButton label="Mover para cima" icon={<ArrowUp size={16} />} variant="ghost" size="sm" disabled={numero === 1} onClick={() => onMover(-1)} />
           <IconButton label="Mover para baixo" icon={<ArrowDown size={16} />} variant="ghost" size="sm" disabled={numero === total} onClick={() => onMover(1)} />
           <IconButton label="Remover seção" icon={<Trash2 size={16} />} variant="ghost" size="sm" disabled={total === 1} onClick={onRemover} />
         </div>
       }
     >
-      <div style={{ display: 'grid', gap: 'var(--np-space-4)' }}>
-        <Input id={`titulo-${secao.id}`} label="Título Da Seção" value={secao.titulo} onChange={(e) => onChange((s) => ({ ...s, titulo: e.target.value }))} />
+      <div style={{ display: 'grid', gap: 'var(--s-4)' }}>
+        <Input id={`titulo-${secao.id}`} label="Título da seção" value={secao.titulo} onChange={(e) => onChange((s) => ({ ...s, titulo: e.target.value }))} />
         <Textarea
           id={`ajuda-${secao.id}`}
-          label="Orientação Para Quem Preenche (Opcional)"
+          label="Orientação para quem preenche (opcional)"
           rows={2}
           value={secao.ajuda ?? ''}
           onChange={(e) => onChange((s) => ({ ...s, ajuda: e.target.value }))}
@@ -342,11 +343,11 @@ function EditorSecao({ numero, total, secao, todasPerguntas, usados, onChange, o
           <Bloco titulo="Perguntas">
             {(secao.perguntas ?? []).map((p, j) => (
               <div key={j} style={blocoInterno}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr) auto', gap: 'var(--np-space-3)', alignItems: 'end' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr) auto', gap: 'var(--s-3)', alignItems: 'end' }}>
                   <Input id={`pergunta-${secao.id}-${j}`} label={`Pergunta ${j + 1}`} value={p.rotulo} onChange={(e) => onRenomearPergunta(j, e.target.value)} />
                   <Select
                     id={`tipo-${secao.id}-${j}`}
-                    label="Tipo De Resposta"
+                    label="Tipo de resposta"
                     value={p.tipo}
                     options={opcoesDeTipo(ROTULOS_TIPO_PERGUNTA)}
                     onChange={(e) => {
@@ -362,7 +363,7 @@ function EditorSecao({ numero, total, secao, todasPerguntas, usados, onChange, o
                     onClick={() => onChange((s) => ({ ...s, perguntas: s.perguntas!.filter((_, k) => k !== j) }))}
                   />
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-5)' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-5)' }}>
                   <Checkbox label="Essencial (avisa se ficar em branco)" checked={!!p.obrigatoria} onChange={(e) => alterarPergunta(j, { obrigatoria: e.target.checked })} />
                   {p.tipo === 'sim_nao' && (
                     <Checkbox
@@ -373,10 +374,10 @@ function EditorSecao({ numero, total, secao, todasPerguntas, usados, onChange, o
                   )}
                 </div>
                 {p.opcoes && (
-                  <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
+                  <div style={{ display: 'grid', gap: 'var(--s-2)' }}>
                     <span style={legenda}>Opções — o texto ao lado entra no relatório quando a opção é escolhida (opcional)</span>
                     {p.opcoes.map((o, k) => (
-                      <div key={k} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,2fr) auto', gap: 'var(--np-space-2)', alignItems: 'start' }}>
+                      <div key={k} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,2fr) auto', gap: 'var(--s-2)', alignItems: 'start' }}>
                         <Input
                           value={o.rotulo}
                           disabled={p.tipo === 'sim_nao'}
@@ -409,7 +410,7 @@ function EditorSecao({ numero, total, secao, todasPerguntas, usados, onChange, o
                         style={{ justifySelf: 'start' }}
                         onClick={() => alterarPergunta(j, { opcoes: [...p.opcoes!, { rotulo: `Opção ${p.opcoes!.length + 1}`, texto_relatorio: '' }] })}
                       >
-                        Adicionar Opção
+                        Adicionar opção
                       </Button>
                     )}
                   </div>
@@ -418,13 +419,13 @@ function EditorSecao({ numero, total, secao, todasPerguntas, usados, onChange, o
             ))}
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               size="sm"
               icon={<Plus size={14} />}
               style={{ justifySelf: 'start' }}
               onClick={() => onChange((s) => ({ ...s, perguntas: [...(s.perguntas ?? []), novaPergunta(usados())] }))}
             >
-              Adicionar Pergunta
+              Adicionar pergunta
             </Button>
           </Bloco>
         )}
@@ -437,7 +438,7 @@ function EditorSecao({ numero, total, secao, todasPerguntas, usados, onChange, o
           <p style={{ ...legenda, margin: 0 }}>Quem preenche anexa fotos nesta fase; elas entram no relatório nesta posição. A primeira foto também vai no cabeçalho do paciente.</p>
         )}
 
-        <Bloco titulo="No Relatório">
+        <Bloco titulo="No relatório">
           <Checkbox
             label="Mostrar esta seção no relatório"
             checked={secao.relatorio.mostrar}
@@ -460,13 +461,13 @@ function EditorSecao({ numero, total, secao, todasPerguntas, usados, onChange, o
               )}
               <Textarea
                 id={idTexto}
-                label={secao.tipo === 'texto' ? 'Texto Inicial (editável no atendimento)' : 'Texto Padrão Do Relatório'}
+                label={secao.tipo === 'texto' ? 'Texto inicial (editável no atendimento)' : 'Texto padrão do relatório'}
                 rows={5}
                 value={secao.relatorio.texto_padrao ?? ''}
                 onChange={(e) => onChange((s) => ({ ...s, relatorio: { ...s.relatorio, texto_padrao: e.target.value } }))}
                 hint="Aparece já preenchido no atendimento e pode ser editado lá. **negrito**, ==destaque cinza==, linhas começando com • ou ✔ viram listas."
               />
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-2)' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)' }}>
                 {[...VARIAVEIS_GERAIS, ...(secao.tipo === 'escala' ? VARIAVEIS_ESCALA : [])].map((v) => (
                   <Chip key={v.variavel} titulo={v.descricao} onClick={() => inserirVariavel(v.variavel)}>
                     {v.descricao}
@@ -491,9 +492,9 @@ function EditorSecao({ numero, total, secao, todasPerguntas, usados, onChange, o
 function EditorEscala({ escala, usados, onChange }: { escala: Escala; usados: () => Set<string>; onChange: (m: (e: Escala) => Escala) => void }) {
   return (
     <>
-      <Bloco titulo="Itens Da Escala">
+      <Bloco titulo="Itens da escala">
         {escala.itens.map((item, j) => (
-          <div key={item.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 'var(--np-space-2)', alignItems: 'end' }}>
+          <div key={item.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 'var(--s-2)', alignItems: 'end' }}>
             <Input
               id={`item-${item.id}`}
               label={`Item ${j + 1}`}
@@ -511,19 +512,19 @@ function EditorEscala({ escala, usados, onChange }: { escala: Escala; usados: ()
         ))}
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           size="sm"
           icon={<Plus size={14} />}
           style={{ justifySelf: 'start' }}
           onClick={() => onChange((es) => ({ ...es, itens: [...es.itens, { id: idUnico(`item_${es.itens.length + 1}`, usados()), rotulo: '' }] }))}
         >
-          Adicionar Item
+          Adicionar item
         </Button>
       </Bloco>
 
-      <Bloco titulo="Opções De Resposta E Pontos">
+      <Bloco titulo="Opções de resposta e pontos">
         {escala.opcoes.map((o, j) => (
-          <div key={j} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr) auto', gap: 'var(--np-space-2)', alignItems: 'end' }}>
+          <div key={j} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(0,1fr) auto', gap: 'var(--s-2)', alignItems: 'end' }}>
             <Input label={j === 0 ? 'Resposta' : undefined} value={o.rotulo} onChange={(e) => onChange((es) => ({ ...es, opcoes: es.opcoes.map((x, k) => (k === j ? { ...x, rotulo: e.target.value } : x)) }))} />
             <Input
               label={j === 0 ? 'Pontos' : undefined}
@@ -543,20 +544,20 @@ function EditorEscala({ escala, usados, onChange }: { escala: Escala; usados: ()
         ))}
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           size="sm"
           icon={<Plus size={14} />}
           style={{ justifySelf: 'start' }}
           onClick={() => onChange((es) => ({ ...es, opcoes: [...es.opcoes, { rotulo: '', valor: es.opcoes.length }] }))}
         >
-          Adicionar Resposta
+          Adicionar resposta
         </Button>
       </Bloco>
 
-      <Bloco titulo="Classificação Pela Pontuação Total (Opcional)">
+      <Bloco titulo="Classificação pela pontuação total (opcional)">
         {escala.faixas.map((f, j) => (
           <div key={j} style={blocoInterno}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,2fr) auto', gap: 'var(--np-space-2)', alignItems: 'end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,2fr) auto', gap: 'var(--s-2)', alignItems: 'end' }}>
               <Input label="De" type="number" step="any" value={f.min} onChange={(e) => onChange((es) => ({ ...es, faixas: es.faixas.map((x, k) => (k === j ? { ...x, min: Number(e.target.value) } : x)) }))} />
               <Input label="Até" type="number" step="any" value={f.max} onChange={(e) => onChange((es) => ({ ...es, faixas: es.faixas.map((x, k) => (k === j ? { ...x, max: Number(e.target.value) } : x)) }))} />
               <Input label="Classificação" value={f.rotulo} onChange={(e) => onChange((es) => ({ ...es, faixas: es.faixas.map((x, k) => (k === j ? { ...x, rotulo: e.target.value } : x)) }))} />
@@ -572,7 +573,7 @@ function EditorEscala({ escala, usados, onChange }: { escala: Escala; usados: ()
         ))}
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           size="sm"
           icon={<Plus size={14} />}
           style={{ justifySelf: 'start' }}
@@ -583,7 +584,7 @@ function EditorEscala({ escala, usados, onChange }: { escala: Escala; usados: ()
             })
           }
         >
-          Adicionar Faixa
+          Adicionar faixa
         </Button>
         <Checkbox
           label="Mostrar gráfico de barras no relatório"
@@ -595,19 +596,19 @@ function EditorEscala({ escala, usados, onChange }: { escala: Escala; usados: ()
   )
 }
 
-const legenda = { font: 'var(--np-type-caption)', color: 'var(--np-text-muted)' } as const
+const legenda = { font: 'var(--type-caption)', color: 'var(--text-2)' } as const
 const blocoInterno = {
   display: 'grid',
-  gap: 'var(--np-space-3)',
-  padding: 'var(--np-space-3)',
-  border: '1px solid var(--np-border)',
-  borderRadius: 'var(--np-radius-sm)',
+  gap: 'var(--s-3)',
+  padding: 'var(--s-3)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--r-sm)',
 } as const
 
 function Bloco({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
-    <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 'var(--np-space-3)' }}>
-      <legend style={{ font: 'var(--np-type-section)', marginBottom: 'var(--np-space-2)', padding: 0 }}>{titulo}</legend>
+    <fieldset style={{ border: 0, padding: 0, margin: 0, display: 'grid', gap: 'var(--s-3)' }}>
+      <legend style={{ font: 'var(--type-h3)', marginBottom: 'var(--s-2)', padding: 0 }}>{titulo}</legend>
       {children}
     </fieldset>
   )
@@ -615,20 +616,7 @@ function Bloco({ titulo, children }: { titulo: string; children: ReactNode }) {
 
 function Chip({ children, titulo, onClick }: { children: ReactNode; titulo: string; onClick: () => void }) {
   return (
-    <button
-      type="button"
-      title={titulo}
-      onClick={onClick}
-      style={{
-        border: '1px solid var(--np-border)',
-        background: 'var(--np-surface-alt)',
-        color: 'var(--np-text)',
-        borderRadius: 999,
-        padding: '2px 10px',
-        font: 'var(--np-type-caption)',
-        cursor: 'pointer',
-      }}
-    >
+    <button type="button" title={titulo} onClick={onClick} className="chip">
       + {children}
     </button>
   )

@@ -1,4 +1,4 @@
-import { Camera, Trash2 } from 'lucide-react'
+import { Camera, Download, Ellipsis, FileText, Pencil, Plus, Sparkles, Stethoscope, Trash2 } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
@@ -22,9 +22,10 @@ import type {
   ReportResumo,
   ReportTemplate,
 } from '../api/types'
-import { Alert, Badge, Button, buttonStyle, Card, PageHeader } from '../components/ds'
+import { Alert, Badge, Button, buttonClass, Card, Menu, PageHeader } from '../components/ds'
 import { FormulariosDeResponsaveis } from '../components/pacientes/FormulariosDeResponsaveis'
 import { SecoesClinicasForm } from '../components/pacientes/SecoesClinicasForm'
+import { idadeParaExibicao, nomeParaExibicao } from '../utils/exibicao'
 import styles from './Page.module.css'
 
 
@@ -128,16 +129,21 @@ export default function HistoricoPaciente() {
     }
   }
 
-  if (loading) return <p>Carregando...</p>
+  if (loading) return <p className="text-2">Carregando…</p>
 
   return (
     <div>
       <PageHeader
-        eyebrow="Histórico"
-        title={patient ? patient.name : `Paciente #${id}`}
+        eyebrow="Pacientes · Histórico"
+        title={patient ? nomeParaExibicao(patient.name) : `Paciente #${id}`}
+        description={
+          patient
+            ? [idadeParaExibicao(patient.birth_date), `nascimento em ${new Date(`${patient.birth_date}T00:00:00`).toLocaleDateString('pt-BR')}`].filter(Boolean).join(' · ')
+            : undefined
+        }
         actions={
-          <Link to={`/atendimento/novo?paciente=${id}`} style={buttonStyle('primary')}>
-            + Novo Protocolo Para Este Paciente
+          <Link to={`/atendimento/novo?paciente=${id}`} className={buttonClass('primary', 'lg')}>
+            <Plus aria-hidden="true" /> Novo protocolo para este paciente
           </Link>
         }
       />
@@ -148,17 +154,21 @@ export default function HistoricoPaciente() {
       {error && <Alert tone="danger">{error}</Alert>}
 
       {id && (
-        <Card title="Laudo Por IA" style={{ marginTop: 'var(--np-space-5)' }}>
-          <p>Envie os PDFs dos formulários e das escalas para gerar o estudo de caso e o laudo no protocolo padrão.</p>
-          <Link to={`/laudo-ia?paciente=${id}`} style={buttonStyle('primary')}>
-            Gerar Laudo Com IA
-          </Link>
+        <Card title="Laudo por IA" style={{ marginTop: 'var(--s-5)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-4)', alignItems: 'center', justifyContent: 'space-between' }}>
+            <p className="text-2" style={{ margin: 0, flex: '1 1 320px' }}>
+              Envie os PDFs dos formulários e das escalas para gerar o estudo de caso e o laudo no protocolo padrão.
+            </p>
+            <Link to={`/laudo-ia?paciente=${id}`} className={buttonClass('tonal')}>
+              <Sparkles aria-hidden="true" /> Gerar laudo com IA
+            </Link>
+          </div>
         </Card>
       )}
 
-      <Card title="Protocolos Do Paciente" style={{ marginTop: 'var(--np-space-5)' }}>
+      <Card title="Protocolos do paciente" style={{ marginTop: 'var(--s-5)' }}>
         {!error && reports.length === 0 && (
-          <p style={{ color: 'var(--np-text-muted)' }}>Nenhum protocolo registrado para este paciente ainda. Clique em "+ Novo Protocolo Para Este Paciente" para começar.</p>
+          <p className="text-2" style={{ margin: 0 }}>Nenhum protocolo registrado para este paciente ainda. Clique em "Novo protocolo para este paciente" para começar.</p>
         )}
 
         {reports.length > 0 && (
@@ -168,91 +178,89 @@ export default function HistoricoPaciente() {
               <thead>
                 <tr>
                   <th>Data</th>
-                  <th>Modelo Usado</th>
+                  <th>Modelo usado</th>
                   <th>Classificação</th>
-                  <th></th>
+                  <th>
+                    <span className="sr-only">Ações</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {reports.map((report) => (
                   <Fragment key={report.id}>
                     <tr>
-                      <td>{new Date(report.created_at).toLocaleString('pt-BR')}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>{new Date(report.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
 
                       {editingId === report.id ? (
                         <>
                           <td>
-                            <input value={editName} onChange={(e) => setEditName(e.target.value)} />
+                            <input className="input" aria-label="Modelo usado" value={editName} onChange={(e) => setEditName(e.target.value)} />
                           </td>
                           <td>
                             <input
+                              className="input"
+                              aria-label="Classificação"
                               value={editClassification}
                               onChange={(e) => setEditClassification(e.target.value)}
                             />
                           </td>
-                          <td style={{ whiteSpace: 'nowrap' }}>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={() => saveEdit(report)}
-                              disabled={savingEdit}
-                              style={{ marginRight: 'var(--np-space-2)' }}
-                            >
-                              {savingEdit ? 'Salvando...' : 'Salvar'}
-                            </Button>
-                            <Button type="button" size="sm" variant="outline" onClick={() => setEditingId(null)}>
-                              Cancelar
-                            </Button>
+                          <td>
+                            <div className={styles.rowActions} style={{ flexWrap: 'nowrap' }}>
+                              <Button size="sm" onClick={() => saveEdit(report)} loading={savingEdit} loadingLabel="Salvando…">
+                                Salvar
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} disabled={savingEdit}>
+                                Cancelar
+                              </Button>
+                            </div>
                           </td>
                         </>
                       ) : (
                         <>
                           <td>{nomeDoTemplate(report)}</td>
                           <td>
-                            <Badge tone="brand">{classificacaoResumo(report)}</Badge>
+                            {classificacaoResumo(report) === '—' ? (
+                              <span className="text-2">—</span>
+                            ) : (
+                              <Badge tone="brand">{classificacaoResumo(report)}</Badge>
+                            )}
                           </td>
-                          <td style={{ whiteSpace: 'nowrap' }}>
-                            {ehRelatorioIA(report) && (
-                              <>
-                                <Link className={styles.rowLink} to={`/pacientes/${id}/relatorio-ia/${report.id}`}>
-                                  Abrir Relatório
-                                </Link>{' '}
-                              </>
-                            )}
-                            {ehProtocoloPadrao(report) && (
-                              <>
-                                <Link className={styles.rowLink} to={`/atendimento/novo?laudo=${report.id}`}>
-                                  Abrir Protocolo
-                                </Link>{' '}
-                              </>
-                            )}
-                            {ehModeloDeProtocolo(report) && (
-                              <>
-                                <Link className={styles.rowLink} to={`/atendimento/protocolo/${report.template_id}?laudo=${report.id}`}>
-                                  Abrir Protocolo
-                                </Link>{' '}
-                              </>
-                            )}
-                            <button type="button" className={styles.rowLink} onClick={() => startEdit(report)}>
-                              Editar
-                            </button>{' '}
-                            <button type="button" className={styles.rowLink} onClick={() => toggleClinical(report.id)}>
-                              {clinicalOpenId === report.id ? 'Ocultar Seções Clínicas' : 'Seções Clínicas'}
-                            </button>{' '}
-                            <button
-                              type="button"
-                              className={styles.rowLink}
-                              onClick={() => handleDownloadReport(report, 'pdf')}
-                            >
-                              Baixar PDF
-                            </button>{' '}
-                            <button
-                              type="button"
-                              className={styles.rowLink}
-                              onClick={() => handleDownloadReport(report, 'docx')}
-                            >
-                              Baixar Word
-                            </button>
+                          <td>
+                            <div className={styles.rowActions} style={{ justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+                              {ehRelatorioIA(report) && (
+                                <Link className={buttonClass('secondary', 'sm')} to={`/pacientes/${id}/relatorio-ia/${report.id}`}>
+                                  Abrir relatório
+                                </Link>
+                              )}
+                              {ehProtocoloPadrao(report) && (
+                                <Link className={buttonClass('secondary', 'sm')} to={`/atendimento/novo?laudo=${report.id}`}>
+                                  Abrir protocolo
+                                </Link>
+                              )}
+                              {ehModeloDeProtocolo(report) && (
+                                <Link className={buttonClass('secondary', 'sm')} to={`/atendimento/protocolo/${report.template_id}?laudo=${report.id}`}>
+                                  Abrir protocolo
+                                </Link>
+                              )}
+                              <Button size="sm" variant="tonal" icon={<Download />} aria-label="Baixar PDF" onClick={() => handleDownloadReport(report, 'pdf')}>
+                                PDF
+                              </Button>
+                              <Button size="sm" variant="tonal" icon={<FileText />} aria-label="Baixar Word" onClick={() => handleDownloadReport(report, 'docx')}>
+                                Word
+                              </Button>
+                              <Menu
+                                label={`Mais ações do protocolo de ${new Date(report.created_at).toLocaleDateString('pt-BR')}`}
+                                icon={<Ellipsis />}
+                                items={[
+                                  { label: 'Editar', icon: <Pencil />, onSelect: () => startEdit(report) },
+                                  {
+                                    label: clinicalOpenId === report.id ? 'Ocultar seções clínicas' : 'Seções clínicas',
+                                    icon: <Stethoscope />,
+                                    onSelect: () => toggleClinical(report.id),
+                                  },
+                                ]}
+                              />
+                            </div>
                           </td>
                         </>
                       )}
@@ -344,44 +352,30 @@ function FotosDoPaciente({ patientId }: { patientId: string }) {
   if (loading) return null
 
   return (
-    <Card title="Fotos Do Paciente" subtitle="Usadas no relatório em PDF e Word (a primeira foto vai no cabeçalho)." style={{ marginTop: 'var(--np-space-5)' }}>
-      {error && <Alert tone="danger" style={{ marginBottom: 'var(--np-space-3)' }}>{error}</Alert>}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)', marginBottom: 'var(--np-space-4)' }}>
+    <Card title="Fotos do paciente" subtitle="Usadas no relatório em PDF e Word (a primeira foto vai no cabeçalho)." style={{ marginTop: 'var(--s-5)' }}>
+      {error && <Alert tone="danger" style={{ marginBottom: 'var(--s-3)' }}>{error}</Alert>}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-3)', marginBottom: 'var(--s-4)' }}>
         {photos.map((photo) => (
           <div key={photo.id} style={{ textAlign: 'center' }}>
             {urls[photo.id] ? (
               <img
                 src={urls[photo.id]}
                 alt={photo.caption ?? 'Foto do paciente'}
-                style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 'var(--np-radius-md)', border: '2px solid var(--np-white)', boxShadow: 'var(--np-shadow-xs)' }}
+                style={{ width: 112, height: 112, objectFit: 'cover', borderRadius: 'var(--r-md)', border: '1px solid var(--divider)', display: 'block' }}
               />
             ) : (
-              <div style={{ width: 100, height: 100, background: 'var(--np-surface-sunken)', borderRadius: 'var(--np-radius-md)' }} />
+              <div style={{ width: 112, height: 112, background: 'var(--n-50)', borderRadius: 'var(--r-md)' }} />
             )}
-            <button
-              type="button"
-              onClick={() => handleDelete(photo.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                margin: '6px auto 0',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--np-danger)',
-                font: 'var(--np-type-caption)',
-              }}
-            >
-              <Trash2 size={12} /> Excluir
-            </button>
+            <Button size="sm" variant="danger-ghost" icon={<Trash2 />} aria-label="Excluir foto" onClick={() => handleDelete(photo.id)} style={{ marginTop: 'var(--s-1)' }}>
+              Excluir
+            </Button>
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--np-space-3)', flexWrap: 'wrap' }}>
-        <input type="file" accept=".jpg,.jpeg,.png,.webp" ref={fileInputRef} />
-        <Button type="button" size="sm" icon={<Camera size={16} />} onClick={handleUpload} disabled={uploading}>
-          {uploading ? 'Enviando...' : 'Adicionar Foto'}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-3)', flexWrap: 'wrap' }}>
+        <input type="file" accept=".jpg,.jpeg,.png,.webp" ref={fileInputRef} aria-label="Escolher foto do paciente" />
+        <Button size="sm" variant="secondary" icon={<Camera />} onClick={handleUpload} loading={uploading} loadingLabel="Enviando…">
+          Adicionar foto
         </Button>
       </div>
     </Card>

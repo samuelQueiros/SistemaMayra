@@ -1,78 +1,18 @@
-import type { CSSProperties, MouseEventHandler, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { buttonClass } from './buttonClass'
+import type { ButtonSize, ButtonVariant } from './buttonClass'
 
-type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
-type Size = 'sm' | 'md' | 'lg'
-
-const variants: Record<Variant, CSSProperties> = {
-  primary: {
-    background: 'var(--np-primary)',
-    color: 'var(--np-text-on-brand)',
-    border: '1px solid var(--np-primary)',
-    boxShadow: 'var(--np-shadow-sm)',
-  },
-  secondary: {
-    background: 'var(--np-secondary)',
-    color: 'var(--np-white)',
-    border: '1px solid var(--np-secondary)',
-    boxShadow: 'var(--np-shadow-sm)',
-  },
-  outline: {
-    background: 'var(--np-surface)',
-    color: 'var(--np-text-brand)',
-    border: '1px solid var(--np-border-brand)',
-    boxShadow: 'var(--np-shadow-xs)',
-  },
-  ghost: {
-    background: 'transparent',
-    color: 'var(--np-text-brand)',
-    border: '1px solid transparent',
-    boxShadow: 'none',
-  },
-  danger: {
-    background: 'var(--np-danger)',
-    color: 'var(--np-white)',
-    border: '1px solid var(--np-danger)',
-    boxShadow: 'var(--np-shadow-sm)',
-  },
-}
-
-const sizes: Record<Size, CSSProperties> = {
-  sm: { height: 'var(--np-control-h-sm)', padding: '0 var(--np-space-3)', fontSize: 'var(--np-text-sm)' },
-  md: { height: 'var(--np-control-h)', padding: '0 var(--np-space-5)', fontSize: 'var(--np-text-base)' },
-  lg: { height: 'var(--np-control-h-lg)', padding: '0 var(--np-space-6)', fontSize: 'var(--np-text-md)' },
-}
-
-interface ButtonProps {
-  variant?: Variant
-  size?: Size
+interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
+  variant?: ButtonVariant
+  /** sm = 36px (tabelas), md = 44px (padrão), lg = 52px (ação principal do topo). */
+  size?: ButtonSize
   icon?: ReactNode
   iconRight?: ReactNode
   fullWidth?: boolean
-  disabled?: boolean
-  type?: 'button' | 'submit' | 'reset'
-  onClick?: MouseEventHandler<HTMLButtonElement>
+  /** Mostra o spinner, desabilita o botão e troca o texto por `loadingLabel`. */
+  loading?: boolean
+  loadingLabel?: ReactNode
   children?: ReactNode
-  style?: CSSProperties
-}
-
-// Exportado para estilizar elementos que não podem ser um <button> (ex.:
-// <Link> do react-router-dom usado como ação de navegação com cara de botão).
-export function buttonStyle(variant: Variant = 'primary', size: Size = 'md'): CSSProperties {
-  return {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 'var(--np-space-2)',
-    borderRadius: 'var(--np-radius-pill)',
-    fontFamily: 'var(--np-font-body)',
-    fontWeight: 'var(--np-weight-bold)',
-    textDecoration: 'none',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    transition: 'background var(--np-dur) var(--np-ease), transform var(--np-dur-fast) var(--np-ease)',
-    ...sizes[size],
-    ...variants[variant],
-  }
 }
 
 export function Button({
@@ -81,38 +21,25 @@ export function Button({
   icon,
   iconRight,
   fullWidth = false,
+  loading = false,
+  loadingLabel,
   disabled = false,
   type = 'button',
-  onClick,
+  className,
   children,
-  style,
+  ...rest
 }: ButtonProps) {
   return (
     <button
       type={type}
-      disabled={disabled}
-      onClick={onClick}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 'var(--np-space-2)',
-        borderRadius: 'var(--np-radius-pill)',
-        fontFamily: 'var(--np-font-body)',
-        fontWeight: 'var(--np-weight-bold)',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.45 : 1,
-        width: fullWidth ? '100%' : 'auto',
-        whiteSpace: 'nowrap',
-        transition: 'background var(--np-dur) var(--np-ease), transform var(--np-dur-fast) var(--np-ease)',
-        ...sizes[size],
-        ...variants[variant],
-        ...style,
-      }}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      className={buttonClass(variant, size, [fullWidth && 'btn-block', className].filter(Boolean).join(' '))}
+      {...rest}
     >
-      {icon}
-      {children}
-      {iconRight}
+      {loading ? <span className="btn-spinner" aria-hidden="true" /> : icon}
+      {loading ? (loadingLabel ?? children) : children}
+      {!loading && iconRight}
     </button>
   )
 }

@@ -27,7 +27,7 @@ async function prepararEGerar() {
   )
   const pdf = new File(['%PDF-1.4'], 'anamnese.pdf', { type: 'application/pdf' })
   fireEvent.change(await screen.findByTestId('arquivos-pdf'), { target: { files: [pdf] } })
-  fireEvent.click(screen.getByRole('button', { name: 'Gerar Laudo Com IA' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Gerar laudo com IA' }))
   return pdf
 }
 
@@ -47,16 +47,16 @@ describe('Laudo Por IA', () => {
     } as never)
     const pdf = await prepararEGerar()
 
-    expect(screen.getByTitle('Gerando O Laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?paciente=p1&modo=catalogo')
+    expect(screen.getByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?paciente=p1&modo=catalogo')
     mensagemDoFormulario({ tipo: 'laudo-ia:catalogo', catalogo })
 
-    expect(await screen.findByTitle('Gerando O Laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l1&modo=gerar')
+    expect(await screen.findByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l1&modo=gerar')
     expect(laudoIA.gerarLaudoPorIA).toHaveBeenCalledWith('p1', [pdf], '', catalogo)
     mensagemDoFormulario({ tipo: 'laudo-ia:gerado', laudoId: 'l1' })
 
-    expect(await screen.findByText('Laudo Gerado')).toBeInTheDocument()
+    expect(await screen.findByText('Laudo gerado')).toBeInTheDocument()
     expect(screen.getByText('Sem dados do Portage.')).toBeInTheDocument()
-    expect(screen.getByTitle('Pré-Visualização Do Laudo')).toBeInTheDocument()
+    expect(screen.getByTitle('Pré-visualização do laudo')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Baixar Word (DOCX)' }))
     expect(reports.downloadReportDocx).toHaveBeenCalledWith('l1', 'laudo_ia_Bia_Lima.docx')
   })
@@ -65,7 +65,7 @@ describe('Laudo Por IA', () => {
     vi.mocked(laudoIA.gerarLaudoPorIA).mockResolvedValue({ id: 'l2' } as laudoIA.LaudoPorIA)
     await prepararEGerar()
     mensagemDoFormulario({ tipo: 'laudo-ia:catalogo', catalogo })
-    await screen.findByTitle('Gerando O Laudo')
+    await screen.findByTitle('Gerando o laudo')
     await act(async () => {})
     mensagemDoFormulario({ tipo: 'laudo-ia:erro', mensagem: 'Falhou ao gerar.' })
 

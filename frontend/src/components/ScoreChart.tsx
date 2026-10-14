@@ -23,8 +23,10 @@ ChartJS.register(
   Legend,
 )
 
-// Paleta da marca (Neuropp Mayra Vanessa) — ver frontend/src/styles/tokens/colors.css.
-const CORES = ['#7561ae', '#d9709f', '#8fb4d6', '#f5a623', '#3fa35b', '#b3a5e2', '#e7a8c8', '#dce9f5']
+// Paleta "Caderno Lilás" (public/identidade/tokens.css). O Chart.js desenha
+// em canvas e não entende var(): lê o valor das variáveis na hora.
+const VARIAVEIS = ['--violeta-600', '--ceu-500', '--sol-500', '--ok', '--violeta-300', '--ceu-300', '--sol-300', '--violeta-800']
+const corDoToken = (nome: string) => getComputedStyle(document.documentElement).getPropertyValue(nome).trim() || undefined
 
 interface ScoreChartProps {
   type: 'bar' | 'radar' | 'pie'
@@ -40,8 +42,8 @@ export default function ScoreChart({ type, labels, values, title }: ScoreChartPr
       {
         label: title,
         data: values,
-        backgroundColor: type === 'bar' ? '#7561ae' : CORES,
-        borderColor: '#7561ae',
+        backgroundColor: type === 'bar' ? corDoToken('--primary') : VARIAVEIS.map(corDoToken),
+        borderColor: corDoToken('--primary'),
         borderWidth: type === 'radar' ? 2 : 1,
       },
     ],

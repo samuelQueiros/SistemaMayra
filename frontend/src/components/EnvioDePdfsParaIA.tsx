@@ -30,16 +30,16 @@ export function EnvioDePdfsParaIA({ patientId, abertoInicial = false }: { patien
 
   if (!aberto) {
     return (
-      <Card style={{ marginTop: 'var(--np-space-5)' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-4)', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Card style={{ marginTop: 'var(--s-5)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-4)', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontWeight: 600 }}>Relatório Por IA A Partir De Formulários</div>
-            <div style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-muted)' }}>
+            <div style={{ fontWeight: 600 }}>Relatório por IA a partir de formulários</div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-2)' }}>
               Anexe até {MAXIMO_DE_PDFS} PDFs com as respostas (ex.: Google Forms). A IA lê perguntas e respostas e monta o relatório por área, com gráficos, para você revisar.
             </div>
           </div>
           <Button type="button" icon={<Sparkles size={16} />} onClick={() => setAberto(true)}>
-            Relatório Por IA (PDFs)
+            Relatório por IA (PDFs)
           </Button>
         </div>
       </Card>
@@ -48,11 +48,11 @@ export function EnvioDePdfsParaIA({ patientId, abertoInicial = false }: { patien
 
   return (
     <Card
-      title="Relatório Por IA A Partir De Formulários"
+      title="Relatório por IA a partir de formulários"
       subtitle={`Anexe de 1 a ${MAXIMO_DE_PDFS} PDFs com as respostas. No Google Forms: aba Respostas → Individual → ícone de impressora → Salvar como PDF.`}
-      style={{ marginTop: 'var(--np-space-5)' }}
+      style={{ marginTop: 'var(--s-5)' }}
     >
-      <div style={{ display: 'grid', gap: 'var(--np-space-4)' }}>
+      <div style={{ display: 'grid', gap: 'var(--s-4)' }}>
         <SeletorDePdfs
           arquivos={arquivos}
           onChange={setArquivos}
@@ -64,7 +64,7 @@ export function EnvioDePdfsParaIA({ patientId, abertoInicial = false }: { patien
 
         <Textarea
           id="observacoes-ia"
-          label="Observações Para A IA (Opcional)"
+          label="Observações para a IA (opcional)"
           rows={2}
           value={observacoes}
           onChange={(e) => setObservacoes(e.target.value)}
@@ -75,9 +75,9 @@ export function EnvioDePdfsParaIA({ patientId, abertoInicial = false }: { patien
         </Alert>
         {erro && <Alert tone="danger">{erro}</Alert>}
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-3)' }}>
           <Button type="button" icon={<Sparkles size={16} />} onClick={gerar} disabled={!arquivos.length || gerando}>
-            {gerando ? 'Lendo os formulários… (pode levar 1 a 2 minutos)' : 'Gerar Relatório'}
+            {gerando ? 'Lendo os formulários… (pode levar 1 a 2 minutos)' : 'Gerar relatório'}
           </Button>
           <Button type="button" variant="ghost" disabled={gerando} onClick={() => setAberto(false)}>
             Cancelar

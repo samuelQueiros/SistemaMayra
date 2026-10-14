@@ -88,34 +88,34 @@ export function SecoesClinicasForm({
   const hipotesesMarcadas = new Set((form.diagnostic_hypotheses ?? []).map((h) => h.label))
 
   return (
-    <Card tone="sunken" style={{ boxShadow: 'none', textAlign: 'left' }}>
-      <div style={{ display: 'grid', gap: 'var(--np-space-4)' }}>
-        <Textarea label="Anamnese Inicial" value={form.anamnese ?? ''} onChange={(e) => setCampo('anamnese', e.target.value)} rows={3} />
+    <Card tone="sunken">
+      <div style={{ display: 'grid', gap: 'var(--s-4)' }}>
+        <Textarea label="Anamnese inicial" value={form.anamnese ?? ''} onChange={(e) => setCampo('anamnese', e.target.value)} rows={3} />
         <Textarea
-          label="Histórico De Desenvolvimento"
+          label="Histórico de desenvolvimento"
           value={form.historico_desenvolvimento ?? ''}
           onChange={(e) => setCampo('historico_desenvolvimento', e.target.value)}
           rows={3}
         />
         <Textarea
-          label="Encaminhamento, Histórico E Queixas"
+          label="Encaminhamento, histórico e queixas"
           value={form.encaminhamento_queixas ?? ''}
           onChange={(e) => setCampo('encaminhamento_queixas', e.target.value)}
           rows={3}
         />
         <Textarea label="Metodologia" value={form.metodologia ?? ''} onChange={(e) => setCampo('metodologia', e.target.value)} rows={2} />
         <Textarea
-          label="Estudo De Caso E Observações Clínicas"
+          label="Estudo de caso e observações clínicas"
           value={form.estudo_de_caso ?? ''}
           onChange={(e) => setCampo('estudo_de_caso', e.target.value)}
           rows={4}
         />
 
         <div>
-          <span style={{ font: 'var(--np-type-label)', color: 'var(--np-text)', display: 'block', marginBottom: 'var(--np-space-2)' }}>
-            Hipóteses Diagnósticas Investigadas
+          <span className="field-label" style={{ display: 'block', marginBottom: 'var(--s-1)' }}>
+            Hipóteses diagnósticas investigadas
           </span>
-          <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
+          <div style={{ display: 'grid' }}>
             {cidCodes.map((c) => (
               <Checkbox
                 key={c.label}
@@ -130,22 +130,23 @@ export function SecoesClinicasForm({
                 <Checkbox key={h.label} label={h.label} checked onChange={() => toggleHipotese(h.label, h.cid ?? null)} />
               ))}
           </div>
-          <div style={{ display: 'flex', gap: 'var(--np-space-2)', marginTop: 'var(--np-space-3)' }}>
-            <Input placeholder="Outra hipótese..." value={outraHipotese} onChange={(e) => setOutraHipotese(e.target.value)} style={{ flex: 1 }} />
-            <Button type="button" variant="outline" onClick={adicionarOutraHipotese}>
+          <div style={{ display: 'flex', gap: 'var(--s-2)', marginTop: 'var(--s-2)' }}>
+            <Input aria-label="Outra hipótese" placeholder="Outra hipótese…" value={outraHipotese} onChange={(e) => setOutraHipotese(e.target.value)} style={{ flex: 1 }} />
+            <Button type="button" variant="secondary" onClick={adicionarOutraHipotese}>
               Adicionar
             </Button>
           </div>
 
           {(form.diagnostic_hypotheses ?? []).length > 0 && (
-            <div style={{ marginTop: 'var(--np-space-4)' }}>
-              <span style={{ font: 'var(--np-type-label)', color: 'var(--np-text)', display: 'block', marginBottom: 'var(--np-space-2)' }}>
-                Hipótese Selecionada Para Este Paciente (única que aparece no PDF)
+            <div style={{ marginTop: 'var(--s-4)' }}>
+              <span className="field-label" style={{ display: 'block', marginBottom: 'var(--s-1)' }}>
+                Hipótese selecionada para este paciente (única que aparece no PDF)
               </span>
-              <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
+              <div style={{ display: 'grid', gap: 'var(--s-2)' }}>
                 {(form.diagnostic_hypotheses ?? []).map((h) => (
-                  <label key={h.label} style={{ display: 'flex', gap: 'var(--np-space-2)', alignItems: 'center', cursor: 'pointer' }}>
+                  <label key={h.label} style={{ display: 'flex', gap: 'var(--s-3)', alignItems: 'center', minHeight: 'var(--h-md)', cursor: 'pointer' }}>
                     <input
+                      style={{ width: 18, height: 18, margin: 0 }}
                       type="radio"
                       name="hipotese-principal"
                       checked={!!h.selected}
@@ -163,17 +164,17 @@ export function SecoesClinicasForm({
         </div>
 
         <Textarea
-          label="Plano De Intervenção"
+          label="Plano de intervenção"
           value={form.plano_intervencao ?? ''}
           onChange={(e) => setCampo('plano_intervencao', e.target.value)}
           rows={3}
         />
 
         <div>
-          <span style={{ font: 'var(--np-type-label)', color: 'var(--np-text)', display: 'block', marginBottom: 'var(--np-space-2)' }}>
+          <span className="field-label" style={{ display: 'block', marginBottom: 'var(--s-1)' }}>
             Encaminhamentos
           </span>
-          <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
+          <div style={{ display: 'grid' }}>
             {ENCAMINHAMENTOS_SUGERIDOS.map((nome) => (
               <Checkbox
                 key={nome}
@@ -186,7 +187,7 @@ export function SecoesClinicasForm({
         </div>
 
         <Textarea
-          label="Considerações Finais"
+          label="Considerações finais"
           value={form.consideracoes_finais ?? ''}
           onChange={(e) => setCampo('consideracoes_finais', e.target.value)}
           rows={3}
@@ -194,8 +195,8 @@ export function SecoesClinicasForm({
 
         {error && <Alert tone="danger">{error}</Alert>}
         {success && <Alert tone="success">Seções clínicas salvas com sucesso.</Alert>}
-        <Button type="button" onClick={handleSalvar} disabled={saving} style={{ justifySelf: 'start' }}>
-          {saving ? 'Salvando...' : 'Salvar Seções Clínicas'}
+        <Button onClick={handleSalvar} loading={saving} loadingLabel="Salvando…" style={{ justifySelf: 'start' }}>
+          Salvar seções clínicas
         </Button>
       </div>
     </Card>

@@ -91,8 +91,8 @@ export default function TemplateBuilder({ value, onChange }: TemplateBuilderProp
   }
 
   return (
-    <div style={{ display: 'grid', gap: 'var(--np-space-5)' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--np-space-4)' }}>
+    <div style={{ display: 'grid', gap: 'var(--s-5)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--s-4)' }}>
         <Input
           label="Nome Da Escala"
           value={value.name}
@@ -140,13 +140,13 @@ export default function TemplateBuilder({ value, onChange }: TemplateBuilderProp
       )}
 
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--np-space-3)' }}>
-          <h3 style={{ font: 'var(--np-type-section)', margin: 0 }}>Áreas</h3>
-          <Button type="button" size="sm" variant="outline" icon={<Plus size={14} />} onClick={adicionarArea}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--s-3)' }}>
+          <h3 style={{ font: 'var(--type-h3)', margin: 0 }}>Áreas</h3>
+          <Button type="button" size="sm" variant="secondary" icon={<Plus size={14} />} onClick={adicionarArea}>
             Adicionar Área
           </Button>
         </div>
-        <div style={{ display: 'grid', gap: 'var(--np-space-3)' }}>
+        <div style={{ display: 'grid', gap: 'var(--s-3)' }}>
           {value.areas.map((area, i) => (
             <AreaEditor
               key={i}
@@ -157,19 +157,19 @@ export default function TemplateBuilder({ value, onChange }: TemplateBuilderProp
             />
           ))}
           {value.areas.length === 0 && (
-            <p style={{ color: 'var(--np-text-subtle)', font: 'var(--np-type-caption)' }}>Nenhuma área ainda.</p>
+            <p style={{ color: 'var(--text-2)', font: 'var(--type-caption)' }}>Nenhuma área ainda.</p>
           )}
         </div>
       </div>
 
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--np-space-3)' }}>
-          <h3 style={{ font: 'var(--np-type-section)', margin: 0 }}>Faixas De Classificação</h3>
-          <Button type="button" size="sm" variant="outline" icon={<Plus size={14} />} onClick={adicionarFaixa}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--s-3)' }}>
+          <h3 style={{ font: 'var(--type-h3)', margin: 0 }}>Faixas De Classificação</h3>
+          <Button type="button" size="sm" variant="secondary" icon={<Plus size={14} />} onClick={adicionarFaixa}>
             Adicionar Faixa
           </Button>
         </div>
-        <div style={{ display: 'grid', gap: 'var(--np-space-3)' }}>
+        <div style={{ display: 'grid', gap: 'var(--s-3)' }}>
           {value.classification_ranges.map((faixa, i) => (
             <ClassificationRangeEditor
               key={i}
@@ -181,7 +181,7 @@ export default function TemplateBuilder({ value, onChange }: TemplateBuilderProp
             />
           ))}
           {value.classification_ranges.length === 0 && (
-            <p style={{ color: 'var(--np-text-subtle)', font: 'var(--np-type-caption)' }}>Nenhuma faixa ainda.</p>
+            <p style={{ color: 'var(--text-2)', font: 'var(--type-caption)' }}>Nenhuma faixa ainda.</p>
           )}
         </div>
       </div>
@@ -214,14 +214,14 @@ function AreaEditor({
 
   return (
     <Card tone="sunken" style={{ boxShadow: 'none' }}>
-      <div style={{ display: 'grid', gap: 'var(--np-space-3)' }}>
-        <div style={{ display: 'flex', gap: 'var(--np-space-3)', alignItems: 'flex-end' }}>
+      <div style={{ display: 'grid', gap: 'var(--s-3)' }}>
+        <div style={{ display: 'flex', gap: 'var(--s-3)', alignItems: 'flex-end' }}>
           <Input label="Nome Da Área" value={area.label} onChange={(e) => onChange({ ...area, label: e.target.value })} style={{ flex: 1 }} />
-          <IconButton label="Remover área" icon={<Trash2 size={16} />} variant="outline" onClick={onRemove} />
+          <IconButton label="Remover área" icon={<Trash2 size={16} />} variant="secondary" onClick={onRemove} />
         </div>
 
         {ruleType !== 'age_equivalent_percentage' ? (
-          <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
+          <div style={{ display: 'grid', gap: 'var(--s-2)' }}>
             {(area.fields ?? []).map((campo, i) => (
               <FieldEditor
                 key={i}
@@ -239,7 +239,7 @@ function AreaEditor({
             </Button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gap: 'var(--np-space-3)' }}>
+          <div style={{ display: 'grid', gap: 'var(--s-3)' }}>
             {(area.age_brackets ?? []).map((faixa, i) => (
               <AgeBracketEditor
                 key={i}
@@ -277,9 +277,9 @@ function AgeBracketEditor({
   }
 
   return (
-    <Card padding="var(--np-space-3)" style={{ boxShadow: 'none', border: '1px dashed var(--np-border-strong)' }}>
-      <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
-        <div style={{ display: 'flex', gap: 'var(--np-space-3)', alignItems: 'flex-end' }}>
+    <Card padding="var(--s-3)" style={{ boxShadow: 'none', border: '1px dashed var(--n-300)' }}>
+      <div style={{ display: 'grid', gap: 'var(--s-2)' }}>
+        <div style={{ display: 'flex', gap: 'var(--s-3)', alignItems: 'flex-end' }}>
           <Input label="Nome Da Faixa" value={bracket.label} onChange={(e) => onChange({ ...bracket, label: e.target.value })} style={{ flex: 1 }} />
           <Input
             label="Idade Máxima (Meses)"
@@ -288,7 +288,7 @@ function AgeBracketEditor({
             onChange={(e) => onChange({ ...bracket, max_age_months: Number(e.target.value) })}
             style={{ width: 160 }}
           />
-          <IconButton label="Remover faixa" icon={<Trash2 size={16} />} variant="outline" onClick={onRemove} />
+          <IconButton label="Remover faixa" icon={<Trash2 size={16} />} variant="secondary" onClick={onRemove} />
         </div>
         {bracket.fields.map((campo, i) => (
           <FieldEditor
@@ -320,7 +320,7 @@ function FieldEditor({
   onRemove: () => void
 }) {
   return (
-    <div style={{ display: 'flex', gap: 'var(--np-space-2)', alignItems: 'flex-end', flexWrap: 'wrap', padding: 'var(--np-space-2)', background: 'var(--np-surface)', borderRadius: 'var(--np-radius-sm)' }}>
+    <div style={{ display: 'flex', gap: 'var(--s-2)', alignItems: 'flex-end', flexWrap: 'wrap', padding: 'var(--s-2)', background: 'var(--bg-card)', borderRadius: 'var(--r-sm)' }}>
       <Input label="Pergunta" value={field.label} onChange={(e) => onChange({ ...field, label: e.target.value })} style={{ flex: 2, minWidth: 160 }} />
       <Select
         label="Tipo"
@@ -369,7 +369,7 @@ function ClassificationRangeEditor({
   onRemove: () => void
 }) {
   return (
-    <div style={{ display: 'flex', gap: 'var(--np-space-2)', alignItems: 'flex-end', flexWrap: 'wrap', padding: 'var(--np-space-2)', background: 'var(--np-surface-sunken)', borderRadius: 'var(--np-radius-sm)' }}>
+    <div style={{ display: 'flex', gap: 'var(--s-2)', alignItems: 'flex-end', flexWrap: 'wrap', padding: 'var(--s-2)', background: 'var(--n-50)', borderRadius: 'var(--r-sm)' }}>
       <Input label="Nome Da Classificação" value={range.label} onChange={(e) => onChange({ ...range, label: e.target.value })} style={{ flex: 1, minWidth: 160 }} />
 
       {ruleType === 'count_threshold' ? (
@@ -440,12 +440,12 @@ function ItemScoringEditor({
 
   return (
     <div>
-      <span style={{ font: 'var(--np-type-label)', color: 'var(--np-text)', display: 'block', marginBottom: 'var(--np-space-2)' }}>
+      <span style={{ font: 'var(--type-label)', color: 'var(--text)', display: 'block', marginBottom: 'var(--s-2)' }}>
         Peso De Cada Resposta Possível
       </span>
-      <div style={{ display: 'grid', gap: 'var(--np-space-2)' }}>
+      <div style={{ display: 'grid', gap: 'var(--s-2)' }}>
         {entradas.map(([chave, peso]) => (
-          <div key={chave} style={{ display: 'flex', gap: 'var(--np-space-2)', alignItems: 'flex-end' }}>
+          <div key={chave} style={{ display: 'flex', gap: 'var(--s-2)', alignItems: 'flex-end' }}>
             <Input label="Resposta" value={chave} onChange={(e) => atualizarChave(chave, e.target.value)} style={{ width: 180 }} />
             <Input label="Peso" type="number" value={peso} onChange={(e) => atualizarPeso(chave, Number(e.target.value))} style={{ width: 100 }} />
             <IconButton label="Remover" icon={<Trash2 size={16} />} variant="ghost" onClick={() => remover(chave)} />

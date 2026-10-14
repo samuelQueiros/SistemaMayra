@@ -3,6 +3,7 @@ import type { ChangeEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { ApiError } from '../api/client'
 import { fetchCapaUrl, me as getMe, removeCapa, updateCapaConfig, uploadCapa } from '../api/auth'
 import type { CapaConfig } from '../api/types'
+import { Upload } from 'lucide-react'
 import { Alert, Button, Card, Checkbox } from './ds'
 
 // Arte e faixa do nome usadas quando a psicóloga não envia capa própria —
@@ -158,10 +159,10 @@ export function EditorCapa() {
 
   return (
     <Card
-      title="Capa Do Relatório"
+      title="Capa do relatório"
       subtitle="Primeira página de todo relatório (pré-visualização, PDF e Word). Cada relatório ainda pode trocar a capa dentro do formulário."
     >
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-5)', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-5)', alignItems: 'flex-start' }}>
         <div
           ref={previewRef}
           data-testid="preview-capa"
@@ -173,10 +174,10 @@ export function EditorCapa() {
             position: 'relative',
             width: 'min(100%, 260px)',
             aspectRatio: '210 / 297',
-            border: '1px solid var(--np-border)',
-            borderRadius: 'var(--np-radius-xs)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--r-xs)',
             overflow: 'hidden',
-            background: '#fff',
+            background: 'var(--n-0)',
             cursor: config.escreverNome ? 'crosshair' : 'default',
             touchAction: config.escreverNome ? 'none' : 'auto',
             userSelect: 'none',
@@ -198,7 +199,7 @@ export function EditorCapa() {
                 top: `${faixa.y * 100}%`,
                 width: `${faixa.largura * 100}%`,
                 height: `${faixa.altura * 100}%`,
-                outline: '2px dashed #f59e0b',
+                outline: '2px dashed var(--sol-500)',
                 containerType: 'size',
                 display: 'flex',
                 alignItems: 'center',
@@ -213,19 +214,19 @@ export function EditorCapa() {
           )}
         </div>
 
-        <div style={{ flex: '1 1 260px', display: 'grid', gap: 'var(--np-space-4)' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)' }}>
+        <div style={{ flex: '1 1 260px', display: 'grid', gap: 'var(--s-4)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-3)' }}>
             <input ref={inputRef} type="file" accept=".jpg,.jpeg,.png,.webp" hidden onChange={aoEscolherArquivo} data-testid="arquivo-capa" />
-            <Button type="button" onClick={() => inputRef.current?.click()} disabled={enviando}>
-              {enviando ? 'Enviando...' : temCapa ? 'Trocar Capa' : 'Enviar Minha Capa'}
+            <Button variant="secondary" icon={<Upload />} onClick={() => inputRef.current?.click()} loading={enviando} loadingLabel="Enviando…">
+              {temCapa ? 'Trocar capa' : 'Enviar minha capa'}
             </Button>
             {temCapa && (
-              <Button type="button" variant="outline" onClick={voltarAoPadrao}>
-                Voltar À Capa Padrão
+              <Button variant="ghost" onClick={voltarAoPadrao}>
+                Voltar à capa padrão
               </Button>
             )}
           </div>
-          <p style={{ margin: 0, color: 'var(--np-text-muted)', font: 'var(--np-type-caption)' }}>
+          <p className="caption" style={{ margin: 0 }}>
             Imagem JPG, PNG ou WEBP de até 10 MB, em pé, tamanho A4 (ideal 2480×3508). Feita no Canva? Exporte como
             PNG no tamanho A4.
           </p>
@@ -242,7 +243,7 @@ export function EditorCapa() {
             onChange={(e) => setConfig((c) => ({ ...c, escreverNome: e.target.checked }))}
           />
           {config.escreverNome && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--np-space-3)' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-3)', minHeight: 'var(--h-md)' }}>
               <input
                 type="color"
                 value={config.corNome}
@@ -256,8 +257,8 @@ export function EditorCapa() {
           {erro && <Alert tone="danger">{erro}</Alert>}
           {sucesso && <Alert tone="success">{sucesso}</Alert>}
 
-          <Button type="button" onClick={salvar} disabled={salvando} style={{ justifySelf: 'start' }}>
-            {salvando ? 'Salvando...' : 'Salvar Capa'}
+          <Button onClick={salvar} loading={salvando} loadingLabel="Salvando…" style={{ justifySelf: 'start' }}>
+            Salvar capa
           </Button>
         </div>
       </div>

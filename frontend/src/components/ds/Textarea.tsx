@@ -1,4 +1,5 @@
 import type { CSSProperties, ChangeEventHandler, ReactNode } from 'react'
+import { useId } from 'react'
 
 interface TextareaProps {
   id?: string
@@ -12,6 +13,7 @@ interface TextareaProps {
   required?: boolean
   onChange?: ChangeEventHandler<HTMLTextAreaElement>
   style?: CSSProperties
+  'aria-label'?: string
 }
 
 export function Textarea({
@@ -26,12 +28,26 @@ export function Textarea({
   required = false,
   onChange,
   style,
+  'aria-label': ariaLabel,
 }: TextareaProps) {
+  const auto = useId()
+  const textareaId = id ?? auto
+  const temRodape = Boolean(hint || maxLength)
   return (
-    <label style={{ display: 'grid', gap: 'var(--np-space-2)', ...style }}>
-      {label && <span style={{ font: 'var(--np-type-label)', color: 'var(--np-text)' }}>{label}</span>}
+    <div className="field" style={style}>
+      {label && (
+        <label className="field-label" htmlFor={textareaId}>
+          {label}
+          {required && (
+            <i className="field-required" aria-hidden="true">
+              *
+            </i>
+          )}
+        </label>
+      )}
       <textarea
-        id={id}
+        id={textareaId}
+        className="textarea"
         rows={rows}
         value={value}
         placeholder={placeholder}
@@ -39,20 +55,12 @@ export function Textarea({
         disabled={disabled}
         required={required}
         onChange={onChange}
-        style={{
-          padding: 'var(--np-space-3) var(--np-field-pad-x)',
-          background: disabled ? 'var(--np-surface-sunken)' : 'var(--np-surface)',
-          border: '1px solid var(--np-border-strong)',
-          borderRadius: 'var(--np-radius-sm)',
-          font: 'var(--np-type-body)',
-          color: 'var(--np-text)',
-          resize: 'vertical',
-          outline: 'none',
-        }}
+        aria-label={ariaLabel}
+        aria-describedby={hint ? `${textareaId}-ajuda` : undefined}
       />
-      {(hint || maxLength) && (
-        <span style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--np-type-caption)', color: 'var(--np-text-subtle)' }}>
-          <span>{hint}</span>
+      {temRodape && (
+        <span className="field-hint" style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--s-3)' }}>
+          <span id={`${textareaId}-ajuda`}>{hint}</span>
           {maxLength && (
             <span>
               {(value || '').length}/{maxLength}
@@ -60,6 +68,6 @@ export function Textarea({
           )}
         </span>
       )}
-    </label>
+    </div>
   )
 }

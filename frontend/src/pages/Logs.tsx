@@ -5,6 +5,7 @@ import { listAllLogs } from '../api/reports'
 import type { LogDeEdicao } from '../api/reports'
 import type { Patient } from '../api/types'
 import { Alert, Card, PageHeader, Select } from '../components/ds'
+import { nomeParaExibicao } from '../utils/exibicao'
 import styles from './Page.module.css'
 
 const ROTULO_DO_CAMPO: Record<string, string> = {
@@ -12,7 +13,7 @@ const ROTULO_DO_CAMPO: Record<string, string> = {
   classification_override: 'Classificação',
 }
 
-// Menu lateral → "Ver Logs": todas as edições feitas em relatórios (quem,
+// Menu lateral → "Registro de atividades": todas as edições feitas em relatórios (quem,
 // quando, o que mudou), com filtro por paciente.
 export default function Logs() {
   const [params, setParams] = useSearchParams()
@@ -39,21 +40,21 @@ export default function Logs() {
 
   return (
     <div>
-      <PageHeader eyebrow="Registro" title="Logs De Edição" description="Todas as alterações feitas nos relatórios: quem alterou, quando e o que mudou." />
+      <PageHeader eyebrow="Sistema" title="Registro de atividades" description="Todas as alterações feitas nos relatórios: quem alterou, quando e o que mudou." />
       <Card>
-        <div style={{ maxWidth: 360, marginBottom: 'var(--np-space-4)' }}>
+        <div style={{ maxWidth: 360, marginBottom: 'var(--s-4)' }}>
           <Select
             id="filtro-paciente-logs"
             label="Paciente"
             placeholder="Todos os pacientes"
             value={pacienteId}
-            options={patients.map((p) => ({ value: p.id, label: p.name }))}
+            options={patients.map((p) => ({ value: p.id, label: nomeParaExibicao(p.name) }))}
             onChange={(e) => setParams(e.target.value ? { paciente: e.target.value } : {}, { replace: true })}
           />
         </div>
-        {erro && <Alert tone="danger">Não foi possível carregar os logs.</Alert>}
-        {logs === null && !erro && <p>Carregando…</p>}
-        {logs?.length === 0 && <p style={{ color: 'var(--np-text-muted)' }}>Nenhuma edição registrada{pacienteId ? ' para este paciente' : ''}.</p>}
+        {erro && <Alert tone="danger">Não foi possível carregar o registro de atividades.</Alert>}
+        {logs === null && !erro && <p className="text-2">Carregando…</p>}
+        {logs?.length === 0 && <p className="text-2">Nenhuma edição registrada{pacienteId ? ' para este paciente' : ''}.</p>}
         {logs && logs.length > 0 && (
           <div className={styles.tableWrap}>
             <table className={styles.table}>
@@ -72,12 +73,12 @@ export default function Logs() {
                     <td style={{ whiteSpace: 'nowrap' }}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
                     <td>
                       <Link className={styles.rowLink} to={`/pacientes/${log.patient_id}/historico`}>
-                        {log.patient_name}
+                        {nomeParaExibicao(log.patient_name)}
                       </Link>
                     </td>
                     <td>
                       {log.template_name}
-                      <div style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-muted)' }}>{new Date(log.report_created_at).toLocaleDateString('pt-BR')}</div>
+                      <div className="caption">{new Date(log.report_created_at).toLocaleDateString('pt-BR')}</div>
                     </td>
                     <td>
                       <strong>{ROTULO_DO_CAMPO[log.field] ?? log.field}:</strong> "{log.old_value ?? '(vazio)'}" → "{log.new_value ?? '(vazio)'}"

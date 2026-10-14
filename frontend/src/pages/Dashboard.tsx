@@ -1,42 +1,32 @@
-import { CalendarClock, ClipboardList, ClipboardPlus, Download, FileText, History, Plus, Search, Stethoscope, Users } from 'lucide-react'
+import { CalendarClock, ClipboardList, ClipboardPlus, Download, Ellipsis, FileText, History, Plus, Search, Stethoscope, Users } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listPatients } from '../api/patients'
 import { getStatsSummary } from '../api/stats'
 import type { Patient, StatsSummary } from '../api/types'
-import { Alert, Button, buttonStyle, Card, EmptyState, Input, PageHeader, PatientAvatar } from '../components/ds'
+import { Alert, buttonClass, Card, EmptyState, Input, Menu, PageHeader, PatientAvatar } from '../components/ds'
 import { BaixarRelatorioDialog } from '../components/pacientes/BaixarRelatorioDialog'
+import { idadeParaExibicao, nomeParaExibicao } from '../utils/exibicao'
 import styles from './Page.module.css'
 
-function BlocoEstatistica({ icon, valor, legenda }: { icon: React.ReactNode; valor: string | number; legenda: string }) {
+function BlocoEstatistica({ icon, tom, valor, legenda }: { icon: ReactNode; tom: 'violeta' | 'ceu' | 'sol'; valor: string | number; legenda: string }) {
   return (
     <Card>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--np-space-3)' }}>
-        <span
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 'var(--np-radius-md)',
-            background: 'var(--np-purple-100)',
-            color: 'var(--np-primary)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flex: '0 0 auto',
-          }}
-        >
+      <div className="stat">
+        <span className={`stat-icon stat-icon-${tom}`} aria-hidden="true">
           {icon}
         </span>
         <div>
-          <span style={{ display: 'block', font: 'var(--np-type-display)', fontSize: 'var(--np-text-2xl)', color: 'var(--np-text)' }}>{valor}</span>
-          <span style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-subtle)' }}>{legenda}</span>
+          <span className="stat-value">{valor}</span>
+          <span className="stat-label">{legenda}</span>
         </div>
       </div>
     </Card>
   )
 }
 
-const semAcento = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+const semAcento = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
 // Busca por nome (sem diferenciar acentos/maiúsculas) ou pela data de
 // nascimento como aparece na tela (ex.: 15/03 ou 2018).
@@ -74,109 +64,121 @@ export default function Dashboard() {
       .catch(() => setStats(null))
   }, [])
 
+  const campoBusca = !loading && patients.length > 0 && (
+    <div style={{ width: 'min(100%, 380px)' }}>
+      <Input
+        id="busca-pacientes"
+        type="search"
+        aria-label="Pesquisar pacientes"
+        placeholder="Pesquisar por nome ou nascimento"
+        prefix={<Search />}
+        value={busca}
+        onChange={(e) => setBusca(e.target.value)}
+      />
+    </div>
+  )
+
   return (
     <div>
       <PageHeader
         eyebrow="Pacientes"
-        title="Todos Os Pacientes"
+        title="Todos os pacientes"
         description="Cadastre pacientes e acompanhe o histórico de atendimentos."
         actions={
-          <Link to="/atendimento/novo" style={buttonStyle('primary')}>
-            <Plus size={18} /> Novo Atendimento
+          <Link to="/atendimento/novo" className={buttonClass('primary', 'lg')}>
+            <Plus aria-hidden="true" /> Novo atendimento
           </Link>
         }
       />
 
       {!loading && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--np-space-4)', marginBottom: 'var(--np-space-6)' }}>
-          <BlocoEstatistica icon={<Users size={22} />} valor={patients.length} legenda="Pacientes cadastrados" />
+        <div className="stat-grid">
+          <BlocoEstatistica icon={<Users />} tom="violeta" valor={patients.length} legenda="Pacientes cadastrados" />
           {stats && (
             <>
-              <BlocoEstatistica icon={<FileText size={22} />} valor={stats.total_reports} legenda="Protocolos registrados" />
-              <BlocoEstatistica icon={<CalendarClock size={22} />} valor={stats.reports_last_30_days} legenda="Protocolos nos últimos 30 dias" />
+              <BlocoEstatistica icon={<FileText />} tom="ceu" valor={stats.total_reports} legenda="Protocolos registrados" />
+              <BlocoEstatistica icon={<CalendarClock />} tom="sol" valor={stats.reports_last_30_days} legenda="Protocolos nos últimos 30 dias" />
             </>
           )}
         </div>
       )}
 
-      <Card title="Pacientes Cadastrados">
+      <Card title="Pacientes cadastrados" action={campoBusca}>
         {error && <Alert tone="danger">{error}</Alert>}
-        {loading && <p>Carregando...</p>}
+        {loading && <p className="text-2">Carregando…</p>}
 
         {!loading && patients.length === 0 && !error && (
           <EmptyState
-            icon={<Users size={40} />}
+            icon={<Users />}
             title="Nenhum paciente cadastrado ainda"
-            description='Use o botão "Novo Atendimento" acima para começar.'
+            description='Use o botão "Novo atendimento" acima para começar.'
           />
         )}
 
-        {!loading && patients.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)', alignItems: 'center', marginBottom: 'var(--np-space-4)' }}>
-            <div style={{ flex: '1 1 320px', maxWidth: 480 }}>
-              <Input
-                id="busca-pacientes"
-                type="search"
-                placeholder="Pesquisar por nome ou data de nascimento"
-                prefix={<Search size={16} />}
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-              />
-            </div>
-            {busca.trim() && (
-              <span style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-muted)' }}>
-                {filtrados.length} de {patients.length} {patients.length === 1 ? 'paciente' : 'pacientes'}
-              </span>
-            )}
-          </div>
+        {busca.trim() && patients.length > 0 && (
+          <p className="caption" role="status" style={{ margin: '0 0 var(--s-3)' }}>
+            {filtrados.length} de {patients.length} {patients.length === 1 ? 'paciente' : 'pacientes'}
+          </p>
         )}
 
         {!loading && patients.length > 0 && filtrados.length === 0 && (
-          <p style={{ color: 'var(--np-text-muted)' }}>Nenhum paciente encontrado para "{busca.trim()}".</p>
+          <p className="text-2">Nenhum paciente encontrado para "{busca.trim()}".</p>
         )}
 
         {!loading && filtrados.length > 0 && (
           <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th></th>
-                <th>Nome</th>
-                <th>Data De Nascimento</th>
-                <th>Opções</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtrados.map((patient) => (
-                <tr key={patient.id}>
-                  <td style={{ width: 40 }}>
-                    <PatientAvatar name={patient.name} size={32} />
-                  </td>
-                  <td>{patient.name}</td>
-                  <td>{new Date(`${patient.birth_date}T00:00:00`).toLocaleDateString('pt-BR')}</td>
-                  <td>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-2)', alignItems: 'center' }}>
-                      <Link style={buttonStyle('primary', 'sm')} to={`/atendimento/novo?paciente=${patient.id}`}>
-                        <ClipboardPlus size={14} /> Novo Atendimento
-                      </Link>
-                      <Link style={buttonStyle('outline', 'sm')} to={`/pacientes/${patient.id}/historico`}>
-                        <History size={14} /> Histórico
-                      </Link>
-                      <Link style={buttonStyle('outline', 'sm')} to={`/pacientes/${patient.id}/formularios-responsaveis`}>
-                        <ClipboardList size={14} /> Formulário Dos Responsáveis
-                      </Link>
-                      <Link style={buttonStyle('outline', 'sm')} to={`/pacientes/${patient.id}/secoes-clinicas`}>
-                        <Stethoscope size={14} /> Seções Clínicas
-                      </Link>
-                      <Button type="button" variant="outline" size="sm" icon={<Download size={14} />} onClick={() => setBaixarDe(patient)}>
-                        PDF / Word
-                      </Button>
-                    </div>
-                  </td>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Paciente</th>
+                  <th>Nascimento</th>
+                  <th>
+                    <span className="sr-only">Ações</span>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtrados.map((patient) => {
+                  const nome = nomeParaExibicao(patient.name)
+                  const idade = idadeParaExibicao(patient.birth_date)
+                  return (
+                    <tr key={patient.id}>
+                      <td>
+                        <div className={styles.patientCell}>
+                          <PatientAvatar name={nome} size={40} />
+                          <div>
+                            <span className={styles.patientName}>{nome}</span>
+                            {idade && <span className={styles.patientMeta}>{idade}</span>}
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ whiteSpace: 'nowrap' }}>{new Date(`${patient.birth_date}T00:00:00`).toLocaleDateString('pt-BR')}</td>
+                      <td>
+                        <div className={styles.rowActions} style={{ justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+                          <Link className={buttonClass('primary', 'sm')} to={`/atendimento/novo?paciente=${patient.id}`}>
+                            <ClipboardPlus aria-hidden="true" /> Atendimento
+                          </Link>
+                          <Link className={buttonClass('secondary', 'sm')} to={`/pacientes/${patient.id}/historico`}>
+                            <History aria-hidden="true" /> Histórico
+                          </Link>
+                          <Link className={buttonClass('secondary', 'sm')} to={`/pacientes/${patient.id}/formularios-responsaveis`}>
+                            <ClipboardList aria-hidden="true" /> Responsáveis
+                          </Link>
+                          <Menu
+                            label={`Mais ações para ${nome}`}
+                            icon={<Ellipsis />}
+                            items={[
+                              { label: 'Seções clínicas', icon: <Stethoscope />, to: `/pacientes/${patient.id}/secoes-clinicas` },
+                              { label: 'PDF / Word', icon: <Download />, onSelect: () => setBaixarDe(patient) },
+                            ]}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </Card>

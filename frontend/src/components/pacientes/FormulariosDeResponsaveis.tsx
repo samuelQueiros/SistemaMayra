@@ -19,7 +19,7 @@ const STATUS_TONE: Record<GuardianFormSubmission['status'], 'warning' | 'success
   rejeitado: 'danger',
 }
 const STATUS_LABEL: Record<GuardianFormSubmission['status'], string> = {
-  pendente: 'Pendente De Validação',
+  pendente: 'Pendente de validação',
   validado: 'Validado',
   rejeitado: 'Rejeitado',
 }
@@ -113,40 +113,40 @@ export function FormulariosDeResponsaveis({ patientId }: { patientId: string }) 
 
   return (
     <Card
-      title="Formulários Dos Responsáveis"
+      title="Formulários dos responsáveis"
       subtitle="Registre o que a família preencheu fora do sistema (papel, verbal). Só considere validado o que já foi conferido — isto não lança nada automaticamente no laudo ou nos gráficos."
-      style={{ marginTop: 'var(--np-space-5)' }}
+      style={{ marginTop: 'var(--s-5)' }}
     >
-      {error && <Alert tone="danger" style={{ marginBottom: 'var(--np-space-3)' }}>{error}</Alert>}
+      {error && <Alert tone="danger" style={{ marginBottom: 'var(--s-3)' }}>{error}</Alert>}
 
-      <div style={{ display: 'grid', gap: 'var(--np-space-3)' }}>
+      <div style={{ display: 'grid', gap: 'var(--s-3)' }}>
         {itens.length === 0 && (
-          <p style={{ color: 'var(--np-text-muted)', font: 'var(--np-type-body-sm)' }}>
+          <p className="caption" style={{ margin: 0 }}>
             Nenhum formulário de responsável registrado ainda.
           </p>
         )}
         {itens.map((item) => (
-          <Card key={item.id} tone="sunken" style={{ boxShadow: 'none', textAlign: 'left' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--np-space-2)' }}>
+          <Card key={item.id} tone="sunken" padding="var(--s-4)">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--s-2)' }}>
               <div>
                 <strong>{item.kind}</strong>
-                <div style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-muted)' }}>
+                <div className="caption">
                   Preenchido por {item.respondent_name}
                   {item.respondent_relation ? ` (${item.respondent_relation})` : ''} em{' '}
                   {new Date(item.filled_at + 'T00:00:00').toLocaleDateString('pt-BR')}
                 </div>
-                {item.notes && <div style={{ font: 'var(--np-type-caption)', marginTop: 4 }}>{item.notes}</div>}
+                {item.notes && <div style={{ font: 'var(--type-caption)', marginTop: 4 }}>{item.notes}</div>}
               </div>
               <Badge tone={STATUS_TONE[item.status]}>{STATUS_LABEL[item.status]}</Badge>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--np-space-2)', flexWrap: 'wrap', marginTop: 'var(--np-space-3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-2)', flexWrap: 'wrap', marginTop: 'var(--s-3)' }}>
               {item.file_path ? (
                 <a
                   href={`/api/patients/${patientId}/guardian-forms/${item.id}/file`}
                   target="_blank"
                   rel="noreferrer"
-                  style={{ font: 'var(--np-type-caption)' }}
+                  style={{ font: 'var(--type-label)' }}
                 >
                   Ver formulário original anexado
                 </a>
@@ -158,10 +158,11 @@ export function FormulariosDeResponsaveis({ patientId }: { patientId: string }) 
                     ref={(el) => {
                       fileInputRefs.current[item.id] = el
                     }}
-                    style={{ maxWidth: 220 }}
+                    style={{ maxWidth: 260 }}
+                    aria-label={`Arquivo original de ${item.kind}`}
                   />
-                  <Button type="button" size="sm" variant="outline" onClick={() => handleUploadArquivo(item.id)}>
-                    Anexar Original
+                  <Button type="button" size="sm" variant="secondary" onClick={() => handleUploadArquivo(item.id)}>
+                    Anexar original
                   </Button>
                 </>
               )}
@@ -170,37 +171,61 @@ export function FormulariosDeResponsaveis({ patientId }: { patientId: string }) 
                   <Button type="button" size="sm" onClick={() => handleValidar(item.id)}>
                     Validar
                   </Button>
-                  <Button type="button" size="sm" variant="outline" onClick={() => handleRejeitar(item.id)}>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => handleRejeitar(item.id)}>
                     Rejeitar
                   </Button>
                 </>
               )}
-              <button
-                type="button"
-                onClick={() => handleExcluir(item.id)}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--np-danger)', font: 'var(--np-type-caption)' }}
-              >
-                <Trash2 size={12} /> Excluir
-              </button>
+              <Button size="sm" variant="danger-ghost" icon={<Trash2 />} onClick={() => handleExcluir(item.id)} style={{ marginLeft: 'auto' }}>
+                Excluir
+              </Button>
             </div>
           </Card>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gap: 'var(--np-space-2)', gridTemplateColumns: '1fr 1fr', marginTop: 'var(--np-space-4)' }}>
-        <Input placeholder="Formulário (ex.: SNAP-IV, Anamnese)" value={form.kind} onChange={(e) => setForm((f) => ({ ...f, kind: e.target.value }))} />
-        <Input placeholder="Quem preencheu" value={form.respondent_name} onChange={(e) => setForm((f) => ({ ...f, respondent_name: e.target.value }))} />
-        <Input placeholder="Relação (ex.: mãe, pai)" value={form.respondent_relation} onChange={(e) => setForm((f) => ({ ...f, respondent_relation: e.target.value }))} />
-        <Input type="date" value={form.filled_at} onChange={(e) => setForm((f) => ({ ...f, filled_at: e.target.value }))} />
+      <h3 style={{ margin: 'var(--s-6) 0 var(--s-3)', font: 'var(--type-h3)' }}>Registrar formulário preenchido</h3>
+      <div className="form-grid">
         <Input
-          placeholder="Observações (opcional)"
+          id="responsavel-formulario"
+          label="Formulário"
+          required
+          placeholder="Ex.: SNAP-IV, anamnese"
+          value={form.kind}
+          onChange={(e) => setForm((f) => ({ ...f, kind: e.target.value }))}
+        />
+        <Input
+          id="responsavel-quem"
+          label="Quem preencheu"
+          required
+          value={form.respondent_name}
+          onChange={(e) => setForm((f) => ({ ...f, respondent_name: e.target.value }))}
+        />
+        <Input
+          id="responsavel-relacao"
+          label="Relação com o paciente"
+          placeholder="Ex.: mãe, pai"
+          value={form.respondent_relation}
+          onChange={(e) => setForm((f) => ({ ...f, respondent_relation: e.target.value }))}
+        />
+        <Input
+          id="responsavel-data"
+          label="Data do preenchimento"
+          required
+          type="date"
+          value={form.filled_at}
+          onChange={(e) => setForm((f) => ({ ...f, filled_at: e.target.value }))}
+        />
+        <Input
+          id="responsavel-observacoes"
+          label="Observações (opcional)"
           value={form.notes}
           onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
           style={{ gridColumn: '1 / -1' }}
         />
       </div>
-      <Button type="button" size="sm" onClick={handleCriar} disabled={salvando} style={{ marginTop: 'var(--np-space-3)' }}>
-        {salvando ? 'Registrando...' : 'Registrar Formulário Preenchido Pelos Responsáveis'}
+      <Button onClick={handleCriar} loading={salvando} loadingLabel="Registrando…" style={{ marginTop: 'var(--s-4)' }}>
+        Registrar formulário
       </Button>
     </Card>
   )

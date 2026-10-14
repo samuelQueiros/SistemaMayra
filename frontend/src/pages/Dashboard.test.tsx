@@ -21,8 +21,8 @@ vi.mock('../api/reports', () => ({
   downloadReportDocx: vi.fn().mockResolvedValue(undefined),
 }))
 
-describe('Todos Os Pacientes', () => {
-  it('cada paciente tem histórico, novo atendimento, formulário dos responsáveis e seções clínicas', async () => {
+describe('Todos os pacientes', () => {
+  it('cada paciente tem atendimento, histórico e responsáveis visíveis; seções clínicas e PDF / Word no menu ⋯', async () => {
     render(
       <MemoryRouter>
         <Dashboard />
@@ -32,9 +32,19 @@ describe('Todos Os Pacientes', () => {
     expect(screen.queryByText('Protocolos Por Modelo')).not.toBeInTheDocument()
     const link = (nome: string) => within(linha).getByRole('link', { name: nome })
     expect(link('Histórico')).toHaveAttribute('href', '/pacientes/p1/historico')
-    expect(link('Novo Atendimento')).toHaveAttribute('href', '/atendimento/novo?paciente=p1')
-    expect(link('Formulário Dos Responsáveis')).toHaveAttribute('href', '/pacientes/p1/formularios-responsaveis')
-    expect(link('Seções Clínicas')).toHaveAttribute('href', '/pacientes/p1/secoes-clinicas')
+    expect(link('Atendimento')).toHaveAttribute('href', '/atendimento/novo?paciente=p1')
+    expect(link('Responsáveis')).toHaveAttribute('href', '/pacientes/p1/formularios-responsaveis')
+    expect(within(linha).queryByRole('link', { name: 'Seções clínicas' })).not.toBeInTheDocument()
+
+    const mais = within(linha).getByRole('button', { name: 'Mais ações para Ana Souza' })
+    expect(mais).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(mais)
+    expect(mais).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('menuitem', { name: 'Seções clínicas' })).toHaveAttribute('href', '/pacientes/p1/secoes-clinicas')
+    expect(screen.getByRole('menuitem', { name: 'Seções clínicas' })).toHaveFocus()
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(mais).toHaveFocus()
   })
 
   it('PDF / Word abre a escolha do relatório, mais recente primeiro, e baixa o escolhido', async () => {
@@ -43,7 +53,8 @@ describe('Todos Os Pacientes', () => {
         <Dashboard />
       </MemoryRouter>,
     )
-    fireEvent.click((await screen.findAllByRole('button', { name: 'PDF / Word' }))[0])
+    fireEvent.click(await screen.findByRole('button', { name: 'Mais ações para Ana Souza' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'PDF / Word' }))
     const dialogo = await screen.findByRole('dialog', { name: 'Baixar relatório de Ana Souza' })
     const itens = await within(dialogo).findAllByText(/Reavaliação|Avaliação/)
     expect(itens[0]).toHaveTextContent('Reavaliação')
@@ -68,7 +79,7 @@ describe('pesquisa de pacientes', () => {
       </MemoryRouter>,
     )
     await screen.findByText('Ana Souza')
-    const busca = screen.getByPlaceholderText('Pesquisar por nome ou data de nascimento')
+    const busca = screen.getByRole('searchbox', { name: 'Pesquisar pacientes' })
 
     fireEvent.change(busca, { target: { value: 'joao conceicao' } })
     expect(screen.getByText('João Conceição')).toBeInTheDocument()

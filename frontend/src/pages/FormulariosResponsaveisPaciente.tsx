@@ -7,7 +7,7 @@ export default function FormulariosResponsaveisPaciente() {
   return (
     <PaginaDoPaciente
       patientId={id!}
-      titulo="Formulário Dos Responsáveis"
+      titulo="Formulário dos responsáveis"
       descricao="Registre os formulários preenchidos pela família e valide cada um."
     >
       {(patient) => <FormulariosDeResponsaveis patientId={patient.id} />}

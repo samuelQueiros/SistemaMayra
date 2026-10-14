@@ -9,23 +9,25 @@ interface ProgressBarProps {
   style?: CSSProperties
 }
 
-export function ProgressBar({ value = 0, max = 100, label, caption, color = 'var(--np-primary)', style }: ProgressBarProps) {
+export function ProgressBar({ value = 0, max = 100, label, caption, color, style }: ProgressBarProps) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100))
   return (
-    <div style={{ display: 'grid', gap: 'var(--np-space-2)', ...style }}>
+    <div className="progress" style={style}>
       {(label || caption) && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--np-type-label)', color: 'var(--np-text-muted)' }}>
+        <div className="progress-labels">
           <span>{label}</span>
-          <span style={{ color: 'var(--np-text-subtle)' }}>{caption}</span>
+          <span className="progress-caption">{caption}</span>
         </div>
       )}
       <div
+        className="progress-track"
         role="progressbar"
         aria-valuenow={value}
+        aria-valuemin={0}
         aria-valuemax={max}
-        style={{ height: 10, borderRadius: 'var(--np-radius-pill)', background: 'var(--np-surface-sunken)', overflow: 'hidden' }}
+        aria-label={typeof label === 'string' ? label : undefined}
       >
-        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 'var(--np-radius-pill)', background: color, transition: 'width var(--np-dur-slow) var(--np-ease)' }} />
+        <div className="progress-fill" style={{ width: `${pct}%`, ...(color ? { background: color } : null) }} />
       </div>
     </div>
   )

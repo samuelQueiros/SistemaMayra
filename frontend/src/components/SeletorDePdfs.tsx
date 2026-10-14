@@ -49,14 +49,14 @@ export function SeletorDePdfs({
         onDragLeave={() => setArrastando(false)}
         onDrop={soltar}
         style={{
-          border: `2px dashed ${arrastando ? 'var(--np-primary)' : 'var(--np-border-strong)'}`,
-          borderRadius: 'var(--np-radius-md)',
-          padding: 'var(--np-space-5)',
+          border: `1.5px dashed ${arrastando ? 'var(--violeta-500)' : 'var(--n-300)'}`,
+          borderRadius: 'var(--r-md)',
+          padding: 'var(--s-6) var(--s-5)',
           textAlign: 'center',
-          background: arrastando ? 'var(--np-surface-alt)' : 'transparent',
+          background: arrastando ? 'var(--violeta-50)' : 'var(--bg-subtle)',
         }}
       >
-        <p style={{ marginTop: 0 }}>Arraste os PDFs para cá ou</p>
+        <p className="text-2" style={{ marginTop: 0 }}>Arraste os PDFs para cá ou</p>
         <input
           ref={inputRef}
           type="file"
@@ -69,18 +69,18 @@ export function SeletorDePdfs({
             e.target.value = ''
           }}
         />
-        <Button type="button" variant="outline" icon={<FileUp size={16} />} onClick={() => inputRef.current?.click()} disabled={arquivos.length >= maximo || desabilitado}>
+        <Button type="button" variant="secondary" icon={<FileUp />} onClick={() => inputRef.current?.click()} disabled={arquivos.length >= maximo || desabilitado}>
           Escolher PDFs ({arquivos.length}/{maximo})
         </Button>
       </div>
 
       {arquivos.length > 0 && (
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 'var(--np-space-2)' }}>
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 'var(--s-2)' }}>
           {arquivos.map((a, i) => (
-            <li key={a.name + a.size} style={{ display: 'flex', alignItems: 'center', gap: 'var(--np-space-3)' }}>
+            <li key={a.name + a.size} style={{ display: 'flex', alignItems: 'center', gap: 'var(--s-3)' }}>
               <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</span>
-              <span style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-muted)' }}>{tamanho(a.size)}</span>
-              <IconButton label={`Remover ${a.name}`} icon={<Trash2 size={16} />} variant="ghost" size="sm" disabled={desabilitado} onClick={() => onChange(arquivos.filter((_, k) => k !== i))} />
+              <span className="caption">{tamanho(a.size)}</span>
+              <IconButton label={`Remover ${a.name}`} icon={<Trash2 />} variant="danger-ghost" size="sm" disabled={desabilitado} onClick={() => onChange(arquivos.filter((_, k) => k !== i))} />
             </li>
           ))}
         </ul>

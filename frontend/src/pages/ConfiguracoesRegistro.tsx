@@ -6,7 +6,7 @@ import { Alert, Button, Card, Input, PageHeader } from '../components/ds'
 export default function ConfiguracoesRegistro() {
   return (
     <div>
-      <PageHeader eyebrow="Configurações" title="Registro Profissional" description="Defina o registro usado na assinatura dos relatórios." />
+      <PageHeader eyebrow="Configurações" title="Registro profissional" description="Defina o registro usado na assinatura dos relatórios." />
       <RegistroProfissional />
     </div>
   )
@@ -39,18 +39,18 @@ function RegistroProfissional() {
   if (loading) return null
 
   return (
-    <Card title="Registro Profissional" subtitle="Usado no bloco de assinatura do PDF completo (ex.: número do CRP).">
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'var(--np-space-4)' }}>
+    <Card title="Registro profissional" subtitle="Usado no bloco de assinatura do PDF completo (ex.: número do CRP).">
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'var(--s-4)' }}>
         <Input
           id="registro-profissional"
-          label="Registro Profissional (Ex.: CRP)"
+          label="Registro profissional (ex.: CRP)"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="CRP 12/34567"
         />
         {success && <Alert tone="success">Registro salvo com sucesso.</Alert>}
-        <Button type="submit" disabled={saving} style={{ justifySelf: 'start' }}>
-          {saving ? 'Salvando...' : 'Salvar Registro'}
+        <Button type="submit" loading={saving} loadingLabel="Salvando…" style={{ justifySelf: 'start' }}>
+          Salvar registro
         </Button>
       </form>
     </Card>

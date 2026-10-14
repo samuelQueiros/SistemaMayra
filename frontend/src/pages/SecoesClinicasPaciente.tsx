@@ -31,16 +31,16 @@ export default function SecoesClinicasPaciente() {
   return (
     <PaginaDoPaciente
       patientId={id!}
-      titulo="Seções Clínicas"
+      titulo="Seções clínicas"
       descricao="Anamnese, hipóteses diagnósticas, encaminhamentos e conduta — registradas em cada relatório."
     >
       {() => (
-        <div style={{ display: 'grid', gap: 'var(--np-space-5)' }}>
+        <div style={{ display: 'grid', gap: 'var(--s-5)' }}>
           {erro && <Alert tone="danger">{erro}</Alert>}
           {reports === null && !erro && <p>Carregando…</p>}
           {reports?.length === 0 && (
             <Card>
-              <p style={{ margin: 0, color: 'var(--np-text-muted)' }}>
+              <p style={{ margin: 0, color: 'var(--text-2)' }}>
                 Este paciente ainda não tem relatórios. As seções clínicas são registradas em um relatório — faça um novo atendimento primeiro.
               </p>
             </Card>

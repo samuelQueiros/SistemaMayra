@@ -39,7 +39,7 @@ describe('EditorCapa', () => {
 
     expect(await screen.findByAltText('Prévia da capa do relatório')).toHaveAttribute('src', '/capa-relatorio.png')
     expect(screen.getByTestId('area-nome')).toBeInTheDocument()
-    expect(screen.queryByText('Voltar À Capa Padrão')).not.toBeInTheDocument()
+    expect(screen.queryByText('Voltar à capa padrão')).not.toBeInTheDocument()
   })
 
   it('arrastar sobre a prévia marca a área do nome e salva em frações da capa', async () => {
@@ -50,7 +50,7 @@ describe('EditorCapa', () => {
     fireEvent.pointerDown(preview, { clientX: 20, clientY: 100, pointerId: 1 })
     fireEvent.pointerMove(preview, { clientX: 180, clientY: 120, pointerId: 1 })
     fireEvent.pointerUp(preview, { pointerId: 1 })
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar Capa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar capa' }))
 
     await waitFor(() => expect(auth.updateCapaConfig).toHaveBeenCalled())
     const config = vi.mocked(auth.updateCapaConfig).mock.calls[0][0]
@@ -69,7 +69,7 @@ describe('EditorCapa', () => {
     fireEvent.change(screen.getByTestId('arquivo-capa'), { target: { files: [arquivo] } })
 
     await waitFor(() => expect(auth.uploadCapa).toHaveBeenCalledWith(arquivo))
-    expect(await screen.findByText('Voltar À Capa Padrão')).toBeInTheDocument()
+    expect(await screen.findByText('Voltar à capa padrão')).toBeInTheDocument()
     expect(screen.queryByTestId('area-nome')).not.toBeInTheDocument()
     expect(screen.getByAltText('Prévia da capa do relatório')).toHaveAttribute('src', 'blob:capa')
   })

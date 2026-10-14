@@ -2347,3 +2347,22 @@ lugar e rodar `npm run build`.
 - O Histórico oferece o novo Laudo Por IA com o paciente já selecionado.
 - Links antigos para `/relatorio-ia` redirecionam para `/laudo-ia`, preservando os parâmetros. Relatórios antigos continuam acessíveis para revisão e exportação pelo Histórico.
 - Cota diária da IA esgotada agora tem mensagem específica; o sistema não repete a chamada automaticamente nesse caso.
+
+## Nova identidade visual "Caderno Lilás" em todo o sistema
+
+**Status:** ✅ Pronto (2026-10-14)
+
+- **O que mudou na aparência (sem mudar dados, rotas nem regras):**
+  - Novas cores (violeta principal, céu secundária, amarelo só para pendências e avisos), fundo lilás-claro com o conteúdo em cartões brancos, e novas fontes: Bricolage Grotesque nos títulos e números, Figtree no resto, JetBrains Mono nos atalhos de teclado.
+  - Botões com um só tipo de destaque por tela (primário violeta), secundário branco com borda, tonal lilás para PDF/Word e fantasma para Voltar/Cancelar. Todos têm estado de foco visível, desabilitado e carregando (com spinner).
+  - Campos com rótulo acima, asterisco nos obrigatórios, halo violeta no foco, erro em vermelho com ícone, e calculados com borda tracejada.
+  - Menu lateral com grupos "Clínica" e "Sistema", sua foto/iniciais no rodapé e botão de sair. "Ver Logs" passou a se chamar **Registro de atividades**. No celular o menu abre empilhado acima da tela.
+  - **Todos os pacientes:** cartões de números, tabela com iniciais coloridas e idade, e ações "Atendimento", "Histórico" e "Responsáveis". "Seções clínicas" e "PDF / Word" ficam no botão ⋯.
+  - **Novo atendimento:** etiqueta "Ainda não salvo" / "Salvo às HH:MM" no topo, fases com círculos (atual violeta, concluída verde ✓, pendente amarela com !), faixa de título da fase sem degradê, ajuda em aviso azul e barra de ações embaixo ("← Fase anterior", "Mais opções", "Pré-visualizar", "PDF", "Word" e **"Salvar laudo" em violeta, não mais amarelo**).
+  - Títulos, menus e botões só com a primeira letra maiúscula. Nomes de pacientes salvos em CAIXA ALTA aparecem como nome (o dado salvo não muda).
+- **Não mudou:** o PDF e o Word dos relatórios, os textos e as regras do protocolo, nem os nomes dos campos do formulário.
+- **Arquivos principais:** `frontend/public/identidade/tokens.css` (cores e fontes), `frontend/src/styles/base.css`, `frontend/src/components/ds/`, `frontend/src/components/Layout.tsx`, todas as páginas em `frontend/src/pages/`, `frontend/public/formulario-novo-paciente.html` (só aparência e textos de botões). Referência de design: `docs/identidade/`.
+- **Como testar:** entrar no sistema e percorrer Todos os pacientes, Novo atendimento, Histórico, Laudo por IA, Configurações e Registro de atividades, no computador e no celular.
+- **Pendências/observações:**
+  - A etiqueta de status do último laudo na tabela de pacientes não foi incluída: a lista de pacientes não traz essa informação, e incluí-la exigiria mudar a API (fora do escopo de "só aparência").
+  - No formulário do protocolo padrão, os rótulos dos campos e os títulos das seções continuam com Iniciais Maiúsculas no código, porque as regras das fases e a IA leem esses textos. Os nomes das fases e os títulos mostrados na tela já aparecem só com a primeira letra maiúscula.

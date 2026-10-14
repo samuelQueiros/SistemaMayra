@@ -5,6 +5,7 @@ import { downloadReportDocx, downloadReportPdf, listReports } from '../../api/re
 import { listTemplates } from '../../api/templates'
 import type { Patient, ReportResumo, ReportTemplate } from '../../api/types'
 import { Alert, Badge, Button, Card, IconButton } from '../ds'
+import { nomeParaExibicao } from '../../utils/exibicao'
 
 // "Baixar PDF/Word" da lista de pacientes: mostra os relatórios do paciente
 // (mais recente primeiro, destacado) para escolher qual baixar.
@@ -45,49 +46,58 @@ export function BaixarRelatorioDialog({ patient, onClose }: { patient: Patient; 
     }
   }
 
+  const nome = nomeParaExibicao(patient.name)
+
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Baixar relatório de ${patient.name}`}
+      aria-label={`Baixar relatório de ${nome}`}
+      className="dialog-backdrop"
       onClick={(e) => e.target === e.currentTarget && onClose()}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(20, 16, 40, 0.45)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 50 }}
     >
       <Card
-        title={`Baixar Relatório — ${patient.name}`}
+        title={`Baixar relatório — ${nome}`}
         subtitle="Escolha o relatório e o formato."
-        action={<IconButton label="Fechar" icon={<X size={18} />} variant="ghost" onClick={onClose} />}
+        action={<IconButton label="Fechar" icon={<X />} onClick={onClose} />}
         style={{ width: 'min(640px, 100%)', maxHeight: '85vh', overflowY: 'auto' }}
       >
-        {erro && <Alert tone="danger" style={{ marginBottom: 'var(--np-space-3)' }}>{erro}</Alert>}
-        {reports === null && !erro && <p>Carregando…</p>}
-        {reports?.length === 0 && <p style={{ color: 'var(--np-text-muted)' }}>Este paciente ainda não tem relatórios.</p>}
-        <div style={{ display: 'grid', gap: 'var(--np-space-3)' }}>
+        {erro && <Alert tone="danger" style={{ marginBottom: 'var(--s-3)' }}>{erro}</Alert>}
+        {reports === null && !erro && <p className="text-2">Carregando…</p>}
+        {reports?.length === 0 && <p className="text-2">Este paciente ainda não tem relatórios.</p>}
+        <div style={{ display: 'grid', gap: 'var(--s-3)' }}>
           {reports?.map((r, i) => (
-            <div
-              key={r.id}
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 'var(--np-space-3)',
-                alignItems: 'center',
-                padding: 'var(--np-space-3)',
-                border: `1px solid ${i === 0 ? 'var(--np-border-brand)' : 'var(--np-border)'}`,
-                borderRadius: 'var(--np-radius-sm)',
-              }}
-            >
+            <div key={r.id} className={`list-row${i === 0 ? ' list-row-highlight' : ''}`}>
               <div style={{ flex: 1, minWidth: 180 }}>
-                <div style={{ fontWeight: 600 }}>
+                <div className="list-row-title">
                   {nomeDoModelo(r)} {i === 0 && <Badge tone="brand">Mais recente</Badge>}
                 </div>
-                <div style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-muted)' }}>{new Date(r.created_at).toLocaleString('pt-BR')}</div>
+                <div className="list-row-meta">{new Date(r.created_at).toLocaleString('pt-BR')}</div>
               </div>
-              <Button type="button" size="sm" variant="outline" icon={<Download size={14} />} disabled={!!baixando} onClick={() => baixar(r, 'pdf')}>
-                {baixando === `${r.id}:pdf` ? 'Gerando…' : 'PDF'}
-              </Button>
-              <Button type="button" size="sm" variant="outline" icon={<FileText size={14} />} disabled={!!baixando} onClick={() => baixar(r, 'docx')}>
-                {baixando === `${r.id}:docx` ? 'Gerando…' : 'Word'}
-              </Button>
+              <div style={{ display: 'flex', gap: 'var(--s-2)' }}>
+                <Button
+                  size="sm"
+                  variant="tonal"
+                  icon={<Download />}
+                  loading={baixando === `${r.id}:pdf`}
+                  loadingLabel="Gerando…"
+                  disabled={!!baixando}
+                  onClick={() => baixar(r, 'pdf')}
+                >
+                  PDF
+                </Button>
+                <Button
+                  size="sm"
+                  variant="tonal"
+                  icon={<FileText />}
+                  loading={baixando === `${r.id}:docx`}
+                  loadingLabel="Gerando…"
+                  disabled={!!baixando}
+                  onClick={() => baixar(r, 'docx')}
+                >
+                  Word
+                </Button>
+              </div>
             </div>
           ))}
         </div>

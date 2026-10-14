@@ -5,7 +5,7 @@ import { ApiError } from '../api/client'
 import { MAXIMO_DE_PDFS_LAUDO, gerarLaudoPorIA, problemaNosPdfsDoLaudo } from '../api/laudoIA'
 import type { CatalogoDoProtocolo, LaudoPorIA as Laudo } from '../api/laudoIA'
 import { downloadReportDocx, downloadReportPdf, getReport } from '../api/reports'
-import { Alert, Button, Card, PageHeader, Textarea } from '../components/ds'
+import { Alert, Button, buttonClass, Card, PageHeader, Textarea } from '../components/ds'
 import { EscolhaDePaciente } from '../components/pacientes/EscolhaDePaciente'
 import { SeletorDePdfs } from '../components/SeletorDePdfs'
 
@@ -113,10 +113,10 @@ export default function LaudoPorIA() {
     <div>
       <PageHeader
         eyebrow="Pacientes"
-        title="Laudo Por IA"
+        title="Laudo por IA"
         description="Envie os PDFs do Google Forms e das escalas (CARS, ATA, SNAP-IV…). A IA faz o estudo de caso, preenche o protocolo padrão e o sistema gera o laudo com os gráficos. Você revisa e edita o Word."
       />
-      <div style={{ display: 'grid', gap: 'var(--np-space-5)' }}>
+      <div style={{ display: 'grid', gap: 'var(--s-5)' }}>
         <EscolhaDePaciente
           id="paciente-laudo-ia"
           pacienteId={pacienteId}
@@ -129,8 +129,8 @@ export default function LaudoPorIA() {
         />
 
         {pacienteId && !cadastrando && etapa !== 'pronto' && (
-          <Card title="PDFs Do Paciente" subtitle={`De 1 a ${MAXIMO_DE_PDFS_LAUDO} PDFs: respostas do Google Forms (responsáveis, escola) e escalas pontuadas. Cada escala enviada gera o seu gráfico no laudo.`}>
-            <div style={{ display: 'grid', gap: 'var(--np-space-4)' }}>
+          <Card title="PDFs do paciente" subtitle={`De 1 a ${MAXIMO_DE_PDFS_LAUDO} PDFs: respostas do Google Forms (responsáveis, escola) e escalas pontuadas. Cada escala enviada gera o seu gráfico no laudo.`}>
+            <div style={{ display: 'grid', gap: 'var(--s-4)' }}>
               <SeletorDePdfs
                 arquivos={arquivos}
                 onChange={setArquivos}
@@ -141,7 +141,7 @@ export default function LaudoPorIA() {
               />
               <Textarea
                 id="observacoes-laudo-ia"
-                label="Observações Para A IA (Opcional)"
+                label="Observações para a IA (opcional)"
                 rows={2}
                 value={observacoes}
                 onChange={(e) => setObservacoes(e.target.value)}
@@ -156,15 +156,15 @@ export default function LaudoPorIA() {
                   {erro}
                   {laudoSemDocumento && (
                     <>
-                      {' '}O laudo foi criado com as respostas da IA: <Link to={`/atendimento/novo?laudo=${laudoSemDocumento}`}>abra no formulário</Link> e clique em "Salvar Laudo" para gerar o documento.
+                      {' '}O laudo foi criado com as respostas da IA: <Link to={`/atendimento/novo?laudo=${laudoSemDocumento}`}>abra no formulário</Link> e clique em "Salvar laudo" para gerar o documento.
                     </>
                   )}
                 </Alert>
               )}
               {ocupado && <Alert tone="info">{MENSAGEM_DA_ETAPA[etapa]}</Alert>}
               <div>
-                <Button type="button" icon={<Sparkles size={16} />} onClick={gerar} disabled={!arquivos.length || ocupado}>
-                  {ocupado ? 'Gerando…' : 'Gerar Laudo Com IA'}
+                <Button icon={<Sparkles />} onClick={gerar} disabled={!arquivos.length} loading={ocupado} loadingLabel="Gerando…">
+                  Gerar laudo com IA
                 </Button>
               </div>
             </div>
@@ -172,8 +172,8 @@ export default function LaudoPorIA() {
         )}
 
         {etapa === 'pronto' && laudo && (
-          <Card title="Laudo Gerado" subtitle="Mesmo modelo do protocolo padrão, com os gráficos. Baixe o Word para editar ou ajuste no formulário.">
-            <div style={{ display: 'grid', gap: 'var(--np-space-4)' }}>
+          <Card title="Laudo gerado" subtitle="Mesmo modelo do protocolo padrão, com os gráficos. Baixe o Word para editar ou ajuste no formulário.">
+            <div style={{ display: 'grid', gap: 'var(--s-4)' }}>
               {laudo.computed_json.lacunas.length > 0 && (
                 <Alert tone="warning">
                   <strong>Os PDFs não trouxeram:</strong>
@@ -184,27 +184,28 @@ export default function LaudoPorIA() {
                   </ul>
                 </Alert>
               )}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-3)' }}>
-                <Button type="button" icon={<Download size={16} />} onClick={() => downloadReportDocx(laudo.id, nomeArquivo('docx')).catch(() => setErro('Não foi possível gerar o Word.'))}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-3)' }}>
+                <Button variant="tonal" icon={<Download />} onClick={() => downloadReportDocx(laudo.id, nomeArquivo('docx')).catch(() => setErro('Não foi possível gerar o Word.'))}>
                   Baixar Word (DOCX)
                 </Button>
-                <Button type="button" variant="outline" icon={<FileText size={16} />} onClick={() => downloadReportPdf(laudo.id, nomeArquivo('pdf')).catch(() => setErro('Não foi possível gerar o PDF.'))}>
+                <Button variant="tonal" icon={<FileText />} onClick={() => downloadReportPdf(laudo.id, nomeArquivo('pdf')).catch(() => setErro('Não foi possível gerar o PDF.'))}>
                   Baixar PDF
                 </Button>
-                <Button type="button" variant="outline" icon={<PencilLine size={16} />} onClick={() => navigate(`/atendimento/novo?laudo=${laudo.id}`)}>
-                  Ajustar No Formulário
+                <Button variant="secondary" icon={<PencilLine />} onClick={() => navigate(`/atendimento/novo?laudo=${laudo.id}`)}>
+                  Ajustar no formulário
                 </Button>
-                <Link to={`/pacientes/${pacienteId}/historico`} style={{ alignSelf: 'center', color: 'var(--np-text-link)' }}>
-                  Ver Histórico Do Paciente
+                <Link to={`/pacientes/${pacienteId}/historico`} className={buttonClass('ghost')}>
+                  Ver histórico do paciente
                 </Link>
               </div>
               {erro && <Alert tone="danger">{erro}</Alert>}
               {laudo.generated_text && (
                 <iframe
-                  title="Pré-Visualização Do Laudo"
+                  title="Pré-visualização do laudo"
                   srcDoc={laudo.generated_text}
                   sandbox=""
-                  style={{ width: '100%', minHeight: '80vh', border: '1px solid var(--np-border)', borderRadius: 'var(--np-radius-md)', background: '#fff' }}
+                  className="doc-preview"
+                  style={{ minHeight: '80vh' }}
                 />
               )}
               <div>
@@ -217,7 +218,7 @@ export default function LaudoPorIA() {
                     setEtapa('preencher')
                   }}
                 >
-                  Gerar Outro Laudo
+                  Gerar outro laudo
                 </Button>
               </div>
             </div>
@@ -229,7 +230,7 @@ export default function LaudoPorIA() {
         <iframe
           key={iframeSrc}
           src={iframeSrc}
-          title="Gerando O Laudo"
+          title="Gerando o laudo"
           aria-hidden="true"
           tabIndex={-1}
           style={{ position: 'fixed', left: -10000, top: 0, width: 1100, height: 800, border: 0 }}

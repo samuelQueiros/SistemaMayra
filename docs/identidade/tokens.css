@@ -1,0 +1,98 @@
+/* Identidade visual "Caderno Lilás" — Sistema Mayra Vanessa
+   Fontes (Google Fonts):
+   https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap
+
+   REFERÊNCIA de design (entregue pelo cliente). O sistema usa a cópia
+   aplicada em frontend/public/identidade/tokens.css (mesmas variáveis +
+   fontes servidas pelo próprio sistema, sem Google Fonts por causa da CSP)
+   e as classes base em frontend/src/styles/base.css.
+*/
+:root {
+  /* Violeta — primária */
+  --violeta-50:#F4F1FB;  --violeta-100:#E8E2F7; --violeta-200:#D2C6EF;
+  --violeta-300:#B3A0E2; --violeta-400:#8F74D0; --violeta-500:#6E50B8;
+  --violeta-600:#5A3EA0; --violeta-700:#4A3285; --violeta-800:#3B296A;
+  --violeta-900:#2A1E4C;
+
+  /* Céu — secundária */
+  --ceu-50:#EEF6FC; --ceu-100:#D9ECF8; --ceu-300:#8FC3E8;
+  --ceu-500:#3E8FCB; --ceu-600:#2D76AE; --ceu-700:#22628F;
+
+  /* Sol — destaque (pendências, nunca botão) */
+  --sol-50:#FEF6E4; --sol-300:#F7CF7A; --sol-500:#F2B33D; --sol-800:#7A4E00;
+
+  /* Neutros (grafite lilás) */
+  --n-0:#FFFFFF;   --n-25:#FBFAFD;  --n-50:#F6F4F9;  --n-100:#EDEAF2;
+  --n-200:#DEDAE6; --n-300:#C4BFD0; --n-400:#9A94A8; --n-500:#716B80;
+  --n-700:#433E52; --n-900:#1D1A26;
+
+  /* Semânticas: fundo / borda / texto / sólido */
+  --ok-bg:#E9F6EF;   --ok-bd:#B7E0C8;   --ok-tx:#1F6B45;   --ok:#2E9461;
+  --warn-bg:#FEF6E4; --warn-bd:#F7D99A; --warn-tx:#7A4E00; --warn:#E0A100;
+  --err-bg:#FDECEA;  --err-bd:#F5C2BC;  --err-tx:#A3251B;  --err:#D23B2E;
+  --info-bg:#EEF6FC; --info-bd:#BFDDF2; --info-tx:#22628F; --info:#3E8FCB;
+  --danger:#B42F23; --danger-hover:#962519; --danger-press:#7A1D13;
+
+  /* Papéis */
+  --bg-app:var(--n-50); --bg-card:var(--n-0); --bg-subtle:var(--n-25);
+  --text:var(--n-900); --text-body:var(--n-700); --text-2:var(--n-500); --text-placeholder:var(--n-400);
+  --border:var(--n-200); --divider:var(--n-100);
+  --primary:var(--violeta-600); --primary-hover:var(--violeta-700); --primary-press:var(--violeta-800);
+  --primary-soft:var(--violeta-50); --primary-soft-hover:var(--violeta-100); --on-primary-soft:var(--violeta-700);
+  --focus-ring:0 0 0 2px #FFFFFF, 0 0 0 5px var(--violeta-300);
+  --input-focus:0 0 0 4px var(--violeta-100);
+
+  /* Tipografia */
+  --font-display:"Bricolage Grotesque", system-ui, sans-serif;
+  --font-body:"Figtree", system-ui, sans-serif;
+  --font-mono:"JetBrains Mono", ui-monospace, monospace;
+  --fs-display:48px; --fs-h1:32px; --fs-h2:22px; --fs-h3:17px;
+  --fs-body-lg:17px; --fs-body:15px; --fs-label:14px; --fs-caption:13px; --fs-overline:12px;
+
+  /* Espaço, raios, sombras, controles */
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-6:24px; --s-8:32px; --s-12:48px; --s-16:64px;
+  --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-pill:999px;
+  --sh-sm:0 1px 2px rgba(42,30,76,.06);
+  --sh-md:0 1px 2px rgba(42,30,76,.05), 0 6px 20px rgba(42,30,76,.07);
+  --sh-lg:0 4px 8px rgba(42,30,76,.06), 0 18px 40px rgba(42,30,76,.14);
+  --h-sm:36px; --h-md:44px; --h-lg:52px;
+}
+
+body { background:var(--bg-app); color:var(--text); font-family:var(--font-body); font-size:var(--fs-body); line-height:1.6; }
+h1, h2, .display { font-family:var(--font-display); letter-spacing:-0.01em; }
+:focus-visible { outline:none; box-shadow:var(--focus-ring); }
+
+/* Botões */
+.btn { height:var(--h-md); padding:0 18px; border-radius:var(--r-sm); border:1px solid transparent;
+  font:600 15px/1 var(--font-body); display:inline-flex; align-items:center; gap:8px; cursor:pointer; white-space:nowrap; }
+.btn-sm { height:var(--h-sm); padding:0 12px; font-size:14px; }
+.btn-lg { height:var(--h-lg); padding:0 24px; font-size:16px; border-radius:12px; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--primary-hover); }
+.btn-primary:active { background:var(--primary-press); }
+.btn-secondary { background:#fff; border-color:var(--border); color:var(--violeta-700); }
+.btn-secondary:hover { border-color:var(--violeta-300); background:var(--n-25); }
+.btn-secondary:active { border-color:var(--violeta-400); background:var(--violeta-50); }
+.btn-tonal { background:var(--primary-soft); color:var(--on-primary-soft); }
+.btn-tonal:hover { background:var(--violeta-100); }
+.btn-tonal:active { background:var(--violeta-200); }
+.btn-ghost { background:transparent; color:var(--text-body); }
+.btn-ghost:hover { background:var(--n-50); color:var(--text); }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-danger:hover { background:var(--danger-hover); }
+.btn:disabled { background:var(--violeta-100); color:var(--n-400); border-color:transparent; cursor:not-allowed; }
+.btn-secondary:disabled, .btn-ghost:disabled { background:transparent; color:var(--n-300); border-color:var(--n-100); }
+
+/* Campos */
+.input, .select { height:var(--h-md); padding:0 14px; border:1px solid var(--border); border-radius:var(--r-sm);
+  background:#fff; font:400 15px var(--font-body); color:var(--text); }
+.input::placeholder { color:var(--text-placeholder); }
+.input:focus, .select:focus { outline:none; border:1.5px solid var(--violeta-500); box-shadow:var(--input-focus); }
+.input[aria-invalid="true"] { border:1.5px solid var(--err); }
+.input:disabled { background:var(--n-50); border-style:dashed; color:var(--text-body); }
+.label { font-size:var(--fs-label); font-weight:600; }
+.hint { font-size:var(--fs-caption); color:var(--text-2); }
+.error-text { font-size:var(--fs-caption); color:var(--err-tx); }
+
+/* Cartões */
+.card { background:var(--bg-card); border:1px solid var(--divider); border-radius:var(--r-lg); box-shadow:var(--sh-sm); }

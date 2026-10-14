@@ -21,7 +21,7 @@ function renderizar() {
       </Routes>
     </MemoryRouter>,
   )
-  fireEvent.click(screen.getByRole('button', { name: 'Relatório Por IA (PDFs)' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Relatório por IA (PDFs)' }))
 }
 
 const anexar = (arquivos: File[]) => fireEvent.change(screen.getByTestId('arquivos-pdf'), { target: { files: arquivos } })
@@ -36,8 +36,8 @@ describe('EnvioDePdfsParaIA', () => {
     renderizar()
     anexar([pdf('mae.pdf'), pdf('escola.pdf')])
     expect(screen.getByText('mae.pdf')).toBeInTheDocument()
-    fireEvent.change(screen.getByLabelText('Observações Para A IA (Opcional)'), { target: { value: 'foco em atenção' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Gerar Relatório' }))
+    fireEvent.change(screen.getByLabelText('Observações para a IA (opcional)'), { target: { value: 'foco em atenção' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Gerar relatório' }))
 
     expect(await screen.findByText('Tela de revisão')).toBeInTheDocument()
     const [paciente, arquivos, obs] = vi.mocked(api.gerarRelatorioPorPdfs).mock.calls[0]
@@ -50,7 +50,7 @@ describe('EnvioDePdfsParaIA', () => {
     renderizar()
     anexar(Array.from({ length: 7 }, (_, i) => pdf(`${i}.pdf`)))
     expect(screen.getByText('Anexe no máximo 6 PDFs por relatório.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Gerar Relatório' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Gerar relatório' })).toBeDisabled()
   })
 
   it('recusa arquivo que não é PDF', () => {
@@ -63,8 +63,8 @@ describe('EnvioDePdfsParaIA', () => {
     vi.mocked(api.gerarRelatorioPorPdfs).mockRejectedValue(new ApiError(502, 'O modelo precisa aceitar PDFs.'))
     renderizar()
     anexar([pdf('a.pdf')])
-    fireEvent.click(screen.getByRole('button', { name: 'Gerar Relatório' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Gerar relatório' }))
     expect(await screen.findByText('O modelo precisa aceitar PDFs.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Gerar Relatório' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Gerar relatório' })).toBeEnabled()
   })
 })

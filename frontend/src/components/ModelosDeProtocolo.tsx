@@ -4,7 +4,7 @@ import { Copy, Pencil, Plus } from 'lucide-react'
 import { ApiError } from '../api/client'
 import { arquivarProtocolo, duplicarProtocolo, listProtocolos, restaurarProtocolo } from '../api/protocolos'
 import type { Protocolo } from '../laudo/tipos'
-import { Alert, Badge, Button, Card, buttonStyle } from './ds'
+import { Alert, Badge, Button, Card, buttonClass } from './ds'
 
 // Card de Configurações: modelos de protocolo da psicóloga. O protocolo
 // padrão (formulario-novo-paciente.html) aparece só como referência.
@@ -38,22 +38,22 @@ export function ModelosDeProtocolo() {
 
   return (
     <Card
-      title="Modelos De Protocolo"
-      subtitle="Formulários próprios, além do protocolo padrão. Em Novo Atendimento você escolhe qual usar; cada um gera o relatório no mesmo padrão visual."
+      title="Modelos de protocolo"
+      subtitle="Formulários próprios, além do protocolo padrão. Em “Novo atendimento” você escolhe qual usar; cada um gera o relatório no mesmo padrão visual."
       action={
-        <Link to="/configuracoes/protocolos/novo" style={buttonStyle('primary', 'sm')}>
-          <Plus size={16} /> Novo Modelo
+        <Link to="/configuracoes/protocolos/novo" className={buttonClass('primary', 'sm')}>
+          <Plus aria-hidden="true" /> Novo modelo
         </Link>
       }
     >
-      <div style={{ display: 'grid', gap: 'var(--np-space-3)' }}>
+      <div style={{ display: 'grid', gap: 'var(--s-3)' }}>
         {erro && <Alert tone="danger">{erro}</Alert>}
         <Linha
-          titulo="Avaliação Neuropsicopedagógica E Análise Comportamental"
+          titulo="Avaliação neuropsicopedagógica e análise comportamental"
           detalhe="Protocolo padrão do sistema — não editável."
           etiqueta={<Badge tone="neutral">Padrão</Badge>}
         />
-        {modelos === null && !erro && <p style={{ margin: 0 }}>Carregando…</p>}
+        {modelos === null && !erro && <p className="text-2" style={{ margin: 0 }}>Carregando…</p>}
         {ativos.map((m) => (
           <Linha
             key={m.id}
@@ -61,10 +61,10 @@ export function ModelosDeProtocolo() {
             detalhe={`${m.schema_json.secoes.length} ${m.schema_json.secoes.length === 1 ? 'seção' : 'seções'}${m.schema_json.descricao ? ' · ' + m.schema_json.descricao : ''}`}
             acoes={
               <>
-                <Link to={`/configuracoes/protocolos/${m.id}`} style={buttonStyle('outline', 'sm')}>
-                  <Pencil size={14} /> Editar
+                <Link to={`/configuracoes/protocolos/${m.id}`} className={buttonClass('secondary', 'sm')}>
+                  <Pencil aria-hidden="true" /> Editar
                 </Link>
-                <Button type="button" variant="ghost" size="sm" icon={<Copy size={14} />} onClick={() => executar(() => duplicarProtocolo(m.id), false)}>
+                <Button type="button" variant="ghost" size="sm" icon={<Copy />} onClick={() => executar(() => duplicarProtocolo(m.id), false)}>
                   Duplicar
                 </Button>
                 <Button
@@ -72,7 +72,7 @@ export function ModelosDeProtocolo() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    if (confirm(`Arquivar o modelo "${m.name}"? Ele some de Novo Atendimento, mas os relatórios já feitos continuam no histórico.`))
+                    if (confirm(`Arquivar o modelo "${m.name}"? Ele some de “Novo atendimento”, mas os relatórios já feitos continuam no histórico.`))
                       executar(() => arquivarProtocolo(m.id), true)
                   }}
                 >
@@ -83,7 +83,7 @@ export function ModelosDeProtocolo() {
           />
         ))}
         {modelos !== null && !ativos.length && (
-          <p style={{ margin: 0, color: 'var(--np-text-muted)' }}>Nenhum modelo próprio ainda. Clique em "Novo Modelo" para montar o primeiro.</p>
+          <p className="text-2" style={{ margin: 0 }}>Nenhum modelo próprio ainda. Clique em "Novo modelo" para montar o primeiro.</p>
         )}
         {arquivados.length > 0 && (
           <Button type="button" variant="ghost" size="sm" style={{ justifySelf: 'start' }} onClick={() => setMostrarArquivados((v) => !v)}>
@@ -110,25 +110,14 @@ export function ModelosDeProtocolo() {
 
 function Linha({ titulo, detalhe, etiqueta, acoes }: { titulo: string; detalhe: string; etiqueta?: React.ReactNode; acoes?: React.ReactNode }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 'var(--np-space-3)',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 'var(--np-space-3) var(--np-space-4)',
-        border: '1px solid var(--np-border)',
-        borderRadius: 'var(--np-radius-sm)',
-      }}
-    >
+    <div className="list-row">
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontWeight: 600 }}>
+        <div className="list-row-title">
           {titulo} {etiqueta}
         </div>
-        <div style={{ font: 'var(--np-type-caption)', color: 'var(--np-text-muted)' }}>{detalhe}</div>
+        <div className="list-row-meta">{detalhe}</div>
       </div>
-      {acoes && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--np-space-2)' }}>{acoes}</div>}
+      {acoes && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)' }}>{acoes}</div>}
     </div>
   )
 }
