@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class ReportCreate(BaseModel):
@@ -93,6 +93,34 @@ class ReportOut(BaseModel):
     classification_override: str | None = None
     clinical_sections_json: dict | None = None
     created_at: datetime
+
+
+# Chaves de computed_json que as listas usam (classificação no Histórico).
+CHAVES_DE_RESUMO = ("classification", "classifications")
+
+
+class ReportResumoOut(BaseModel):
+    """Laudo sem as partes pesadas (respostas com fotos em base64, HTML final
+    com capa e gráficos): é o que as listas e os salvamentos automáticos
+    devolvem. O laudo completo continua em GET /api/reports/{id}."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    patient_id: UUID
+    template_id: UUID
+    computed_json: dict | None = None
+    template_name_override: str | None = None
+    classification_override: str | None = None
+    clinical_sections_json: dict | None = None
+    created_at: datetime
+
+    @field_validator("computed_json", mode="before")
+    @classmethod
+    def _so_classificacao(cls, valor):
+        if not isinstance(valor, dict):
+            return valor
+        return {k: valor[k] for k in CHAVES_DE_RESUMO if k in valor}
 
 
 class LogDeEdicaoOut(BaseModel):

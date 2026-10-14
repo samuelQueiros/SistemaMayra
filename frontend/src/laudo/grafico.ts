@@ -58,7 +58,7 @@ export function graficoDeBarras(titulo: string, rotulos: string[], valores: numb
       type: 'bar',
       data: {
         labels: rotulos.map((r) => quebrarRotulo(r)),
-        datasets: [{ data: valores, backgroundColor: '#8e7cc3', borderRadius: 4, barThickness: 26 }],
+        datasets: [{ data: valores, backgroundColor: '#7561ae', borderRadius: 4, barThickness: 26 }],
       },
       options: {
         indexAxis: 'y',
@@ -66,12 +66,12 @@ export function graficoDeBarras(titulo: string, rotulos: string[], valores: numb
         animation: false,
         devicePixelRatio: 1,
         plugins: {
-          title: { display: true, text: titulo, color: '#262626', font: { size: 28, weight: 'bold' }, padding: { top: 10, bottom: 18 } },
+          title: { display: true, text: titulo, color: '#2b2740', font: { size: 28, weight: 'bold' }, padding: { top: 10, bottom: 18 } },
           legend: { display: false },
         },
         scales: {
           x: { min: Math.min(minimo, ...valores), max: maximo && maximo >= maiorValor ? maximo : undefined, ticks: { font: { size: 20 } } },
-          y: { ticks: { font: { size: 21 }, color: '#262626' } },
+          y: { ticks: { font: { size: 21 }, color: '#2b2740' } },
         },
       },
       plugins: [fundoBranco],

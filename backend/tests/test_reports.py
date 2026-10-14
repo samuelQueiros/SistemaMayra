@@ -131,3 +131,35 @@ def test_outro_psicologo_nao_acessa_laudo_alheio(client):
     response = client.get(f"/api/reports/{report_id}", headers=headers_b)
 
     assert response.status_code == 404
+
+
+def test_lista_de_laudos_e_autosave_sao_leves(client):
+    """Lista e autosave não devolvem respostas (fotos em base64) nem o HTML
+    final; o autosave sem fotos mantém as fotos já salvas."""
+    headers = registrar_e_logar(client)
+    template = client.post("/api/templates/custom-form-avaliacao", headers=headers).json()
+    pid = client.post("/api/patients", json={"name": "Criança", "birth_date": "2019-01-01"}, headers=headers).json()["id"]
+    fotos = [{"nome": "f.jpg", "src": "data:image/jpeg;base64," + "A" * 5000}]
+    laudo = client.post(
+        f"/api/patients/{pid}/reports",
+        json={"template_id": template["id"], "answers": {"nomePaciente": "Criança", "__fotosPacienteDados": fotos}},
+        headers=headers,
+    ).json()
+    client.put(f"/api/reports/{laudo['id']}/text", json={"generated_text": "<html>" + "x" * 5000 + "</html>"}, headers=headers)
+
+    resposta = client.put(f"/api/reports/{laudo['id']}/answers", json={"answers": {"nomePaciente": "Criança Atualizada"}}, headers=headers)
+    assert resposta.status_code == 200
+    assert "answers_json" not in resposta.json() and "generated_text" not in resposta.json()
+
+    lista = client.get(f"/api/patients/{pid}/reports", headers=headers).json()
+    assert lista[0]["id"] == laudo["id"]
+    assert "answers_json" not in lista[0] and "generated_text" not in lista[0]
+
+    completo = client.get(f"/api/reports/{laudo['id']}", headers=headers).json()
+    assert completo["answers_json"]["nomePaciente"] == "Criança Atualizada"
+    assert completo["answers_json"]["__fotosPacienteDados"] == fotos
+    assert completo["generated_text"].startswith("<html>")
+
+    # Enviar a chave (ex.: lista vazia) substitui as fotos.
+    client.put(f"/api/reports/{laudo['id']}/answers", json={"answers": {"__fotosPacienteDados": []}}, headers=headers)
+    assert client.get(f"/api/reports/{laudo['id']}", headers=headers).json()["answers_json"]["__fotosPacienteDados"] == []

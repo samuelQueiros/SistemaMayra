@@ -15,15 +15,17 @@ export default function NovoAtendimento() {
   const [params] = useSearchParams()
   const pacienteId = params.get('paciente')
   const escolhido = params.get('protocolo')
-  const [modelos, setModelos] = useState<Protocolo[] | null>(escolhido ? [] : null)
+  const laudoId = params.get('laudo')
+  const [modelos, setModelos] = useState<Protocolo[] | null>(escolhido || laudoId ? [] : null)
 
   useEffect(() => {
-    if (escolhido) return
+    if (escolhido || laudoId) return
     listProtocolos()
       .then(setModelos)
       .catch(() => setModelos([]))
-  }, [escolhido])
+  }, [escolhido, laudoId])
 
+  if (laudoId) return <ProtocoloPadrao pacienteId={null} laudoId={laudoId} />
   if (modelos === null) return <p>Carregando…</p>
   if (escolhido === 'padrao' || !modelos.length) return <ProtocoloPadrao pacienteId={pacienteId} />
 
@@ -67,11 +69,14 @@ function CartaoProtocolo({ para, titulo, descricao }: { para: string; titulo: st
 }
 
 // Protocolo padrão (formulario-novo-paciente.html) embutido num iframe —
-// comportamento de sempre.
-function ProtocoloPadrao({ pacienteId }: { pacienteId: string | null }) {
-  const src = pacienteId
-    ? `/formulario-novo-paciente.html?paciente=${pacienteId}`
-    : '/formulario-novo-paciente.html'
+// comportamento de sempre. Com `laudoId`, reabre um laudo já salvo (ex.:
+// gerado pelo Laudo Por IA) para ajustes.
+function ProtocoloPadrao({ pacienteId, laudoId = null }: { pacienteId: string | null; laudoId?: string | null }) {
+  const src = laudoId
+    ? `/formulario-novo-paciente.html?laudo=${laudoId}`
+    : pacienteId
+      ? `/formulario-novo-paciente.html?paciente=${pacienteId}`
+      : '/formulario-novo-paciente.html'
 
   // O formulário (iframe) avisa quando há alterações ainda não gravadas no
   // banco. Enquanto houver, fechar/recarregar a aba ou sair pelo menu pede
@@ -122,8 +127,12 @@ function ProtocoloPadrao({ pacienteId }: { pacienteId: string | null }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
       <PageHeader
         eyebrow="Atendimento"
-        title="Novo Atendimento"
-        description="Preencha o protocolo completo. Ao salvar, o paciente e o protocolo ficam registrados no histórico."
+        title={laudoId ? 'Ajustar Laudo' : 'Novo Atendimento'}
+        description={
+          laudoId
+            ? 'Revise e ajuste o protocolo deste laudo. As alterações são salvas automaticamente; clique em "Salvar Laudo" para atualizar o documento.'
+            : 'Preencha o protocolo completo. Ao salvar, o paciente e o protocolo ficam registrados no histórico.'
+        }
       />
       <iframe
         key={src}

@@ -61,24 +61,15 @@ def _idade(nascimento: date) -> str:
     return f"{anos} anos e {meses} meses"
 
 
-@router.post("/api/patients/{patient_id}/relatorios-pdf", response_model=ReportOut, status_code=status.HTTP_201_CREATED)
-def criar_relatorio_por_pdfs(
-    patient_id: UUID,
-    arquivos: list[UploadFile] = File(...),
-    observacoes: str | None = Form(default=None),
-    db: Session = Depends(get_db),
-    current: Psychologist = Depends(get_current_psychologist),
-) -> Report:
-    patient = get_patient_or_404(patient_id, db, current)
-
+def ler_pdfs_enviados(arquivos: list[UploadFile], maximo: int) -> list[dict]:
+    """Valida e lê os PDFs enviados (nome, bytes e texto extraído)."""
     if not arquivos:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Anexe pelo menos um PDF.")
-    if len(arquivos) > MAXIMO_DE_ARQUIVOS:
+    if len(arquivos) > maximo:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Anexe no máximo {MAXIMO_DE_ARQUIVOS} PDFs por relatório.",
+            detail=f"Anexe no máximo {maximo} PDFs por relatório.",
         )
-
     pdfs: list[dict] = []
     for arquivo in arquivos:
         nome = arquivo.filename or "formulario.pdf"
@@ -100,6 +91,29 @@ def criar_relatorio_por_pdfs(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"Não foi possível ler '{nome}'. O PDF pode estar corrompido."
             ) from exc
         pdfs.append({"nome": nome, "conteudo": conteudo, "texto": texto})
+    return pdfs
+
+
+def guardar_pdfs(patient_id, pdfs: list[dict]) -> list[dict]:
+    storage = get_form_pdfs_storage()
+    guardados = []
+    for pdf in pdfs:
+        chave = f"{patient_id}/{uuid.uuid4()}.pdf"
+        storage.save(chave, pdf["conteudo"])
+        guardados.append({"nome": pdf["nome"], "chave": chave})
+    return guardados
+
+
+@router.post("/api/patients/{patient_id}/relatorios-pdf", response_model=ReportOut, status_code=status.HTTP_201_CREATED)
+def criar_relatorio_por_pdfs(
+    patient_id: UUID,
+    arquivos: list[UploadFile] = File(...),
+    observacoes: str | None = Form(default=None),
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Report:
+    patient = get_patient_or_404(patient_id, db, current)
+    pdfs = ler_pdfs_enviados(arquivos, MAXIMO_DE_ARQUIVOS)
 
     ai_settings = db.query(AISettings).filter(AISettings.owner_id == current.id).first()
     try:
@@ -125,13 +139,7 @@ def criar_relatorio_por_pdfs(
             ),
         ) from exc
 
-    storage = get_form_pdfs_storage()
-    guardados = []
-    for pdf in pdfs:
-        chave = f"{patient.id}/{uuid.uuid4()}.pdf"
-        storage.save(chave, pdf["conteudo"])
-        guardados.append({"nome": pdf["nome"], "chave": chave})
-
+    guardados = guardar_pdfs(patient.id, pdfs)
     template = _template_interno(db, current)
     report = Report(
         patient_id=patient.id,

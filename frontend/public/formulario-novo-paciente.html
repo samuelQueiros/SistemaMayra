@@ -7,20 +7,20 @@
 </script>
 <style>
 :root{
-  --roxo:#7466b5;
-  --azul:#85d3ed;
-  --lilas:#f5f2ff;
-  --amarelo:#ffd966;
+  --roxo:#7561ae;
+  --azul:#8fb4d6;
+  --lilas:#ede9fa;
+  --amarelo:#ffd100;
 }
 *{box-sizing:border-box}
-body{font-family:Arial,Helvetica,sans-serif;background:#f3f3f7;margin:0;padding:18px;color:#222}
+body{font-family:Arial,Helvetica,sans-serif;background:#f5f4fa;margin:0;padding:18px;color:#2b2740}
 .container{max-width:1150px;margin:auto;background:#fff;border-radius:14px;padding:24px;box-shadow:0 0 15px rgba(0,0,0,.12)}
 .topo{text-align:center;border-bottom:4px solid var(--roxo);padding-bottom:14px;margin-bottom:18px}
 .topo img{max-width:260px;width:70%;height:auto}
-h1{color:#5d52a5;text-align:center;font-size:24px;margin:10px 0;text-transform:capitalize}
+h1{color:#5c4b92;text-align:center;font-size:24px;margin:10px 0;text-transform:capitalize}
 h2{background:linear-gradient(90deg,var(--roxo),#9a91d2);color:white;padding:10px;border-radius:8px;font-size:17px;margin-top:24px;text-transform:capitalize}
 h3,label{text-transform:capitalize}
-h3{color:#5d52a5}
+h3{color:#5c4b92}
 label{display:block;font-weight:bold;margin-top:10px}
 input,select,textarea{width:100%;padding:8px;margin-top:5px;border:1px solid #bbb;border-radius:6px;font-family:Arial,Helvetica,sans-serif;font-size:14px}
 textarea{min-height:80px}
@@ -29,7 +29,7 @@ textarea{min-height:80px}
 .bloco{background:#fafafa;border:1px solid #ddd;border-radius:8px;padding:12px;margin:10px 0}
 .detalhe-sim{display:none;margin-top:8px}
 .simnao{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
-.simnao button{padding:8px 12px;font-size:14px;background:#eee;color:#222;border:1px solid #bbb}
+.simnao button{padding:8px 12px;font-size:14px;background:#eee;color:#2b2740;border:1px solid #bbb}
 .simnao button.ativo{background:var(--roxo);color:#fff;border-color:var(--roxo)}
 .escalas-toggle{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
 .escala-icone{display:flex;align-items:center;gap:6px;padding:7px 12px;font-size:13px;font-weight:bold;background:#eee;color:#444;border:1px solid #bbb;border-radius:20px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
@@ -38,7 +38,7 @@ textarea{min-height:80px}
 .escala-icone:not(.ativo){opacity:.75}
 .acoes{display:flex;flex-wrap:wrap;gap:10px;position:sticky;bottom:0;background:#fff;border-top:2px solid #ddd;padding:14px 0;margin-top:24px;z-index:10}
 
-.status-salvamento{font-size:13px;color:#4d4295;background:#f5f2ff;border-left:5px solid var(--roxo);padding:10px;border-radius:8px;margin-top:10px}
+.status-salvamento{font-size:13px;color:#43356b;background:#ede9fa;border-left:5px solid var(--roxo);padding:10px;border-radius:8px;margin-top:10px}
 .fotos-preview{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
 .foto-item{border:1px solid #ddd;border-radius:8px;padding:8px;background:#fafafa;max-width:180px}
 .foto-item img{width:160px;max-height:130px;object-fit:cover;border-radius:6px;display:block}
@@ -63,24 +63,24 @@ textarea{min-height:80px}
 @media(max-width:780px){.habilidade-item{grid-template-columns:1fr}}
 button{border:none;border-radius:8px;padding:12px 16px;background:var(--roxo);color:#fff;font-size:15px;cursor:pointer}
 button:hover{opacity:.9}
-.botao-principal{background:var(--amarelo)!important;color:#222!important;border:2px solid #d8b500!important;font-weight:bold}
+.botao-principal{background:var(--amarelo)!important;color:#2b2740!important;border:2px solid #d8b500!important;font-weight:bold}
 .botao-limpar{background:#777!important}
 .relatorio{display:none;background:#fff;padding:30px;margin-top:28px;border-top:8px solid var(--roxo);font-family:Arial,Helvetica,sans-serif;font-size:10pt}
 .relatorio h1{font-size:16pt;text-transform:uppercase}
-.relatorio h2{color:#443b91;background:#f5f2ff;border-left:6px solid var(--roxo);font-size:12pt}
+.relatorio h2{color:#443b91;background:#ede9fa;border-left:6px solid var(--roxo);font-size:12pt}
 .relatorio p,.relatorio li,.relatorio td,.relatorio th{font-size:10pt;line-height:1.5;text-align:justify;text-indent:1.5em}
 .cabecalho-relatorio{text-align:center;border-bottom:3px solid var(--roxo);padding-bottom:10px;margin-bottom:16px}
 .cabecalho-relatorio img{max-width:220px}
 .rodape-relatorio{text-align:center;border-top:2px solid var(--azul);margin-top:28px;padding-top:10px}
 .rodape-relatorio img{max-width:100%}
 .assinatura{text-align:center;margin-top:46px}
-.assinatura-manuscrita{font-family:"Brush Script MT","Segoe Script","Lucida Handwriting",cursive;font-size:30pt!important;color:#4d4295;text-align:center!important;margin-bottom:-10px;text-indent:0!important}
+.assinatura-manuscrita{font-family:"Brush Script MT","Segoe Script","Lucida Handwriting",cursive;font-size:30pt!important;color:#43356b;text-align:center!important;margin-bottom:-10px;text-indent:0!important}
 .linha-assinatura{border-top:1.5px solid #333;width:380px;max-width:90%;margin:auto}
 .grafico-box{page-break-inside:avoid;border:1px solid #ddd;padding:14px;border-radius:8px;margin:20px 0}
 .grafico-container{height:330px;max-width:680px;margin:auto}
 .obs-table{width:100%;border-collapse:collapse;margin:12px 0}
 .obs-table th,.obs-table td{border:1px solid #999;padding:6px;vertical-align:top}
-.obs-table th{background:#f5f2ff}
+.obs-table th{background:#ede9fa}
 .print-report form,.print-report .no-print,.print-report .acoes{display:none!important}
 .print-report .relatorio{display:block!important}
 .print-form .relatorio{display:none!important}
@@ -103,16 +103,16 @@ button:hover{opacity:.9}
 .wizard-progresso{position:sticky;top:0;background:#fff;z-index:20;padding:12px 0 6px;margin-bottom:2px}
 .wizard-barra{background:#eee;border-radius:20px;height:10px;overflow:hidden}
 .wizard-barra-preenchida{background:linear-gradient(90deg,var(--roxo),var(--azul));height:100%;width:0%;transition:width .4s ease;border-radius:20px}
-.wizard-texto{font-size:13px;color:#5d52a5;font-weight:bold;margin-top:6px;text-align:right}
+.wizard-texto{font-size:13px;color:#5c4b92;font-weight:bold;margin-top:6px;text-align:right}
 .wizard-steps{display:flex;overflow-x:auto;gap:6px;padding:8px 2px 14px;margin-bottom:6px;border-bottom:1px solid #eee}
 .wizard-step{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;padding:4px 6px;cursor:pointer;color:#888;font-size:10.5px;max-width:78px;text-align:center;text-transform:none;border-radius:8px}
-.wizard-step:hover{background:#f5f2ff}
+.wizard-step:hover{background:#ede9fa}
 .wizard-step .circulo{width:26px;height:26px;border-radius:50%;background:#eee;color:#888;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;border:2px solid #ddd;transition:all .2s ease}
 .wizard-step.ativo .circulo{background:var(--roxo);border-color:var(--roxo);color:#fff;transform:scale(1.12)}
 .wizard-step.ativo{color:var(--roxo)}
 .wizard-step.completo .circulo{background:#5fb878;border-color:#5fb878;color:#fff}
 .wizard-nav-etapa{display:flex;justify-content:space-between;gap:10px;margin-top:22px;padding-top:16px;border-top:1px dashed #ddd}
-.wizard-nav-etapa button{background:#eee;color:#333}
+.wizard-nav-etapa button{background:#eee;color:#2b2740}
 .wizard-nav-etapa button.avancar{background:var(--roxo);color:#fff}
 .wizard-toast{position:fixed;bottom:20px;right:20px;background:#5fb878;color:#fff;padding:14px 18px;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.22);font-weight:bold;font-size:13.5px;z-index:999;opacity:0;transform:translateY(12px) scale(.96);transition:all .3s ease;pointer-events:none;max-width:280px}
 .wizard-toast.mostrar{opacity:1;transform:translateY(0) scale(1)}
@@ -132,17 +132,17 @@ button:hover{opacity:.9}
 .wizard-cabecalho .wizard-steps{border-bottom:none;margin-bottom:0;padding-bottom:10px}
 .wizard-step .nome{line-height:1.2}
 .wizard-step.parcial .circulo{background:#fff4d6;border-color:#e0a800;color:#8a5a06}
-.wizard-step.completo .circulo{background:#3f9a5c;border-color:#3f9a5c;color:#fff}
+.wizard-step.completo .circulo{background:#3fa35b;border-color:#3fa35b;color:#fff}
 .wizard-step.completo{color:#2f7a47}
-.wizard-step.ativo .circulo{box-shadow:0 0 0 3px #c9c3ee}
+.wizard-step.ativo .circulo{box-shadow:0 0 0 3px #d6cef2}
 .wizard-step:focus-visible,.pendencia:focus-visible,.acoes button:focus-visible{outline:3px solid #ffd966;outline-offset:2px}
 .etapa-form h2:focus{outline:none}
-label.essencial::after{content:" *";color:#c0392b}
+label.essencial::after{content:" *";color:#c8443f}
 .legenda-essencial{font-size:12.5px;color:#666;margin:4px 0 0}
 .pendencias{margin-top:18px;padding:10px 12px;border-radius:8px;background:#fff8e6;border-left:5px solid #e0a800;font-size:13.5px;line-height:1.6}
-.pendencias.ok{background:#eaf7ee;border-left-color:#3f9a5c;color:#2a7342;font-weight:bold}
+.pendencias.ok{background:#eaf7ee;border-left-color:#3fa35b;color:#2a7342;font-weight:bold}
 button.pendencia{background:#fff;color:#7a5200;border:1px solid #e0a800;padding:3px 10px;font-size:12.5px;margin:4px 6px 0 0;width:auto;border-radius:14px;text-transform:none}
-.campo-erro{border-color:#c0392b!important;background:#fff6f5}
+.campo-erro{border-color:#c8443f!important;background:#fff6f5}
 .msg-erro{color:#b02a1e;font-size:12.5px;margin-top:4px;font-weight:bold}
 .campo-destacado{outline:3px solid #ffd966;outline-offset:2px}
 .soma-ok{color:#2a7342;font-weight:bold;font-size:13px;margin-top:6px}
@@ -155,17 +155,17 @@ body{padding-bottom:86px}
 .mais-opcoes summary{list-style:none;cursor:pointer;padding:10px 14px;border:1px solid #bbb;border-radius:8px;font-size:14px;background:#fff;user-select:none}
 .mais-opcoes summary::-webkit-details-marker{display:none}
 .mais-opcoes .menu{position:absolute;bottom:calc(100% + 8px);right:0;background:#fff;border:1px solid #ddd;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);padding:8px;display:flex;flex-direction:column;gap:6px;min-width:280px}
-.mais-opcoes .menu button{background:#f3f1fb;color:#333;text-align:left}
+.mais-opcoes .menu button{background:#ede9fa;color:#2b2740;text-align:left}
 .mais-opcoes .menu button.botao-limpar{background:#fdecea!important;color:#a12a1e!important}
 #notificacoes{position:fixed;right:18px;bottom:92px;z-index:1000;display:flex;flex-direction:column;gap:8px;max-width:400px}
-.notificacao{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.22);font-size:13.5px;color:#fff;background:#4d4295;animation:etapaEntrada .25s ease}
-.notificacao.sucesso{background:#3f9a5c}.notificacao.erro{background:#b3261e}.notificacao.aviso{background:#a86a00}
+.notificacao{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.22);font-size:13.5px;color:#fff;background:#43356b;animation:etapaEntrada .25s ease}
+.notificacao.sucesso{background:#3fa35b}.notificacao.erro{background:#b3261e}.notificacao.aviso{background:#a86a00}
 .notificacao .texto{flex:1;line-height:1.45}
 .notificacao button{background:rgba(255,255,255,.2);color:#fff;padding:4px 10px;font-size:12.5px;width:auto;white-space:nowrap}
 .notificacao button.fechar{background:none;font-size:19px;padding:0 4px;line-height:1}
 .status-salvamento.salvando{border-left-color:#e0a800;background:#fff8e6;color:#7a5200}
-.status-salvamento.salvo{border-left-color:#3f9a5c;background:#eaf7ee;color:#2a7342}
-.status-salvamento.erro{border-left-color:#c0392b;background:#fdecea;color:#a12a1e}
+.status-salvamento.salvo{border-left-color:#3fa35b;background:#eaf7ee;color:#2a7342}
+.status-salvamento.erro{border-left-color:#c8443f;background:#fdecea;color:#a12a1e}
 @media(max-width:780px){.acoes{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.acoes button,.acoes .mais-opcoes{flex:0 0 auto;width:auto}.mais-opcoes .menu{right:auto;left:0;position:fixed;bottom:70px}#notificacoes{left:12px;right:12px;max-width:none}.wizard-cabecalho{margin:0 -24px 10px}button.pendencia{width:auto}}
 @media print{.wizard-cabecalho,#notificacoes,.pendencias{display:none!important}body{padding-bottom:0}}
 
@@ -183,14 +183,14 @@ body{padding-bottom:calc(var(--altura-acoes) + 16px)}
 .wizard-legenda{display:flex;flex-wrap:wrap;gap:2px 12px;margin:0;padding:0;list-style:none;font-size:11.5px;color:var(--texto-suave)}
 .wizard-legenda li{display:flex;align-items:center;gap:5px}
 .wizard-legenda .amostra{width:12px;height:12px;border-radius:50%;border:2px solid #c8c8d0;background:#eee;display:inline-block}
-.wizard-legenda .amostra.atual{background:var(--roxo);border-color:var(--roxo);box-shadow:0 0 0 2px #c9c3ee}
-.wizard-legenda .amostra.completo{background:#3f9a5c;border-color:#3f9a5c}
+.wizard-legenda .amostra.atual{background:var(--roxo);border-color:var(--roxo);box-shadow:0 0 0 2px #d6cef2}
+.wizard-legenda .amostra.completo{background:#3fa35b;border-color:#3fa35b}
 .wizard-legenda .amostra.parcial{background:#fff4d6;border-color:#e0a800}
 #wizardStatusHolder{flex:1 1 240px;min-width:0;display:flex;justify-content:flex-end}
 #wizardStatusHolder .status-salvamento{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 10px;font-size:12px}
 .wizard-cabecalho .wizard-barra{height:6px}
 .wizard-trilho{display:flex;align-items:stretch;gap:4px;margin-top:6px}
-button.wizard-seta{flex:0 0 32px;width:32px;padding:0;background:#fff;color:var(--roxo);border:1px solid #d9d5ef;border-radius:8px;font-size:22px;line-height:1}
+button.wizard-seta{flex:0 0 32px;width:32px;padding:0;background:#fff;color:var(--roxo);border:1px solid #d6cef2;border-radius:8px;font-size:22px;line-height:1}
 button.wizard-seta:disabled{opacity:.35;cursor:default}
 .wizard-janela{position:relative;flex:1;min-width:0}
 .wizard-janela::before,.wizard-janela::after{content:"";position:absolute;top:0;bottom:0;width:40px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:1}
@@ -204,7 +204,7 @@ button.wizard-seta:disabled{opacity:.35;cursor:default}
 .wizard-step .circulo{flex:0 0 auto;width:28px;height:28px;border-color:#c8c8d0;color:var(--texto-suave)}
 .wizard-step.parcial{color:#7a5200}
 .wizard-seletor{display:none}
-.wizard-seletor select{margin:0;font-weight:bold;color:#4d4295;background:#f5f2ff;border-color:#c9c3ee}
+.wizard-seletor select{margin:0;font-weight:bold;color:#43356b;background:#ede9fa;border-color:#d6cef2}
 @media(max-width:700px){
   .wizard-trilho,.wizard-legenda{display:none}
   .wizard-seletor{display:block;margin:6px 0 4px}
@@ -234,8 +234,8 @@ textarea{min-height:80px}
 input[readonly],textarea[readonly]{background:#f6f6f9;color:#3b3b48}
 .dica-campo{font-size:12px;color:var(--texto-suave);margin-top:4px}
 .simnao button{min-height:40px;min-width:64px}
-.simnao.campo-erro{outline:2px solid #c0392b;outline-offset:3px;border-radius:8px}
-input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid #7466b5;outline-offset:2px}
+.simnao.campo-erro{outline:2px solid #c8443f;outline-offset:3px;border-radius:8px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid #7561ae;outline-offset:2px}
 input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 .wizard-nav-etapa{align-items:center}
 .wizard-nav-posicao{font-size:13px;color:var(--texto-suave);font-weight:bold;text-align:center}
@@ -251,7 +251,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 </div>
 
 <div class="aviso no-print">
-<strong>Como preencher o protocolo:</strong> percorra as fases na ordem que preferir. No topo, a fase atual fica <strong style="color:#4d4295">roxa</strong>, a fase concluída fica <strong style="color:#2f7a47">verde ✓</strong> (todos os campos essenciais <span style="color:#c0392b">*</span> preenchidos), a fase começada mas com pendências fica <strong style="color:#8a5a06">amarela</strong> e a fase ainda não iniciada fica cinza — no fim de cada fase aparece o que ainda falta. Depois do primeiro <strong>Salvar Protocolo</strong>, cada alteração é salva sozinha.
+<strong>Como preencher o protocolo:</strong> percorra as fases na ordem que preferir. No topo, a fase atual fica <strong style="color:#43356b">roxa</strong>, a fase concluída fica <strong style="color:#2f7a47">verde ✓</strong> (todos os campos essenciais <span style="color:#c8443f">*</span> preenchidos), a fase começada mas com pendências fica <strong style="color:#8a5a06">amarela</strong> e a fase ainda não iniciada fica cinza — no fim de cada fase aparece o que ainda falta. Depois do primeiro <strong>Salvar Laudo</strong>, cada alteração é salva sozinha.
 <div class="legenda-essencial">Atalhos: <kbd>Ctrl</kbd>+<kbd>S</kbd> salva · <kbd>Alt</kbd>+<kbd>→</kbd> / <kbd>Alt</kbd>+<kbd>←</kbd> trocam de fase.</div>
 </div>
 
@@ -281,10 +281,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 
 <h2>2. Anamnese Inicial</h2>
 <div class="grid">
-<div><label>Idade Da Mãe Durante A Gestação</label><input id="idadeMaeGestacao"></div>
-<div><label>Idade Gestacional</label><input id="idadeGestacional" placeholder="Ex.: 39 semanas"></div>
+<div><label>Idade Da Mãe Durante A Gestação</label><select id="idadeMaeGestacao" data-numeros="12-55" data-sufixo=" anos"></select></div>
+<div><label>Idade Gestacional</label><select id="idadeGestacional" data-numeros="22-42" data-sufixo=" semanas"></select></div>
 <div><label>Intercorrências Gestacionais</label><input type="hidden" id="intercorrenciasGestacionais"><div class="simnao" data-campo="intercorrenciasGestacionais"><button type="button" onclick="selecionarSimNao('intercorrenciasGestacionais','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('intercorrenciasGestacionais','Não')">Não</button></div><textarea id="intercorrenciasGestacionaisDescricao" class="detalhe-sim" placeholder="Se sim, descreva quais intercorrências ocorreram."></textarea></div>
 <div><label>Parto</label><select id="parto"><option value="">Selecione</option><option>Normal</option><option>Cesáreo</option><option>Fórceps</option><option>Prematuro</option><option>Não Informado</option></select></div>
+<div><label>Houve Complicação No Parto?</label><input type="hidden" id="complicacaoParto"><div class="simnao" data-campo="complicacaoParto"><button type="button" onclick="selecionarSimNao('complicacaoParto','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('complicacaoParto','Não')">Não</button></div><textarea id="complicacaoPartoDescricao" class="detalhe-sim" placeholder="Se sim, descreva a complicação (ex.: sofrimento no parto, uso de fórceps, UTI neonatal, falta de oxigenação)."></textarea></div>
 <div><label>Uso De Medicamentos Durante A Gestação</label><input type="hidden" id="usoMedicamentosGestacao"><div class="simnao" data-campo="usoMedicamentosGestacao"><button type="button" onclick="selecionarSimNao('usoMedicamentosGestacao','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('usoMedicamentosGestacao','Não')">Não</button></div><textarea id="usoMedicamentosGestacaoDescricao" class="detalhe-sim" placeholder="Se sim, descreva quais medicamentos, período e orientação médica."></textarea></div>
 <div><label>História De Sofrimento Fetal</label><input type="hidden" id="sofrimentoFetal"><div class="simnao" data-campo="sofrimentoFetal"><button type="button" onclick="selecionarSimNao('sofrimentoFetal','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('sofrimentoFetal','Não')">Não</button></div><textarea id="sofrimentoFetalDescricao" class="detalhe-sim" placeholder="Se sim, descreva qual tipo de sofrimento fetal a criança sofreu."></textarea></div>
 </div>
@@ -315,7 +316,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 <label>Relatório Escolar / Observações Da Escola</label><textarea id="relatorioEscolar" style="min-height:140px"></textarea>
 
 
-<h2>5. Metodologia</h2>
+<h2>5. Protocolo Utilizado</h2>
 <div class="aviso">Os textos abaixo já vêm com o <strong>texto-padrão do modelo oficial</strong> do relatório (ajustado automaticamente para "o paciente"/"a paciente" conforme o sexo). Edite livremente. Cada linha vira um parágrafo; use <code>**texto**</code> para <strong>negrito</strong>, <code>==texto==</code> para <mark style="background:#d9d9d9"><strong>destaque cinza</strong></mark>, <code>!!texto!!</code> para <mark style="background:#ffff00"><strong>destaque amarelo</strong></mark> e comece a linha com ✔ ou • para lista. Deixe um campo vazio para retirar aquele bloco do relatório.</div>
 <label>Escalas E Protocolos Incluídos No Texto (Clique Para Ligar/Desligar)</label>
 <div class="escalas-toggle" id="escalasMetodologiaToggle"></div>
@@ -325,10 +326,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 <h2>6. Estudo De Caso E Observações Clínicas</h2>
 <label>Estudo De Caso</label><textarea id="estudoCaso" style="min-height:130px" placeholder="Cole aqui o estudo de caso com as observações gerais do paciente. O sistema poderá interpretar esse texto e preencher automaticamente o quadro comportamental."></textarea>
 <label>Observações Clínicas Gerais</label><textarea id="observacoesClinicas" style="min-height:130px" placeholder="Registre aqui observações clínicas complementares, quando houver."></textarea>
-<div class="aviso">Opcional: o botão abaixo <strong>substitui</strong> o quadro comparativo do modelo (TDAH × TPAC) por um quadro interpretativo gerado a partir do Estudo De Caso e das Observações Clínicas Gerais (colunas no formato DSM-5-TR). Para voltar ao modelo, use "Restaurar Quadro Do Modelo" na seção do quadro.</div>
-<button type="button" onclick="gerarQuadroPeloEstudoCaso()">Gerar Quadro Interpretativo Pelo Estudo De Caso</button>
-<button type="button" onclick="gerarQuadroResumidoEscolar()">Gerar Quadro Resumido Para Escola/Cuidadores</button>
-<div id="quadroResumoEscolar" class="bloco" style="display:none"></div>
+<div class="aviso">Opcional: depois de marcar as hipóteses diagnósticas, o botão abaixo preenche o quadro de cada hipótese com os comportamentos encontrados no Estudo De Caso e nas Observações Clínicas Gerais. Para voltar às linhas do modelo, use "Restaurar Linhas Do Modelo" no quadro.</div>
+<button type="button" onclick="gerarQuadroPeloEstudoCaso()">Preencher Os Quadros Pelo Estudo De Caso</button>
 
 
 <h2>7. Inserção De Fotos</h2>
@@ -348,26 +347,18 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 
 
 <h2>8. Habilidades Acadêmicas De Acordo Com O Ano Escolar</h2>
-<div class="aviso interno">Uso interno: esta seção não aparece no relatório final (modelo oficial do parecer).</div>
-<div class="aviso">Esta seção é carregada automaticamente a partir do campo <strong>Ano Escolar</strong> preenchido na identificação inicial do paciente.</div>
+<div class="aviso">Vai para o relatório: tabela das habilidades avaliadas e gráfico <strong>Satisfatório / Em Desenvolvimento / Insatisfatório</strong> (habilidades "Não Observado" ficam só na tabela). Esta seção é carregada automaticamente a partir do campo <strong>Ano Escolar</strong> preenchido na identificação inicial do paciente.</div>
 <div id="habilidadesAcademicas" class="habilidades-academicas"><p>Selecione o ano escolar na identificação inicial para carregar as habilidades acadêmicas esperadas.</p></div>
 
 
-<h2>9. Quadro De Observações Comportamentais</h2>
-<div class="aviso">No relatório este quadro sai como <strong>"Quadro Comparativo – Análise dos Comportamentos"</strong>. Já vem com as 16 linhas do modelo (TDAH × TPAC): edite, remova ou adicione linhas. Linhas totalmente vazias não saem no relatório.</div>
-<div class="grid"><div><label>Título Da 3ª Coluna</label><input id="quadroTituloColuna3" value="Relação com TDAH" oninput="atualizarRotulosDoQuadro()"></div><div><label>Título Da 4ª Coluna</label><input id="quadroTituloColuna4" value="Relação com TPAC" oninput="atualizarRotulosDoQuadro()"></div></div>
-<div id="quadrosObservacao"></div>
-<div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><button type="button" onclick="adicionarLinhaQuadro()">+ Adicionar Linha</button><button type="button" class="botao-limpar" onclick="restaurarQuadroDoModelo()">Restaurar Quadro Do Modelo (TDAH × TPAC)</button></div>
-
-
-<h2>10. Hipóteses Diagnósticas Investigadas</h2>
+<h2>9. Hipóteses Diagnósticas Investigadas</h2>
 <div class="bloco">
-<label><input type="checkbox" class="hipotese" value="TEA – Transtorno Do Espectro Autista (CID-11: 6A02)"> TEA – Transtorno Do Espectro Autista (CID-11: 6A02)</label>
-<label><input type="checkbox" class="hipotese" value="TDAH – Transtorno Do Déficit De Atenção/Hiperatividade (CID-11: 6A05)"> TDAH – Transtorno Do Déficit De Atenção/Hiperatividade (CID-11: 6A05)</label>
-<label><input type="checkbox" class="hipotese" value="DI – Transtorno Do Desenvolvimento Intelectual / Deficiência Intelectual (CID-11: 6A00)"> DI – Transtorno Do Desenvolvimento Intelectual / Deficiência Intelectual (CID-11: 6A00)</label>
-<label><input type="checkbox" class="hipotese" value="Transtorno Do Desenvolvimento Da Aprendizagem (CID-11: 6A03)"> Transtorno Do Desenvolvimento Da Aprendizagem (CID-11: 6A03)</label>
-<label><input type="checkbox" class="hipotese" value="TOD – Transtorno Opositivo Desafiador (CID-11: 6C90.1)"> TOD – Transtorno Opositivo Desafiador (CID-11: 6C90.1)</label>
-<label><input type="checkbox" class="hipotese" value="TPAC – Transtorno Do Processamento Auditivo Central"> TPAC – Transtorno Do Processamento Auditivo Central</label>
+<label><input type="checkbox" class="hipotese" id="hip_tea" value="TEA – Transtorno Do Espectro Autista (CID-11: 6A02)"> TEA – Transtorno Do Espectro Autista (CID-11: 6A02)</label>
+<label><input type="checkbox" class="hipotese" id="hip_tdah" value="TDAH – Transtorno Do Déficit De Atenção/Hiperatividade (CID-11: 6A05)"> TDAH – Transtorno Do Déficit De Atenção/Hiperatividade (CID-11: 6A05)</label>
+<label><input type="checkbox" class="hipotese" id="hip_di" value="DI – Transtorno Do Desenvolvimento Intelectual / Deficiência Intelectual (CID-11: 6A00)"> DI – Transtorno Do Desenvolvimento Intelectual / Deficiência Intelectual (CID-11: 6A00)</label>
+<label><input type="checkbox" class="hipotese" id="hip_ta" value="Transtorno Do Desenvolvimento Da Aprendizagem (CID-11: 6A03)"> Transtorno Do Desenvolvimento Da Aprendizagem (CID-11: 6A03)</label>
+<label><input type="checkbox" class="hipotese" id="hip_tod" value="TOD – Transtorno Opositivo Desafiador (CID-11: 6C90.1)"> TOD – Transtorno Opositivo Desafiador (CID-11: 6C90.1)</label>
+<label><input type="checkbox" class="hipotese" id="hip_tpac" value="TPAC – Transtorno Do Processamento Auditivo Central"> TPAC – Transtorno Do Processamento Auditivo Central</label>
 </div>
 <label>Hipóteses Como Devem Sair No Relatório (Opcional — Uma Por Linha; Substitui As Marcadas Acima)</label><textarea id="hipotesesTexto" placeholder="Ex.:&#10;TDAH - Transtorno de Déficit de Atenção Hiperatividade, combinada (CID 11 6A05.2)&#10;TPAC - Transtorno do Processamento Auditivo Central (CID 10 H93)"></textarea>
 <label>Hipótese Diagnóstica Selecionada Para Este Paciente</label>
@@ -375,7 +366,18 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 <div class="aviso">O relatório final exibe <strong>somente</strong> a hipótese selecionada aqui — nunca a lista completa das hipóteses investigadas acima.</div>
 
 
+<h2>10. Quadros De Comportamento</h2>
+<div class="aviso">Um quadro para cada hipótese marcada na seção anterior, todos no mesmo padrão (Comportamento Identificado · Caracterização Observada · Relação Com A Hipótese · Associação Aos Critérios DSM-5-TR). No relatório saem numa seção própria, <strong>"Quadros Comparativos – Análise dos Comportamentos"</strong>, só com os quadros. Edite, remova ou adicione linhas; linhas vazias não saem no relatório.</div>
+<div id="quadrosObservacao"></div>
+
+
 <h2>11. Pontuações ATA E CARS</h2>
+<div class="bloco no-print">
+<label for="pdfsEscalas">Importar Escalas De PDF (CARS, ATA, SNAP-IV, TOD, Portage)</label>
+<div class="dica">Anexe os PDFs das escalas já pontuadas: a IA transcreve item a item e os gráficos saem automaticamente no relatório. Confira os itens depois.</div>
+<input type="file" id="pdfsEscalas" accept="application/pdf,.pdf" multiple>
+<button type="button" id="btnImportarEscalas" onclick="importarEscalasDePdf()">Importar Escalas Com IA</button>
+</div>
 <div class="grid">
 <div><label>Pontuação ATA (Total — Calculada Pelos Itens Abaixo, Ou Digite)</label><input type="number" id="ata" oninput="atualizarInterpretacoes();atualizarPercentualATA()"></div>
 <div><label>Interpretação ATA</label><textarea id="ataInterpretacao" readonly></textarea></div>
@@ -423,25 +425,22 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 <div id="mchat"></div>
 
 
-<h2>17. Habilidades Cognitivas, Socioemocionais E Motoras</h2>
-<div class="aviso">Marque Sim, Às Vezes ou Não para cada habilidade. No relatório saem as três tabelas descritivas e os três gráficos (Sim / Às Vezes / Não) do modelo. Se nada for marcado, esta parte não aparece.</div>
-<div id="habilidadesModelo" class="habilidades-academicas"></div>
-
-
-<h2>18. Distribuição Das Dificuldades Por Domínio</h2>
+<h2>17. Distribuição Das Dificuldades Por Domínio</h2>
 <div class="aviso">Percentuais do gráfico de pizza "Distribuição Das Dificuldades Por Domínio" (idealmente somando 100%).</div>
 <div class="grid"><div><label>Atenção (%)</label><input type="number" min="0" max="100" id="dom_atencao"></div><div><label>Habilidades Sociais (%)</label><input type="number" min="0" max="100" id="dom_sociais"></div><div><label>Comportamento (%)</label><input type="number" min="0" max="100" id="dom_comportamento"></div><div><label>Aprendizagem (%)</label><input type="number" min="0" max="100" id="dom_aprendizagem"></div><div><label>Funções Executivas (%)</label><input type="number" min="0" max="100" id="dom_fe"></div></div>
 
 
-<h2>19. Textos Do Parecer (Modelo Oficial Do Relatório)</h2>
+<h2>18. Textos Do Parecer (Modelo Oficial Do Relatório)</h2>
 <div class="aviso">Os textos abaixo já vêm com o <strong>texto-padrão do modelo oficial</strong> do relatório (ajustado automaticamente para "o paciente"/"a paciente" conforme o sexo). Edite livremente. Cada linha vira um parágrafo; use <code>**texto**</code> para <strong>negrito</strong>, <code>==texto==</code> para <mark style="background:#d9d9d9"><strong>destaque cinza</strong></mark>, <code>!!texto!!</code> para <mark style="background:#ffff00"><strong>destaque amarelo</strong></mark> e comece a linha com ✔ ou • para lista. Deixe um campo vazio para retirar aquele bloco do relatório.</div>
-<label>Contexto Inicial (Após A Metodologia)</label><textarea id="parecerContexto" style="min-height:110px"></textarea>
+<label>Contexto Inicial (Após O Protocolo Utilizado)</label><textarea id="parecerContexto" style="min-height:110px"></textarea>
 <label>Aspectos Comportamentais</label><textarea id="aspectosComportamentais" style="min-height:170px"></textarea>
 <label>Observações Dos Atendimentos (Antes Da Escala CARS)</label><textarea id="textoAtendimentos" style="min-height:220px"></textarea>
 <label>Após As Escalas ATA/CARS (Avaliação Conclusa)</label><textarea id="textoPosEscalas" style="min-height:200px"></textarea>
 <label>Após Os Gráficos De Habilidades</label><textarea id="textoHabilidades" style="min-height:120px"></textarea>
 <label>Após O Gráfico Do Portage (Idade De Desenvolvimento)</label><textarea id="textoPortage" style="min-height:180px"></textarea>
+<div id="blocoAnalisePorArea">
 <h3>Análise Por Área (Faixas Cinza Do Relatório)</h3>
+<div class="aviso">Só aparece (aqui e no relatório) quando o TDAH está entre as hipóteses diagnósticas.</div>
 <label>Hiperatividade</label><textarea id="topico_hiperatividade" style="min-height:110px"></textarea>
 <label>Impulsividade</label><textarea id="topico_impulsividade" style="min-height:110px"></textarea>
 <label>Desatenção</label><textarea id="topico_desatencao" style="min-height:110px"></textarea>
@@ -449,6 +448,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 <label>Memória Operacional</label><textarea id="topico_memoriaOperacional" style="min-height:110px"></textarea>
 <label>Impulsividade Cognitiva</label><textarea id="topico_impulsividadeCognitiva" style="min-height:110px"></textarea>
 <label>Desempenho Escolar</label><textarea id="topico_desempenhoEscolar" style="min-height:320px"></textarea>
+</div>
 <h3>Parte Final</h3>
 <label>Após Os Gráficos Do SNAP-IV</label><textarea id="textoSNAP" style="min-height:180px"></textarea>
 <label>Síntese Clínica</label><textarea id="textoSintese" style="min-height:360px"></textarea>
@@ -457,32 +457,24 @@ input:focus,select:focus,textarea:focus{border-color:var(--roxo)}
 <label>Encaminhamento Para Exames Complementares (Caixa Cinza Da Última Página)</label><textarea id="textoEncaminhamentoExames" style="min-height:140px"></textarea>
 
 
-<h2>20. Sugestões De Intervenção</h2>
-<div class="aviso">Aparece no relatório final, como última seção antes da assinatura. Escreva livremente ou use o botão "Gerar Com IA" na fase 22 (Considerações Finais) — as sugestões devem decorrer das necessidades, dificuldades e potencialidades <strong>deste paciente</strong>, e não só da hipótese diagnóstica marcada.</div>
-<textarea id="planoIntervencao" style="min-height:200px" placeholder="Ex.: recomenda-se treino de atenção sustentada com [detalhe do que foi observado neste paciente]..."></textarea>
-
-
-<h2>21. Encaminhamentos</h2>
+<h2>19. Encaminhamentos</h2>
 <div class="bloco">
 <div class="aviso interno" style="margin-top:0">Uso interno: esta seção não aparece no relatório final (modelo oficial do parecer).</div>
-<label><input type="checkbox" class="encaminhamento" value="Neuropediatra"> Neuropediatra</label>
-<label><input type="checkbox" class="encaminhamento" value="Avaliação Neuropsicológica"> Avaliação Neuropsicológica</label>
-<label><input type="checkbox" class="encaminhamento" value="Avaliação Do Processamento Auditivo Central – TPAC"> Avaliação Do Processamento Auditivo Central – TPAC</label>
-<label><input type="checkbox" class="encaminhamento" value="Psicologia Infantil"> Psicologia Infantil</label>
-<label><input type="checkbox" class="encaminhamento" value="Fonoaudiologia"> Fonoaudiologia</label>
-<label><input type="checkbox" class="encaminhamento" value="Terapia Ocupacional"> Terapia Ocupacional</label>
-<label><input type="checkbox" class="encaminhamento" value="Acompanhamento Neuropsicopedagógico/Psicopedagógico"> Acompanhamento Neuropsicopedagógico/Psicopedagógico</label>
+<label><input type="checkbox" class="encaminhamento" id="enc_neuropediatra" value="Neuropediatra"> Neuropediatra</label>
+<label><input type="checkbox" class="encaminhamento" id="enc_avaliacao_neuropsicologica" value="Avaliação Neuropsicológica"> Avaliação Neuropsicológica</label>
+<label><input type="checkbox" class="encaminhamento" id="enc_avaliacao_do_processamento_auditivo_central_tpac" value="Avaliação Do Processamento Auditivo Central – TPAC"> Avaliação Do Processamento Auditivo Central – TPAC</label>
+<label><input type="checkbox" class="encaminhamento" id="enc_fonoaudiologia" value="Fonoaudiologia"> Fonoaudiologia</label>
+<label><input type="checkbox" class="encaminhamento" id="enc_terapia_ocupacional" value="Terapia Ocupacional"> Terapia Ocupacional</label>
+<label><input type="checkbox" class="encaminhamento" id="enc_acompanhamento_neuropsicopedagogico_psicopedagogico" value="Acompanhamento Neuropsicopedagógico/Psicopedagógico"> Acompanhamento Neuropsicopedagógico/Psicopedagógico</label>
+<h3>Acompanhamento Multidisciplinar</h3>
+<label><input type="checkbox" class="encaminhamento" id="enc_terapia" value="Terapia"> Terapia</label>
+<label><input type="checkbox" class="encaminhamento" id="enc_fisioterapia" value="Fisioterapia"> Fisioterapia</label>
+<label><input type="checkbox" class="encaminhamento" id="enc_nutricao" value="Nutrição"> Nutrição</label>
+<label><input type="checkbox" class="encaminhamento" id="enc_psicologia_infantil" value="Psicologia Infantil"> Psicologia Infantil</label>
 </div>
 
 
-<h2>22. Considerações Finais</h2>
-<div class="aviso">Última página do relatório, depois das hipóteses diagnósticas e antes da assinatura. Aceita a mesma marcação dos textos do parecer. Deve ser a síntese <strong>deste paciente</strong> — estudo de caso, observações, habilidades avaliadas, protocolos utilizados e hipótese selecionada —, não um texto genérico.</div>
-<button type="button" id="btnGerarConclusaoIA" onclick="gerarConclusaoEIntervencoesComIA()">Gerar Considerações Finais E Sugestões De Intervenção Com IA (Baseado Neste Paciente)</button>
-<div id="avisoConclusaoIA" class="aviso interno" style="display:none"></div>
-<textarea id="consideracoes" style="min-height:220px" placeholder="Escreva a síntese de fechamento deste paciente, ou gere com o botão acima."></textarea>
-
-
-<h2>23. Cidade E Data</h2>
+<h2>20. Cidade E Data</h2>
 <div class="grid">
 <div><label>Cidade</label><select id="cidade"><option>Cidade Ocidental – GO</option><option>Gama – DF</option></select></div>
 <div><label>Data Do Relatório</label><input type="date" id="dataRelatorio"></div>
@@ -654,7 +646,46 @@ const obsBase = [
 ["Dificuldade em manter atenção prolongada","Perde o foco com facilidade durante atividades","Sintoma central do TDAH","Pode ocorrer em ambientes com excesso de estímulos auditivos"],
 ["Boa linguagem expressiva com dificuldade de atenção","Apresenta vocabulário adequado, mas dificuldade em seguir comandos longos","Comum no TDAH","Bastante característico do TPAC"]
 ];
-const QUADRO_TITULOS_MODELO = ["Relação com TDAH","Relação com TPAC"];
+// Critério do DSM-5-TR (TDAH) correspondente a cada linha de obsBase, para o
+// quadro "Relação com TDAH" (4ª coluna).
+const DSM_TDAH_OBSBASE = [
+"Critério A1(h) – é facilmente distraído por estímulos externos",
+"Critério A1(d) – não segue instruções até o fim e não termina tarefas",
+"Critério A1(a) – não presta atenção a detalhes ou comete erros por descuido",
+"Critério A1(b) – dificuldade de manter a atenção em tarefas (associação indireta)",
+"Critério A1(i) – esquecimento em atividades cotidianas",
+"Critério A1(f) – evita ou reluta em tarefas que exigem esforço mental prolongado",
+"Critério A1(e) – dificuldade para organizar tarefas e atividades",
+"Critério A1(c) – parece não escutar quando lhe dirigem a palavra",
+"Critério A2(a)/(e) – remexe-se, agita mãos ou pés; age como se estivesse “a mil”",
+"Critério A2(b) – levanta-se em situações em que se espera que permaneça sentado",
+"Critério A1(b) – dificuldade de manter a atenção (associação indireta)",
+"Critério A1(g) – perde objetos necessários para tarefas ou atividades",
+"Critérios A2(g)/(i) – responde precipitadamente; interrompe ou se intromete",
+"Não corresponde isoladamente a critério do TDAH; considerar diagnóstico diferencial e comorbidades (Critério E)",
+"Critério A1(b) – dificuldade de manter a atenção em tarefas ou atividades lúdicas",
+"Critério A1(d) – não segue instruções até o fim"
+];
+
+// Hipóteses que geram quadro. `padrao` reconhece a hipótese marcada (ou
+// digitada em "Hipóteses Como Devem Sair No Relatório").
+const HIPOTESES_QUADRO = [
+  {chave:"TDAH", rotulo:"TDAH", padrao:/TDAH|d[ée]ficit de aten/i},
+  {chave:"TEA",  rotulo:"TEA", padrao:/\bTEA\b|autis/i},
+  {chave:"DI",   rotulo:"DI", padrao:/\bDI\b|intelectual/i},
+  {chave:"TA",   rotulo:"Transtorno Da Aprendizagem", padrao:/aprendizagem/i},
+  {chave:"TOD",  rotulo:"TOD", padrao:/\bTOD\b|opositi?or/i},
+  {chave:"TPAC", rotulo:"TPAC", padrao:/TPAC|processamento auditivo/i}
+];
+// Regras de regrasInterpretativasOutrosTranstornos() → hipótese do quadro.
+const HIPOTESE_DA_REGRA = {
+  "Indicadores De Desatenção":"TDAH",
+  "Indicadores De Hiperatividade/Impulsividade":"TDAH",
+  "Indicadores De Dificuldades De Aprendizagem":"TA",
+  "Indicadores De Fragilidade Cognitiva/Adaptativa":"DI",
+  "Indicadores De Processamento Auditivo":"TPAC",
+  "Indicadores De Comportamento Opositor/Desafiador":"TOD"
+};
 
 
 const carsItens = [
@@ -749,6 +780,18 @@ const portageBase = {
 
 const mchatItens = ["Interesse Por Outras Crianças","Aponta Quando Quer Algo","Aponta Para Mostrar Interesse","Brinca De Faz De Conta","Segue Olhar/Apontar","Responde Ao Nome","Olha Nos Olhos","Imita Ações","Traz Objetos Para Mostrar","Compreende Comandos Simples","Busca Atenção Compartilhada","Sorri Socialmente","Reage A Sons","Observa Rosto Do Adulto","Anda Sem Padrão Incomum","Não Apresenta Movimentos Estranhos Dos Dedos","Demonstra Interesse Por Objetos Além De Partes","Adapta-Se A Mudanças Simples","Procura Adulto Quando Precisa","Compartilha Prazer"];
 
+// Selects numéricos (ex.: idade da mãe, idade gestacional): as opções vêm
+// de data-numeros="min-max" + data-sufixo; o valor salvo é o texto da opção.
+function popularSelectsNumericos(){
+  document.querySelectorAll("select[data-numeros]").forEach(sel=>{
+    if(sel.options.length)return;
+    const [min,max]=sel.dataset.numeros.split("-").map(Number), sufixo=sel.dataset.sufixo||"";
+    sel.add(new Option("Selecione",""));
+    for(let n=min;n<=max;n++)sel.add(new Option(n+sufixo,n+sufixo));
+    sel.add(new Option("Não informado","Não informado"));
+  });
+}
+popularSelectsNumericos();
 function valor(id){const el=document.getElementById(id);return el?(el.value||""):"";}
 function processarFotosPaciente(event){
   const arquivos=Array.from((event.target&&event.target.files)||[]);
@@ -808,76 +851,101 @@ function regrasInterpretativasOutrosTranstornos(){
     {k:["opositor","desafiador","tod","teimos","não obedece","nao obedece","provoca","irrita","vingativo","rancoroso","raiva","discute"],c:"Indicadores De Comportamento Opositor/Desafiador",d:"O relato aponta comportamentos de oposição, resistência a comandos, irritabilidade, desafio a regras, discussões frequentes ou baixa tolerância à frustração.",t:"Pode estar associado a TOD, desregulação emocional, dificuldades parentais, ansiedade, TDAH, TEA ou dificuldade de comunicação funcional, devendo ser interpretado de forma contextual.",m:"DSM-5-TR – Transtorno Opositor Desafiador, quando o padrão é persistente, frequente e gera prejuízo relacional, familiar, escolar ou social."}
   ];
 }
-function observacoesInterpretativasDoEstudo(){
-  const texto=textoClinicoBaseParaQuadro();
-  const achados=[];
-  regrasInterpretativasTEA().concat(regrasInterpretativasOutrosTranstornos()).forEach(r=>{if(r.k.some(p=>texto.includes(p))&&!achados.some(a=>a[0]===r.c))achados.push([r.c,r.d,r.t,r.m]);});
-  if(!achados.length)return [["Estudo De Caso Registrado","As informações inseridas no estudo de caso devem ser analisadas em conjunto com a observação clínica, anamnese, contexto familiar, contexto escolar/cuidador e protocolos aplicados.","O raciocínio interpretativo dependerá dos comportamentos efetivamente descritos no campo de estudo de caso.","A associação aos critérios DSM-5-TR deve ser realizada apenas quando houver evidências clínicas suficientes no texto e na observação direta."]];
-  return achados;
+/* Quadros de comportamento: um por hipótese, mesmo padrão de colunas. Cada
+   quadro fica num <div data-chave>; quadros de hipóteses desmarcadas ficam
+   ocultos (os dados continuam salvos) e não saem no relatório. */
+function chaveDaHipotese(h){
+  const conhecida=HIPOTESES_QUADRO.find(x=>x.padrao.test(h));
+  if(conhecida)return conhecida.chave;
+  return "H_"+(h.normalize("NFD").replace(/[^A-Za-z0-9]/g,"").slice(0,16).toUpperCase()||"OUTRA");
 }
-function renderizarQuadroObservacao(lista){
-  const q=document.getElementById("quadrosObservacao");if(!q)return;
+function rotuloDaHipotese(h,chave){
+  const conhecida=HIPOTESES_QUADRO.find(x=>x.chave===chave);
+  return conhecida?conhecida.rotulo:h.split(/\s+[–-]\s+|\s*\(/)[0].trim();
+}
+function hipotesesDoQuadro(){
+  const vistas=new Set(), lista=[];
+  listaHipotesesInvestigadas().forEach(h=>{const chave=chaveDaHipotese(h);if(vistas.has(chave))return;vistas.add(chave);lista.push({chave,rotulo:rotuloDaHipotese(h,chave)});});
+  return lista;
+}
+function bancoDoQuadro(chave){
+  const linha=r=>[r.c,r.d,r.t,r.m];
+  if(chave==="TEA")return regrasInterpretativasTEA().map(linha);
+  if(chave==="TDAH")return obsBase.map((o,i)=>[o[0],o[1],o[2],DSM_TDAH_OBSBASE[i]||""]);
+  if(chave==="TPAC")return obsBase.map(o=>[o[0],o[1],o[3],"Não descrito no DSM-5-TR – confirmação por avaliação audiológica do processamento auditivo central."]);
+  const linhas=regrasInterpretativasOutrosTranstornos().filter(r=>HIPOTESE_DA_REGRA[r.c]===chave).map(linha);
+  return linhas.length?linhas:[["","","",""]];
+}
+const CAMPOS_QUADRO=["comp","desc","rel","dsm"];
+function idCelulaQuadro(chave,i,campo){return "qd_"+chave+"_"+i+"_"+campo;}
+function blocoDoQuadro(chave){return document.querySelector('#quadrosObservacao .quadro-hipotese[data-chave="'+chave+'"]');}
+function renderizarQuadroHipotese(chave,rotulo,linhas){
+  const area=document.getElementById("quadrosObservacao");if(!area)return;
   const t=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
-  const col3=valor("quadroTituloColuna3")||"Relação com TDAH", col4=valor("quadroTituloColuna4")||"Relação com TPAC";
-  q.innerHTML=lista.map((o,i)=>'<div class="bloco"><h3>Linha '+(i+1)+'</h3><label>Comportamento Identificado</label><textarea id="obs_comp_'+i+'">'+t(o[0])+'</textarea><label>Caracterização Observada</label><textarea id="obs_desc_'+i+'">'+t(o[1])+'</textarea><label class="rotulo-col3">'+t(col3)+'</label><textarea id="obs_tea_'+i+'">'+t(o[2])+'</textarea><label class="rotulo-col4">'+t(col4)+'</label><textarea id="obs_dsm_'+i+'">'+t(o[3])+'</textarea><button type="button" class="botao-limpar no-print" onclick="removerLinhaQuadro('+i+')">Remover Esta Linha</button></div>').join("");
+  let bloco=blocoDoQuadro(chave);
+  if(!bloco){bloco=document.createElement("div");bloco.className="quadro-hipotese";bloco.dataset.chave=chave;area.appendChild(bloco);}
+  bloco.dataset.rotulo=rotulo;
+  const rotulos=["Comportamento Identificado","Caracterização Observada","Relação Com "+rotulo,"Associação Aos Critérios DSM-5-TR"];
+  bloco.innerHTML='<h3>Quadro – Relação Com '+t(rotulo)+'</h3>'+linhas.map((o,i)=>'<div class="bloco"><h3>Linha '+(i+1)+'</h3>'+
+    CAMPOS_QUADRO.map((campo,c)=>'<label>'+t(rotulos[c])+'</label><textarea id="'+idCelulaQuadro(chave,i,campo)+'">'+t(o[c])+'</textarea>').join("")+
+    '<button type="button" class="botao-limpar no-print" onclick="removerLinhaQuadro(\''+chave+'\','+i+')">Remover Esta Linha</button></div>').join("")+
+    '<div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 18px"><button type="button" onclick="adicionarLinhaQuadro(\''+chave+'\')">+ Adicionar Linha</button><button type="button" class="botao-limpar" onclick="restaurarQuadroDoModelo(\''+chave+'\')">Restaurar Linhas Do Modelo</button></div>';
 }
-function linhasAtuaisDoQuadro(){
+function linhasDoQuadro(chave){
   const linhas=[];
-  for(let i=0;document.getElementById("obs_comp_"+i);i++)linhas.push([valor("obs_comp_"+i),valor("obs_desc_"+i),valor("obs_tea_"+i),valor("obs_dsm_"+i)]);
+  for(let i=0;document.getElementById(idCelulaQuadro(chave,i,"comp"));i++)linhas.push(CAMPOS_QUADRO.map(campo=>valor(idCelulaQuadro(chave,i,campo))));
   return linhas;
 }
-function adicionarLinhaQuadro(){
-  const linhas=linhasAtuaisDoQuadro();linhas.push(["","","",""]);
-  renderizarQuadroObservacao(linhas);salvarDadosNoNavegador(false);
-  const nova=document.getElementById("obs_comp_"+(linhas.length-1));if(nova)nova.focus();
+// Cria o quadro das hipóteses recém-marcadas (com as linhas do modelo) e
+// mostra só os das hipóteses marcadas, na ordem em que aparecem.
+function sincronizarQuadros(){
+  const area=document.getElementById("quadrosObservacao");if(!area)return;
+  const ativas=hipotesesDoQuadro();
+  ativas.forEach(h=>{if(!blocoDoQuadro(h.chave))renderizarQuadroHipotese(h.chave,h.rotulo,bancoDoQuadro(h.chave));});
+  area.querySelectorAll(".quadro-hipotese").forEach(b=>b.style.display="none");
+  ativas.forEach(h=>{const b=blocoDoQuadro(h.chave);b.style.display="";area.appendChild(b);});
+  let vazio=document.getElementById("quadrosSemHipotese");
+  if(!vazio){vazio=document.createElement("div");vazio.id="quadrosSemHipotese";vazio.className="aviso";vazio.textContent="Marque as hipóteses diagnósticas na seção anterior: cada hipótese marcada gera o seu quadro aqui.";area.prepend(vazio);}
+  vazio.style.display=ativas.length?"none":"";
 }
-function removerLinhaQuadro(i){
-  const linhas=linhasAtuaisDoQuadro();
+function adicionarLinhaQuadro(chave){
+  const bloco=blocoDoQuadro(chave);if(!bloco)return;
+  const linhas=linhasDoQuadro(chave);linhas.push(["","","",""]);
+  renderizarQuadroHipotese(chave,bloco.dataset.rotulo,linhas);salvarDadosNoNavegador(false);
+  const nova=document.getElementById(idCelulaQuadro(chave,linhas.length-1,"comp"));if(nova)nova.focus();
+}
+function removerLinhaQuadro(chave,i){
+  const bloco=blocoDoQuadro(chave);if(!bloco)return;
+  const linhas=linhasDoQuadro(chave);
   if(linhas[i].some(v=>v.trim())&&!confirm("Remover a linha "+(i+1)+" do quadro?"))return;
-  linhas.splice(i,1);renderizarQuadroObservacao(linhas);salvarDadosNoNavegador(false);
+  linhas.splice(i,1);renderizarQuadroHipotese(chave,bloco.dataset.rotulo,linhas);salvarDadosNoNavegador(false);
 }
-function restaurarQuadroDoModelo(){
-  if(!confirm("Substituir o quadro atual pelas 16 linhas do modelo (TDAH × TPAC)?"))return;
-  setValor("quadroTituloColuna3",QUADRO_TITULOS_MODELO[0]);setValor("quadroTituloColuna4",QUADRO_TITULOS_MODELO[1]);
-  renderizarQuadroObservacao(obsBase);salvarDadosNoNavegador(false);
+function restaurarQuadroDoModelo(chave){
+  const bloco=blocoDoQuadro(chave);if(!bloco)return;
+  if(!confirm("Substituir as linhas deste quadro pelas linhas do modelo?"))return;
+  renderizarQuadroHipotese(chave,bloco.dataset.rotulo,bancoDoQuadro(chave));salvarDadosNoNavegador(false);
 }
-function atualizarRotulosDoQuadro(){
-  document.querySelectorAll("#quadrosObservacao .rotulo-col3").forEach(l=>l.textContent=valor("quadroTituloColuna3")||"Coluna 3");
-  document.querySelectorAll("#quadrosObservacao .rotulo-col4").forEach(l=>l.textContent=valor("quadroTituloColuna4")||"Coluna 4");
-}
+// Linhas das regras interpretativas que aparecem no texto clínico, por hipótese.
 function gerarQuadroPeloEstudoCaso(){
-  const lista=observacoesInterpretativasDoEstudo();
-  setValor("quadroTituloColuna3","Possíveis Associações Clínicas");setValor("quadroTituloColuna4","Associação Aos Critérios DSM-5-TR");
-  renderizarQuadroObservacao(lista);
+  const ativas=hipotesesDoQuadro();
+  if(!ativas.length){notificar("Marque as hipóteses diagnósticas antes: o quadro de cada hipótese é preenchido com os comportamentos do Estudo De Caso.","aviso");return;}
+  const texto=textoClinicoBaseParaQuadro();
+  const casa=r=>r.k.some(p=>texto.includes(p)), linha=r=>[r.c,r.d,r.t,r.m];
+  let preenchidos=0;
+  ativas.forEach(h=>{
+    const regras=h.chave==="TEA"?regrasInterpretativasTEA():regrasInterpretativasOutrosTranstornos().filter(r=>HIPOTESE_DA_REGRA[r.c]===h.chave);
+    const achados=regras.filter(casa).map(linha);
+    if(!achados.length)return;
+    renderizarQuadroHipotese(h.chave,h.rotulo,achados);preenchidos++;
+  });
   salvarDadosNoNavegador(false);
-  notificar("Quadro interpretativo gerado a partir do Estudo De Caso (TEA, TDAH, Aprendizagem, DI, TPAC e TOD). Revise as linhas na fase do quadro antes de gerar o relatório.","sucesso",{duracao:8000});
-}
-
-function gerarQuadroResumidoEscolar(){
-  const lista=observacoesInterpretativasDoEstudo();
-  const alvo=document.getElementById("quadroResumoEscolar");
-  if(!alvo)return;
-  const linhas=lista.map(o=>{
-    let area=o[0]||"Observação Clínica";
-    let impacto="Pode interferir na participação, aprendizagem, interação e organização da rotina escolar/cuidador.";
-    let orientacao="Oferecer mediação clara, previsibilidade, comandos objetivos, acolhimento e registro dos comportamentos observados.";
-    const base=(area+" "+o[1]+" "+o[2]).toLowerCase();
-    if(base.includes("comunicação")||base.includes("linguagem")){impacto="Pode dificultar compreensão de comandos, expressão de necessidades e interação com pares/adultos.";orientacao="Usar linguagem objetiva, apoio visual, tempo de resposta e incentivo à comunicação funcional.";}
-    if(base.includes("sensor")){impacto="Pode gerar desconforto, fuga, irritabilidade ou desorganização diante de sons, texturas, cheiros, luzes ou alimentos.";orientacao="Observar gatilhos sensoriais, reduzir sobrecarga e oferecer ambiente previsível e acolhedor.";}
-    if(base.includes("atenção")||base.includes("atencional")){impacto="Pode comprometer permanência na atividade, conclusão de tarefas e seguimento de instruções.";orientacao="Fracionar comandos, reduzir distratores, oferecer pausas curtas e reforçar cada etapa concluída.";}
-    if(base.includes("rigidez")||base.includes("flexibilidade")){impacto="Pode dificultar transições, mudanças de rotina e aceitação de combinados.";orientacao="Antecipar mudanças, usar rotina visual, preparar transições e validar emoções antes de redirecionar.";}
-    if(base.includes("agress")||base.includes("desregulação")){impacto="Pode prejudicar segurança, vínculo social e permanência em atividades coletivas.";orientacao="Identificar antecedentes, evitar confronto direto, acolher, reduzir estímulos e registrar frequência/intensidade.";}
-    if(base.includes("autonomia")){impacto="Pode aumentar dependência de mediação para autocuidados, organização e participação funcional.";orientacao="Treinar pequenas etapas com apoio gradual, rotina visual e reforço positivo.";}
-    return `<tr><td>${area}</td><td>${impacto}</td><td>${orientacao}</td></tr>`;
-  }).join("");
-  alvo.style.display="block";
-  alvo.innerHTML=`<h3>Quadro Resumido Para Escola/Cuidadores</h3><div class="aviso">Síntese pedagógica gerada a partir do estudo de caso, observações clínicas, anamnese e protocolos preenchidos. Pode ser revisada antes de anexar ao relatório.</div><table class="obs-table"><thead><tr><th>Área Observada</th><th>Impacto Funcional</th><th>Orientação Para Escola/Cuidadores</th></tr></thead><tbody>${linhas}</tbody></table>`;
-  salvarDadosNoNavegador(false);
+  if(preenchidos)notificar("Quadros preenchidos pelo Estudo De Caso ("+preenchidos+" de "+ativas.length+"). Revise as linhas antes de gerar o relatório.","sucesso",{duracao:8000});
+  else notificar("Nenhum comportamento das hipóteses marcadas foi encontrado no Estudo De Caso — os quadros continuam com as linhas atuais.","aviso",{duracao:8000});
 }
 
 
 function montarFormulario(){
-  renderizarQuadroObservacao(obsBase);
+  sincronizarQuadros();
   montarSecoesDoModelo();
   inicializarEscalasMetodologia();
   perfilProfissional(); // aquece o cache cedo, para o bloco final do laudo
@@ -1100,32 +1168,99 @@ async function gerarRelatorio(){
   return html;
 }
 
+/* ------------------------------------------------- Laudo Por IA: catálogo dos campos */
+
+// Campos que a IA pode preencher no Laudo Por IA, lidos do próprio formulário
+// (o backend valida a resposta contra esta lista — services/laudo_ia.py).
+// Ficam de fora a identificação do cadastro, os textos-padrão do parecer,
+// os quadros (preenchidos pelo estudo de caso) e os campos calculados.
+const FORA_DO_CATALOGO_IA=/^(nomePaciente|dataNascimento|sexo|estudoCaso|metodologia|parecerContexto|aspectosComportamentais|texto[A-Z]\w*|topico_\w+|qd_\w+|fasesRevisadas|capaRelatorioVersao|hipotesesTexto|hipoteseSelecionada|cidade|dataRelatorio|idadeCognitivaRelatorio|marcoRelatorio|ata|cars|hab_(status|obs)_\d+)$/;
+const STATUS_HABILIDADE=["Satisfatório","Em Desenvolvimento","Insatisfatório","Não Observado"];
+function rotuloParaIA(el){
+  if(el.type==="checkbox"){const l=el.closest("label");return l?l.textContent.trim():el.value;}
+  for(let no=el,n=0;no&&n<3;no=no.parentElement,n++){
+    for(let irmao=no.previousElementSibling;irmao;irmao=irmao.previousElementSibling){
+      if(/^(LABEL|SPAN|STRONG)$/.test(irmao.tagName))return irmao.textContent.trim()+(el.classList.contains("detalhe-sim")?" — descrição (se Sim)":"");
+    }
+  }
+  return el.id;
+}
+function catalogoParaIA(){
+  if(!document.querySelector(".portageItem"))carregarPortage();
+  if(!document.querySelector(".mchatItem"))carregarMCHAT();
+  const campos=[];let secao="",grupo="";
+  document.querySelectorAll("#formulario h2, #formulario h3, #formulario input, #formulario select, #formulario textarea").forEach(el=>{
+    if(el.tagName==="H2"){secao=el.textContent.trim();grupo="";return;}
+    if(el.tagName==="H3"){grupo=el.textContent.trim();return;}
+    const id=el.id;
+    if(!id||FORA_DO_CATALOGO_IA.test(id)||el.type==="file"||el.type==="button"||el.readOnly)return;
+    const base={id,secao,grupo,rotulo:rotuloParaIA(el)};
+    if(el.type==="hidden"){if(document.querySelector('.simnao[data-campo="'+id+'"]'))campos.push(Object.assign(base,{tipo:"opcao",opcoes:[{valor:"Sim",rotulo:"Sim"},{valor:"Não",rotulo:"Não"}]}));return;}
+    if(el.type==="checkbox")campos.push(Object.assign(base,{tipo:"marcar"}));
+    else if(el.tagName==="SELECT"){const opcoes=Array.from(el.options).filter(o=>o.value!=="").map(o=>({valor:o.value,rotulo:o.text.trim()}));if(opcoes.length)campos.push(Object.assign(base,{tipo:"opcao",opcoes}));}
+    else if(el.type==="number")campos.push(Object.assign(base,{tipo:"numero",min:el.min!==""?Number(el.min):null,max:el.max!==""?Number(el.max):null}));
+    else campos.push(Object.assign(base,{tipo:"texto"}));
+  });
+  // Habilidades acadêmicas: a lista depende do ano escolar (que a IA também
+  // escolhe) — campos por posição, com as listas de cada ano no contexto.
+  const maiorLista=Math.max(...Object.values(habilidadesPorAno).map(l=>l.length));
+  const secaoHab=Array.from(document.querySelectorAll("#formulario h2")).map(h=>h.textContent.trim()).find(t=>t.includes("Habilidades Acadêmicas"))||"Habilidades Acadêmicas";
+  for(let i=0;i<maiorLista;i++){
+    campos.push({id:"hab_status_"+i,secao:secaoHab,grupo:"",rotulo:"Desempenho na habilidade nº "+i+" do ano escolar escolhido",tipo:"opcao",opcoes:STATUS_HABILIDADE.map(v=>({valor:v,rotulo:v}))});
+    campos.push({id:"hab_obs_"+i,secao:secaoHab,grupo:"",rotulo:"Observação sobre a habilidade nº "+i+" do ano escolar escolhido",tipo:"texto"});
+  }
+  const contexto=[
+    "Habilidades acadêmicas: escolha primeiro [anoEscolar]; hab_status_N e hab_obs_N referem-se à habilidade de número N (começando em 0) da lista do ano escolhido:",
+    ...Object.entries(habilidadesPorAno).map(([ano,lista])=>"- "+ano+": "+lista.map((h,i)=>i+"="+h[0]).join("; ")),
+    "Hipóteses diagnósticas (campos hip_*): marque só as que os PDFs mencionam como investigadas/encaminhadas.",
+    "Portage: os itens listados são os da faixa etária do paciente.",
+    "Campos de descrição (\"se Sim\") só quando o campo correspondente for Sim."
+  ].join("\n");
+  return {campos,contexto};
+}
+window.catalogoParaIA=catalogoParaIA;
+
 function coletarDados(){
   const dados={};
   dados.__fotosPacienteDados=fotosPacienteDados;
   dados.__capaRelatorio=capaRelatorioDados;
-  dados.__quadroQtd=document.querySelectorAll('[id^="obs_comp_"]').length;
+  dados.__quadros={};document.querySelectorAll("#quadrosObservacao .quadro-hipotese").forEach(b=>{dados.__quadros[b.dataset.chave]={rotulo:b.dataset.rotulo,linhas:linhasDoQuadro(b.dataset.chave).length};});
   dados.__auto={};CAMPOS_AUTOMATICOS.forEach(id=>{const el=document.getElementById(id);if(el&&el.dataset.auto!==undefined)dados.__auto[id]=el.dataset.auto;});
   document.querySelectorAll("input, textarea, select").forEach(el=>{if(el.type==="file")return;const key=el.id||el.name;if(!key)return;if(el.type==="checkbox"||el.type==="radio")dados[key]=el.checked;else dados[key]=el.value;});
   return dados;
+}
+// Select que recebe um valor fora das opções (ex.: laudo salvo quando o
+// campo ainda era texto livre) ganha essa opção, para não perder o dado.
+function garantirOpcao(el,v){
+  if(el.tagName==="SELECT"&&typeof v==="string"&&v&&!Array.from(el.options).some(o=>o.value===v))el.add(new Option(v,v));
+}
+// Laudos salvos antes dos quadros por hipótese: o quadro único (obs_comp_N)
+// vira o quadro da primeira hipótese marcada.
+function migrarQuadroAntigo(dados){
+  if(dados.__quadros||!("obs_comp_0" in dados))return;
+  const primeira=hipotesesDoQuadro()[0];
+  if(!primeira)return;
+  const linhas=[];
+  for(let i=0;("obs_comp_"+i) in dados;i++)linhas.push([dados["obs_comp_"+i],dados["obs_desc_"+i],dados["obs_tea_"+i],dados["obs_dsm_"+i]].map(v=>v||""));
+  renderizarQuadroHipotese(primeira.chave,primeira.rotulo,linhas);
+  sincronizarQuadros();
 }
 function aplicarDados(dados){
   dados=dados||{};
   if(Array.isArray(dados.__fotosPacienteDados)){fotosPacienteDados=dados.__fotosPacienteDados;renderizarFotosPaciente();}
   if("__capaRelatorio" in dados){capaRelatorioDados=(dados.__capaRelatorio&&dados.__capaRelatorio.src)?dados.__capaRelatorio:null;versaoCapaRelatorio++;renderizarCapaRelatorio();}
   ["dataNascimento","dataRelatorio","anoEscolar","sexo"].forEach(k=>{if(typeof dados[k]==="string")setValor(k,dados[k]);});
-  const qtdQuadro=Number(dados.__quadroQtd)||0;
-  if(qtdQuadro>0&&qtdQuadro!==document.querySelectorAll('[id^="obs_comp_"]').length)renderizarQuadroObservacao(Array.from({length:qtdQuadro},()=>["","","",""]));
+  Object.entries(dados.__quadros||{}).forEach(([chave,q])=>renderizarQuadroHipotese(chave,q.rotulo,Array.from({length:Number(q.linhas)||0},()=>["","","",""])));
   atualizarHabilidadesAcademicas();
   const chaves=Object.keys(dados);
-  if(chaves.some(k=>k.startsWith("portage_")))carregarPortage();
-  if(chaves.some(k=>k.startsWith("mchat_")))carregarMCHAT();
-  Object.keys(dados).forEach(key=>{if(key.startsWith("__"))return;const el=document.getElementById(key);if(!el)return;if(el.type==="checkbox"||el.type==="radio")el.checked=!!dados[key];else el.value=dados[key];});
+  if(chaves.some(k=>k.startsWith("portage_"))&&!document.querySelector(".portageItem"))carregarPortage();
+  if(chaves.some(k=>k.startsWith("mchat_"))&&!document.querySelector(".mchatItem"))carregarMCHAT();
+  Object.keys(dados).forEach(key=>{if(key.startsWith("__"))return;const el=document.getElementById(key);if(!el)return;if(el.type==="checkbox"||el.type==="radio")el.checked=!!dados[key];else{garantirOpcao(el,dados[key]);el.value=dados[key];}});
   if(document.getElementById("hipoteseSelecionada")){
     atualizarOpcoesHipoteseSelecionada();
     if(typeof dados.hipoteseSelecionada==="string")setValor("hipoteseSelecionada",dados.hipoteseSelecionada);
   }
-  atualizarRotulosDoQuadro();
+  migrarQuadroAntigo(dados);
   Object.keys(dados.__auto||{}).forEach(id=>{const el=document.getElementById(id);if(el)el.dataset.auto=dados.__auto[id];});
   atualizarCamposBasePaciente();
   atualizarBotoesSimNao();
@@ -1134,11 +1269,16 @@ function aplicarDados(dados){
 }
 
 const CHAVE_SALVAMENTO_LOCAL="formulario_coleta_inicial_mayra_vanessa_v2";
+// Aberto com ?laudo=<id> (laudo já salvo, inclusive os gerados pelo Laudo Por
+// IA) ou com ?modo=catalogo (Laudo Por IA lendo os campos): os dados vêm do
+// banco e não se misturam com o rascunho deste navegador.
+const MODO_LAUDO=new URLSearchParams(location.search).has("laudo")||new URLSearchParams(location.search).get("modo")==="catalogo";
 function atualizarStatusSalvamento(msg){
   const el=document.getElementById("statusSalvamento");
   if(el)el.textContent=msg;
 }
 function salvarDadosNoNavegador(manual=false){
+  if(MODO_LAUDO)return true;
   try{
     const dados=coletarDados();
     dados.__salvoEm=new Date().toLocaleString("pt-BR");
@@ -1259,7 +1399,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   atualizarBotoesSimNao(); mostrarDescricaoSim();
   const tag=document.getElementById("DADOS_PACIENTE");
   if(tag){try{aplicarDados(JSON.parse(tag.textContent));atualizarCamposBasePaciente();atualizarStatusSalvamento("Cópia do paciente aberta com dados preenchidos.");}catch(e){}}
-  else{recuperarDadosDoNavegador(false);atualizarCamposBasePaciente();}
+  else if(!MODO_LAUDO){recuperarDadosDoNavegador(false);atualizarCamposBasePaciente();}
   aplicarTextosPadrao(false);
   ativarSalvamentoAutomatico();
 });
@@ -1285,42 +1425,6 @@ const FE_LAUDO = [
 // Ordem das barras no gráfico "Distribuição dos Déficits nas Funções Executivas" do modelo.
 const FE_ORDEM_GRAFICO = [3,2,1,4,0,5];
 
-const HABILIDADES_LAUDO = [
-  {id:"cog", titulo:"HABILIDADES COGNITIVAS E METACOGNITIVAS", tituloGrafico:"HABILIDADES COGNITIVAS E METACOGNITIVAS", itens:[
-    ["Atenção e concentração","Mantém atenção e foco nas atividades propostas e no ambiente escolar."],
-    ["Interesse e participação","Demonstra interesse pelas atividades, objetos e propostas pedagógicas."],
-    ["Memória e sequência lógica","Memória auditiva, visual e capacidade de organizar sequências de fatos."],
-    ["Raciocínio lógico","Associação, comparação, classificação e raciocínio lógico-matemático."],
-    ["Abstração e simbolização","Utiliza pensamento simbólico e compreensão abstrata."],
-    ["Discriminação sensorial","Diferencia estímulos visuais, auditivos e táteis."],
-    ["Organização e autonomia","Demonstra organização e noções de autopreservação."],
-    ["Metacognição","Reconhece erros, avalia estratégias e realiza correções."],
-    ["Estratégias de aprendizagem","Utiliza estratégias para aquisição, organização e aplicação do conhecimento."],
-    ["Julgamento e resolução","Analisa e busca soluções adequadas para desafios cotidianos e acadêmicos."]]},
-  {id:"soc", titulo:"HABILIDADES SOCIOEMOCIONAIS E COMUNICATIVAS", tituloGrafico:"HABILIDADES SOCIOEMOCIONAIS", itens:[
-    ["Interação social","Relaciona-se socialmente e demonstra iniciativa nas interações."],
-    ["Regulação emocional","Tolerância à frustração, autoestima e controle emocional."],
-    ["Comportamento social","Respeita regras, rotina, comportamento adequado em diferentes ambientes."],
-    ["Participação e permanência","Consegue permanecer em sala e participar das atividades propostas."],
-    ["Atenção e resposta","Mantém foco e atende quando solicitado."],
-    ["Compreensão da linguagem","Compreende comandos, informações e situações comunicativas."],
-    ["Comunicação verbal e não verbal","Utiliza fala, gestos, expressões faciais e outros recursos de comunicação."],
-    ["Comunicação funcional","Expressa-se de maneira inteligível e adequada ao contexto."],
-    ["Transmissão de informações","Relata experiências pessoais e transmite recados adequadamente."],
-    ["Recursos assistivos","Comunicação assistiva e/ou tecnologia assistiva quando necessário."]]},
-  {id:"mot", titulo:"HABILIDADES MOTORAS E SOCIOMOTORAS", tituloGrafico:"HABILIDADES MOTORAS E SOCIOMOTORAS", itens:[
-    ["Controle postural","Apresenta adequação postural compatível com o desenvolvimento motor."],
-    ["Desenvolvimento motor global","Realiza movimentos como rolar, engatinhar, arrastar-se, andar, correr e pular."],
-    ["Equilíbrio e coordenação","Apresenta equilíbrio estático/dinâmico e coordenação motora global."],
-    ["Coordenação motora fina","Habilidades de manipulação e coordenação fina para atividades funcionais."],
-    ["Coord gráfica e visomotora","Atividades gráficas e percepção visual aos movimentos."],
-    ["Esquema corporal e lateralidade","Demonstra reconhecimento corporal e discriminação entre direita e esquerda."],
-    ["Conceitos espaciais","Conceitos relacionados a cores, posições e organização espacial."],
-    ["Manipulação de objetos","Manipula objetos pequenos e realiza atividades manuais funcionais."],
-    ["Preensão e motricidade manual","Utiliza lápis, borracha e tesoura de forma funcional e adequada."],
-    ["Controle psicomotor","Agitação psicomotora e organização motora durante as atividades."],
-    ["Estereotipias motoras","Movimentos repetitivos e padrões motores estereotipados."]]}
-];
 
 // [nome no gráfico, nome na tabela de percentuais] — 22 áreas da Escala ATA.
 const ATA_ITENS = [
@@ -1348,12 +1452,23 @@ const ATA_ITENS = [
   ["XXII. Ignora o perigo","XXII. IGNORA O PERIGO"]
 ];
 
+// Paleta única dos gráficos do laudo — tokens da marca
+// (frontend/src/styles/tokens/colors.css). Categorias validadas para
+// daltonismo (skill dataviz); a ordem é fixa, nunca reciclada.
+const PALETA_LAUDO = {
+  categorias:["#7561ae","#d4840a","#3f7fc0","#d9709f","#3f9a57"],
+  serie:"#7561ae", serieEscura:"#43356b",
+  status:{bom:"#5c4b92",atencao:"#d4840a",critico:"#c8443f"},
+  dificuldade:"#c9548b", desempenho:"#5c4b92", referencia:"#8a85a0",
+  tinta:"#2b2740", texto:"#5a5570", textoSuave:"#8a85a0",
+  grade:"#e6e3f0", gradeForte:"#cbc6dc", fundoSuave:"#f5f4fa"
+};
 const DOMINIOS_LAUDO = [
-  ["dom_atencao","Atenção","#1f77b4"],
-  ["dom_sociais","Habilidades Sociais","#9467bd"],
-  ["dom_comportamento","Comportamento","#d62728"],
-  ["dom_aprendizagem","Aprendizagem","#2ca02c"],
-  ["dom_fe","Funções Executivas","#ff7f0e"]
+  ["dom_atencao","Atenção",PALETA_LAUDO.categorias[0]],
+  ["dom_sociais","Habilidades Sociais",PALETA_LAUDO.categorias[1]],
+  ["dom_comportamento","Comportamento",PALETA_LAUDO.categorias[2]],
+  ["dom_aprendizagem","Aprendizagem",PALETA_LAUDO.categorias[3]],
+  ["dom_fe","Funções Executivas",PALETA_LAUDO.categorias[4]]
 ];
 
 const TOPICOS_LAUDO = [
@@ -1403,7 +1518,7 @@ function formasGenero(sexo){
 function textosPadraoLaudo(g){
   const t = {};
   const paragrafosMetodologia = {
-    intro: "**METODOLOGIA**: Realizada análise dos comportamentos quanto ao desenvolvimento sócio comunicativo e cognitivo, baseado no **DSM - V**, registrado a partir de observações clínicas e escalas de avaliação **(ATA, CARS, SNAP IV, TOD e PORTAGE),** a depender da necessidade do processo da avaliação e da suspeita apresentada.",
+    intro: "**PROTOCOLO UTILIZADO**: Realizada análise dos comportamentos quanto ao desenvolvimento sócio comunicativo e cognitivo, baseado no **DSM - V**, registrado a partir de observações clínicas e escalas de avaliação **(ATA, CARS, SNAP IV, TOD e PORTAGE),** a depender da necessidade do processo da avaliação e da suspeita apresentada.",
     CARS: "**Escala CARS** - **(Childhood Autism Rating Scale)**, em português escala de pontuação para Autismo na infância, é um questionário frequentemente utilizado por profissionais da área da saúde para averiguar a possibilidade da presença de Autismo em crianças e adolescentes **(2 anos de idade e adolescentes até 17 anos e 11 meses)** e é considerada uma ferramenta pré-diagnóstica bastante confiável. Dentre todas as escalas de avaliação do Autismo, a **CARS** é a de maior validação e preferência.",
     ATA: "**Escala ATA** - Escala de avaliação de Traços Autísticos **(ATA)** validade e confiabilidade de uma escala para a detecção de condutas autísticas Francisco B. Assumpção Jr., Evelyn Kuczynski, Marcia Rego Gabriel, Cristiane Castanho Rocca. Sua aplicação é indicada em **crianças a partir de 2 anos de idade** (Assumpção et al., 2008). O estudo de validade e confiabilidade da **ATA** foi realizado em amostra brasileira com idades entre **2 e 18 anos.**",
     SNAPIV: "Escala **SNAP-IV** é composta pela descrição de 18 sintomas do **TDAH** e entre os sintomas de desatenção **(9 primeiros itens)** e hiperatividade/impulsividade **(itens 10 ao 18)**, os quais devem ser pontuados por pais e/ou professores, em uma escala de quatro níveis de gravidade. Existem chances de "+g.o+" paciente ser portador"+g.r+" de **TDAH** caso seja identificado pelo menos **6** em cada uma das partes “bastante” e/ou “demais”.",
@@ -1518,6 +1633,15 @@ function textosPadraoLaudo(g){
   return t;
 }
 
+// Texto fornecido pela cliente para a hipótese de TEA em pacientes do sexo feminino.
+function consideracoesFinaisTEAMeninas(sexo,hipotese){
+  if(sexo!=="Feminino"||chaveDaHipotese(hipotese)!=="TEA")return "";
+  return [
+    "Geralmente, as meninas com Autismo nível 01 e/ou 02 demoram mais para receber o diagnóstico (devido a essas particularidades). Dessa forma, isso leva a um menor número de diagnósticos, quando comparado com os meninos.",
+    "Dessa forma, os sintomas de Autismo acabam ficando difíceis de identificar. O mascaramento autista, também conhecido como camuflagem ou mascaramento neurodivergente, é a supressão consciente ou subconsciente de comportamentos autistas e a compensação das dificuldades de interação social por pessoas autistas com o objetivo de serem percebidas como neurotípicas. Muitas vezes essas meninas vão passar por adolescentes tímidas ou retraídas. Mas, oriento que fiquem atentos aos detalhes, pois com o diagnóstico precoce, a intervenção pode começar o quanto antes e ajudar essa adolescente a lidar com suas dificuldades sociais na adolescência e vida adulta."
+  ].join("\n");
+}
+
 // Aviso de fechamento fixo (esclarecimento de que o laudo não é um
 // documento médico + disponibilidade para contato) — sempre impresso, não
 // é mais o texto-padrão do campo "Considerações Finais" (ponto 2 da
@@ -1612,8 +1736,6 @@ function montarSecoesDoModelo(){
   if(ata)ata.innerHTML=ATA_ITENS.map((it,i)=>'<div class="ata-item"><span>'+it[0]+'</span><select id="ata_item_'+i+'" onchange="calcularATA()"><option value="">Pontos</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select><input type="number" min="0" max="100" id="ata_perc_'+i+'" placeholder="% na tabela"></div>').join("");
   const fe=document.getElementById("funcoes");
   if(fe)fe.innerHTML=FE_LAUDO.map((f,i)=>'<div class="bloco"><h3>'+f.nome+'</h3><p class="dica"><strong>Desenvolvimento funcional esperado:</strong> '+f.esperado+'</p><label>Manifestação Observada Durante O Processo Avaliativo</label><textarea id="fe_manif_'+i+'"></textarea><label>Indicador De Dificuldade Observado (%) — Gráfico De Déficits</label><input type="number" min="0" max="100" id="fe_perc_'+i+'" placeholder="Ex.: 82"></div>').join("");
-  const hab=document.getElementById("habilidadesModelo");
-  if(hab)hab.innerHTML=HABILIDADES_LAUDO.map(grupo=>'<h3>'+grupo.titulo+'</h3>'+grupo.itens.map((it,i)=>'<div class="habilidade-item"><strong>'+it[0]+'</strong><select id="hab_'+grupo.id+'_'+i+'"><option value="">Selecione</option><option>Sim</option><option>Às Vezes</option><option>Não</option></select><span class="dica">'+it[1]+'</span></div>').join("")).join("");
 }
 
 function preencherAutomatico(id,valorAuto){
@@ -1662,7 +1784,7 @@ function portagePorArea(){
   if(!itens.some(i=>i.value!==""))return null;
   const fx=faixaPortage(idadeMeses());
   const limiteMeses=fx?Number(fx.split("-")[1]):72;
-  const areas=[["Socialização","Socialização","#4472c4"],["Linguagem","Linguagem","#c0504d"],["Cognição","Cognição","#4472c4"],["Autocuidados","Auto cuidados","#8064a2"],["Motor","Motor","#f79646"]];
+  const areas=[["Socialização","Socialização",PALETA_LAUDO.categorias[0]],["Linguagem","Linguagem",PALETA_LAUDO.categorias[1]],["Cognição","Cognição",PALETA_LAUDO.categorias[2]],["Autocuidados","Auto cuidados",PALETA_LAUDO.categorias[3]],["Motor","Motor",PALETA_LAUDO.categorias[4]]];
   return {limiteAnos:limiteMeses/12, areas:areas.map(([area,rotulo,cor])=>{
     const doArea=itens.filter(i=>i.dataset.area===area);
     const pontos=doArea.reduce((s,i)=>s+(Number(i.value)||0),0);
@@ -1768,7 +1890,7 @@ const pluginRotulosLaudo={id:"rotulosValores",
       meta.data.forEach((el,i)=>{
         const v=ds.data[i]; if(v===null||v===undefined||Number.isNaN(v))return;
         const texto=cfg.formato?cfg.formato(v,i):String(v); if(texto==="")return;
-        c.save();c.font=cfg.fonte||"bold 13px Arial";c.fillStyle=cfg.cor||"#404040";c.textAlign="center";
+        c.save();c.font=cfg.fonte||"bold 13px Arial";c.fillStyle=cfg.cor||PALETA_LAUDO.tinta;c.textAlign="center";
         const posicao=typeof cfg.posicao==="function"?cfg.posicao(v,i):(cfg.posicao||"acima");
         let x=el.x,y=el.y;
         if(posicao==="acima"){c.textBaseline="bottom";y-=cfg.distancia||6;}
@@ -1781,7 +1903,7 @@ const pluginRotulosLaudo={id:"rotulosValores",
           c.textBaseline="middle";
           c.fillText(texto,p.x+Math.cos(meio)*p.outerRadius*0.62,p.y+Math.sin(meio)*p.outerRadius*0.62);
           if(cfg.nomes){
-            c.font=cfg.fonteNome||"15px Arial";c.fillStyle=cfg.corNome||"#262626";
+            c.font=cfg.fonteNome||"15px Arial";c.fillStyle=cfg.corNome||PALETA_LAUDO.tinta;
             c.textAlign=Math.cos(meio)>=0.1?"left":Math.cos(meio)<=-0.1?"right":"center";
             c.fillText(cfg.nomes[i],p.x+Math.cos(meio)*(p.outerRadius+14),p.y+Math.sin(meio)*(p.outerRadius+14));
           }
@@ -1815,11 +1937,11 @@ const numeroBR=v=>String(v).replace(".",",");
 function graficoCARS(){
   const valores=carsItens.map((_,i)=>valor("cars_"+i)===""?null:Number(valor("cars_"+i)));
   if(!valores.some(v=>v!==null))return null;
-  return graficoPNG({type:"line",data:{labels:carsItens.map(it=>encurtar(fraseCaso(it[0]),17)),datasets:[{data:valores,borderColor:"#5b9bd5",borderWidth:3.5,pointRadius:0,tension:0,spanGaps:true,
-    rotulos:{fonte:"bold 14px Arial",cor:"#595959",formato:v=>numeroBR(v),posicao:v=>v<=0.5?"acima":"abaixo"}}]},
+  return graficoPNG({type:"line",data:{labels:carsItens.map(it=>encurtar(fraseCaso(it[0]),17)),datasets:[{data:valores,borderColor:PALETA_LAUDO.serie,borderWidth:3.5,pointRadius:0,tension:0,spanGaps:true,
+    rotulos:{fonte:"bold 14px Arial",cor:PALETA_LAUDO.texto,formato:v=>numeroBR(v),posicao:v=>v<=0.5?"acima":"abaixo"}}]},
     options:{layout:{padding:{top:8,right:26,left:14,bottom:6}},
-      plugins:{legend:{display:false},tooltip:{enabled:false},title:{display:true,text:"Pontuação por Área - CARS",color:"#7f7f7f",font:{size:19,weight:"bold",family:FONTE_GRAFICO},padding:{bottom:16}}},
-      scales:{y:{min:0,max:4.4,ticks:{display:false,stepSize:1},grid:{color:"#d9d9d9"},border:{display:false}},x:{grid:{display:false},border:{color:"#bfbfbf"},ticks:{color:"#595959",maxRotation:45,minRotation:45,font:{size:14,family:FONTE_GRAFICO}}}}}},1000,430);
+      plugins:{legend:{display:false},tooltip:{enabled:false},title:{display:true,text:"Pontuação por Área - CARS",color:PALETA_LAUDO.textoSuave,font:{size:19,weight:"bold",family:FONTE_GRAFICO},padding:{bottom:16}}},
+      scales:{y:{min:0,max:4.4,ticks:{display:false,stepSize:1},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},border:{color:PALETA_LAUDO.gradeForte},ticks:{color:PALETA_LAUDO.texto,maxRotation:45,minRotation:45,font:{size:14,family:FONTE_GRAFICO}}}}}},1000,430);
 }
 
 function graficoATA(){
@@ -1827,41 +1949,46 @@ function graficoATA(){
   if(!valores.some(v=>v!==null))return null;
   const media=valores.map((v,i)=>i===0||v===null||valores[i-1]===null?null:(v+valores[i-1])/2);
   return graficoPNG({type:"bar",data:{labels:ATA_ITENS.map(it=>encurtar(it[0].toUpperCase(),22)),datasets:[
-      {type:"line",data:media,borderColor:"#4472c4",borderWidth:2,borderDash:[3,4],pointRadius:0,spanGaps:false},
-      {data:valores,backgroundColor:"#4472c4",barPercentage:0.75,categoryPercentage:0.85,rotulos:{fonte:"15px Arial",cor:"#404040"}}]},
-    options:{layout:{padding:{top:22,right:18,left:10,bottom:8}},plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:"#d9d9d9",espessura:1}},
-      scales:{y:{min:0,max:3,ticks:{stepSize:1,color:"#595959",font:{size:14}},grid:{color:"#d9d9d9"},border:{display:false}},x:{grid:{display:false},ticks:{color:"#595959",maxRotation:45,minRotation:45,autoSkip:false,font:{size:12,family:FONTE_GRAFICO}}}}}},1000,560);
+      {type:"line",data:media,borderColor:PALETA_LAUDO.serieEscura,borderWidth:2,borderDash:[3,4],pointRadius:0,spanGaps:false},
+      {data:valores,backgroundColor:PALETA_LAUDO.serie,barPercentage:0.75,categoryPercentage:0.85,rotulos:{fonte:"15px Arial",cor:PALETA_LAUDO.tinta}}]},
+    options:{layout:{padding:{top:22,right:18,left:10,bottom:8}},plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.grade,espessura:1}},
+      scales:{y:{min:0,max:3,ticks:{stepSize:1,color:PALETA_LAUDO.texto,font:{size:14}},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:45,minRotation:45,autoSkip:false,font:{size:12,family:FONTE_GRAFICO}}}}}},1000,560);
 }
 
-function graficoHabilidades(grupo){
-  const respostas=grupo.itens.map((_,i)=>valor("hab_"+grupo.id+"_"+i));
-  if(!respostas.some(Boolean))return null;
-  const serie=(resposta,v)=>respostas.map(r=>r===resposta?v:null);
-  return graficoPNG({type:"bar",data:{labels:grupo.itens.map(it=>encurtar(it[0],13)),datasets:[
-      {label:"SIM",data:serie("Sim",1),backgroundColor:"#4472c4"},
-      {label:"AS VEZES",data:serie("Às Vezes",0.5),backgroundColor:"#ffff00"},
-      {label:"NÃO",data:serie("Não",0.2),backgroundColor:"#ff0000"}]},
+// Habilidades acadêmicas da seção 8 (ano escolar): só as avaliadas.
+function habilidadesAcademicasAvaliadas(){
+  const lista=habilidadesPorAno[valor("anoEscolar")]||[];
+  return lista.map((it,i)=>({nome:it[0],status:valor("hab_status_"+i),obs:valor("hab_obs_"+i).trim()})).filter(h=>h.status);
+}
+function graficoHabilidadesAcademicas(habilidades){
+  const pontuadas=habilidades.filter(h=>h.status!=="Não Observado");
+  if(!pontuadas.length)return null;
+  const serie=(status,v)=>pontuadas.map(h=>h.status===status?v:null);
+  return graficoPNG({type:"bar",data:{labels:pontuadas.map(h=>encurtar(h.nome,16)),datasets:[
+      {label:"SATISFATÓRIO",data:serie("Satisfatório",1),backgroundColor:PALETA_LAUDO.status.bom},
+      {label:"EM DESENVOLVIMENTO",data:serie("Em Desenvolvimento",0.5),backgroundColor:PALETA_LAUDO.status.atencao},
+      {label:"INSATISFATÓRIO",data:serie("Insatisfatório",0.2),backgroundColor:PALETA_LAUDO.status.critico}]},
     options:{datasets:{bar:{skipNull:true,maxBarThickness:16}},layout:{padding:{top:8,right:22,left:14,bottom:8}},
-      plugins:{tooltip:{enabled:false},fundoLaudo:{borda:"#d9d9d9",espessura:1},
-        legend:{position:"bottom",labels:{boxWidth:12,boxHeight:12,color:"#595959",font:{size:15,family:FONTE_GRAFICO}}},
-        title:{display:true,text:grupo.tituloGrafico,color:"#595959",font:{size:24,weight:grupo.id==="cog"?"normal":"bold",family:FONTE_GRAFICO},padding:{bottom:14}}},
-      scales:{y:{min:0,max:1,ticks:{stepSize:0.5,color:"#595959",font:{size:15},callback:v=>numeroBR(Number(v).toFixed(1))},grid:{color:"#d9d9d9"},border:{display:false}},
-        x:{grid:{display:false},ticks:{color:"#595959",maxRotation:45,minRotation:45,autoSkip:false,font:{size:14,family:FONTE_GRAFICO}}}}}},1000,400);
+      plugins:{tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.grade,espessura:1},
+        legend:{position:"bottom",labels:{boxWidth:12,boxHeight:12,color:PALETA_LAUDO.texto,font:{size:15,family:FONTE_GRAFICO}}},
+        title:{display:true,text:"HABILIDADES ACADÊMICAS – "+valor("anoEscolar").toUpperCase(),color:PALETA_LAUDO.texto,font:{size:24,weight:"bold",family:FONTE_GRAFICO},padding:{bottom:14}}},
+      scales:{y:{min:0,max:1,ticks:{stepSize:0.5,color:PALETA_LAUDO.texto,font:{size:15},callback:v=>numeroBR(Number(v).toFixed(1))},grid:{color:PALETA_LAUDO.grade},border:{display:false}},
+        x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:45,minRotation:45,autoSkip:false,font:{size:14,family:FONTE_GRAFICO}}}}}},1000,400);
 }
 
 function graficoPortage(portage,idadeAnos){
   if(!portage)return null;
   const limite=portage.limiteAnos;
   return graficoPNG({type:"bar",data:{labels:portage.areas.map(a=>a.rotulo),datasets:[
-      {data:portage.areas.map(a=>Math.min(a.anos,limite)),backgroundColor:portage.areas.map(a=>a.cor),borderColor:"#262626",borderWidth:1,
-        rotulos:{fonte:"15px Arial",cor:"#404040",formato:(v,i)=>numeroBR(portage.areas[i].anos.toFixed(1)),posicao:v=>v>=limite*0.93?"abaixo":"acima",distancia:6}},
-      {data:portage.areas.map(()=>Math.min(idadeAnos,limite)),backgroundColor:"#ed7d31",borderColor:"#262626",borderWidth:1,
-        rotulos:{fonte:"15px Arial",cor:"#404040",posicao:"topoEixo",formato:()=>doisDigitos(idadeAnos)}}]},
+      {data:portage.areas.map(a=>Math.min(a.anos,limite)),backgroundColor:portage.areas.map(a=>a.cor),borderColor:PALETA_LAUDO.tinta,borderWidth:1,
+        rotulos:{fonte:"15px Arial",cor:PALETA_LAUDO.tinta,formato:(v,i)=>numeroBR(portage.areas[i].anos.toFixed(1)),posicao:v=>v>=limite*0.93?"abaixo":"acima",distancia:6}},
+      {data:portage.areas.map(()=>Math.min(idadeAnos,limite)),backgroundColor:PALETA_LAUDO.referencia,borderColor:PALETA_LAUDO.tinta,borderWidth:1,
+        rotulos:{fonte:"15px Arial",cor:PALETA_LAUDO.tinta,posicao:"topoEixo",formato:()=>doisDigitos(idadeAnos)}}]},
     options:{barPercentage:0.92,categoryPercentage:0.62,layout:{padding:{top:40,right:26,left:20,bottom:14}},
-      plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:"#7f7f7f",raio:22,espessura:1.5},
-        title:{display:true,text:"Idade de desenvolvimento",color:"#595959",font:{size:26,family:FONTE_GRAFICO},padding:{top:0,bottom:40}}},
-      scales:{y:{min:0,max:limite,ticks:{stepSize:limite>3?1:0.5,color:"#404040",font:{size:15},callback:v=>numeroBR(Number(v).toFixed(1))},grid:{color:"#bfbfbf"},border:{display:false}},
-        x:{grid:{display:false},ticks:{color:"#404040",font:{size:15,family:FONTE_GRAFICO}}}}}},1000,480);
+      plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.textoSuave,raio:22,espessura:1.5},
+        title:{display:true,text:"Idade de desenvolvimento",color:PALETA_LAUDO.texto,font:{size:26,family:FONTE_GRAFICO},padding:{top:0,bottom:40}}},
+      scales:{y:{min:0,max:limite,ticks:{stepSize:limite>3?1:0.5,color:PALETA_LAUDO.tinta,font:{size:15},callback:v=>numeroBR(Number(v).toFixed(1))},grid:{color:PALETA_LAUDO.gradeForte},border:{display:false}},
+        x:{grid:{display:false},ticks:{color:PALETA_LAUDO.tinta,font:{size:15,family:FONTE_GRAFICO}}}}}},1000,480);
 }
 
 function graficosSNAP(){
@@ -1872,18 +1999,18 @@ function graficosSNAP(){
   const percentuais=contagem.map(c=>Math.round(c/total*100));
   const rotulos=[["Nem um","pouco"],["Só um","pouco"],"Bastante","Demais"];
   const maxPontos=Math.max(10,Math.ceil((Math.max(...contagem)+1)/2)*2);
-  const pontos=graficoPNG({type:"bar",data:{labels:rotulos,datasets:[{data:contagem,backgroundColor:"#4472c4",borderColor:"#000000",borderWidth:2,barPercentage:0.55,
-      rotulos:{fonte:"bold 17px Arial",cor:"#000000"}}]},
-    options:{layout:{padding:{top:14,right:28,left:24,bottom:18}},plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:"#7f7f7f",raio:24,espessura:1.5},
-        title:{display:true,text:"Pontos",color:"#7f7f7f",font:{size:26,weight:"bold",family:FONTE_GRAFICO},padding:{bottom:8}}},
-      scales:{y:{min:0,max:maxPontos,ticks:{stepSize:2,color:"#404040",font:{size:15}},grid:{display:false},border:{color:"#595959"}},
-        x:{grid:{display:false},border:{color:"#595959"},ticks:{color:"#404040",font:{size:15,family:FONTE_GRAFICO}}}}}},560,420);
+  const pontos=graficoPNG({type:"bar",data:{labels:rotulos,datasets:[{data:contagem,backgroundColor:PALETA_LAUDO.serie,borderColor:PALETA_LAUDO.tinta,borderWidth:2,barPercentage:0.55,
+      rotulos:{fonte:"bold 17px Arial",cor:PALETA_LAUDO.tinta}}]},
+    options:{layout:{padding:{top:14,right:28,left:24,bottom:18}},plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.textoSuave,raio:24,espessura:1.5},
+        title:{display:true,text:"Pontos",color:PALETA_LAUDO.textoSuave,font:{size:26,weight:"bold",family:FONTE_GRAFICO},padding:{bottom:8}}},
+      scales:{y:{min:0,max:maxPontos,ticks:{stepSize:2,color:PALETA_LAUDO.tinta,font:{size:15}},grid:{display:false},border:{color:PALETA_LAUDO.texto}},
+        x:{grid:{display:false},border:{color:PALETA_LAUDO.texto},ticks:{color:PALETA_LAUDO.tinta,font:{size:15,family:FONTE_GRAFICO}}}}}},560,420);
   const maxPerc=Math.max(...percentuais)>50?100:50;
-  const perc=graficoPNG({type:"line",data:{labels:rotulos,datasets:[{data:percentuais,borderColor:"#5b9bd5",backgroundColor:"#5b9bd5",borderWidth:3,pointRadius:6,
-      rotulos:{fonte:"bold 17px Arial",cor:"#000000",formato:v=>v+"%",distancia:10}}]},
-    options:{layout:{padding:{top:40,right:40,left:24,bottom:18}},plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:"#7f7f7f",raio:24,espessura:1.5}},
-      scales:{y:{min:0,max:maxPerc,ticks:{stepSize:10,color:"#404040",font:{size:15},callback:v=>v+"%"},grid:{display:false},border:{color:"#595959"}},
-        x:{offset:true,grid:{display:false},border:{color:"#595959"},ticks:{color:"#404040",font:{size:15,family:FONTE_GRAFICO}}}}}},560,420);
+  const perc=graficoPNG({type:"line",data:{labels:rotulos,datasets:[{data:percentuais,borderColor:PALETA_LAUDO.serie,backgroundColor:PALETA_LAUDO.serie,borderWidth:3,pointRadius:6,
+      rotulos:{fonte:"bold 17px Arial",cor:PALETA_LAUDO.tinta,formato:v=>v+"%",distancia:10}}]},
+    options:{layout:{padding:{top:40,right:40,left:24,bottom:18}},plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.textoSuave,raio:24,espessura:1.5}},
+      scales:{y:{min:0,max:maxPerc,ticks:{stepSize:10,color:PALETA_LAUDO.tinta,font:{size:15},callback:v=>v+"%"},grid:{display:false},border:{color:PALETA_LAUDO.texto}},
+        x:{offset:true,grid:{display:false},border:{color:PALETA_LAUDO.texto},ticks:{color:PALETA_LAUDO.tinta,font:{size:15,family:FONTE_GRAFICO}}}}}},560,420);
   return {pontos,perc};
 }
 
@@ -1892,10 +2019,10 @@ function graficoFuncoesExecutivas(){
   if(!ordem.length)return null;
   const dif=ordem.map(i=>Math.max(0,Math.min(100,Number(valor("fe_perc_"+i)))));
   return graficoPNG({type:"bar",data:{labels:ordem.map(i=>FE_LAUDO[i].grafico),datasets:[
-      {data:dif,backgroundColor:"#ff7f0e",barPercentage:0.7,rotulos:{posicao:"centro",fonte:"bold 17px Arial",cor:"#ffffff",formato:v=>v+"%"}},
-      {data:dif.map(v=>100-v),backgroundColor:"#1f77b4",barPercentage:0.7,rotulos:{posicao:"centro",fonte:"bold 17px Arial",cor:"#ffffff",formato:v=>v>0?v+"%":""}}]},
+      {data:dif,backgroundColor:PALETA_LAUDO.dificuldade,barPercentage:0.7,rotulos:{posicao:"centro",fonte:"bold 17px Arial",cor:"#ffffff",formato:v=>v+"%"}},
+      {data:dif.map(v=>100-v),backgroundColor:PALETA_LAUDO.desempenho,barPercentage:0.7,rotulos:{posicao:"centro",fonte:"bold 17px Arial",cor:"#ffffff",formato:v=>v>0?v+"%":""}}]},
     options:{layout:{padding:{top:10,right:26,left:14,bottom:8}},plugins:{legend:{display:false},tooltip:{enabled:false},
-        title:{display:true,text:"Distribuição dos Déficits nas Funções Executivas",color:"#000000",font:{size:22,weight:"bold",family:"DejaVu Sans, Verdana, Arial"},padding:{bottom:12}}},
+        title:{display:true,text:"Distribuição dos Déficits nas Funções Executivas",color:PALETA_LAUDO.tinta,font:{size:22,weight:"bold",family:"DejaVu Sans, Verdana, Arial"},padding:{bottom:12}}},
       scales:{y:{stacked:true,min:0,max:100,ticks:{stepSize:20,color:"#000",font:{size:15}},title:{display:true,text:"Nível de Desenvolvimento Funcional (%)",color:"#000",font:{size:16}},grid:{display:false},border:{color:"#000"}},
         x:{stacked:true,grid:{display:false},border:{color:"#000"},title:{display:true,text:"Funções Executivas",color:"#000",font:{size:16}},ticks:{color:"#000",maxRotation:40,minRotation:40,font:{size:14}}}}}},1000,640);
 }
@@ -1905,9 +2032,9 @@ function graficoDominios(){
   if(!valores.some(v=>v))return null;
   const dados=valores.map(v=>v||0);
   return graficoPNG({type:"pie",data:{labels:DOMINIOS_LAUDO.map(d=>d[1]),datasets:[{data:dados,backgroundColor:DOMINIOS_LAUDO.map(d=>d[2]),borderColor:"#ffffff",borderWidth:1,
-      rotulos:{posicao:"fatia",fonte:"17px Arial",cor:"#262626",formato:v=>v?v+"%":"",nomes:DOMINIOS_LAUDO.map(d=>d[1])}}]},
-    options:{layout:{padding:{top:10,bottom:30,left:150,right:150}},plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{cor:"#ebebeb"},
-      title:{display:true,text:"Distribuição das Dificuldades por Domínio",color:"#262626",font:{size:24,family:FONTE_GRAFICO},padding:{top:14,bottom:14}}}}},900,640);
+      rotulos:{posicao:"fatia",fonte:"17px Arial",cor:PALETA_LAUDO.tinta,formato:v=>v?v+"%":"",nomes:DOMINIOS_LAUDO.map(d=>d[1])}}]},
+    options:{layout:{padding:{top:10,bottom:30,left:150,right:150}},plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{cor:PALETA_LAUDO.fundoSuave},
+      title:{display:true,text:"Distribuição das Dificuldades por Domínio",color:PALETA_LAUDO.tinta,font:{size:24,family:FONTE_GRAFICO},padding:{top:14,bottom:14}}}}},900,640);
 }
 
 /* ---------------------------------------------------------------- imagens (fotos) */
@@ -2137,7 +2264,7 @@ mark.amarelo{background:#ffff00}
 .faixa.centro{text-align:center}
 .faixa-topico{background:#a6a6a6;font-weight:bold;font-size:9.5pt;padding:1mm 2mm;margin:4mm 0 3mm;break-after:avoid;page-break-after:avoid}
 h2{font-size:12.5pt;text-align:center;margin:3mm 0 5mm;break-after:avoid;page-break-after:avoid}
-h2.roxo{color:#5b4a91}
+h2.roxo{color:#5c4b92}
 h2.marcado{font-size:10pt;margin:5mm 0 3mm}
 h3{font-size:10pt;margin:5mm 0 2mm;break-after:avoid;page-break-after:avoid}
 ul{list-style:none;margin:0 0 7pt;padding:0}
@@ -2156,7 +2283,7 @@ table.compacta td,table.compacta th{padding:.5mm 1.4mm;line-height:1.15}
 table.quadro td,table.quadro th{padding:.7mm 1.2mm;line-height:1.12}
 h2.marcado{margin:3mm 0 2mm}
 table.simples td,table.simples th{border:.75pt solid #000}
-table.roxa td,table.roxa th{border:.75pt solid #b4a7d6}
+table.roxa td,table.roxa th{border:.75pt solid #b3a5e2}
 table.centro td{text-align:center}
 .grafico{text-align:center;margin:3mm 0 4mm;break-inside:avoid;page-break-inside:avoid}
 .grafico img,.graficos-lado img,.fotos img,.cab-foto img{display:inline-block;vertical-align:middle}
@@ -2181,7 +2308,7 @@ td.cab-espaco{width:8mm}
   .moldura,.rodape-pagina{display:none}
   .cabecalho-pagina{background:#fff;max-width:210mm;margin:0 auto;padding-top:8mm}
   .documento{background:#fff;max-width:210mm;margin:0 auto;padding:6mm 20mm 14mm;box-shadow:0 2px 10px rgba(0,0,0,.15)}
-  .quebra{border-top:2px dashed #c9c3ee;margin:8mm -20mm}
+  .quebra{border-top:2px dashed #d6cef2;margin:8mm -20mm}
   .capa{width:auto;height:auto;max-width:210mm;margin:0 auto 14px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15)}
   .capa img{width:100%;height:auto}
 }`;
@@ -2206,88 +2333,17 @@ function atualizarOpcoesHipoteseSelecionada(){
   sel.innerHTML='<option value="">Selecione a hipótese deste paciente...</option>'+
     opcoes.map(h=>'<option value="'+esc(h)+'">'+esc(h)+"</option>").join("");
   if(opcoes.includes(atual))sel.value=atual;
+  atualizarVisibilidadeAnalisePorArea();
+  sincronizarQuadros();
 }
 
-/* ------------------------------------------------- IA: considerações finais e sugestões (pontos 2, 3 e 10) */
-
-// Monta o resumo curado DESTE paciente (nunca o catálogo completo de
-// hipóteses/protocolos/intervenções) a ser enviado à IA — só os campos que
-// de fato têm dado preenchido entram no resumo.
-function montarResumoParaIA(){
-  const resumo = {};
-
-  const estudo = valor("estudoCaso").trim();
-  if(estudo)resumo.estudo_de_caso = estudo;
-  const obs = valor("observacoesClinicas").trim();
-  if(obs)resumo.observacoes_clinicas = obs;
-
-  const linhasHabilidades = [];
-  HABILIDADES_LAUDO.forEach(gr=>{
-    gr.itens.forEach((it,i)=>{
-      const v = valor("hab_"+gr.id+"_"+i);
-      if(v)linhasHabilidades.push(it[0]+": "+v);
-    });
-  });
-  FE_LAUDO.forEach((f,i)=>{
-    const perc = valor("fe_perc_"+i), manif = valor("fe_manif_"+i).trim();
-    if(perc!==""||manif)linhasHabilidades.push(f.nome+(perc!==""?" (indicador de dificuldade: "+perc+"%)":"")+(manif?" — "+manif:""));
-  });
-  if(linhasHabilidades.length)resumo.habilidades_avaliadas = linhasHabilidades.join("\n");
-
-  const linhasProtocolos = [];
-  if(valor("cars")!=="")linhasProtocolos.push("CARS: "+valor("cars")+" pontos"+(valor("carsPercentualFalhas")!==""?" ("+valor("carsPercentualFalhas")+"% de falhas para a idade)":""));
-  if(valor("ata")!=="")linhasProtocolos.push("ATA: "+valor("ata")+" pontos"+(valor("ataPercentual")?" ("+valor("ataPercentual")+"% de características)":""));
-  const snapResumo = analisarSNAP();
-  if(snapResumo.pre>0)linhasProtocolos.push("SNAP-IV: "+snapResumo.des+"/9 itens de desatenção, "+snapResumo.hip+"/9 itens de hiperatividade/impulsividade"+(snapResumo.completo?"":" (protocolo incompleto)"));
-  const todResumo = analisarTOD();
-  if(todResumo.pre>0)linhasProtocolos.push("TOD: "+todResumo.pos+"/"+todItens.length+" comportamentos identificados"+(todResumo.completo?" ("+todResumo.perc+"%)":" (protocolo incompleto)"));
-  const portageResumo = portagePorArea();
-  if(portageResumo)linhasProtocolos.push("Portage: "+portageResumo.areas.map(a=>a.rotulo+" "+a.anos+" anos").join(", ")+(idadeForaDaFaixaPortage(idadeMeses())?" (paciente fora da faixa etária do instrumento — usado só como referência de repertório, não comparação normativa)":""));
-  const itensMCHATResumo = mchatItens.map((t,i)=>({resp:valor("mchat_"+i)})).filter(x=>x.resp!=="");
-  if(itensMCHATResumo.length)linhasProtocolos.push("M-CHAT: "+itensMCHATResumo.filter(x=>x.resp==="nao").length+"/"+itensMCHATResumo.length+" itens respondidos como ausentes/atípicos");
-  if(linhasProtocolos.length)resumo.protocolos_utilizados = linhasProtocolos.join("\n");
-
-  const hip = valor("hipoteseSelecionada").trim();
-  if(hip)resumo.hipotese_selecionada = hip;
-
-  return resumo;
+// Análise por área (faixas cinza): exclusiva do TDAH.
+function temHipoteseTDAH(){
+  return listaHipotesesInvestigadas().some(h=>/TDAH/i.test(h));
 }
-
-async function gerarConclusaoEIntervencoesComIA(){
-  const btn = document.getElementById("btnGerarConclusaoIA");
-  const aviso = document.getElementById("avisoConclusaoIA");
-  if(aviso){aviso.style.display = "none";}
-  const reportId = typeof window.obterLaudoAtualId === "function" ? window.obterLaudoAtualId() : null;
-  if(!reportId){
-    notificar("Salve o protocolo no sistema pelo menos uma vez (botão \"Salvar Protocolo\") antes de gerar com IA.","aviso");
-    return;
-  }
-  const resumo = montarResumoParaIA();
-  if(!resumo.estudo_de_caso&&!resumo.observacoes_clinicas&&!resumo.habilidades_avaliadas&&!resumo.protocolos_utilizados){
-    notificar("Preencha o estudo de caso, as observações clínicas, as habilidades avaliadas ou algum protocolo deste paciente antes de gerar com IA.","aviso");
-    return;
-  }
-  const textoOriginal = btn?btn.textContent:"";
-  if(btn){btn.disabled = true; btn.textContent = "Gerando com IA…";}
-  try{
-    const resultado = await window.apiFetch("/reports/"+reportId+"/generate-conclusion", {
-      method: "POST",
-      body: JSON.stringify(Object.assign({patient_name: valor("nomePaciente")||"Paciente"}, resumo))
-    });
-    setValor("consideracoes", resultado.consideracoes_finais);
-    setValor("planoIntervencao", resultado.sugestoes_intervencao);
-    const taConsideracoes = document.getElementById("consideracoes"), taPlano = document.getElementById("planoIntervencao");
-    if(taConsideracoes)taConsideracoes.dispatchEvent(new Event("input",{bubbles:true}));
-    if(taPlano)taPlano.dispatchEvent(new Event("input",{bubbles:true}));
-    notificar("Considerações finais e sugestões de intervenção geradas — revise antes de salvar.","sucesso");
-  }catch(e){
-    if(aviso){
-      aviso.textContent = (e&&e.message)||"Não foi possível gerar o texto com IA. Configure o provedor em \"Configurações\" ou escreva manualmente.";
-      aviso.style.display = "block";
-    }
-  }finally{
-    if(btn){btn.disabled = false; btn.textContent = textoOriginal;}
-  }
+function atualizarVisibilidadeAnalisePorArea(){
+  const bloco=document.getElementById("blocoAnalisePorArea");
+  if(bloco)bloco.style.display=temHipoteseTDAH()?"":"none";
 }
 
 // Perfil da profissional responsável (bio + credenciais da assinatura),
@@ -2365,7 +2421,7 @@ async function gerarDocumentoLaudoHTML(){
   partes.push('<table class="cab-paciente"><tr><td class="cab-foto">'+(fotoCabecalho?'<img src="'+fotoCabecalho+'" data-mm="42" style="width:42mm;height:52mm">':"")+'</td><td class="cab-espaco"></td><td class="cab-info"><div class="cab-box">'+linhasCabecalho.map(l=>"<p>"+esc(l[0])+": "+esc(l[1])+"</p>").join("")+"</div></td></tr></table>");
   partes.push('<div class="faixa centro">PARECER NEUROPSICOPEDAGÓGICO<br>ANÁLISE COMPORTAMENTAL</div>');
   partes.push('<div class="caixa-cinza clara"><p><strong>NOTA SOBRE OS RESULTADOS:</strong> Os percentuais apresentados neste relatório possuem caráter descritivo e clínico-observacional, sendo construídos a partir do desempenho apresentado nas atividades propostas, dos registros realizados durante os atendimentos e da análise qualitativa dos dados obtidos. Esses valores não correspondem a percentis normativos, índices psicométricos ou escores provenientes de testes padronizados restritos a outras categorias profissionais. Constituem recurso de organização e representação visual dos achados e devem ser interpretados conjuntamente com as demais informações apresentadas neste relatório.</p></div>');
-  partes.push(blocoDeTexto(valor("metodologia"),Object.assign({primeiroSemRecuo:/^\s*\*\*METODOLOGIA/i.test(valor("metodologia"))},opcoesTexto)));
+  partes.push(blocoDeTexto(valor("metodologia"),Object.assign({primeiroSemRecuo:/^\s*\*\*(METODOLOGIA|PROTOCOLO UTILIZADO)/i.test(valor("metodologia"))},opcoesTexto)));
   partes.push(texto("parecerContexto"));
 
   /* Anamnese e histórico de desenvolvimento */
@@ -2380,6 +2436,7 @@ async function gerarDocumentoLaudoHTML(){
     itemLista("Idade Gestacional",ponto(valor("idadeGestacional").trim())),
     itemLista("Intercorrências Gestacionais",ausentePresente("intercorrenciasGestacionais")),
     itemLista("Parto",valor("parto")),
+    itemLista("Complicação no parto",ausentePresente("complicacaoParto")),
     itemLista("Uso de medicamentos",simNao("usoMedicamentosGestacao","Sim")),
     itemLista("História de sofrimento fetal",ausentePresente("sofrimentoFetal"))
   ].join("");
@@ -2401,15 +2458,15 @@ async function gerarDocumentoLaudoHTML(){
   if(historico)partes.push('<h3><mark class="cinza">HISTÓRICO DE DESENVOLVIMENTO DA CRIANÇA:</mark></h3><ul class="bullets">'+historico+"</ul>");
   if(valor("aspectosComportamentais").trim())partes.push('<h3><mark class="cinza">ASPECTOS COMPORTAMENTAIS</mark></h3>'+texto("aspectosComportamentais"));
 
-  /* Quadro comparativo */
-  const linhasQuadro=[];
-  for(let i=0;document.getElementById("obs_comp_"+i);i++){
-    const c=[valor("obs_comp_"+i),valor("obs_desc_"+i),valor("obs_tea_"+i),valor("obs_dsm_"+i)];
-    if(c.some(x=>x.trim()))linhasQuadro.push("<tr>"+c.map(x=>"<td>"+esc(x)+"</td>").join("")+"</tr>");
-  }
-  if(linhasQuadro.length){
-    partes.push(QUEBRA+"<h2>Quadro Comparativo – Análise dos Comportamentos</h2>");
-    partes.push('<table class="tabela dupla centro quadro" data-larguras="38,46,43,43" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:38mm"><col style="width:46mm"><col style="width:43mm"><col style="width:43mm"></colgroup><tr><th>Comportamento Identificado</th><th>Caracterização Observada</th><th>'+esc(valor("quadroTituloColuna3")||"Possíveis Associações Clínicas")+"</th><th>"+esc(valor("quadroTituloColuna4")||"Associação Aos Critérios DSM-5-TR")+"</th></tr>"+linhasQuadro.join("")+"</table>");
+  /* Quadros comparativos: seção própria, só com os quadros — um por
+     hipótese marcada, todos no mesmo padrão. */
+  const quadros=hipotesesDoQuadro().map(h=>({h,linhas:linhasDoQuadro(h.chave).filter(l=>l.some(x=>x.trim()))})).filter(q=>q.linhas.length);
+  if(quadros.length){
+    partes.push(QUEBRA+"<h2>Quadros Comparativos – Análise dos Comportamentos</h2>");
+    quadros.forEach(q=>{
+      partes.push('<h3><mark class="cinza">Relação Com '+esc(q.h.rotulo)+"</mark></h3>");
+      partes.push('<table class="tabela dupla centro quadro" data-larguras="38,46,43,43" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:38mm"><col style="width:46mm"><col style="width:43mm"><col style="width:43mm"></colgroup><tr><th>Comportamento Identificado</th><th>Caracterização Observada</th><th>Relação Com '+esc(q.h.rotulo)+"</th><th>Associação Aos Critérios DSM-5-TR</th></tr>"+q.linhas.map(l=>"<tr>"+l.map(x=>"<td>"+esc(x)+"</td>").join("")+"</tr>").join("")+"</table>");
+    });
   }
 
   /* Atendimentos + CARS */
@@ -2434,7 +2491,7 @@ async function gerarDocumentoLaudoHTML(){
     partes.push('<p class="centro"><mark class="cinza"><strong><span style="font-size:8pt">Pontuação acima de 16 pontos&nbsp; - &nbsp;Atraso no desenvolvimento&nbsp; / &nbsp;Pontuação acima 20 pontos&nbsp; - &nbsp;Traços Autísticos</span></strong></mark></p>');
     if(imgATA)partes.push('<div class="grafico"><img src="'+imgATA+'" data-mm="165" style="width:165mm"></div>');
     if(ATA_ITENS.some((_,i)=>valor("ata_perc_"+i)!=="")){
-      const celula=(i)=>'<td style="background:#deeaf6"><strong><span style="font-size:7pt">'+esc(ATA_ITENS[i][1])+'</span></strong></td><td class="centro" style="background:#deeaf6"><strong><span style="font-size:7pt">'+esc(valor("ata_perc_"+i)?valor("ata_perc_"+i)+"%":"-")+"</span></strong></td>";
+      const celula=(i)=>'<td style="background:#ede9fa"><strong><span style="font-size:7pt">'+esc(ATA_ITENS[i][1])+'</span></strong></td><td class="centro" style="background:#ede9fa"><strong><span style="font-size:7pt">'+esc(valor("ata_perc_"+i)?valor("ata_perc_"+i)+"%":"-")+"</span></strong></td>";
       let linhas="";
       for(let i=0;i<11;i++)linhas+="<tr>"+celula(i)+celula(i+11)+"</tr>";
       partes.push('<table class="tabela simples" data-larguras="62,21,62,21" data-fonte="7" style="width:166mm;margin:6mm auto 0"><colgroup><col style="width:62mm"><col style="width:21mm"><col style="width:62mm"><col style="width:21mm"></colgroup>'+linhas+"</table>");
@@ -2447,24 +2504,21 @@ async function gerarDocumentoLaudoHTML(){
     if(fotosMeio.length)partes.push('<div class="fotos">'+fotosMeio.map(src=>'<img src="'+src+'" data-mm="44" style="width:44mm">').join("")+"</div>");
   }
 
-  /* Habilidades (tabelas descritivas + gráficos Sim/Às vezes/Não) */
-  const gruposAvaliados=HABILIDADES_LAUDO.filter(gr=>gr.itens.some((_,i)=>valor("hab_"+gr.id+"_"+i)));
-  if(gruposAvaliados.length){
-    partes.push(QUEBRA);
-    HABILIDADES_LAUDO.forEach(gr=>{
-      partes.push('<h2 class="marcado"><mark class="cinza">'+esc(gr.titulo)+"</mark></h2>");
-      partes.push('<table class="tabela dupla compacta" data-larguras="52,118" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:52mm"><col style="width:118mm"></colgroup><tr><th>Habilidade</th><th>Observação</th></tr>'+gr.itens.map(it=>"<tr><td>"+esc(it[0])+"</td><td>"+esc(it[1])+"</td></tr>").join("")+"</table>");
-    });
-    partes.push(QUEBRA);
-    gruposAvaliados.forEach(gr=>{const img=graficoHabilidades(gr);if(img)partes.push('<div class="grafico"><img src="'+img+'" data-mm="150" style="width:150mm"></div>');});
+  /* Habilidades acadêmicas (seção 8): tabela + gráfico por status */
+  const habAcademicas=habilidadesAcademicasAvaliadas();
+  if(habAcademicas.length){
+    partes.push(QUEBRA+'<h2 class="marcado"><mark class="cinza">HABILIDADES ACADÊMICAS – '+esc(valor("anoEscolar").toUpperCase())+"</mark></h2>");
+    partes.push('<table class="tabela dupla compacta" data-larguras="48,32,90" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:48mm"><col style="width:32mm"><col style="width:90mm"></colgroup><tr><th>Habilidade</th><th>Desempenho</th><th>Observação</th></tr>'+habAcademicas.map(h=>"<tr><td>"+esc(h.nome)+"</td><td>"+esc(h.status)+"</td><td>"+esc(h.obs)+"</td></tr>").join("")+"</table>");
+    const imgHab=graficoHabilidadesAcademicas(habAcademicas);
+    if(imgHab)partes.push('<div class="grafico"><img src="'+imgHab+'" data-mm="150" style="width:150mm"></div>');
     partes.push(texto("textoHabilidades"));
   }
 
   /* Perfil das funções executivas */
-  const linhasFE=FE_LAUDO.map((f,i)=>valor("fe_manif_"+i).trim()?'<tr><td style="color:#5b4a91"><strong>'+esc(f.nome)+"</strong></td><td>"+esc(f.esperado)+"</td><td>"+esc(valor("fe_manif_"+i))+"</td></tr>":"").join("");
+  const linhasFE=FE_LAUDO.map((f,i)=>valor("fe_manif_"+i).trim()?'<tr><td style="color:#5c4b92"><strong>'+esc(f.nome)+"</strong></td><td>"+esc(f.esperado)+"</td><td>"+esc(valor("fe_manif_"+i))+"</td></tr>":"").join("");
   if(linhasFE){
     partes.push(QUEBRA+'<h2 class="roxo">PERFIL CLÍNICO-OBSERVACIONAL DAS FUNÇÕES EXECUTIVAS</h2>');
-    partes.push('<table class="tabela roxa centro" data-larguras="26,52,92" data-fonte="8.5" style="font-size:8.5pt"><colgroup><col style="width:26mm"><col style="width:52mm"><col style="width:92mm"></colgroup><tr><th style="background:#6a5aa8;color:#ffffff">Função Executiva</th><th style="background:#6a5aa8;color:#ffffff">Desenvolvimento funcional esperado</th><th style="background:#6a5aa8;color:#ffffff">Manifestação observada durante o processo avaliativo</th></tr>'+linhasFE+"</table>");
+    partes.push('<table class="tabela roxa centro" data-larguras="26,52,92" data-fonte="8.5" style="font-size:8.5pt"><colgroup><col style="width:26mm"><col style="width:52mm"><col style="width:92mm"></colgroup><tr><th style="background:#5c4b92;color:#ffffff">Função Executiva</th><th style="background:#5c4b92;color:#ffffff">Desenvolvimento funcional esperado</th><th style="background:#5c4b92;color:#ffffff">Manifestação observada durante o processo avaliativo</th></tr>'+linhasFE+"</table>");
   }
 
   /* Portage */
@@ -2484,11 +2538,13 @@ async function gerarDocumentoLaudoHTML(){
   }
 
   /* Análise por área (faixas cinza) */
-  const topicos=TOPICOS_LAUDO.filter(t=>valor(t[0]).trim());
+  const topicos=temHipoteseTDAH()?TOPICOS_LAUDO.filter(t=>valor(t[0]).trim()):[];
   if(topicos.length){
     partes.push(QUEBRA);
     topicos.forEach(t=>partes.push('<div class="faixa-topico">'+esc(t[1])+"</div>"+texto(t[0])));
     if(fotosFinais.length)partes.push('<div class="fotos">'+fotosFinais.map(src=>'<img src="'+src+'" data-mm="55" style="width:55mm">').join("")+"</div>");
+  }else if(fotos.length>4&&fotosFinais.length){
+    partes.push(QUEBRA+'<div class="fotos">'+fotosFinais.map(src=>'<img src="'+src+'" data-mm="55" style="width:55mm">').join("")+"</div>");
   }
 
   /* SNAP-IV */
@@ -2534,7 +2590,7 @@ async function gerarDocumentoLaudoHTML(){
     partes.push(QUEBRA+texto("textoCorroboracao"));
     if(imgFE){
       partes.push('<div class="grafico"><img src="'+imgFE+'" data-mm="160" style="width:160mm"></div>');
-      partes.push('<p class="compacto"><span style="color:#c00000">✚</span> Legenda:</p><p class="compacto" style="padding-left:6mm"><span style="color:#ed7d31"><strong>Indicadores de dificuldade observados</strong></span></p><p style="padding-left:6mm"><span style="color:#1f3864"><strong>Indicadores de desempenho funcional observado</strong></span></p>');
+      partes.push('<p class="compacto"><span style="color:#c8443f">✚</span> Legenda:</p><p class="compacto" style="padding-left:6mm"><span style="color:#c9548b"><strong>Indicadores de dificuldade observados</strong></span></p><p style="padding-left:6mm"><span style="color:#5c4b92"><strong>Indicadores de desempenho funcional observado</strong></span></p>');
     }
   }
 
@@ -2572,16 +2628,11 @@ async function gerarDocumentoLaudoHTML(){
     partes.push('<h3><mark class="cinza">Hipótese Diagnóstica:</mark></h3><ul class="bullets">'+formatarHipotese(hipoteseSelecionada)+"</ul>");
   }
 
-  if(valor("consideracoes").trim()){
-    partes.push('<h3><mark class="cinza">Considerações Finais</mark></h3>');
-    partes.push(texto("consideracoes"));
-  }
-  if(valor("planoIntervencao").trim()){
-    partes.push('<h3><mark class="cinza">Sugestões De Intervenção</mark></h3>');
-    partes.push(texto("planoIntervencao"));
-  }
-  // Aviso de fechamento fixo — sempre impresso, não depende do que a
-  // psicóloga escreveu em Considerações Finais (ver avisoLegalFechamento()).
+  // Considerações Finais: texto-padrão fixo do modelo (a seção do
+  // formulário foi removida a pedido da cliente; Sugestões De Intervenção
+  // também saiu do laudo).
+  partes.push('<h3><mark class="cinza">Considerações Finais</mark></h3>');
+  partes.push(blocoDeTexto(consideracoesFinaisTEAMeninas(valor("sexo"),hipoteseSelecionada),opcoesTexto));
   partes.push(blocoDeTexto(avisoLegalFechamento(g),opcoesTexto));
 
   const perfil=await perfilProfissional();
@@ -2624,6 +2675,8 @@ function mostrarPreviaDoLaudo(html){
 (function () {
   const params = new URLSearchParams(location.search);
   const pacienteId = params.get('paciente');
+  const laudoId = params.get('laudo');
+  const modoGerar = params.get('modo') === 'gerar';
   const token = localStorage.getItem('formpsico_token');
 
   // Erros da API em linguagem de gente: o que aconteceu e o que fazer.
@@ -2794,19 +2847,119 @@ function mostrarPreviaDoLaudo(html){
     if (!pacienteId || !token) return;
     try {
       pacienteCarregado = await apiFetch('/patients/' + pacienteId);
-      setValor('nomePaciente', pacienteCarregado.name);
-      if (pacienteCarregado.birth_date) {
-        const [y, m, d] = pacienteCarregado.birth_date.split('-');
-        setValor('dataNascimento', d + '/' + m + '/' + y);
-      }
-      if (pacienteCarregado.sex) setValor('sexo', pacienteCarregado.sex);
-      if (pacienteCarregado.school_info) setValor('escola', pacienteCarregado.school_info);
-      if (typeof atualizarCamposBasePaciente === 'function') atualizarCamposBasePaciente();
+      preencherIdentificacao(pacienteCarregado);
       await carregarFotosDaGaleria();
     } catch (e) {
       notificar('Não foi possível carregar os dados do paciente. ' + e.message, 'erro', { acao: acaoParaErro(e, carregarPaciente) });
     }
   }
+
+  function preencherIdentificacao(paciente) {
+    setValor('nomePaciente', paciente.name);
+    if (paciente.birth_date) {
+      const [y, m, d] = paciente.birth_date.split('-');
+      setValor('dataNascimento', d + '/' + m + '/' + y);
+    }
+    if (paciente.sex) setValor('sexo', paciente.sex);
+    if (paciente.school_info) setValor('escola', paciente.school_info);
+    if (typeof atualizarCamposBasePaciente === 'function') atualizarCamposBasePaciente();
+  }
+
+  function avisarJanelaPai(mensagem) {
+    if (window.parent !== window) window.parent.postMessage(mensagem, location.origin);
+  }
+
+  // ?laudo=<id>: reabre um laudo salvo (identificação do cadastro + respostas
+  // do laudo). Com &modo=gerar (Laudo Por IA), completa o que é calculado,
+  // gera o documento oficial e avisa a janela pai.
+  async function carregarLaudo() {
+    if (!laudoId || !token) return;
+    try {
+      const laudo = await apiFetch('/reports/' + laudoId);
+      laudoAtual = laudo;
+      assinaturaPesadaNoBanco = assinaturaPesada(laudo.answers_json || {});
+      pacienteCarregado = pacienteAtual = await apiFetch('/patients/' + laudo.patient_id);
+      preencherIdentificacao(pacienteCarregado);
+      aplicarDados(laudo.answers_json || {});
+      atualizarCamposBasePaciente();
+      aplicarTextosPadrao(true);
+      await carregarFotosDaGaleria();
+      mostrarBotaoConcluir();
+      definirStatus('Laudo aberto do sistema. Alterações são salvas automaticamente.', 'salvo');
+      if (modoGerar) await gerarLaudoAutomatico();
+    } catch (e) {
+      notificar('Não foi possível abrir o laudo. ' + e.message, 'erro', { acao: acaoParaErro(e, carregarLaudo) });
+      if (modoGerar) avisarJanelaPai({ tipo: 'laudo-ia:erro', mensagem: e.message });
+    }
+  }
+
+  async function gerarLaudoAutomatico() {
+    if (!document.querySelector('.portageItem')) carregarPortage();
+    if (Array.from(document.querySelectorAll('.portageItem')).some((el) => el.value !== '')) calcularPortage();
+    calcularCARS();
+    calcularATA();
+    atualizarInterpretacoes();
+    atualizarOpcoesHipoteseSelecionada();
+    if (!valor('hipoteseSelecionada')) {
+      const primeira = listaHipotesesInvestigadas()[0];
+      if (primeira) setValor('hipoteseSelecionada', primeira);
+    }
+    if (valor('estudoCaso').trim()) gerarQuadroPeloEstudoCaso();
+    await salvarRespostasNoBanco();
+    const html = await gerarDocumentoLaudoHTML();
+    await apiFetch('/reports/' + laudoAtual.id + '/text', {
+      method: 'PUT',
+      body: JSON.stringify({ generated_text: html }),
+    });
+    avisarJanelaPai({ tipo: 'laudo-ia:gerado', laudoId: laudoAtual.id });
+  }
+
+  // Seção "Pontuações ATA E CARS": PDFs das escalas pontuadas → a IA
+  // transcreve só os itens das escalas (POST /patients/{id}/escalas-de-pdf).
+  const ESCALAS_PARA_IA = /^(cars_\d+|ata_item_\d+|ata_perc_\d+|ataPercentual|carsPercentualFalhas|snap_\d+|tod_\d+|portage_\w+|mchat_\d+)$/;
+  async function importarEscalasDePdf() {
+    const input = document.getElementById('pdfsEscalas');
+    const arquivos = Array.from((input && input.files) || []);
+    if (!arquivos.length) { notificar('Escolha os PDFs das escalas primeiro.', 'aviso'); return; }
+    const paciente = pacienteAtual || pacienteCarregado;
+    if (!paciente) { notificar('Salve o laudo pelo menos uma vez (botão "Salvar Laudo") antes de importar escalas com IA.', 'aviso'); return; }
+    const catalogo = catalogoParaIA();
+    catalogo.campos = catalogo.campos.filter((c) => ESCALAS_PARA_IA.test(c.id));
+    catalogo.contexto = 'Portage: os itens listados são os da faixa etária do paciente.';
+    const botao = document.getElementById('btnImportarEscalas');
+    const textoOriginal = botao.textContent;
+    botao.disabled = true;
+    botao.textContent = 'Lendo as escalas… (pode levar 1 a 2 minutos)';
+    try {
+      const dados = new FormData();
+      arquivos.forEach((a) => dados.append('arquivos', a));
+      dados.append('catalogo', JSON.stringify(catalogo));
+      const resposta = await requisitar('/patients/' + paciente.id + '/escalas-de-pdf', {
+        method: 'POST',
+        headers: token ? { Authorization: 'Bearer ' + token } : {},
+        body: dados,
+      });
+      const { respostas, lacunas } = await resposta.json();
+      const ids = Object.keys(respostas);
+      if (!ids.length) { notificar('A IA não encontrou itens de escala nesses PDFs.' + (lacunas.length ? ' ' + lacunas.join(' ') : ''), 'aviso', { duracao: 9000 }); return; }
+      aplicarDados(respostas);
+      calcularCARS();
+      calcularATA();
+      if (ids.some((id) => id.startsWith('portage_'))) calcularPortage();
+      atualizarInterpretacoes();
+      // Leva ao salvamento automático (navegador e banco).
+      const primeiro = document.getElementById(ids[0]);
+      if (primeiro) primeiro.dispatchEvent(new Event('change', { bubbles: true }));
+      input.value = '';
+      notificar(ids.length + ' itens das escalas preenchidos a partir dos PDFs. Confira antes de gerar o relatório.' + (lacunas.length ? ' Não encontrado: ' + lacunas.join(' ') : ''), 'sucesso', { duracao: 10000 });
+    } catch (e) {
+      notificar('Não foi possível importar as escalas. ' + e.message, 'erro', { acao: acaoParaErro(e, importarEscalasDePdf) });
+    } finally {
+      botao.disabled = false;
+      botao.textContent = textoOriginal;
+    }
+  }
+  window.importarEscalasDePdf = importarEscalasDePdf;
 
   function garantirTemplateCustomForm() {
     return apiFetch('/templates/custom-form-avaliacao', { method: 'POST' });
@@ -2840,23 +2993,40 @@ function mostrarPreviaDoLaudo(html){
 
     templateAtual = await garantirTemplateCustomForm();
 
+    const respostas = coletarDados();
     const laudo = await apiFetch('/patients/' + pacienteAtual.id + '/reports', {
       method: 'POST',
-      body: JSON.stringify({ template_id: templateAtual.id, answers: coletarDados() }),
+      body: JSON.stringify({ template_id: templateAtual.id, answers: respostas }),
     });
     laudoAtual = laudo;
+    assinaturaPesadaNoBanco = assinaturaPesada(respostas);
   }
 
   // Autosave real: sincroniza com o banco (não só localStorage) as
   // respostas atuais do formulário. Chamado tanto pelo botão principal
   // quanto, depois que o laudo já existe, automaticamente a cada campo
   // alterado (ver hook de autosave mais abaixo).
+  // Fotos e capa (base64, pesadas) só sobem quando mudaram desde o último
+  // envio — o backend mantém as salvas quando a chave não vem.
+  let assinaturaPesadaNoBanco = null;
+  function assinaturaPesada(dados) {
+    const resumo = (src) => (src ? src.length + ':' + src.slice(-24) : '');
+    const fotos = (dados.__fotosPacienteDados || []).map((f) => resumo(f.src) + ':' + (f._photoId || '')).join('|');
+    return fotos + '#' + resumo(dados.__capaRelatorio && dados.__capaRelatorio.src);
+  }
   async function salvarRespostasNoBanco() {
     if (!laudoAtual) return;
+    const dados = coletarDados();
+    const assinatura = assinaturaPesada(dados);
+    if (assinatura === assinaturaPesadaNoBanco) {
+      delete dados.__fotosPacienteDados;
+      delete dados.__capaRelatorio;
+    }
     await apiFetch('/reports/' + laudoAtual.id + '/answers', {
       method: 'PUT',
-      body: JSON.stringify({ answers: coletarDados() }),
+      body: JSON.stringify({ answers: dados }),
     });
+    assinaturaPesadaNoBanco = assinatura;
   }
 
   async function salvarNoSistema() {
@@ -2865,7 +3035,7 @@ function mostrarPreviaDoLaudo(html){
       return;
     }
     if (typeof window.validarMinimoParaSalvar === 'function' && !window.validarMinimoParaSalvar()) {
-      notificar('Para salvar o protocolo, preencha o Nome Completo e uma Data De Nascimento válida (fase 1). O campo com problema foi destacado.', 'erro', { duracao: 9000 });
+      notificar('Para salvar o laudo, preencha o Nome Completo e uma Data De Nascimento válida (fase 1). O campo com problema foi destacado.', 'erro', { duracao: 9000 });
       return;
     }
     const primeiraVez = !laudoAtual;
@@ -2873,7 +3043,7 @@ function mostrarPreviaDoLaudo(html){
     const textoOriginal = botao.textContent;
     botao.disabled = true;
     botao.textContent = 'Salvando…';
-    definirStatus('Salvando o protocolo no sistema…', 'salvando');
+    definirStatus('Salvando o laudo no sistema…', 'salvando');
     try {
       await garantirRegistroCriado();
       await enviarFotosNovasParaGaleria();
@@ -2887,16 +3057,16 @@ function mostrarPreviaDoLaudo(html){
         body: JSON.stringify({ generated_text: html }),
       });
 
-      definirStatus('✓ Protocolo salvo às ' + horaAgora() + '. Novas alterações são salvas automaticamente.', 'salvo');
+      definirStatus('✓ Laudo salvo às ' + horaAgora() + '. Novas alterações são salvas automaticamente.', 'salvo');
       marcarPendente(false);
       notificar(primeiraVez
-        ? 'Protocolo salvo no histórico do paciente. A partir de agora, cada alteração é salva sozinha.'
-        : 'Protocolo e relatório atualizados no sistema.', 'sucesso');
-      botao.textContent = 'Salvar Protocolo';
+        ? 'Laudo salvo no histórico do paciente. A partir de agora, cada alteração é salva sozinha.'
+        : 'Laudo e relatório atualizados no sistema.', 'sucesso');
+      botao.textContent = 'Salvar Laudo';
       mostrarBotaoConcluir();
     } catch (e) {
       definirStatus('Não foi possível salvar: ' + e.message, 'erro');
-      notificar('Não foi possível salvar o protocolo. ' + e.message, 'erro', { acao: acaoParaErro(e, salvarNoSistema) });
+      notificar('Não foi possível salvar o laudo. ' + e.message, 'erro', { acao: acaoParaErro(e, salvarNoSistema) });
       botao.textContent = textoOriginal;
     } finally {
       botao.disabled = false;
@@ -2959,7 +3129,7 @@ function mostrarPreviaDoLaudo(html){
     btn.type = 'button';
     btn.id = 'btnSalvarNoSistema';
     btn.className = 'botao-principal';
-    btn.textContent = 'Salvar Protocolo';
+    btn.textContent = 'Salvar Laudo';
     btn.title = 'Salva o protocolo no histórico do paciente (Ctrl+S)';
     btn.onclick = salvarNoSistema;
     acoes.insertBefore(btn, acoes.firstChild);
@@ -2968,7 +3138,7 @@ function mostrarPreviaDoLaudo(html){
     status.id = 'statusBanco';
     status.className = 'status-salvamento no-print';
     status.textContent = token
-      ? 'Protocolo ainda não salvo no sistema. Preencha o nome e a data de nascimento e clique em "Salvar Protocolo".'
+      ? 'Laudo ainda não salvo no sistema. Preencha o nome e a data de nascimento e clique em "Salvar Laudo".'
       : 'Formulário aberto fora do sistema: os dados ficam só neste navegador. Para salvar no histórico, use o menu "Novo Atendimento" do sistema.';
     if (!token) status.classList.add('erro');
     acoes.parentNode.insertBefore(status, acoes.nextSibling);
@@ -3047,7 +3217,9 @@ function mostrarPreviaDoLaudo(html){
     injetarBotao();
     ativarAutosaveNoBanco();
     interceptarRemocaoDeFoto();
-    carregarPaciente();
+    if (laudoId) carregarLaudo();
+    else if (params.get('modo') === 'catalogo') carregarPaciente().then(() => avisarJanelaPai({ tipo: 'laudo-ia:catalogo', catalogo: catalogoParaIA() }));
+    else carregarPaciente();
   });
 })();
 </script>
@@ -3064,27 +3236,24 @@ function mostrarPreviaDoLaudo(html){
   // campos continuam opcionais. `grupos` = todos os itens de uma escala.
   const REGRAS = {
     "Identificação Do Paciente": { campos: ["nomePaciente", "sexo", "dataNascimento", "responsavel", "anoEscolar"] },
-    "Anamnese Inicial": { campos: ["idadeMaeGestacao", "idadeGestacional", "intercorrenciasGestacionais", "parto", "usoMedicamentosGestacao", "sofrimentoFetal"] },
+    "Anamnese Inicial": { campos: ["idadeMaeGestacao", "idadeGestacional", "intercorrenciasGestacionais", "parto", "complicacaoParto", "usoMedicamentosGestacao", "sofrimentoFetal"] },
     "Histórico De Desenvolvimento Da Criança": { campos: ["filhoUnico", "convivenciaSocial", "andouAno", "falouAno", "desfralde"] },
     "Encaminhamento, Histórico E Queixas": { campos: ["encaminhamento", "diagnosticoAtual", "laudoAnterior", "familiaLaudo", "transtornoFamilia", "irmaosDiagnostico", "terapias", "queixaFamiliar"] },
-    "Metodologia": { campos: ["metodologia"], revisar: true },
+    "Protocolo Utilizado": { campos: ["metodologia"], revisar: true },
     "Estudo De Caso E Observações Clínicas": { campos: ["estudoCaso"] },
     "Inserção De Fotos": { especial: "fotos" },
     "Habilidades Acadêmicas De Acordo Com O Ano Escolar": { especial: "habilidadesAcademicas" },
-    "Quadro De Observações Comportamentais": { campos: ["quadroTituloColuna3", "quadroTituloColuna4"], especial: "quadro", revisar: true },
     "Hipóteses Diagnósticas Investigadas": { especial: "hipoteses" },
+    "Quadros De Comportamento": { especial: "quadro", revisar: true },
     "Pontuações ATA E CARS": { campos: ["ata", "ataPercentual", "carsPercentualFalhas"], grupos: [["select[id^='cars_']", "itens da CARS sem grau"]] },
     "Perfil Clínico-Observacional Das Funções Executivas": { grupos: [["textarea[id^='fe_manif_']", "manifestações observadas vazias"], ["input[id^='fe_perc_']", "percentuais de dificuldade vazios"]] },
     "Protocolo TOD": { grupos: [["select[id^='tod_']", "itens do TOD sem resposta"]] },
     "SNAP-IV": { grupos: [["select[id^='snap_']", "itens do SNAP-IV sem resposta"]] },
     "Portage": { especial: "portage" },
     "M-CHAT": { especial: "mchat" },
-    "Habilidades Cognitivas, Socioemocionais E Motoras": { grupos: [["select[id^='hab_cog_'],select[id^='hab_soc_'],select[id^='hab_mot_']", "habilidades sem resposta"]] },
     "Distribuição Das Dificuldades Por Domínio": { campos: ["dom_atencao", "dom_sociais", "dom_comportamento", "dom_aprendizagem", "dom_fe"] },
     "Textos Do Parecer (Modelo Oficial Do Relatório)": { especial: "textos", revisar: true },
-    "Sugestões De Intervenção": { campos: ["planoIntervencao"], revisar: true },
     "Encaminhamentos": { especial: "encaminhamentos" },
-    "Considerações Finais": { campos: ["consideracoes"], revisar: true },
     "Cidade E Data": { campos: ["cidade", "dataRelatorio"] },
   };
 
@@ -3185,8 +3354,8 @@ function mostrarPreviaDoLaudo(html){
         else grupo("select[id^='hab_status_']", "habilidades sem status");
         break;
       case "quadro": {
-        const linhas = Array.from(etapa.querySelectorAll("textarea[id^='obs_comp_']"));
-        exigir(linhas.some(preenchido), "Ao menos uma linha no quadro", linhas[0] || botao("Adicionar Linha"));
+        const linhas = Array.from(etapa.querySelectorAll(".quadro-hipotese:not([style*='none']) textarea[id$='_comp']"));
+        exigir(linhas.some(preenchido), "Marque ao menos uma hipótese (seção anterior) e mantenha uma linha no quadro", linhas[0] || etapa.querySelector("h2"));
         break;
       }
       case "hipoteses":
@@ -3659,7 +3828,7 @@ function mostrarPreviaDoLaudo(html){
     aviso.textContent = soma === 100 ? "✓ Soma: 100%." : "Soma atual: " + soma + "%. O gráfico de pizza fica mais fiel quando a soma é 100%.";
   }
 
-  // Usado pelo "Salvar Protocolo": nome e data de nascimento são o mínimo
+  // Usado pelo "Salvar Laudo": nome e data de nascimento são o mínimo
   // para registrar o paciente. Leva até o campo em vez de só avisar.
   window.validarMinimoParaSalvar = function () {
     const nome = document.getElementById("nomePaciente");

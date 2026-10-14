@@ -1,22 +1,27 @@
+import { lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import RequireAuth from './components/RequireAuth'
 import { AuthProvider } from './context/AuthContext'
-import ConfiguracoesRegistro from './pages/ConfiguracoesRegistro'
-import ConfiguracoesCapa from './pages/ConfiguracoesCapa'
-import ConfiguracoesProtocolos from './pages/ConfiguracoesProtocolos'
-import ConfiguracoesIA from './pages/ConfiguracoesIA'
 import Dashboard from './pages/Dashboard'
-import FormulariosResponsaveisPaciente from './pages/FormulariosResponsaveisPaciente'
-import Logs from './pages/Logs'
-import RelatorioIA from './pages/RelatorioIA'
-import SecoesClinicasPaciente from './pages/SecoesClinicasPaciente'
-import HistoricoPaciente from './pages/HistoricoPaciente'
 import Login from './pages/Login'
-import NovoAtendimento from './pages/NovoAtendimento'
-import AtendimentoProtocolo from './pages/AtendimentoProtocolo'
-import EditorProtocolo from './pages/EditorProtocolo'
-import RelatorioPorPdfs from './pages/RelatorioPorPdfs'
+
+// Telas carregadas sob demanda: o login e a lista de pacientes não baixam
+// o código das demais (editor de protocolo, laudos com Chart.js...).
+const ConfiguracoesRegistro = lazy(() => import('./pages/ConfiguracoesRegistro'))
+const ConfiguracoesCapa = lazy(() => import('./pages/ConfiguracoesCapa'))
+const ConfiguracoesProtocolos = lazy(() => import('./pages/ConfiguracoesProtocolos'))
+const ConfiguracoesIA = lazy(() => import('./pages/ConfiguracoesIA'))
+const FormulariosResponsaveisPaciente = lazy(() => import('./pages/FormulariosResponsaveisPaciente'))
+const Logs = lazy(() => import('./pages/Logs'))
+const RelatorioIA = lazy(() => import('./pages/RelatorioIA'))
+const LaudoPorIA = lazy(() => import('./pages/LaudoPorIA'))
+const SecoesClinicasPaciente = lazy(() => import('./pages/SecoesClinicasPaciente'))
+const HistoricoPaciente = lazy(() => import('./pages/HistoricoPaciente'))
+const NovoAtendimento = lazy(() => import('./pages/NovoAtendimento'))
+const AtendimentoProtocolo = lazy(() => import('./pages/AtendimentoProtocolo'))
+const EditorProtocolo = lazy(() => import('./pages/EditorProtocolo'))
+const RelatorioPorPdfs = lazy(() => import('./pages/RelatorioPorPdfs'))
 
 function App() {
   return (
@@ -31,6 +36,7 @@ function App() {
               <Route path="/pacientes/:id/formularios-responsaveis" element={<FormulariosResponsaveisPaciente />} />
               <Route path="/pacientes/:id/secoes-clinicas" element={<SecoesClinicasPaciente />} />
               <Route path="/relatorio-ia" element={<RelatorioIA />} />
+              <Route path="/laudo-ia" element={<LaudoPorIA />} />
               <Route path="/logs" element={<Logs />} />
               <Route path="/atendimento/novo" element={<NovoAtendimento />} />
               <Route path="/pacientes/:id/historico" element={<HistoricoPaciente />} />

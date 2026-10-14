@@ -29,7 +29,7 @@ mark.amarelo{background:#ffff00}
 .faixa.centro{text-align:center}
 .faixa-topico{background:#a6a6a6;font-weight:bold;font-size:9.5pt;padding:1mm 2mm;margin:4mm 0 3mm;break-after:avoid;page-break-after:avoid}
 h2{font-size:12.5pt;text-align:center;margin:3mm 0 5mm;break-after:avoid;page-break-after:avoid}
-h2.roxo{color:#5b4a91}
+h2.roxo{color:#5c4b92}
 h2.marcado{font-size:10pt;margin:5mm 0 3mm}
 h3{font-size:10pt;margin:5mm 0 2mm;break-after:avoid;page-break-after:avoid}
 ul{list-style:none;margin:0 0 7pt;padding:0}
@@ -48,7 +48,7 @@ table.compacta td,table.compacta th{padding:.5mm 1.4mm;line-height:1.15}
 table.quadro td,table.quadro th{padding:.7mm 1.2mm;line-height:1.12}
 h2.marcado{margin:3mm 0 2mm}
 table.simples td,table.simples th{border:.75pt solid #000}
-table.roxa td,table.roxa th{border:.75pt solid #b4a7d6}
+table.roxa td,table.roxa th{border:.75pt solid #b3a5e2}
 table.centro td{text-align:center}
 .grafico{text-align:center;margin:3mm 0 4mm;break-inside:avoid;page-break-inside:avoid}
 .grafico img,.graficos-lado img,.fotos img,.cab-foto img{display:inline-block;vertical-align:middle}
@@ -73,7 +73,7 @@ td.cab-espaco{width:8mm}
   .moldura,.rodape-pagina{display:none}
   .cabecalho-pagina{background:#fff;max-width:210mm;margin:0 auto;padding-top:8mm}
   .documento{background:#fff;max-width:210mm;margin:0 auto;padding:6mm 20mm 14mm;box-shadow:0 2px 10px rgba(0,0,0,.15)}
-  .quebra{border-top:2px dashed #c9c3ee;margin:8mm -20mm}
+  .quebra{border-top:2px dashed #d6cef2;margin:8mm -20mm}
   .capa{width:auto;height:auto;max-width:210mm;margin:0 auto 14px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15)}
   .capa img{width:100%;height:auto}
 }`

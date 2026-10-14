@@ -2,10 +2,12 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from starlette.requests import Request
+from starlette.responses import Response
 from fastapi.staticfiles import StaticFiles
 
 from app import models  # noqa: F401 -- garante que todos os modelos sejam registrados no ORM
-from app.api import ai_settings, auth, documents, guardian_forms, patients, protocolos, relatorios_pdf, reports, stats, templates
+from app.api import ai_settings, auth, documents, guardian_forms, laudo_ia, patients, protocolos, relatorios_pdf, reports, stats, templates
 from app.core.config import settings
 from app.core.cabecalhos import registrar_cabecalhos_de_seguranca
 from app.core.errors import registrar_tratadores_de_erro
@@ -22,6 +24,7 @@ app.include_router(patients.router)
 app.include_router(templates.router)
 app.include_router(protocolos.router)
 app.include_router(relatorios_pdf.router)
+app.include_router(laudo_ia.router)
 app.include_router(reports.router)
 app.include_router(ai_settings.router)
 app.include_router(stats.router)
@@ -41,11 +44,43 @@ frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 frontend_dist_resolvido = frontend_dist.resolve()
 
+class ArquivosComHash(StaticFiles):
+    """/assets do build do Vite: o nome muda a cada build (hash), então o
+    navegador pode guardar por um ano sem revalidar."""
+
+    async def get_response(self, path, scope):
+        resposta = await super().get_response(path, scope)
+        if resposta.status_code in (200, 304):
+            resposta.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return resposta
+
+
+def _etag_sem_compressao(etag: str) -> str:
+    # O Caddy (encode gzip) marca o ETag como fraco e/ou com sufixo "-gzip".
+    etag = etag.strip().removeprefix("W/")
+    for sufixo in ("-gzip", "-zstd", "-br"):
+        etag = etag.replace(sufixo + '"', '"')
+    return etag
+
+
+def _arquivo_revalidado(request: Request, caminho: Path) -> Response:
+    """Arquivos sem hash no nome (index.html, formulário, Chart.js, imagens
+    do laudo): o navegador revalida a cada uso e recebe 304 sem corpo
+    quando nada mudou — sempre a versão do último deploy, sem baixar de novo."""
+    info = caminho.stat()
+    etag = f'"{info.st_mtime_ns:x}-{info.st_size:x}"'
+    cabecalhos = {"ETag": etag, "Cache-Control": "no-cache"}
+    pedido = request.headers.get("if-none-match", "")
+    if pedido and any(_etag_sem_compressao(e) == etag for e in pedido.split(",")):
+        return Response(status_code=304, headers=cabecalhos)
+    return FileResponse(caminho, headers=cabecalhos, stat_result=info)
+
+
 if frontend_dist.exists():
-    app.mount("/assets", StaticFiles(directory=frontend_dist / "assets"), name="frontend-assets")
+    app.mount("/assets", ArquivosComHash(directory=frontend_dist / "assets"), name="frontend-assets")
 
     @app.get("/{full_path:path}")
-    def serve_frontend(full_path: str):
+    def serve_frontend(full_path: str, request: Request):
         # Rotas de API que não existem devem continuar dando 404 "de API",
         # não a página do frontend.
         if full_path.startswith("api/"):
@@ -56,7 +91,7 @@ if frontend_dist.exists():
         # servidor (path traversal).
         candidate = (frontend_dist / full_path).resolve()
         if full_path and candidate.is_relative_to(frontend_dist_resolvido) and candidate.is_file():
-            return FileResponse(candidate)
+            return _arquivo_revalidado(request, candidate)
 
         # Fallback de SPA: qualquer outra rota (ex.: /dashboard, recarregada
         # direto no navegador) devolve o index.html e o React Router decide
@@ -64,4 +99,4 @@ if frontend_dist.exists():
         # navegador a sempre revalidar essa casca (que referencia o bundle
         # JS hasheado do build atual) em vez de reter uma versão antiga
         # depois de um novo deploy.
-        return FileResponse(frontend_dist / "index.html", headers={"Cache-Control": "no-cache"})
+        return _arquivo_revalidado(request, frontend_dist / "index.html")

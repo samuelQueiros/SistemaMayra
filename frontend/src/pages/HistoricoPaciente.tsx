@@ -19,11 +19,10 @@ import { listTemplates } from '../api/templates'
 import type {
   Patient,
   PatientPhoto,
-  Report,
+  ReportResumo,
   ReportTemplate,
 } from '../api/types'
 import { Alert, Badge, Button, buttonStyle, Card, PageHeader } from '../components/ds'
-import { EnvioDePdfsParaIA } from '../components/EnvioDePdfsParaIA'
 import { FormulariosDeResponsaveis } from '../components/pacientes/FormulariosDeResponsaveis'
 import { SecoesClinicasForm } from '../components/pacientes/SecoesClinicasForm'
 import styles from './Page.module.css'
@@ -32,7 +31,7 @@ import styles from './Page.module.css'
 export default function HistoricoPaciente() {
   const { id } = useParams<{ id: string }>()
   const [patient, setPatient] = useState<Patient | null>(null)
-  const [reports, setReports] = useState<Report[]>([])
+  const [reports, setReports] = useState<ReportResumo[]>([])
   const [templates, setTemplates] = useState<ReportTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -59,23 +58,29 @@ export default function HistoricoPaciente() {
 
   useEffect(carregar, [id])
 
-  function nomeDoTemplate(report: Report) {
+  function nomeDoTemplate(report: ReportResumo) {
     return report.template_name_override ?? templates.find((t) => t.id === report.template_id)?.name ?? 'Modelo removido'
   }
 
   // Laudo feito com um modelo de protocolo próprio (Configurações): reabre
   // na tela do atendimento configurável.
-  function ehModeloDeProtocolo(report: Report) {
+  function ehModeloDeProtocolo(report: ReportResumo) {
     const template = templates.find((t) => t.id === report.template_id)
     return (template?.schema_json as { rule_type?: string } | undefined)?.rule_type === 'protocolo'
   }
 
-  function ehRelatorioIA(report: Report) {
+  // Protocolo padrão (formulario-novo-paciente.html), manual ou gerado pelo Laudo Por IA.
+  function ehProtocoloPadrao(report: ReportResumo) {
+    const template = templates.find((t) => t.id === report.template_id)
+    return (template?.schema_json as { rule_type?: string } | undefined)?.rule_type === 'custom_form'
+  }
+
+  function ehRelatorioIA(report: ReportResumo) {
     const template = templates.find((t) => t.id === report.template_id)
     return (template?.schema_json as { rule_type?: string } | undefined)?.rule_type === 'relatorio_ia_pdf'
   }
 
-  function classificacaoResumo(report: Report) {
+  function classificacaoResumo(report: ReportResumo) {
     if (report.classification_override) return report.classification_override
     const computed = report.computed_json
     if (!computed) return '—'
@@ -86,13 +91,13 @@ export default function HistoricoPaciente() {
     return '—'
   }
 
-  function startEdit(report: Report) {
+  function startEdit(report: ReportResumo) {
     setEditingId(report.id)
     setEditName(nomeDoTemplate(report))
     setEditClassification(classificacaoResumo(report))
   }
 
-  async function saveEdit(report: Report) {
+  async function saveEdit(report: ReportResumo) {
     setSavingEdit(true)
     try {
       const updated = await updateReportEdit(report.id, {
@@ -112,7 +117,7 @@ export default function HistoricoPaciente() {
     setClinicalOpenId((prev) => (prev === reportId ? null : reportId))
   }
 
-  async function handleDownloadReport(report: Report, formato: 'pdf' | 'docx') {
+  async function handleDownloadReport(report: ReportResumo, formato: 'pdf' | 'docx') {
     setError(null)
     const nomeArquivo = `relatorio_${(patient?.name ?? nomeDoTemplate(report)).replace(/\s+/g, '_')}.${formato}`
     try {
@@ -142,7 +147,14 @@ export default function HistoricoPaciente() {
 
       {error && <Alert tone="danger">{error}</Alert>}
 
-      {id && <EnvioDePdfsParaIA patientId={id} />}
+      {id && (
+        <Card title="Laudo Por IA" style={{ marginTop: 'var(--np-space-5)' }}>
+          <p>Envie os PDFs dos formulários e das escalas para gerar o estudo de caso e o laudo no protocolo padrão.</p>
+          <Link to={`/laudo-ia?paciente=${id}`} style={buttonStyle('primary')}>
+            Gerar Laudo Com IA
+          </Link>
+        </Card>
+      )}
 
       <Card title="Protocolos Do Paciente" style={{ marginTop: 'var(--np-space-5)' }}>
         {!error && reports.length === 0 && (
@@ -204,6 +216,13 @@ export default function HistoricoPaciente() {
                               <>
                                 <Link className={styles.rowLink} to={`/pacientes/${id}/relatorio-ia/${report.id}`}>
                                   Abrir Relatório
+                                </Link>{' '}
+                              </>
+                            )}
+                            {ehProtocoloPadrao(report) && (
+                              <>
+                                <Link className={styles.rowLink} to={`/atendimento/novo?laudo=${report.id}`}>
+                                  Abrir Protocolo
                                 </Link>{' '}
                               </>
                             )}

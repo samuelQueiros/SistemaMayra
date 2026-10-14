@@ -1,5 +1,5 @@
 import { History, LogOut, Menu, Settings, Users, X } from 'lucide-react'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { IconButton, SidebarNav } from './ds'
@@ -11,7 +11,7 @@ const NAV_ITEMS = [
     children: [
       { to: '/pacientes', label: 'Todos Os Pacientes' },
       { to: '/atendimento/novo', label: 'Novo Atendimento' },
-      { to: '/relatorio-ia', label: 'Relatório Por IA A Partir De Formulários Google' },
+      { to: '/laudo-ia', label: 'Laudo Por IA' },
     ],
   },
   {
@@ -66,7 +66,10 @@ export default function Layout() {
 
       <main className={styles.content}>
         <div className={styles.contentInner}>
-          <Outlet />
+          {/* Telas carregadas sob demanda (App.tsx): o menu continua na tela enquanto a página chega. */}
+          <Suspense fallback={<p style={{ color: 'var(--np-text-muted)' }}>Carregando…</p>}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
     </div>

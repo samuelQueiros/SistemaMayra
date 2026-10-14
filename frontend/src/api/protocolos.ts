@@ -36,7 +36,7 @@ export const createLaudoProtocolo = (patientId: string, modeloId: string, respos
 export const getLaudoProtocolo = (id: string) => apiGet<LaudoProtocolo>(`/reports/${id}`)
 
 export const salvarRespostasLaudo = (id: string, respostas: RespostasProtocolo) =>
-  apiPut<LaudoProtocolo>(`/reports/${id}/answers`, { answers: respostas })
+  apiPut<unknown>(`/reports/${id}/answers`, { answers: respostas })
 
 export const salvarDocumentoLaudo = (id: string, html: string) =>
-  apiPut<LaudoProtocolo>(`/reports/${id}/text`, { generated_text: html })
+  apiPut<unknown>(`/reports/${id}/text`, { generated_text: html })

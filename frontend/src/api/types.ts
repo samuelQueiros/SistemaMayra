@@ -170,6 +170,10 @@ export interface Report {
   created_at: string
 }
 
+// O que as listas e os salvamentos automáticos devolvem: o laudo sem as
+// respostas (fotos em base64) e sem o HTML final. Laudo inteiro: getReport().
+export type ReportResumo = Omit<Report, 'answers_json' | 'generated_text' | 'pdf_path'>
+
 export interface StatsByTemplate {
   template_name: string
   count: number

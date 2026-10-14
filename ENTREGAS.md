@@ -2298,3 +2298,52 @@ lugar e rodar `npm run build`.
   `DEPLOY.md` (trocar `JWT_SECRET`, senhas e chaves; revisar a imagem no
   GHCR). O token de login continua no `localStorage` do navegador (risco
   residual baixo com a CSP atual).
+
+## Correções da daily com a cliente e Laudo Por IA (protocolo padrão)
+
+**Status:** 🟡 Parcial (2026-10-13) — itens a confirmar com a cliente no fim.
+
+- **Formulário (protocolo padrão):**
+  - Nova pergunta "Houve Complicação No Parto?" (Sim/Não + descrição), que sai na Anamnese do relatório.
+  - Idade da mãe e idade gestacional viraram listas: é só clicar no número.
+  - "Metodologia" virou "Protocolo Utilizado"; o botão "Salvar Protocolo" virou "Salvar Laudo".
+  - Saíram as seções 17 (habilidades cognitivas, já cobertas pela 8), 20 (Sugestões de Intervenção) e 22 (Considerações Finais, agora com texto-padrão fixo no relatório). A seção 8 (habilidades acadêmicas) passou a sair no relatório com tabela e gráfico.
+  - A Análise por Área (faixas cinza) só aparece quando o TDAH está entre as hipóteses.
+  - Encaminhamentos ganhou "Acompanhamento Multidisciplinar" (Terapia, Fisioterapia, Nutrição, Psicologia Infantil).
+  - Hipóteses viraram a seção 9 e os Quadros a 10: cada hipótese marcada gera o seu quadro, todos no mesmo padrão, numa seção própria do relatório.
+  - As seções foram renumeradas (agora vão de 1 a 20).
+  - Seção 11: botão "Importar Escalas Com IA" — anexar os PDFs das escalas pontuadas preenche CARS, ATA, SNAP-IV, TOD e Portage, e os gráficos saem sozinhos.
+- **Correção de falha antiga:** as hipóteses e os encaminhamentos marcados não eram salvos (sumiam ao reabrir o laudo).
+- **Cores:** formulário, gráficos, PDF e Word seguem a paleta da marca. No gráfico do Portage, Socialização e Cognição tinham a mesma cor; agora são diferentes.
+- **Laudo Por IA (menu Pacientes):** envia de 1 a 10 PDFs (Google Forms e escalas). A IA faz o estudo de caso e preenche o protocolo padrão, o sistema gera o laudo oficial com os gráficos, e a psicóloga baixa o Word para editar ou abre "Ajustar No Formulário". O que os PDFs não trouxeram aparece numa lista. No Histórico, "Abrir Protocolo" reabre qualquer laudo do protocolo padrão.
+- **Arquivos principais:** `frontend/public/formulario-novo-paciente.html`, `frontend/src/pages/LaudoPorIA.tsx`, `frontend/src/components/SeletorDePdfs.tsx`, `frontend/src/components/pacientes/EscolhaDePaciente.tsx`, `backend/app/api/laudo_ia.py`, `backend/app/services/laudo_ia.py`.
+- **Como testar:** Pacientes → Novo Atendimento (correções) e Pacientes → Laudo Por IA (PDFs de teste).
+- **Considerações finais — TEA em meninas:** incluído o texto fornecido pela cliente em 13/10 sobre diagnóstico e mascaramento autista, preservando a redação. Aparece para sexo Feminino e hipótese diagnóstica selecionada de TEA, antes do aviso de fechamento, no HTML compartilhado pela prévia, PDF e Word (também no Laudo Por IA). Laudos já gerados precisam ser regenerados pelo formulário para incorporar o texto.
+- **Pendências — confirmar com a cliente:** o que é "colocar entendas"; quais campos são "observações gerais 4 e 5" (copiar/colar/anexar); o que é a "ficha do grupo" (10 anos ou mais); se o "problema na página 8" era a cor do Portage; o texto geral das Considerações Finais; se o acompanhamento multidisciplinar sai no relatório; se as faixas cinza continuam cinza.
+
+## Sistema mais rápido e IA dividida em agentes
+
+**Status:** ✅ Pronto (2026-10-13)
+
+- **Navegação mais leve:**
+  - A lista de laudos do Histórico trazia o relatório inteiro de cada laudo (fotos, capa e gráficos — cerca de 2 MB por laudo). Agora traz só o resumo: **de 2,1 MB para 651 bytes**. O laudo completo só é baixado quando é aberto.
+  - O salvamento automático do formulário reenviava todas as fotos a cada alteração e recebia de volta o relatório inteiro. Agora as fotos só sobem quando mudam (uma edição de texto: ~35 KB em vez de centenas de KB ou mais) e a resposta é mínima.
+  - As telas do sistema carregam sob demanda: o primeiro acesso baixa 303 KB em vez de 556 KB.
+  - O navegador guarda os arquivos do sistema: os que têm versão no nome ficam guardados por 1 ano; o formulário (540 KB) só é baixado de novo quando muda (senão, resposta vazia).
+- **IA mais rápida, em agentes:**
+  1. Cada PDF é transcrito para JSON (perguntas e respostas marcadas) por um agente próprio, todos ao mesmo tempo. O resultado fica guardado: enviar o mesmo PDF de novo não chama a IA.
+  2. Sobre esse JSON, sem reler os PDFs, trabalham ao mesmo tempo quatro agentes: anamnese/histórico, escalas, desenvolvimento (Portage, habilidades, funções executivas, domínios) e o redator do estudo de caso.
+  - O tempo total passa a ser o da chamada mais lenta de cada etapa, não a soma de todas. No teste com tempo de IA simulado (1,5 s por chamada): 2 PDFs transcritos em 1,5 s e os 4 agentes em 1,5 s.
+  - O Relatório Por IA antigo também usa a transcrição em JSON. Cada Laudo Por IA guarda o JSON lido e o tempo de cada etapa.
+- **Arquivos principais:** `backend/app/services/ai/agentes/` (extração, especialistas, execução em paralelo), `backend/app/services/laudo_ia.py`, `backend/app/api/reports.py` (resumo leve), `backend/app/main.py` (cache), `frontend/src/App.tsx` (carregamento sob demanda), `frontend/public/formulario-novo-paciente.html` (salvamento automático).
+- **Como testar:** abrir o Histórico de um paciente com vários laudos; preencher o formulário com fotos e conferir que continua fluido; gerar um Laudo Por IA com mais de um PDF.
+- **Pendências/observações:** a velocidade real da IA depende do provedor e do modelo configurados. O ganho vem de dividir e paralelizar; ainda não foi medido com o provedor real. Enquanto um PDF é gerado no servidor, as outras requisições ficam mais lentas (há um único processo, porque o limite de tentativas de login vive na memória dele); se isso pesar, o próximo passo é gerar os PDFs num processo separado.
+
+## Laudo Por IA como único fluxo de criação por PDFs
+
+**Status:** ✅ Pronto (2026-10-14)
+
+- Menu Pacientes mantém apenas **Laudo Por IA**; removida a opção antiga de Relatório Por IA.
+- O Histórico oferece o novo Laudo Por IA com o paciente já selecionado.
+- Links antigos para `/relatorio-ia` redirecionam para `/laudo-ia`, preservando os parâmetros. Relatórios antigos continuam acessíveis para revisão e exportação pelo Histórico.
+- Cota diária da IA esgotada agora tem mensagem específica; o sistema não repete a chamada automaticamente nesse caso.

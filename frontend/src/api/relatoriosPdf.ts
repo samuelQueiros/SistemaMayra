@@ -41,4 +41,4 @@ export const baixarPdfOriginal = (laudoId: string, indice: number, nome: string)
 export const getLaudoRelatorioIA = (laudoId: string) => apiGet<LaudoRelatorioIA>(`/reports/${laudoId}`)
 
 export const salvarHtmlRelatorioIA = (laudoId: string, html: string) =>
-  apiPut<LaudoRelatorioIA>(`/reports/${laudoId}/text`, { generated_text: html })
+  apiPut<unknown>(`/reports/${laudoId}/text`, { generated_text: html })

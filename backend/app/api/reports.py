@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from app.api.deps import get_current_psychologist
 from app.api.patients import get_patient_or_404
@@ -24,6 +24,7 @@ from app.schemas.report import (
     ReportCreate,
     ReportEditUpdate,
     ReportOut,
+    ReportResumoOut,
     ReportTextUpdate,
 )
 from app.services.ai import (
@@ -90,15 +91,23 @@ def create_report(
     return report
 
 
-@router.get("/api/patients/{patient_id}/reports", response_model=list[ReportOut])
+# Chaves das respostas do formulário com fotos/capa em base64 (ver
+# coletarDados() em formulario-novo-paciente.html).
+CHAVES_PESADAS_DAS_RESPOSTAS = ("__fotosPacienteDados", "__capaRelatorio")
+
+
+@router.get("/api/patients/{patient_id}/reports", response_model=list[ReportResumoOut])
 def list_reports(
     patient_id: UUID,
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> list[Report]:
+    """Lista leve: sem respostas (fotos em base64) nem HTML final — cada
+    laudo completo passa de 1 MB. O laudo inteiro está em GET /api/reports/{id}."""
     patient = get_patient_or_404(patient_id, db, current)
     return (
         db.query(Report)
+        .options(defer(Report.answers_json), defer(Report.generated_text))
         .filter(Report.patient_id == patient.id)
         .order_by(Report.created_at.desc())
         .all()
@@ -214,7 +223,7 @@ def generate_conclusion(
     )
 
 
-@router.put("/api/reports/{report_id}/text", response_model=ReportOut)
+@router.put("/api/reports/{report_id}/text", response_model=ReportResumoOut)
 def update_text(
     report_id: UUID,
     data: ReportTextUpdate,
@@ -230,7 +239,7 @@ def update_text(
     return report
 
 
-@router.put("/api/reports/{report_id}/answers", response_model=ReportOut)
+@router.put("/api/reports/{report_id}/answers", response_model=ReportResumoOut)
 def update_answers(
     report_id: UUID,
     data: ReportAnswersUpdate,
@@ -241,13 +250,19 @@ def update_answers(
     standalone enquanto a psicóloga preenche, em vez de ficar só no
     localStorage do navegador (ver ENTREGAS.md)."""
     report = _get_report_do_psicologo(report_id, db, current)
-    report.answers_json = data.answers
+    novas = dict(data.answers)
+    # Fotos e capa (base64, pesadas) só vêm quando mudaram: sem a chave,
+    # mantém o que já está salvo.
+    for chave in CHAVES_PESADAS_DAS_RESPOSTAS:
+        if chave not in novas and chave in (report.answers_json or {}):
+            novas[chave] = report.answers_json[chave]
+    report.answers_json = novas
     db.commit()
     db.refresh(report)
     return report
 
 
-@router.patch("/api/reports/{report_id}", response_model=ReportOut)
+@router.patch("/api/reports/{report_id}", response_model=ReportResumoOut)
 def edit_report(
     report_id: UUID,
     data: ReportEditUpdate,
@@ -290,7 +305,7 @@ def list_cid_codes(_: Psychologist = Depends(get_current_psychologist)) -> list[
     return CID_CODES
 
 
-@router.patch("/api/reports/{report_id}/clinical-sections", response_model=ReportOut)
+@router.patch("/api/reports/{report_id}/clinical-sections", response_model=ReportResumoOut)
 def update_clinical_sections(
     report_id: UUID,
     data: ClinicalSections,

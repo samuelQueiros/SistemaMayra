@@ -432,7 +432,7 @@ class _ConversorDocx:
         p.paragraph_format.space_after = Pt(10)
         formato = {"negrito": True, "tamanho": 12.5}
         if "roxo" in classes:
-            formato["cor"] = "#5B4A91"
+            formato["cor"] = "#5C4B92"
         if "marcado" in classes:
             formato.update(destaque="cinza", tamanho=10)
         self._inline(p, el, formato)
@@ -542,7 +542,7 @@ class _ConversorDocx:
         if "dupla" in classes:
             _bordas_tabela(tabela, "000000", "double", 4)
         elif "roxa" in classes:
-            _bordas_tabela(tabela, "B4A7D6", "single", 6)
+            _bordas_tabela(tabela, "B3A5E2", "single", 6)
         else:
             _bordas_tabela(tabela, "000000", "single", 4)
         _fixar_colunas(tabela, larguras)

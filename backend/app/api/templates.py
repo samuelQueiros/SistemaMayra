@@ -128,6 +128,11 @@ def get_or_create_custom_form_template(
     formulário HTML standalone (`/formulario-novo-paciente.html`) — só serve
     de "porta-laudo" para o rule_type 'custom_form' guardar generated_text/
     pdf; não faz nenhuma pontuação. Idempotente por psicóloga."""
+    return garantir_template_custom_form(db, current)
+
+
+def garantir_template_custom_form(db: Session, current: Psychologist) -> ReportTemplate:
+    """Template fixo do protocolo padrão (também usado pelo Laudo Por IA)."""
     existente = (
         db.query(ReportTemplate)
         .filter(ReportTemplate.owner_id == current.id, ReportTemplate.name == _NOME_TEMPLATE_CUSTOM_FORM)

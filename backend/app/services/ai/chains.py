@@ -6,10 +6,15 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from app.services.ai.provedores import provedor
 from app.services.ai.provider import get_structured_model
+from app.services.ai.erros import cota_diaria_esgotada
 from app.services.document_text import paginas_em_png
-from app.services.ai.schemas import ConclusionAndInterventions, ExtractedTemplateDraft, RelatorioPorPdfs, ReportSections
+from app.services.ai.schemas import (
+    ConclusionAndInterventions,
+    ExtractedTemplateDraft,
+    RelatorioPorPdfs,
+    ReportSections,
+)
 
 # Tamanho máximo do texto já redigido de cada laudo de origem, ao montar o
 # resumo para o parecer consolidado. Sem isso, selecionar vários laudos com
@@ -34,6 +39,8 @@ def _invocar_com_retentativas(chat_model: Runnable, messages: list, tentativas: 
         try:
             return chat_model.invoke(messages)
         except Exception as exc:  # noqa: BLE001 - repassado após esgotar tentativas
+            if cota_diaria_esgotada(exc):
+                raise  # A cota diária não se recupera esperando alguns segundos.
             ultimo_erro = exc
             if tentativa < tentativas - 1:
                 time.sleep(_ESPERA_ENTRE_TENTATIVAS_SEGUNDOS)
@@ -247,22 +254,21 @@ def _truncar(texto: str, limite: int = _TAMANHO_MAXIMO_TEXTO_POR_LAUDO) -> str:
 
 
 FORM_PDFS_SYSTEM_PROMPT = (
-    f"{PERSONA} Você vai receber de 1 a 6 PDFs com as RESPOSTAS de "
-    "formulários (geralmente exportados do Google Forms) preenchidos por "
-    "familiares, cuidadores, professores ou pelo próprio paciente. Leia com "
-    "atenção cada pergunta e a opção efetivamente MARCADA — no PDF do Google "
-    "Forms a opção escolhida aparece como círculo/caixa preenchida ou "
-    "destacada; as demais opções listadas NÃO foram escolhidas. Organize o "
-    "relatório por ÁREA/TEMA clínico, cruzando o que os formulários dizem "
-    "sobre cada área e indicando as fontes. Gráficos só com valores "
-    "efetivamente contados ou somados a partir das respostas marcadas, "
-    "dizendo a régua usada; sem dados em escala, não há gráfico. "
+    f"{PERSONA} Você vai receber as RESPOSTAS de 1 a 6 formulários "
+    "(geralmente Google Forms) preenchidos por familiares, cuidadores, "
+    "professores ou pelo próprio paciente, já transcritas em JSON a partir "
+    "dos PDFs: cada pergunta com a opção efetivamente marcada ou o texto "
+    "escrito (resposta vazia = não respondida). Organize o relatório por "
+    "ÁREA/TEMA clínico, cruzando o que os formulários dizem sobre cada área "
+    "e indicando as fontes. Gráficos só com valores efetivamente contados ou "
+    "somados a partir das respostas marcadas, dizendo a régua usada; sem "
+    "dados em escala, não há gráfico. "
     f"{LIMITES_DA_IA} Escreva em português do Brasil, em tom clínico, "
     f"objetivo e respeitoso. {ESTILO_DE_ESCRITA}"
 )
 
-# Texto extraído de cada PDF vai junto como apoio (ajuda em PDFs digitais),
-# limitado para não estourar o prompt com 6 arquivos.
+# Texto extraído de cada PDF vai junto como apoio na extração (ajuda em PDFs
+# digitais), limitado para não estourar o prompt.
 _TAMANHO_MAXIMO_TEXTO_POR_PDF = 12000
 
 
@@ -277,27 +283,21 @@ def generate_report_from_form_pdfs(
     observacoes: str | None = None,
 ) -> RelatorioPorPdfs:
     """Gera o relatório por área/tema a partir dos PDFs de respostas. Cada
-    item de `pdfs` tem `nome`, `conteudo` (bytes) e `texto` (extraído). A
-    forma de entregar os PDFs depende do provedor (`provedores.py`): inteiros
-    (bloco `file`), como imagens das páginas, ou só o texto — porque a opção
-    marcada no Google Forms costuma ser só um desenho, que o texto extraído
-    não mostra. Se o modelo recusar as imagens (modelo sem visão), tenta de
-    novo só com o texto."""
+    item de `pdfs` tem `nome`, `conteudo` (bytes) e `texto` (extraído).
+    Primeiro um agente por PDF transcreve o arquivo em JSON (em paralelo e
+    com cache — `agentes/extracao.py`); depois o relatório é escrito só a
+    partir desse JSON, sem reenviar os PDFs."""
+    # Import local: o pacote de agentes reaproveita funções deste módulo.
+    from app.services.ai.agentes.extracao import documentos_em_texto, extrair_documentos
 
-    info = provedor(provider)
-    leitura = info.leitura_pdf if info else "nativa"
-    messages = _mensagens_dos_pdfs(patient_name, idade, pdfs, observacoes, leitura)
+    documentos = extrair_documentos(provider=provider, model=model, api_key=api_key, pdfs=pdfs)
     chat_model = get_structured_model(provider, model, api_key, RelatorioPorPdfs)
-    if leitura != "imagens":
-        return _invocar_com_retentativas(chat_model, messages)
-    try:
-        return _invocar_com_retentativas(chat_model, messages, tentativas=1)
-    except Exception:  # noqa: BLE001 - modelo sem visão: cai para só texto
-        texto = _mensagens_dos_pdfs(patient_name, idade, pdfs, observacoes, "texto")
-        return _invocar_com_retentativas(chat_model, texto)
+    return _invocar_com_retentativas(
+        chat_model, _mensagens_dos_formularios(patient_name, idade, pdfs, documentos_em_texto(documentos), observacoes)
+    )
 
 
-def _mensagens_dos_pdfs(patient_name, idade, pdfs, observacoes, leitura) -> list:
+def _mensagens_dos_formularios(patient_name, idade, pdfs, documentos_texto, observacoes) -> list:
     instrucoes = (
         f"Paciente: {patient_name}" + (f" ({idade})" if idade else "") + "\n"
         f"Formulários anexados ({len(pdfs)}): " + ", ".join(p["nome"] for p in pdfs) + "\n"
@@ -305,19 +305,19 @@ def _mensagens_dos_pdfs(patient_name, idade, pdfs, observacoes, leitura) -> list
     if observacoes and observacoes.strip():
         instrucoes += f"Observações da profissional para esta análise: {observacoes.strip()}\n"
     instrucoes += (
-        "\nLeia os PDFs a seguir (fonte única de verdade) e produza o relatório "
-        "estruturado: formulários lidos, metodologia, análise por área/tema com "
-        "fontes e gráficos quando houver dados em escala, considerações finais e "
-        "sugestões de intervenção."
+        "\nCom base nos formulários abaixo (fonte única de verdade), produza o "
+        "relatório estruturado: formulários lidos, metodologia, análise por "
+        "área/tema com fontes e gráficos quando houver dados em escala, "
+        "considerações finais e sugestões de intervenção.\n\nFORMULÁRIOS (JSON):\n"
+        + documentos_texto
     )
-    if leitura == "imagens":
-        instrucoes += " Cada página dos PDFs vem como imagem: veja nela qual opção está marcada."
-    if leitura == "texto":
-        instrucoes += (
-            " Os PDFs chegam só como texto extraído: se não for possível saber qual "
-            "opção foi marcada numa pergunta, diga isso no relatório em vez de supor."
-        )
-    conteudo: list[dict] = [{"type": "text", "text": instrucoes}]
+    return [SystemMessage(content=FORM_PDFS_SYSTEM_PROMPT), HumanMessage(content=instrucoes)]
+
+
+def _blocos_dos_pdfs(pdfs: list[dict], leitura: str) -> list[dict]:
+    """Conteúdo multimodal com os PDFs, no formato que o provedor aceita
+    (`leitura`: nativa, imagens ou texto), mais o texto extraído de apoio."""
+    conteudo: list[dict] = []
     for pdf in pdfs:
         conteudo.append({"type": "text", "text": f"=== Arquivo: {pdf['nome']} ==="})
         if leitura == "nativa":
@@ -340,7 +340,7 @@ def _mensagens_dos_pdfs(patient_name, idade, pdfs, observacoes, leitura) -> list
                 else "Texto extraído deste PDF (apoio — a opção marcada pode não aparecer aqui):\n"
             )
             conteudo.append({"type": "text", "text": rotulo + _truncar(pdf["texto"], _TAMANHO_MAXIMO_TEXTO_POR_PDF)})
-    return [SystemMessage(content=FORM_PDFS_SYSTEM_PROMPT), HumanMessage(content=conteudo)]
+    return conteudo
 
 
 TEMPLATE_EXTRACTION_SYSTEM_PROMPT = (

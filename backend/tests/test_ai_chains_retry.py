@@ -40,6 +40,23 @@ def test_truncar_nao_altera_texto_curto():
     assert _truncar("texto curto", limite=100) == "texto curto"
 
 
+def test_cota_diaria_nao_repete_chamada_nem_espera(monkeypatch):
+    from unittest.mock import Mock
+
+    erro = RuntimeError("429 RESOURCE_EXHAUSTED GenerateRequestsPerDayPerProjectPerModel-FreeTier")
+    modelo = Mock()
+    modelo.invoke.side_effect = erro
+    espera = Mock()
+    monkeypatch.setattr("app.services.ai.chains.time.sleep", espera)
+
+    with pytest.raises(RuntimeError) as recebido:
+        _invocar_com_retentativas(modelo, [])
+
+    assert recebido.value is erro
+    modelo.invoke.assert_called_once()
+    espera.assert_not_called()
+
+
 def test_truncar_corta_texto_longo_e_adiciona_reticencias():
     texto = "a" * 50
     resultado = _truncar(texto, limite=10)

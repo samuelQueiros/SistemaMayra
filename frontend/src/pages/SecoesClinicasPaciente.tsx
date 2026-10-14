@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { listReports } from '../api/reports'
 import { listTemplates } from '../api/templates'
-import type { Report, ReportTemplate } from '../api/types'
+import type { ReportResumo, ReportTemplate } from '../api/types'
 import { Alert, Card, Select } from '../components/ds'
 import { PaginaDoPaciente } from '../components/pacientes/CabecalhoDoPaciente'
 import { SecoesClinicasForm } from '../components/pacientes/SecoesClinicasForm'
@@ -12,7 +12,7 @@ import { SecoesClinicasForm } from '../components/pacientes/SecoesClinicasForm'
 export default function SecoesClinicasPaciente() {
   const { id } = useParams<{ id: string }>()
   const [params, setParams] = useSearchParams()
-  const [reports, setReports] = useState<Report[] | null>(null)
+  const [reports, setReports] = useState<ReportResumo[] | null>(null)
   const [templates, setTemplates] = useState<ReportTemplate[]>([])
   const [erro, setErro] = useState<string | null>(null)
 
@@ -25,7 +25,7 @@ export default function SecoesClinicasPaciente() {
       .catch(() => setErro('Não foi possível carregar os relatórios deste paciente.'))
   }, [id])
 
-  const nomeDoModelo = (r: Report) => r.template_name_override ?? templates.find((t) => t.id === r.template_id)?.name ?? 'Relatório'
+  const nomeDoModelo = (r: ReportResumo) => r.template_name_override ?? templates.find((t) => t.id === r.template_id)?.name ?? 'Relatório'
   const escolhido = reports?.find((r) => r.id === params.get('relatorio')) ?? reports?.[0]
 
   return (

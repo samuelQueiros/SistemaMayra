@@ -3,13 +3,13 @@ import { Download, FileText, X } from 'lucide-react'
 import { ApiError } from '../../api/client'
 import { downloadReportDocx, downloadReportPdf, listReports } from '../../api/reports'
 import { listTemplates } from '../../api/templates'
-import type { Patient, Report, ReportTemplate } from '../../api/types'
+import type { Patient, ReportResumo, ReportTemplate } from '../../api/types'
 import { Alert, Badge, Button, Card, IconButton } from '../ds'
 
 // "Baixar PDF/Word" da lista de pacientes: mostra os relatórios do paciente
 // (mais recente primeiro, destacado) para escolher qual baixar.
 export function BaixarRelatorioDialog({ patient, onClose }: { patient: Patient; onClose: () => void }) {
-  const [reports, setReports] = useState<Report[] | null>(null)
+  const [reports, setReports] = useState<ReportResumo[] | null>(null)
   const [templates, setTemplates] = useState<ReportTemplate[]>([])
   const [erro, setErro] = useState<string | null>(null)
   const [baixando, setBaixando] = useState<string | null>(null)
@@ -29,9 +29,9 @@ export function BaixarRelatorioDialog({ patient, onClose }: { patient: Patient; 
     return () => window.removeEventListener('keydown', fechar)
   }, [onClose])
 
-  const nomeDoModelo = (r: Report) => r.template_name_override ?? templates.find((t) => t.id === r.template_id)?.name ?? 'Relatório'
+  const nomeDoModelo = (r: ReportResumo) => r.template_name_override ?? templates.find((t) => t.id === r.template_id)?.name ?? 'Relatório'
 
-  async function baixar(r: Report, formato: 'pdf' | 'docx') {
+  async function baixar(r: ReportResumo, formato: 'pdf' | 'docx') {
     setErro(null)
     setBaixando(`${r.id}:${formato}`)
     const nome = `relatorio_${patient.name.replace(/\s+/g, '_')}.${formato}`

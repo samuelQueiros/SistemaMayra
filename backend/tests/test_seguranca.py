@@ -46,6 +46,20 @@ def test_rota_do_frontend_ainda_serve_arquivos_do_dist(client, frontend_dist_fal
     assert client.get("/pacientes").text == "<html>app</html>"
 
 
+def test_arquivos_do_frontend_respondem_304_quando_nao_mudaram(client, frontend_dist_falso):
+    if not any(getattr(r, "path", "") == "/{full_path:path}" for r in main_module.app.routes):
+        pytest.skip("frontend/dist não existe neste ambiente")
+    for caminho in ("/favicon.svg", "/pacientes"):
+        primeira = client.get(caminho)
+        assert primeira.status_code == 200 and primeira.headers["Cache-Control"] == "no-cache"
+        etag = primeira.headers["ETag"]
+        assert client.get(caminho, headers={"If-None-Match": etag}).status_code == 304
+        # ETag como o Caddy devolve depois de comprimir (fraco e com sufixo).
+        comprimido = "W/" + etag[:-1] + '-gzip"'
+        assert client.get(caminho, headers={"If-None-Match": comprimido}).status_code == 304
+        assert client.get(caminho, headers={"If-None-Match": '"outro"'}).status_code == 200
+
+
 def test_producao_recusa_jwt_secret_fraco_ou_de_exemplo():
     for fraco in ("change-me", "troque-por-um-segredo-forte", "gere-com-openssl-rand-hex-32", "curto"):
         with pytest.raises(ValueError, match="JWT_SECRET"):

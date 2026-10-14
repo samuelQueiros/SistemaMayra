@@ -167,3 +167,34 @@ class RelatorioPorPdfs(BaseModel):
     sugestoes_intervencao: str = Field(
         description="Sugestões de intervenção decorrentes do que foi relatado nos formulários. Linhas começando com • viram lista."
     )
+
+
+class CampoPreenchido(BaseModel):
+    id: str = Field(description="Id exato do campo, copiado do catálogo do protocolo (ex.: 'cars_3', 'parto').")
+    valor: str = Field(
+        description=(
+            "Valor do campo. Em campos com opções, use exatamente o VALOR de uma das opções listadas; "
+            "em campos 'marcar', use 'sim' ou 'não'; em campos numéricos, só o número."
+        )
+    )
+
+
+class ProtocoloPorIA(BaseModel):
+    """Saída estruturada do Laudo Por IA: o estudo de caso e os campos do
+    protocolo fixo (formulario-novo-paciente.html) que os PDFs permitem
+    preencher. O sistema valida cada campo contra o catálogo e gera o laudo
+    padrão (com gráficos) pelo próprio formulário."""
+
+    estudo_de_caso: str = Field(
+        description=(
+            "Estudo de caso do paciente em prosa clínica, integrando o que os PDFs relatam "
+            "(história, queixas, desenvolvimento, comportamento, escola, resultados das escalas)."
+        )
+    )
+    campos: list[CampoPreenchido] = Field(
+        description="Campos do catálogo que os PDFs permitem preencher. Omita o que os PDFs não informam."
+    )
+    lacunas: list[str] = Field(
+        default_factory=list,
+        description="Informações importantes do protocolo que os PDFs não trazem (para a psicóloga completar).",
+    )

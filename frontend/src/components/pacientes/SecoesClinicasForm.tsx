@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { listCidCodes, updateClinicalSections } from '../../api/reports'
-import type { CidCode, ClinicalSections, Report } from '../../api/types'
+import type { CidCode, ClinicalSections, ReportResumo } from '../../api/types'
 import { Alert, Button, Card, Checkbox, Input, Textarea } from '../ds'
 
 const ENCAMINHAMENTOS_SUGERIDOS = [
@@ -15,8 +15,8 @@ export function SecoesClinicasForm({
   report,
   onSaved,
 }: {
-  report: Report
-  onSaved: (updated: Report) => void
+  report: ReportResumo
+  onSaved: (updated: ReportResumo) => void
 }) {
   const atuais = report.clinical_sections_json ?? {}
   const [form, setForm] = useState<ClinicalSections>(atuais)

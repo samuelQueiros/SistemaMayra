@@ -123,7 +123,10 @@ def test_psicologa_edita_e_salva_o_texto_revisado(client):
     )
 
     assert response.status_code == 200
-    assert response.json()["generated_text"] == "Texto revisado manualmente pela psicóloga."
+    # A resposta é o resumo leve; o texto salvo está no laudo completo.
+    assert "generated_text" not in response.json()
+    salvo = client.get(f"/api/reports/{report_id}", headers=headers).json()
+    assert salvo["generated_text"] == "Texto revisado manualmente pela psicóloga."
 
 
 def test_outro_psicologo_nao_edita_texto_de_laudo_alheio(client):
