@@ -36,7 +36,6 @@ from app.services.ai import (
 from app.api.documents import MIME_DOCX, nome_de_arquivo_seguro, resposta_de_arquivo
 from app.services.laudo_documento import DocumentoInvalidoError, html_para_docx
 from app.services.pdf import RULE_TYPES_COM_HTML_PRONTO, render_report_pdf
-from app.services.storage import get_reports_storage
 
 router = APIRouter(tags=["reports"])
 
@@ -417,14 +416,15 @@ def download_pdf(
         )
 
     template = db.get(ReportTemplate, report.template_id)
-    chave_pdf = render_report_pdf(
+    # Os bytes recém-gerados vão direto na resposta (antes eram relidos do
+    # storage logo depois de salvos — uma ida e volta a mais no S3).
+    chave_pdf, conteudo = render_report_pdf(
         patient=report.patient, template=template, report=report, psychologist=current
     )
 
     report.pdf_path = chave_pdf
     db.commit()
 
-    conteudo = get_reports_storage().read(chave_pdf)
     nome_arquivo = nome_de_arquivo_seguro(f"laudo_{report.patient.name}_{report.id}", "pdf")
     return Response(
         content=conteudo,

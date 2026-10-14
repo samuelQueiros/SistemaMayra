@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from starlette.requests import Request
 from starlette.responses import Response
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import DEFAULT_EXCLUDED_CONTENT_TYPES, GZipMiddleware
 
 from app import models  # noqa: F401 -- garante que todos os modelos sejam registrados no ORM
 from app.api import ai_settings, auth, documents, guardian_forms, laudo_ia, patients, protocolos, relatorios_pdf, reports, stats, templates
@@ -18,6 +19,22 @@ _docs = {} if not settings.em_producao else {"docs_url": None, "redoc_url": None
 app = FastAPI(title="Sistema de Relatório Automático para Psicólogos", **_docs)
 registrar_tratadores_de_erro(app)
 registrar_cabecalhos_de_seguranca(app)
+
+# Compressão no próprio app: a stack do Portainer usa `caddy reverse-proxy`,
+# que não comprime (o formulário padrão cai de ~570 KB para ~270 KB). Atrás
+# do Caddyfile com `encode gzip`, o Caddy repassa a resposta já comprimida.
+# PDF e Word já são comprimidos (imagens e fontes já estão no padrão do
+# Starlette): não vale gastar CPU com eles.
+app.add_middleware(
+    GZipMiddleware,
+    minimum_size=1024,
+    compresslevel=6,
+    exclude_content_types=(
+        *DEFAULT_EXCLUDED_CONTENT_TYPES,
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ),
+)
 
 app.include_router(auth.router)
 app.include_router(patients.router)

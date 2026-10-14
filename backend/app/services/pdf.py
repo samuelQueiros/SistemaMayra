@@ -21,13 +21,13 @@ _CORES = ["#7561ae", "#d9709f", "#8fb4d6", "#f5a623", "#3fa35b", "#b3a5e2", "#e7
 RULE_TYPES_COM_HTML_PRONTO = {"custom_form", "protocolo", "relatorio_ia_pdf"}
 
 
-def render_report_pdf(*, patient, template, report, psychologist=None) -> str:
+def render_report_pdf(*, patient, template, report, psychologist=None) -> tuple[str, bytes]:
     """Gera o PDF do laudo (dados do paciente, tabela de pontuações,
     gráfico, classificação e texto revisado — SPEC.md seção 2/Prompt 4.2),
     incluindo as seções clínicas opcionais, fotos do paciente e assinatura
     profissional quando presentes (ver ENTREGAS.md — "PDF completo"), e
     salva via `services/storage` (disco local ou S3, conforme configurado),
-    devolvendo a chave de armazenamento do arquivo."""
+    devolvendo a chave de armazenamento do arquivo e o conteúdo do PDF."""
 
     chave = f"{report.id}.pdf"
 
@@ -38,7 +38,7 @@ def render_report_pdf(*, patient, template, report, psychologist=None) -> str:
         # pontuação/gráfico Matplotlib do motor de regras dinâmico.
         pdf_bytes = html_para_pdf(report.generated_text or "<p>Laudo vazio.</p>")
         get_reports_storage().save(chave, pdf_bytes)
-        return chave
+        return chave, pdf_bytes
 
     grafico_data_uri = _gerar_grafico(template.schema_json, report.computed_json or {})
     html = _montar_html(patient, template, report, grafico_data_uri, psychologist)
@@ -47,7 +47,7 @@ def render_report_pdf(*, patient, template, report, psychologist=None) -> str:
     # puxar arquivos do servidor (file://) nem URLs externas para dentro do PDF.
     pdf_bytes = HTML(string=html, url_fetcher=_buscador_somente_data_uri()).write_pdf()
     get_reports_storage().save(chave, pdf_bytes)
-    return chave
+    return chave, pdf_bytes
 
 
 def _eh_resultado_idade_equivalente(computed: dict) -> bool:

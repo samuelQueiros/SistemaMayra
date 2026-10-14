@@ -10,6 +10,7 @@ guardar uma **chave lógica** (ex.: `"{patient_id}/{uuid}.jpg"`), não um
 caminho absoluto de disco — funciona igual nos dois backends."""
 
 import abc
+from functools import lru_cache
 from pathlib import Path
 
 from app.core.config import settings
@@ -66,13 +67,7 @@ class S3Storage(Storage):
 
         self._bucket = bucket
         self._prefix = prefix
-        self._client = boto3.client(
-            "s3",
-            endpoint_url=endpoint_url or None,
-            region_name=region or None,
-            aws_access_key_id=access_key or None,
-            aws_secret_access_key=secret_key or None,
-        )
+        self._client = _cliente_s3(boto3, endpoint_url, region, access_key, secret_key)
 
     def _full_key(self, key: str) -> str:
         return f"{self._prefix}{key}" if self._prefix else key
@@ -95,6 +90,19 @@ class S3Storage(Storage):
             return True
         except ClientError:
             return False
+
+
+@lru_cache(maxsize=8)
+def _cliente_s3(boto3, endpoint_url, region, access_key, secret_key):
+    """Um cliente boto3 por configuração, reaproveitado entre requisições:
+    criar o cliente custa dezenas de ms e memória, e ele é thread-safe."""
+    return boto3.client(
+        "s3",
+        endpoint_url=endpoint_url or None,
+        region_name=region or None,
+        aws_access_key_id=access_key or None,
+        aws_secret_access_key=secret_key or None,
+    )
 
 
 _LOCAL_STORAGE_ROOT = Path(__file__).resolve().parents[2] / "storage"
