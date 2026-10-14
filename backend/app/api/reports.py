@@ -48,10 +48,27 @@ def _get_template_or_404(template_id: UUID, db: Session, current: Psychologist) 
     return template
 
 
-def _get_report_do_psicologo(report_id: UUID, db: Session, current: Psychologist) -> Report:
-    report = db.get(Report, report_id)
+# Respostas (fotos em base64) e HTML final: cada uma passa de 1 MB. Rotas
+# que não usam essas colunas carregam o laudo sem elas.
+SEM_COLUNAS_PESADAS = (defer(Report.answers_json), defer(Report.generated_text))
+_CAMPOS_DO_RESUMO = list(ReportResumoOut.model_fields)
+
+
+def _get_report_do_psicologo(report_id: UUID, db: Session, current: Psychologist, *opcoes) -> Report:
+    if opcoes:
+        report = db.query(Report).options(*opcoes).filter(Report.id == report_id).first()
+    else:
+        report = db.get(Report, report_id)
     if report is None or report.patient.owner_id != current.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Protocolo não encontrado. Ele pode ter sido excluído ou pertencer a outra conta.")
+    return report
+
+
+def _salvar_e_resumir(db: Session, report: Report) -> Report:
+    """Commit e recarrega só os campos do ReportResumoOut (um refresh
+    completo traria de volta as colunas pesadas que a resposta não usa)."""
+    db.commit()
+    db.refresh(report, attribute_names=_CAMPOS_DO_RESUMO)
     return report
 
 
@@ -107,7 +124,7 @@ def list_reports(
     patient = get_patient_or_404(patient_id, db, current)
     return (
         db.query(Report)
-        .options(defer(Report.answers_json), defer(Report.generated_text))
+        .options(*SEM_COLUNAS_PESADAS)
         .filter(Report.patient_id == patient.id)
         .order_by(Report.created_at.desc())
         .all()
@@ -232,11 +249,9 @@ def update_text(
 ) -> Report:
     # A psicóloga revisa/edita o texto gerado pela IA antes da exportação
     # final (SPEC.md seção 5: nunca exportar sem revisão humana).
-    report = _get_report_do_psicologo(report_id, db, current)
+    report = _get_report_do_psicologo(report_id, db, current, *SEM_COLUNAS_PESADAS)
     report.generated_text = data.generated_text
-    db.commit()
-    db.refresh(report)
-    return report
+    return _salvar_e_resumir(db, report)
 
 
 @router.put("/api/reports/{report_id}/answers", response_model=ReportResumoOut)
@@ -249,7 +264,7 @@ def update_answers(
     """Autosave: sincroniza com o banco cada campo alterado no formulário
     standalone enquanto a psicóloga preenche, em vez de ficar só no
     localStorage do navegador (ver ENTREGAS.md)."""
-    report = _get_report_do_psicologo(report_id, db, current)
+    report = _get_report_do_psicologo(report_id, db, current, defer(Report.generated_text))
     novas = dict(data.answers)
     # Fotos e capa (base64, pesadas) só vêm quando mudaram: sem a chave,
     # mantém o que já está salvo.
@@ -257,9 +272,7 @@ def update_answers(
         if chave not in novas and chave in (report.answers_json or {}):
             novas[chave] = report.answers_json[chave]
     report.answers_json = novas
-    db.commit()
-    db.refresh(report)
-    return report
+    return _salvar_e_resumir(db, report)
 
 
 @router.patch("/api/reports/{report_id}", response_model=ReportResumoOut)
@@ -273,7 +286,7 @@ def edit_report(
     classificação) — cada mudança de valor vira uma entrada de log,
     nunca é sobrescrita silenciosamente."""
 
-    report = _get_report_do_psicologo(report_id, db, current)
+    report = _get_report_do_psicologo(report_id, db, current, *SEM_COLUNAS_PESADAS)
 
     for field, new_value in data.model_dump(exclude_unset=True).items():
         old_value = getattr(report, field)
@@ -290,9 +303,7 @@ def edit_report(
         )
         setattr(report, field, new_value)
 
-    db.commit()
-    db.refresh(report)
-    return report
+    return _salvar_e_resumir(db, report)
 
 
 @router.get("/api/cid-codes")
@@ -317,11 +328,9 @@ def update_clinical_sections(
     Endpoint separado do `PATCH /api/reports/{id}` (que já tem seu próprio
     log de auditoria testado) para não arriscar mudar aquele comportamento."""
 
-    report = _get_report_do_psicologo(report_id, db, current)
+    report = _get_report_do_psicologo(report_id, db, current, *SEM_COLUNAS_PESADAS)
     report.clinical_sections_json = data.model_dump(exclude_none=True)
-    db.commit()
-    db.refresh(report)
-    return report
+    return _salvar_e_resumir(db, report)
 
 
 LIMITE_DE_LOGS = 500
@@ -335,15 +344,27 @@ def list_all_logs(
 ) -> list[LogDeEdicaoOut]:
     """Todas as edições de relatórios da psicóloga (mais recentes primeiro),
     com filtro opcional por paciente — página "Ver Logs" do menu lateral."""
+    # Uma consulta só, com as colunas que a tela usa: carregar log.report
+    # um por um trazia junto as respostas e o HTML de cada laudo (> 1 MB).
     consulta = (
-        db.query(ReportChangeLog)
+        db.query(
+            ReportChangeLog,
+            Psychologist.name,
+            Report.created_at,
+            Report.template_name_override,
+            Patient.id,
+            Patient.name,
+            ReportTemplate.name,
+        )
         .join(Report, ReportChangeLog.report_id == Report.id)
         .join(Patient, Report.patient_id == Patient.id)
+        .join(ReportTemplate, Report.template_id == ReportTemplate.id)
+        .join(Psychologist, ReportChangeLog.psychologist_id == Psychologist.id)
         .filter(Patient.owner_id == current.id)
     )
     if patient_id is not None:
         consulta = consulta.filter(Patient.id == patient_id)
-    logs = consulta.order_by(ReportChangeLog.created_at.desc()).limit(LIMITE_DE_LOGS).all()
+    linhas = consulta.order_by(ReportChangeLog.created_at.desc()).limit(LIMITE_DE_LOGS).all()
     return [
         LogDeEdicaoOut(
             id=log.id,
@@ -351,14 +372,14 @@ def list_all_logs(
             old_value=log.old_value,
             new_value=log.new_value,
             created_at=log.created_at,
-            psychologist_name=log.psychologist.name,
-            report_id=log.report.id,
-            report_created_at=log.report.created_at,
-            patient_id=log.report.patient.id,
-            patient_name=log.report.patient.name,
-            template_name=log.report.template_name_override or log.report.template.name,
+            psychologist_name=nome_psicologa,
+            report_id=log.report_id,
+            report_created_at=laudo_criado_em,
+            patient_id=paciente_id,
+            patient_name=paciente_nome,
+            template_name=nome_override or nome_modelo,
         )
-        for log in logs
+        for log, nome_psicologa, laudo_criado_em, nome_override, paciente_id, paciente_nome, nome_modelo in linhas
     ]
 
 
@@ -368,7 +389,7 @@ def list_report_logs(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> list[ReportChangeLogOut]:
-    report = _get_report_do_psicologo(report_id, db, current)
+    report = _get_report_do_psicologo(report_id, db, current, *SEM_COLUNAS_PESADAS)
     return [
         ReportChangeLogOut(
             id=log.id,

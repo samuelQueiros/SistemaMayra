@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_psychologist
@@ -24,25 +24,18 @@ def get_stats_summary(
     Dashboard) — sempre filtrados pelo dono, mesmo isolamento das demais
     rotas do sistema."""
 
-    total_patients = db.query(Patient).filter(Patient.owner_id == current.id).count()
+    total_patients = db.query(func.count(Patient.id)).filter(Patient.owner_id == current.id).scalar()
 
-    total_reports = (
-        db.query(Report)
-        .join(Patient, Report.patient_id == Patient.id)
-        .filter(Patient.owner_id == current.id)
-        .count()
-    )
-
+    # Uma consulta só para os três números de laudos, e com count(id): o
+    # Query.count() contava sobre um SELECT de todas as colunas do laudo
+    # (respostas e HTML, > 1 MB cada).
     trinta_dias_atras = datetime.now(timezone.utc) - timedelta(days=30)
-    reports_last_30_days = (
-        db.query(Report)
-        .join(Patient, Report.patient_id == Patient.id)
-        .filter(Patient.owner_id == current.id, Report.created_at >= trinta_dias_atras)
-        .count()
-    )
-
     contagem_por_modelo = (
-        db.query(ReportTemplate.name, func.count(Report.id))
+        db.query(
+            ReportTemplate.name,
+            func.count(Report.id),
+            func.count(case((Report.created_at >= trinta_dias_atras, Report.id))),
+        )
         .join(Report, Report.template_id == ReportTemplate.id)
         .join(Patient, Report.patient_id == Patient.id)
         .filter(Patient.owner_id == current.id)
@@ -50,12 +43,14 @@ def get_stats_summary(
         .order_by(func.count(Report.id).desc())
         .all()
     )
+    total_reports = sum(contagem for _, contagem, _ in contagem_por_modelo)
+    reports_last_30_days = sum(recentes for _, _, recentes in contagem_por_modelo)
 
     return StatsSummary(
         total_patients=total_patients,
         total_reports=total_reports,
         reports_last_30_days=reports_last_30_days,
         reports_by_template=[
-            StatsByTemplate(template_name=nome, count=contagem) for nome, contagem in contagem_por_modelo
+            StatsByTemplate(template_name=nome, count=contagem) for nome, contagem, _ in contagem_por_modelo
         ],
     )
