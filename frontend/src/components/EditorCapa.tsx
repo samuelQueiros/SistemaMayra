@@ -8,7 +8,7 @@ import { Alert, Button, Card, Checkbox } from './ds'
 
 // Arte e faixa do nome usadas quando a psicóloga não envia capa própria —
 // os mesmos valores de CAPA_ARTE_URL/CAPA_FAIXA em formulario-novo-paciente.html.
-const ARTE_PADRAO = '/capa-relatorio.png'
+const ARTE_PADRAO = '/capa-relatorio.jpg'
 const CONFIG_PADRAO: CapaConfig = {
   escreverNome: true,
   faixa: { x: 0.285, y: 0.4287, largura: 0.466, altura: 0.039 },

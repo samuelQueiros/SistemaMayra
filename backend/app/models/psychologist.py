@@ -22,7 +22,7 @@ class Psychologist(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     # padrão do formulário.
     credenciais_assinatura: Mapped[str | None] = mapped_column(Text, default=None)
     # Capa padrão dos relatórios enviada pela própria psicóloga (chave no
-    # storage "covers"). Se vazia, o formulário usa a arte capa-relatorio.png.
+    # storage "covers"). Se vazia, o formulário usa a arte capa-relatorio.jpg.
     capa_arquivo: Mapped[str | None] = mapped_column(String(500), default=None)
     # Se o nome do paciente é escrito na capa, onde (frações da arte) e com
     # qual cor — ver `CapaConfig` em app/schemas/auth.py.

@@ -8,7 +8,7 @@ import { fetchCapaUrl } from '../api/auth'
 import type { Psychologist } from '../api/types'
 import type { CapaConfig } from './tipos'
 
-export const CAPA_ARTE_URL = '/capa-relatorio.png'
+export const CAPA_ARTE_URL = '/capa-relatorio.jpg'
 const CAPA_FONTE_URL = '/fonts/Fredoka.ttf'
 const CAPA_LARGURA_PX = 2480
 const CAPA_ALTURA_PX = 3508

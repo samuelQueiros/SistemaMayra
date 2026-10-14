@@ -37,7 +37,7 @@ describe('EditorCapa', () => {
   it('sem capa própria mostra a arte padrão com a área do nome', async () => {
     render(<EditorCapa />)
 
-    expect(await screen.findByAltText('Prévia da capa do relatório')).toHaveAttribute('src', '/capa-relatorio.png')
+    expect(await screen.findByAltText('Prévia da capa do relatório')).toHaveAttribute('src', '/capa-relatorio.jpg')
     expect(screen.getByTestId('area-nome')).toBeInTheDocument()
     expect(screen.queryByText('Voltar à capa padrão')).not.toBeInTheDocument()
   })

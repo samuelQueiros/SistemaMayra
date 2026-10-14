@@ -156,7 +156,7 @@ def delete_capa(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Psychologist:
-    """Volta para a capa padrão do sistema (capa-relatorio.png)."""
+    """Volta para a capa padrão do sistema (capa-relatorio.jpg)."""
     anterior = current.capa_arquivo
     current.capa_arquivo = None
     current.capa_config = None
