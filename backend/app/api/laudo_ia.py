@@ -144,6 +144,10 @@ def _gerar_laudo(
                 # PDFs transcritos em JSON (o que os agentes leram) e tempo de cada etapa.
                 "documentos": [d.model_dump() for d in resultado.documentos],
                 "tempos": resultado.tempos,
+                # Para as pendências (app/services/pendencias.py) e para saber
+                # se a psicóloga editou o estudo de caso antes de reescrevê-lo.
+                "catalogo": catalogo.model_dump(),
+                "estudo_de_caso_ia": answers.get("estudoCaso", ""),
             },
         )
         db.add(report)

@@ -155,6 +155,9 @@ def test_cria_laudo_do_protocolo_padrao(client, ia_falsa):
 
     assert laudo["computed_json"]["documentos"][0]["titulo"] == "Anamnese"
     assert laudo["computed_json"]["tempos"] == {"extracao_s": 1.0, "especialistas_s": 2.0}
+    # Guardados para as pendências e para saber se o estudo foi editado.
+    assert {c["id"] for c in laudo["computed_json"]["catalogo"]["campos"]} >= {"parto", "cars_0"}
+    assert laudo["computed_json"]["estudo_de_caso_ia"].startswith("Criança de 7 anos")
 
     chamada = ia_falsa[0]
     assert chamada["paciente"].startswith("Criança Teste (") and chamada["paciente"].endswith("sexo Masculino")
