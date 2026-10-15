@@ -40,9 +40,9 @@ export interface AndamentoDoLaudoIA {
 }
 
 const INTERVALO_DE_CONSULTA_MS = 2000
-// Falhas de rede seguidas toleradas ao consultar o andamento (a geração
-// continua no servidor mesmo se a conexão oscilar).
-const FALHAS_DE_REDE_TOLERADAS = 5
+// Falhas passageiras seguidas (rede ou servidor) toleradas ao consultar o
+// andamento: a geração continua no servidor mesmo se a conexão oscilar.
+const FALHAS_PASSAGEIRAS_TOLERADAS = 5
 
 const esperar = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -60,15 +60,16 @@ export async function gerarLaudoPorIA(
   if (observacoes.trim()) dados.append('observacoes', observacoes.trim())
   const { job_id } = await enviarFormulario<{ job_id: string }>(`/patients/${patientId}/laudo-ia`, dados)
 
-  let falhasDeRede = 0
+  let falhasSeguidas = 0
   for (;;) {
     await esperar(INTERVALO_DE_CONSULTA_MS)
     let andamento: AndamentoDoLaudoIA
     try {
       andamento = await apiGet<AndamentoDoLaudoIA>(`/laudo-ia/jobs/${job_id}`)
-      falhasDeRede = 0
+      falhasSeguidas = 0
     } catch (e) {
-      if (e instanceof ApiError && e.status === 0 && ++falhasDeRede <= FALHAS_DE_REDE_TOLERADAS) continue
+      const passageira = e instanceof ApiError && (e.status === 0 || e.status >= 500)
+      if (passageira && ++falhasSeguidas <= FALHAS_PASSAGEIRAS_TOLERADAS) continue
       throw e
     }
     aoProgredir?.(andamento)

@@ -24,6 +24,7 @@ describe('gerarLaudoPorIA', () => {
     vi.mocked(client.apiGet)
       .mockResolvedValueOnce(andamento({ mensagem: 'Lendo documento 1 de 2…' }))
       .mockRejectedValueOnce(new client.ApiError(0, 'sem conexão')) // oscilação de rede: continua
+      .mockRejectedValueOnce(new client.ApiError(502, 'proxy')) // erro passageiro do servidor: continua
       .mockResolvedValueOnce(andamento({ status: 'concluido', report_id: 'l9' }))
     const avisos: string[] = []
 

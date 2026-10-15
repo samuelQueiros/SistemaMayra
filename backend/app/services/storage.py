@@ -10,6 +10,8 @@ guardar uma **chave lógica** (ex.: `"{patient_id}/{uuid}.jpg"`), não um
 caminho absoluto de disco — funciona igual nos dois backends."""
 
 import abc
+import os
+import uuid
 from functools import lru_cache
 from pathlib import Path
 
@@ -38,9 +40,17 @@ class LocalDiskStorage(Storage):
         return self.base_dir / key
 
     def save(self, key: str, content: bytes) -> None:
+        # Escreve num temporário e troca de uma vez: quem lê ao mesmo tempo
+        # (ex.: a tela consultando o andamento do Laudo Por IA) nunca vê o
+        # arquivo pela metade ou vazio.
         caminho = self._path(key)
         caminho.parent.mkdir(parents=True, exist_ok=True)
-        caminho.write_bytes(content)
+        temporario = caminho.with_name(f".{caminho.name}.{uuid.uuid4().hex}.tmp")
+        try:
+            temporario.write_bytes(content)
+            os.replace(temporario, caminho)
+        finally:
+            temporario.unlink(missing_ok=True)
 
     def read(self, key: str) -> bytes:
         return self._path(key).read_bytes()

@@ -62,3 +62,11 @@ def test_s3storage_save_read_delete_chamam_o_cliente_boto3_com_a_chave_certa(mon
 
     storage.delete("abc.pdf")
     cliente_falso.delete_object.assert_called_once_with(Bucket="bucket-x", Key="reports/abc.pdf")
+
+
+def test_disco_local_troca_o_arquivo_de_uma_vez(tmp_path):
+    storage = LocalDiskStorage(tmp_path)
+    storage.save("a/andamento.json", b'{"v": 1}')
+    storage.save("a/andamento.json", b'{"v": 2}')
+    assert storage.read("a/andamento.json") == b'{"v": 2}'
+    assert [p.name for p in (tmp_path / "a").iterdir()] == ["andamento.json"]  # nenhum temporário sobrando
