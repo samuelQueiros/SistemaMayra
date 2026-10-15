@@ -232,6 +232,11 @@ export default function HistoricoPaciente() {
                                   Abrir relatório
                                 </Link>
                               )}
+                              {report.computed_json?.origem === 'ia_pdf' && (
+                                <Link className={buttonClass('secondary', 'sm')} to={`/laudo-ia?paciente=${id}&laudo=${report.id}`}>
+                                  <ClipboardCheck aria-hidden="true" /> Campos que faltam
+                                </Link>
+                              )}
                               {ehProtocoloPadrao(report) && (
                                 <Link className={buttonClass('secondary', 'sm')} to={`/atendimento/novo?laudo=${report.id}`}>
                                   Abrir protocolo
@@ -253,9 +258,6 @@ export default function HistoricoPaciente() {
                                 icon={<Ellipsis />}
                                 items={[
                                   { label: 'Editar', icon: <Pencil />, onSelect: () => startEdit(report) },
-                                  ...(report.computed_json?.origem === 'ia_pdf'
-                                    ? [{ label: 'Completar dados', icon: <ClipboardCheck />, to: `/laudo-ia?paciente=${id}&laudo=${report.id}` }]
-                                    : []),
                                   {
                                     label: clinicalOpenId === report.id ? 'Ocultar seções clínicas' : 'Seções clínicas',
                                     icon: <Stethoscope />,

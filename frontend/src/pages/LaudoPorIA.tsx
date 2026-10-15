@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Download, FileText, PencilLine, RefreshCw, Sparkles } from 'lucide-react'
+import { Download, FileText, PencilLine, Sparkles } from 'lucide-react'
 import { ApiError } from '../api/client'
 import { MAXIMO_DE_PDFS_LAUDO, acompanharGeracao, gerarLaudoPorIA, problemaNosPdfsDoLaudo } from '../api/laudoIA'
 import { atualizarLaudo } from '../api/pendencias'
 import type { AndamentoDoLaudoIA, CatalogoDoProtocolo, LaudoPorIA as Laudo } from '../api/laudoIA'
 import { downloadReportDocx, downloadReportPdf, getReport } from '../api/reports'
-import { Alert, Button, buttonClass, Card, Checkbox, PageHeader, Textarea } from '../components/ds'
+import { Alert, Button, buttonClass, Card, PageHeader, Textarea } from '../components/ds'
 import { EscolhaDePaciente } from '../components/pacientes/EscolhaDePaciente'
 import { SeletorDePdfs } from '../components/SeletorDePdfs'
-import { CompletarLaudo } from '../components/pendencias/CompletarLaudo'
+import { CamposQueFaltam } from '../components/pendencias/CamposQueFaltam'
 
 type Etapa = 'preencher' | 'catalogo' | 'ia' | 'documento' | 'pronto'
 
@@ -53,7 +53,6 @@ export default function LaudoPorIA() {
   // "Atualizar laudo" (dados que faltaram): andamento, resultado e recarga das pendências.
   const [atualizando, setAtualizando] = useState<string | null>(null)
   const [resultadoDaAtualizacao, setResultadoDaAtualizacao] = useState<{ tom: 'success' | 'danger'; texto: string } | null>(null)
-  const [reescreverEstudo, setReescreverEstudo] = useState(false)
   const [recarregarPendencias, setRecarregarPendencias] = useState(0)
   const [laudo, setLaudo] = useState<Laudo | null>(null)
   const [laudoSemDocumento, setLaudoSemDocumento] = useState<string | null>(null)
@@ -123,7 +122,7 @@ export default function LaudoPorIA() {
 
   // Aplica os dados confirmados, reescreve só o estudo de caso se for o caso
   // (sem reler os PDFs) e gera o documento de novo pelo formulário (sem IA).
-  async function atualizar(laudoId: string) {
+  async function atualizar(laudoId: string, reescreverEstudo: boolean) {
     setResultadoDaAtualizacao(null)
     try {
       setAtualizando('Aplicando os dados no laudo…')
@@ -133,7 +132,6 @@ export default function LaudoPorIA() {
       await esperarFormulario(`/formulario-novo-paciente.html?laudo=${laudoId}&modo=gerar`, 'laudo-ia:gerado', 120000)
       setLaudo((await getReport(laudoId)) as unknown as Laudo)
       setRecarregarPendencias((n) => n + 1)
-      setReescreverEstudo(false)
       const estudo =
         r.estudo === 'reescrevendo' ? ' O estudo de caso foi reescrito.' : r.estudo === 'mantido_editado' ? ' O estudo de caso editado por você foi mantido.' : ''
       const campos = r.campos_aplicados === 1 ? '1 dado novo' : `${r.campos_aplicados} dados novos`
@@ -267,31 +265,16 @@ export default function LaudoPorIA() {
                 </Link>
               </div>
               {erro && <Alert tone="danger">{erro}</Alert>}
-              <CompletarLaudo laudoId={laudo.id} pacienteId={pacienteId} obterCatalogo={obterCatalogo} recarregar={recarregarPendencias}>
-                {({ salvando, estudoEditado }) => (
-                  <div style={{ display: 'grid', gap: 'var(--s-3)', borderTop: '1px solid var(--divider)', paddingTop: 'var(--s-4)' }}>
-                    {estudoEditado ? (
-                      <Checkbox
-                        label="Reescrever o estudo de caso com os dados novos"
-                        description="Você editou o estudo de caso: sem marcar aqui, o texto atual é mantido."
-                        checked={reescreverEstudo}
-                        onChange={(e) => setReescreverEstudo(e.target.checked)}
-                      />
-                    ) : (
-                      <p style={{ margin: 0, color: 'var(--text-2)' }}>
-                        Com dados novos de identificação, gestação, desenvolvimento ou queixas, a IA reescreve só o estudo de caso (os PDFs não são lidos de novo).
-                      </p>
-                    )}
-                    <div>
-                      <Button icon={<RefreshCw />} onClick={() => atualizar(laudo.id)} disabled={salvando} loading={!!atualizando} loadingLabel="Atualizando…">
-                        Atualizar laudo
-                      </Button>
-                    </div>
-                    {atualizando && <Alert tone="info">{atualizando}</Alert>}
-                    {resultadoDaAtualizacao && <Alert tone={resultadoDaAtualizacao.tom}>{resultadoDaAtualizacao.texto}</Alert>}
-                  </div>
-                )}
-              </CompletarLaudo>
+              <CamposQueFaltam
+                laudoId={laudo.id}
+                pacienteId={pacienteId}
+                obterCatalogo={obterCatalogo}
+                recarregar={recarregarPendencias}
+                gerando={!!atualizando}
+                onGerar={(reescrever) => void atualizar(laudo.id, reescrever)}
+              />
+              {atualizando && <Alert tone="info">{atualizando}</Alert>}
+              {resultadoDaAtualizacao && <Alert tone={resultadoDaAtualizacao.tom}>{resultadoDaAtualizacao.texto}</Alert>}
               {laudo.generated_text && (
                 <iframe
                   title="Pré-visualização do laudo"

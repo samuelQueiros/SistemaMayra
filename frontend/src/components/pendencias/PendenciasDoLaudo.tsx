@@ -1,14 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import type { ReactNode, Ref } from 'react'
 import { ChevronDown, ChevronRight, Ellipsis, Plus, Undo2 } from 'lucide-react'
-import { ApiError } from '../../api/client'
 import type { CatalogoDoProtocolo } from '../../api/laudoIA'
-import {
-  enviarCatalogoDoLaudo,
-  getPendencias,
-  marcarEscalasAplicadas,
-  salvarDadosComplementares,
-} from '../../api/pendencias'
+import { carregarPendencias } from '../../api/carregarPendencias'
+import { marcarEscalasAplicadas, salvarDadosComplementares } from '../../api/pendencias'
 import type {
   CampoDaPendencia,
   DadoComplementar,
@@ -27,6 +22,11 @@ const ESPERA_DO_SALVAMENTO_MS = 800
 const DISPENSAS: Record<Exclude<Situacao, 'preenchido'>, string> = {
   nao_se_aplica: 'Não se aplica',
   nao_informado: 'Não informado pela família',
+}
+
+/** Para quem usa o componente salvar na hora (ex.: botão "Salvar" do modal). */
+export interface ControleDasPendencias {
+  salvarAgora: () => Promise<boolean>
 }
 
 export interface EstadoDasPendencias {
@@ -51,6 +51,9 @@ interface Props {
   topo?: ReactNode
   /** Incrementado por quem usa o componente para recarregar (ex.: sugestões novas). */
   recarregar?: number
+  controle?: Ref<ControleDasPendencias>
+  /** Seção para abrir já visível (chave do grupo). */
+  secaoInicial?: string
 }
 
 const horaAgora = () => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
@@ -61,7 +64,7 @@ function rotuloDaOpcao(o: { valor: string; rotulo: string }) {
   return o.rotulo.length > 70 ? `${o.valor} — ${o.rotulo.slice(0, 67)}…` : o.rotulo
 }
 
-export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children, acoesDaSecao, topo, recarregar = 0 }: Props) {
+export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children, acoesDaSecao, topo, recarregar = 0, controle, secaoInicial }: Props) {
   const [pendencias, setPendencias] = useState<Pendencias | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [locais, setLocais] = useState<Locais>({})
@@ -72,33 +75,50 @@ export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children
   const [alterado, setAlterado] = useState(false)
 
   const carregar = useCallback(async () => {
-    try {
-      setPendencias(await getPendencias(laudoId))
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 409) {
-        setPendencias(await enviarCatalogoDoLaudo(laudoId, await obterCatalogo()))
-      } else throw e
-    }
+    setPendencias(await carregarPendencias(laudoId, obterCatalogo))
   }, [laudoId, obterCatalogo])
 
   useEffect(() => {
     carregar().catch(() => setErro('Não foi possível carregar o que falta preencher.'))
   }, [carregar, recarregar])
 
-  const salvar = useCallback(async () => {
+  const salvar = useCallback(async (): Promise<boolean> => {
     temporizador.current = null
     const lote = fila.current
-    if (!Object.keys(lote).length) return
+    if (!Object.keys(lote).length) return true
     fila.current = {}
     setStatus('Salvando…')
     try {
       await salvarDadosComplementares(pacienteId, lote)
       setStatus(`Salvo às ${horaAgora()}`)
+      return true
     } catch {
       fila.current = { ...lote, ...fila.current }
       setStatus('Alterações ainda não salvas — tente de novo em instantes.')
+      return false
     }
   }, [pacienteId])
+
+  useImperativeHandle(
+    controle,
+    () => ({
+      salvarAgora: () => {
+        if (temporizador.current) clearTimeout(temporizador.current)
+        return salvar()
+      },
+    }),
+    [salvar],
+  )
+
+  // Abre já na seção escolhida (ex.: clicada no resumo).
+  useEffect(() => {
+    if (!pendencias || !secaoInicial) return
+    const grupo = pendencias.grupos.find((g) => g.chave === secaoInicial)
+    if (!grupo) return
+    if (grupo.escala) setAbertos((a) => ({ ...a, [grupo.chave]: true }))
+    if (!grupo.essencial) setAbertos((a) => ({ ...a, __opcionais: true }))
+    requestAnimationFrame(() => document.getElementById(`secao-${secaoInicial}`)?.scrollIntoView?.({ block: 'start' }))
+  }, [pendencias, secaoInicial])
 
   // Ao sair da tela com algo na fila, salva na hora.
   useEffect(
@@ -296,7 +316,7 @@ export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children
     const pendentes = (g.essencial ? g.itens.filter((i) => i.essencial) : g.itens).filter((i) => !situacaoDe(i)).length
     const meta = g.escala ? `${pendentes} ${pendentes === 1 ? 'item sem resposta' : 'itens sem resposta'}` : `${pendentes} ${pendentes === 1 ? 'pendente' : 'pendentes'}`
     return (
-      <section key={g.chave} aria-label={g.titulo} style={{ display: 'grid', gap: 'var(--s-2)' }}>
+      <section key={g.chave} id={`secao-${g.chave}`} aria-label={g.titulo} style={{ display: 'grid', gap: 'var(--s-2)', scrollMarginTop: 'var(--s-4)' }}>
         <SectionBand number={numero} title={g.titulo} meta={meta} />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)' }}>
           {g.escala && (

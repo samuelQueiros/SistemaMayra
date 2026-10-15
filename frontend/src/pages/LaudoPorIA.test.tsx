@@ -61,7 +61,7 @@ describe('Laudo Por IA', () => {
     mensagemDoFormulario({ tipo: 'laudo-ia:gerado', laudoId: 'l1' })
 
     expect(await screen.findByText('Laudo gerado')).toBeInTheDocument()
-    expect(await screen.findByText('Dados que faltaram')).toBeInTheDocument()
+    expect(await screen.findByText('Todos os campos do protocolo estão preenchidos.')).toBeInTheDocument()
     expect(screen.getByTitle('Pré-visualização do laudo')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Baixar Word (DOCX)' }))
     expect(reports.downloadReportDocx).toHaveBeenCalledWith('l1', 'laudo_ia_Bia_Lima.docx')
@@ -123,12 +123,24 @@ describe('Laudo Por IA', () => {
     } as never)
     vi.mocked(pendencias.atualizarLaudo).mockResolvedValue({ job_id: 'j9', campos_aplicados: 2, estudo: 'reescrevendo' })
     vi.mocked(laudoIA.acompanharGeracao).mockResolvedValue({ id: 'l5' })
+    vi.mocked(pendencias.getPendencias).mockResolvedValue({
+      essenciais: { total: 1, resolvidos: 0 },
+      estudo_de_caso: { editado: false },
+      escalas_para_adicionar: [],
+      grupos: [
+        {
+          chave: 'gestacao', titulo: 'Gestação e parto', escala: false, essencial: true, pendentes: 1,
+          itens: [{ chave: 'parto', rotulo: 'Parto', essencial: true, campos: [{ id: 'parto', tipo: 'texto', opcoes: [], min: null, max: null }], valores: {}, situacao: null, origem: null, sugestoes: [] }],
+        },
+      ],
+    })
     render(
       <MemoryRouter initialEntries={['/laudo-ia?paciente=p1&laudo=l5']}>
         <LaudoPorIA />
       </MemoryRouter>,
     )
-    fireEvent.click(await screen.findByRole('button', { name: 'Atualizar laudo' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Preencher campos' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Salvar e gerar o protocolo' }))
     expect(await screen.findByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l5&modo=gerar')
     expect(pendencias.atualizarLaudo).toHaveBeenCalledWith('l5', false)
     expect(laudoIA.acompanharGeracao).toHaveBeenCalledWith('j9', expect.any(Function))

@@ -2414,3 +2414,9 @@ lugar e rodar `npm run build`.
 - **Banco:** migração `f2b8d4e6a1c7` (aplicada sozinha ao subir o container): coluna `patients.dados_complementares` e tabela `patient_attachments`. As fotos ficam no storage existente (pasta `anexos`), e cada psicóloga só vê as dos seus pacientes.
 - **Não mudou:** regras de pontuação, textos do laudo e o modelo do Word/PDF.
 - **Como testar:** gerar um Laudo por IA; preencher 2 ou 3 pendências; dispensar uma; anexar a foto de uma ficha; confirmar a sugestão; "Atualizar laudo" e conferir o documento.
+
+### Ajuste (2026-10-15): resumo com modal
+
+- No lugar da lista de campos aberta na página, o laudo mostra um quadro nas cores do sistema: **"Há alguns campos que podem ser preenchidos:"**, com **tudo** o que falta, por seção (essenciais e opcionais, sem nomes internos) e a contagem dos essenciais.
+- Clicar numa seção (ou em "Preencher campos") abre um **modal** com os campos, o anexar foto e as sugestões. Embaixo ficam **"Salvar"** (salva e fecha) e **"Salvar e gerar o protocolo"** (salva, aplica no laudo e gera o documento de novo).
+- **Para voltar a essa tela:** o quadro continua no laudo depois de fechar o modal, e no Histórico do paciente cada laudo por IA tem o botão **"Campos que faltam"**.
