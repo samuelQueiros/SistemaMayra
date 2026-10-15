@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
+from app.services.ai.agentes import limites
 from app.services.ai.chains import ESTILO_DE_ESCRITA, LIMITES_DA_IA, PERSONA, _invocar_com_retentativas
 from app.services.ai.provider import get_structured_model
 from app.services.ai.schemas import CampoPreenchido
@@ -79,7 +80,7 @@ def preencher_campos(
     catalogo_texto: str,
     observacoes: str | None = None,
 ) -> CamposDoEspecialista:
-    chat_model = get_structured_model(provider, model, api_key, CamposDoEspecialista)
+    chat_model = get_structured_model(provider, model, api_key, CamposDoEspecialista, limites.ESPECIALISTA)
     conteudo = (
         _cabecalho(paciente, observacoes)
         + "\nCATÁLOGO DOS CAMPOS (id · rótulo · tipo/opções):\n"
@@ -105,7 +106,7 @@ ESTUDO_DE_CASO_SYSTEM_PROMPT = (
 def redigir_estudo_de_caso(
     *, provider: str, model: str, api_key: str, paciente: str, documentos_texto: str, observacoes: str | None = None
 ) -> str:
-    chat_model = get_structured_model(provider, model, api_key, EstudoDeCaso)
+    chat_model = get_structured_model(provider, model, api_key, EstudoDeCaso, limites.ESTUDO_DE_CASO)
     conteudo = _cabecalho(paciente, observacoes) + "\nDOCUMENTOS DO CASO (JSON):\n" + documentos_texto
     resultado = _invocar_com_retentativas(
         chat_model, [SystemMessage(content=ESTUDO_DE_CASO_SYSTEM_PROMPT), HumanMessage(content=conteudo)]

@@ -13,6 +13,7 @@ from typing import Literal
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
+from app.services.ai.agentes import limites
 from app.services.ai.agentes.paralelo import em_paralelo
 from app.services.ai.chains import PERSONA, _blocos_dos_pdfs, _invocar_com_retentativas
 from app.services.ai.provedores import provedor
@@ -92,7 +93,7 @@ def extrair_documento(*, provider: str, model: str, api_key: str, pdf: dict) -> 
         except ValueError:
             pass  # cache corrompido: extrai de novo
 
-    chat_model = get_structured_model(provider, model, api_key, DocumentoExtraido)
+    chat_model = get_structured_model(provider, model, api_key, DocumentoExtraido, limites.EXTRACAO)
     if leitura != "imagens":
         documento = _invocar_com_retentativas(chat_model, _mensagens(pdf, leitura))
     else:

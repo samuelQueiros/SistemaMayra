@@ -25,27 +25,73 @@ _TAMANHO_MAXIMO_TEXTO_POR_LAUDO = 2000
 
 # Provedores de IA falham ocasionalmente por motivos transitórios (limite de
 # taxa, instabilidade de rede, uma resposta que não bateu com o formato
-# estruturado pedido) — tentar de novo antes de desistir evita boa parte dos
-# erros intermitentes relatados pelo usuário, sem esconder uma falha real
-# (chave inválida, provedor mal configurado) que continua sendo levantada
-# normalmente após as tentativas.
+# estruturado pedido) — tentar de novo resolve boa parte deles. Erros que não
+# se resolvem tentando de novo (chave inválida, modelo inexistente, documento
+# grande demais para o modelo) falham na hora, sem fazer a psicóloga esperar.
 _TENTATIVAS_PADRAO = 3
-_ESPERA_ENTRE_TENTATIVAS_SEGUNDOS = 1.5
+_ESPERA_ENTRE_TENTATIVAS_SEGUNDOS = 2.0
+# Limite de tokens por minuto: o provedor diz quanto esperar ("try again in
+# 8s" / retry-after); antes esperávamos 1,5 s e batíamos no limite de novo.
+_ESPERA_MAXIMA_LIMITE_DE_TAXA_SEGUNDOS = 60.0
+# Uma chamada que estourou o tempo-limite provavelmente estoura de novo:
+# só mais uma tentativa.
+_MAXIMO_DE_TEMPOS_ESGOTADOS = 2
+_STATUS_DEFINITIVOS = {400, 401, 403, 404, 413, 422}
+
+
+def status_http_do_erro(exc: Exception) -> int | None:
+    """Status HTTP do erro do provedor (atributo do SDK ou texto da mensagem)."""
+    for atributo in ("status_code", "code"):
+        valor = getattr(exc, atributo, None)
+        if isinstance(valor, int) and 100 <= valor < 600:
+            return valor
+    valor = getattr(getattr(exc, "response", None), "status_code", None)
+    if isinstance(valor, int):
+        return valor
+    achado = re.search(r"(?:error code|status code|status)[:= ]*(\d{3})\b|^(\d{3}) [A-Z_]{4,}", str(exc), re.IGNORECASE)
+    return int(achado.group(1) or achado.group(2)) if achado else None
+
+
+def tempo_esgotado(exc: Exception) -> bool:
+    nomes = " ".join(type(e).__name__.lower() for e in (exc, exc.__cause__) if e is not None)
+    return "timeout" in nomes or "timed out" in str(exc).lower() or status_http_do_erro(exc) in (408, 504)
+
+
+def _espera_pedida(exc: Exception) -> float | None:
+    cabecalhos = getattr(getattr(exc, "response", None), "headers", None) or {}
+    try:
+        if cabecalhos.get("retry-after"):
+            return float(cabecalhos["retry-after"])
+    except (TypeError, ValueError):
+        pass
+    achado = re.search(r"(?:try again|retry) in ([\d.]+)\s*(ms|s)", str(exc), re.IGNORECASE)
+    if achado:
+        valor = float(achado.group(1))
+        return valor / 1000 if achado.group(2).lower() == "ms" else valor
+    return None
 
 
 def _invocar_com_retentativas(chat_model: Runnable, messages: list, tentativas: int = _TENTATIVAS_PADRAO):
-    ultimo_erro: Exception | None = None
+    tempos_esgotados = 0
     for tentativa in range(tentativas):
         try:
             return chat_model.invoke(messages)
-        except Exception as exc:  # noqa: BLE001 - repassado após esgotar tentativas
+        except Exception as exc:  # noqa: BLE001 - repassado quando não vale tentar de novo
             if cota_diaria_esgotada(exc):
                 raise  # A cota diária não se recupera esperando alguns segundos.
-            ultimo_erro = exc
-            if tentativa < tentativas - 1:
-                time.sleep(_ESPERA_ENTRE_TENTATIVAS_SEGUNDOS)
-    assert ultimo_erro is not None
-    raise ultimo_erro
+            status_http = status_http_do_erro(exc)
+            if status_http in _STATUS_DEFINITIVOS:
+                raise
+            if tempo_esgotado(exc):
+                tempos_esgotados += 1
+                if tempos_esgotados >= _MAXIMO_DE_TEMPOS_ESGOTADOS:
+                    raise
+            if tentativa == tentativas - 1:
+                raise
+            espera = _ESPERA_ENTRE_TENTATIVAS_SEGUNDOS * (2**tentativa)
+            if status_http == 429:
+                espera = min(max(_espera_pedida(exc) or espera, 1.0) + 1.0, _ESPERA_MAXIMA_LIMITE_DE_TAXA_SEGUNDOS)
+            time.sleep(espera)
 
 # Framing pedido explicitamente pelo usuário: a IA deve responder como uma
 # assistente experiente em psicologia/neuropsicopedagogia, e não como um
