@@ -2397,3 +2397,20 @@ lugar e rodar `npm run build`.
 - **Não mudou:** regras de pontuação, o laudo gerado e o Word/PDF.
 - **Como testar:** Laudo por IA com 4 ou 5 PDFs; acompanhar as mensagens de andamento; gerar de novo com os mesmos PDFs (fica mais rápido).
 - **Arquivos principais:** `backend/app/services/laudo_ia_jobs.py`, `backend/app/api/laudo_ia.py`, `backend/app/services/ai/provider.py`, `backend/app/services/ai/chains.py`, `backend/app/services/ai/agentes/`, `frontend/src/pages/LaudoPorIA.tsx`, `frontend/src/api/laudoIA.ts`.
+
+## Laudo por IA: completar os dados que faltaram (digitando ou por foto)
+
+**Status:** ✅ Pronto (2026-10-15)
+
+- **Antes:** depois do Laudo por IA aparecia "Os PDFs não trouxeram:", uma lista em texto com nomes internos (ata_item_0…), itens fora do caso e sem como resolver ali.
+- **Agora, no cartão "Laudo gerado" (e pelo Histórico, ⋯ → "Completar dados"):**
+  - "Dados que faltaram", por seção com nome amigável (Identificação e escola, Gestação e parto, Desenvolvimento, Histórico clínico e queixas, Habilidades do ano escolar, cada escala). O essencial vem primeiro; o opcional fica recolhido.
+  - Os essenciais são os mesmos marcados como obrigatórios no formulário. As escalas só aparecem se foram aplicadas, ou em "Também apliquei: TOD…". Os itens de cada escala viram uma pendência só ("Pontuações da ATA — 22 itens"), com o botão "Preencher".
+  - Cada pendência tem o campo do tipo certo (lista, Sim/Não, número, data, texto). No menu ⋯ há "Não se aplica" e "Não informado pela família", que não aparecem no laudo.
+  - Barra "8 de 12 essenciais preenchidos" e salvamento automático ("Salvo às…"). Fechar a página não perde nada.
+  - "Anexar foto ou documento", geral e em cada seção. No celular, "Tirar foto" abre a câmera; também aceita PDF. A IA lê a foto (reduzida e sem localização/metadados) e sugere valores só para o que falta. A sugestão aparece destacada com o nome da foto e só entra no laudo depois de "Confirmar" ou "Corrigir".
+  - "Atualizar laudo": aplica os dados confirmados. Se mudaram identificação, gestação, desenvolvimento ou queixas, a IA reescreve só o estudo de caso, sem reler os PDFs (se você já tinha editado o estudo, ele é mantido, salvo se marcar "Reescrever"). Depois gera o documento de novo, com gráficos e pontuações recalculados.
+  - Os dados confirmados ficam no cadastro do paciente e preenchem o que a IA deixar vazio nos próximos laudos, sem sobrescrever o que vier dos PDFs.
+- **Banco:** migração `f2b8d4e6a1c7` (aplicada sozinha ao subir o container): coluna `patients.dados_complementares` e tabela `patient_attachments`. As fotos ficam no storage existente (pasta `anexos`), e cada psicóloga só vê as dos seus pacientes.
+- **Não mudou:** regras de pontuação, textos do laudo e o modelo do Word/PDF.
+- **Como testar:** gerar um Laudo por IA; preencher 2 ou 3 pendências; dispensar uma; anexar a foto de uma ficha; confirmar a sugestão; "Atualizar laudo" e conferir o documento.
