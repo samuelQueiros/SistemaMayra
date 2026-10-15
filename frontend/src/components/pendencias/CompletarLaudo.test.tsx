@@ -55,7 +55,7 @@ describe('CompletarLaudo', () => {
     vi.mocked(anexos.listarAnexos).mockResolvedValue([anexo('pronto', 2)])
     const chamadasAntes = vi.mocked(pendencias.getPendencias).mock.calls.length
     await act(async () => vi.advanceTimersByTime(3100))
-    expect(await screen.findByText('2 sugestões — confira abaixo')).toBeInTheDocument()
+    expect(await screen.findByText('2 sugestões encontradas')).toBeInTheDocument()
     expect(vi.mocked(pendencias.getPendencias).mock.calls.length).toBeGreaterThan(chamadasAntes)
     vi.useRealTimers()
   })

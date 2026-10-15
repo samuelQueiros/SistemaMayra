@@ -61,14 +61,14 @@ export default function LaudoPorIA() {
   const espera = useRef<{ tipo: string; resolver: (m: MensagemDoFormulario) => void; rejeitar: (e: Error) => void } | null>(null)
 
   useEffect(() => {
-    if (!laudoDoHistorico) return
+    if (!laudoDoHistorico || laudo?.id === laudoDoHistorico) return
     getReport(laudoDoHistorico)
       .then((r) => {
         setLaudo(r as unknown as Laudo)
         setEtapa('pronto')
       })
       .catch(() => setErro('Não foi possível abrir o laudo.'))
-  }, [laudoDoHistorico])
+  }, [laudoDoHistorico, laudo?.id])
 
   useEffect(() => {
     function onMessage(event: MessageEvent) {
@@ -162,6 +162,8 @@ export default function LaudoPorIA() {
       await esperarFormulario(`/formulario-novo-paciente.html?laudo=${novo.id}&modo=gerar`, 'laudo-ia:gerado', 120000)
       setLaudo((await getReport(novo.id)) as unknown as Laudo)
       setEtapa('pronto')
+      // No endereço: recarregar ou voltar à página reabre este laudo e as pendências.
+      setParams({ paciente: pacienteId, laudo: novo.id }, { replace: true })
     } catch (e) {
       setErro(e instanceof ApiError ? e.message : e instanceof Error ? e.message : 'Não foi possível gerar o laudo.')
       setLaudoSemDocumento(criado)
@@ -307,6 +309,7 @@ export default function LaudoPorIA() {
                     setLaudo(null)
                     setArquivos([])
                     setEtapa('preencher')
+                    setParams({ paciente: pacienteId }, { replace: true })
                   }}
                 >
                   Gerar outro laudo

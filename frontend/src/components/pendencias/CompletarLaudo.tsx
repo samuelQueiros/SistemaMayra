@@ -114,7 +114,7 @@ export function CompletarLaudo({ laudoId, pacienteId, obterCatalogo, children, r
         ? a.erro
         : a.sugestoes === 0
           ? 'nenhum dado novo encontrado'
-          : `${a.sugestoes} ${a.sugestoes === 1 ? 'sugestão' : 'sugestões'} — confira abaixo`
+          : `${a.sugestoes} ${a.sugestoes === 1 ? 'sugestão encontrada' : 'sugestões encontradas'}`
 
   const topo = (
     <div style={{ display: 'grid', gap: 'var(--s-2)' }}>
