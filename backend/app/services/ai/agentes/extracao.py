@@ -7,6 +7,7 @@ o mesmo PDF (outro laudo, importar escalas de novo) não chama a IA."""
 import hashlib
 import json
 import re
+from collections.abc import Callable
 from functools import partial
 from typing import Literal
 
@@ -15,7 +16,7 @@ from pydantic import BaseModel, Field
 
 from app.services.ai.agentes import limites
 from app.services.ai.agentes.paralelo import em_paralelo
-from app.services.ai.chains import PERSONA, _blocos_dos_pdfs, _invocar_com_retentativas
+from app.services.ai.chains import PERSONA, _blocos_dos_pdfs, _invocar_com_retentativas, status_http_do_erro, tempo_esgotado
 from app.services.ai.provedores import provedor
 from app.services.ai.erros import cota_diaria_esgotada
 from app.services.ai.provider import get_structured_model
@@ -23,6 +24,53 @@ from app.services.storage import get_form_pdfs_storage
 
 # Mudou o prompt ou o formato? Suba a versão para não reaproveitar cache antigo.
 VERSAO_DA_EXTRACAO = 1
+
+# PDFs lidos ao mesmo tempo. Cada um passa de 10 mil tokens: com todos de uma
+# vez, 3 ou mais PDFs estouravam o limite de tokens por minuto da conta do
+# provedor (erro 429) e a geração falhava.
+MAXIMO_DE_LEITURAS_SIMULTANEAS = 3
+
+# Avisos de andamento para a tela: ao_progredir(evento, **dados).
+AoProgredir = Callable[..., None]
+
+
+def sem_aviso(*_args, **_kwargs) -> None:
+    pass
+
+
+class ErroNaEtapaDaIA(Exception):
+    """Falha de uma etapa do Laudo Por IA com mensagem pronta para a tela."""
+
+
+def motivo_do_erro(exc: Exception) -> str:
+    """Motivo curto, em português, de uma falha do provedor de IA."""
+    status_http = status_http_do_erro(exc)
+    if tempo_esgotado(exc):
+        return "o provedor de IA demorou demais para responder"
+    if status_http == 429:
+        return "limite de uso por minuto do provedor de IA atingido"
+    if status_http in (400, 413):
+        return "o documento é grande demais ou não é aceito pelo modelo configurado"
+    if status_http in (401, 403):
+        return "a chave de API foi recusada pelo provedor"
+    if status_http == 404:
+        return "o modelo configurado não foi encontrado no provedor"
+    if status_http is not None and status_http >= 500:
+        return "o provedor de IA está instável no momento"
+    return "erro inesperado do provedor de IA"
+
+
+class ErroNaLeituraDosDocumentos(ErroNaEtapaDaIA):
+    def __init__(self, falhas: list[tuple[str, Exception]], lidos: int):
+        self.falhas = falhas
+        self.lidos = lidos
+        nomes = "; ".join(f"'{nome}' ({motivo_do_erro(erro)})" for nome, erro in falhas)
+        mensagem = f"Não foi possível ler {nomes}."
+        if lidos == 1:
+            mensagem += " O outro documento já foi lido e não será lido de novo ao tentar outra vez."
+        elif lidos > 1:
+            mensagem += f" Os outros {lidos} documentos já foram lidos e não serão lidos de novo ao tentar outra vez."
+        super().__init__(mensagem)
 
 
 class RespostaExtraida(BaseModel):
@@ -108,9 +156,35 @@ def extrair_documento(*, provider: str, model: str, api_key: str, pdf: dict) -> 
     return documento
 
 
-def extrair_documentos(*, provider: str, model: str, api_key: str, pdfs: list[dict]) -> list[DocumentoExtraido]:
-    """Um agente por PDF, todos ao mesmo tempo."""
-    return em_paralelo([partial(extrair_documento, provider=provider, model=model, api_key=api_key, pdf=pdf) for pdf in pdfs])
+def extrair_documentos(
+    *, provider: str, model: str, api_key: str, pdfs: list[dict], ao_progredir: AoProgredir | None = None
+) -> list[DocumentoExtraido]:
+    """Um agente por PDF, até MAXIMO_DE_LEITURAS_SIMULTANEAS ao mesmo tempo.
+    Cada PDF é independente: os que deram certo ficam no cache e a mensagem
+    de erro diz quais falharam."""
+    avisar = ao_progredir or sem_aviso
+    total = len(pdfs)
+
+    def ler(indice: int, pdf: dict) -> DocumentoExtraido | Exception:
+        avisar("lendo_documento", indice=indice, total=total, nome=pdf["nome"])
+        try:
+            documento = extrair_documento(provider=provider, model=model, api_key=api_key, pdf=pdf)
+        except Exception as exc:  # noqa: BLE001 - reunido abaixo, com o nome do arquivo
+            avisar("documento_com_erro", indice=indice, total=total, nome=pdf["nome"], motivo=motivo_do_erro(exc))
+            return exc
+        avisar("documento_lido", indice=indice, total=total, nome=pdf["nome"])
+        return documento
+
+    resultados = em_paralelo(
+        [partial(ler, indice, pdf) for indice, pdf in enumerate(pdfs, start=1)], maximo=MAXIMO_DE_LEITURAS_SIMULTANEAS
+    )
+    falhas = [(pdf["nome"], r) for pdf, r in zip(pdfs, resultados) if isinstance(r, Exception)]
+    for _, erro in falhas:
+        if cota_diaria_esgotada(erro):
+            raise erro  # mensagem própria de cota na rota
+    if falhas:
+        raise ErroNaLeituraDosDocumentos(falhas, lidos=total - len(falhas))
+    return resultados
 
 
 def documentos_em_texto(documentos: list[DocumentoExtraido]) -> str:

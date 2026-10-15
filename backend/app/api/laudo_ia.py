@@ -25,6 +25,7 @@ from app.models.psychologist import Psychologist
 from app.models.report import Report
 from app.schemas.report import ReportOut
 from app.services.ai import AIConfigurationError, resolve_ai_credentials
+from app.services.ai.agentes.extracao import ErroNaEtapaDaIA
 from app.services.ai.erros import cota_diaria_esgotada
 from app.services.laudo_ia import CatalogoDoProtocolo, ResultadoDaIA, preencher_protocolo, respostas_para_answers
 
@@ -77,6 +78,9 @@ def _preencher_com_ia(
         )
     except AIConfigurationError as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+    except ErroNaEtapaDaIA as exc:
+        # Já diz qual documento/parte falhou e por quê.
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
     except Exception as exc:
         if cota_diaria_esgotada(exc):
             raise HTTPException(

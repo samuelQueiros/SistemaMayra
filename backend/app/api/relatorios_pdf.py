@@ -24,6 +24,7 @@ from app.models.psychologist import Psychologist
 from app.models.report import Report
 from app.models.report_template import ReportTemplate
 from app.schemas.report import ReportOut
+from app.services.ai.agentes.extracao import ErroNaEtapaDaIA
 from app.services.ai import AIConfigurationError, generate_report_from_form_pdfs, resolve_ai_credentials
 from app.services.ai.schemas import RelatorioPorPdfs
 from app.services.document_text import DocumentTextError, extrair_texto_pdf
@@ -129,6 +130,8 @@ def criar_relatorio_por_pdfs(
         )
     except AIConfigurationError as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+    except ErroNaEtapaDaIA as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,

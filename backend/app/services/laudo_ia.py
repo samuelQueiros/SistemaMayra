@@ -26,6 +26,8 @@ from app.services.ai.agentes import (
     preencher_campos,
     redigir_estudo_de_caso,
 )
+from app.services.ai.agentes.extracao import AoProgredir, ErroNaEtapaDaIA, sem_aviso, motivo_do_erro
+from app.services.ai.erros import cota_diaria_esgotada
 from app.services.ai.schemas import ProtocoloPorIA
 
 MAXIMO_DE_CAMPOS = 3000
@@ -139,6 +141,12 @@ SECOES_POR_ESPECIALISTA: dict[str, tuple[str, ...]] = {
     DESENVOLVIMENTO.nome: ("Portage", "Habilidades Acadêmicas", "Funções Executivas", "Por Domínio"),
 }
 ESPECIALISTAS: tuple[Especialista, ...] = (ANAMNESE, ESCALAS, DESENVOLVIMENTO)
+ROTULOS_DAS_ETAPAS = {
+    ANAMNESE.nome: "anamnese e histórico",
+    ESCALAS.nome: "escalas",
+    DESENVOLVIMENTO.nome: "desenvolvimento",
+    "estudo_de_caso": "estudo de caso",
+}
 
 
 def dividir_catalogo(catalogo: CatalogoDoProtocolo) -> dict[str, CatalogoDoProtocolo]:
@@ -170,21 +178,41 @@ def preencher_protocolo(
     catalogo: CatalogoDoProtocolo,
     observacoes: str | None = None,
     com_estudo_de_caso: bool = True,
+    ao_progredir: AoProgredir | None = None,
 ) -> ResultadoDaIA:
     """Laudo Por IA em duas etapas paralelas:
     1. um agente por PDF transcreve o arquivo em JSON (com cache);
     2. sobre esse JSON, ao mesmo tempo, o redator escreve o estudo de caso e
        cada especialista preenche a sua parte do catálogo."""
+    avisar = ao_progredir or sem_aviso
     credenciais = {"provider": provider, "model": model, "api_key": api_key}
     inicio = time.monotonic()
-    documentos = extrair_documentos(pdfs=pdfs, **credenciais)
+    documentos = extrair_documentos(pdfs=pdfs, ao_progredir=ao_progredir, **credenciais)
     fim_da_extracao = time.monotonic()
 
     texto = documentos_em_texto(documentos)
     partes = dividir_catalogo(catalogo)
     especialistas = [e for e in ESPECIALISTAS if e.nome in partes]
+    def etapa(nome: str, funcao):
+        """Avisa o fim de cada agente e diz qual parte falhou."""
+
+        def rodar():
+            try:
+                resultado = funcao()
+            except Exception as exc:
+                if cota_diaria_esgotada(exc):
+                    raise
+                raise ErroNaEtapaDaIA(
+                    f"Os documentos foram lidos, mas não foi possível concluir a parte \"{ROTULOS_DAS_ETAPAS[nome]}\" "
+                    f"({motivo_do_erro(exc)}). Tente de novo: os documentos não serão lidos outra vez."
+                ) from exc
+            avisar("etapa_concluida", etapa=nome)
+            return resultado
+
+        return rodar
+
     tarefas = [
-        partial(
+        etapa(e.nome, partial(
             preencher_campos,
             especialista=e,
             paciente=paciente,
@@ -192,11 +220,17 @@ def preencher_protocolo(
             catalogo_texto=formatar_catalogo(partes[e.nome]),
             observacoes=observacoes,
             **credenciais,
-        )
+        ))
         for e in especialistas
     ]
     if com_estudo_de_caso:
-        tarefas.append(partial(redigir_estudo_de_caso, paciente=paciente, documentos_texto=texto, observacoes=observacoes, **credenciais))
+        tarefas.append(
+            etapa(
+                "estudo_de_caso",
+                partial(redigir_estudo_de_caso, paciente=paciente, documentos_texto=texto, observacoes=observacoes, **credenciais),
+            )
+        )
+    avisar("preenchendo", etapas=[e.nome for e in especialistas] + (["estudo_de_caso"] if com_estudo_de_caso else []))
     resultados = em_paralelo(tarefas)
 
     estudo = resultados.pop() if com_estudo_de_caso else ""
