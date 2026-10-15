@@ -59,7 +59,11 @@ export async function gerarLaudoPorIA(
   dados.append('catalogo', JSON.stringify(catalogo))
   if (observacoes.trim()) dados.append('observacoes', observacoes.trim())
   const { job_id } = await enviarFormulario<{ job_id: string }>(`/patients/${patientId}/laudo-ia`, dados)
+  return acompanharGeracao(job_id, aoProgredir)
+}
 
+// Acompanha uma geração em segundo plano até o fim; devolve o id do laudo.
+export async function acompanharGeracao(job_id: string, aoProgredir?: (andamento: AndamentoDoLaudoIA) => void): Promise<{ id: string }> {
   let falhasSeguidas = 0
   for (;;) {
     await esperar(INTERVALO_DE_CONSULTA_MS)

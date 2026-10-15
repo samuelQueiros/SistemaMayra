@@ -220,3 +220,21 @@ def test_escalas_de_pdf_devolve_so_as_respostas(client, ia_falsa):
     assert ia_falsa[0]["com_estudo_de_caso"] is False
     # Nenhum laudo é criado.
     assert client.get(f"/api/patients/{pid}/reports", headers=headers).json() == []
+
+
+def test_dados_confirmados_antes_preenchem_o_que_a_ia_deixou_vazio(client, ia_falsa):
+    headers, pid = _preparar(client)
+    client.patch(
+        f"/api/patients/{pid}/dados-complementares",
+        json={"campos": {
+            "complicacaoParto": {"valor": "Não", "situacao": "preenchido"},  # a IA não preencheu (valor inválido)
+            "parto": {"valor": "Normal", "situacao": "preenchido"},  # a IA leu "Cesáreo" no PDF: vale o PDF
+            "queixaFamiliar": {"situacao": "nao_informado"},
+        }},
+        headers=headers,
+    )
+    andamento = _concluir(client, headers, _enviar(client, headers, pid))
+    answers = client.get(f"/api/reports/{andamento['report_id']}", headers=headers).json()["answers_json"]
+    assert answers["complicacaoParto"] == "Não"
+    assert answers["parto"] == "Cesáreo"
+    assert answers["queixaFamiliar"] == "Esquece tarefas."  # dispensado nunca apaga o que a IA leu

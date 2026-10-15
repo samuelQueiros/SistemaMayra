@@ -4,14 +4,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as patients from '../api/patients'
 import * as laudoIA from '../api/laudoIA'
 import * as reports from '../api/reports'
+import * as pendencias from '../api/pendencias'
 import LaudoPorIA from './LaudoPorIA'
 
 vi.mock('../api/patients', () => ({ listPatients: vi.fn(), createPatient: vi.fn() }))
 vi.mock('../api/reports', () => ({ getReport: vi.fn(), downloadReportDocx: vi.fn(), downloadReportPdf: vi.fn() }))
-vi.mock('../api/laudoIA', async (original) => ({ ...(await original<typeof laudoIA>()), gerarLaudoPorIA: vi.fn() }))
+vi.mock('../api/laudoIA', async (original) => ({ ...(await original<typeof laudoIA>()), gerarLaudoPorIA: vi.fn(), acompanharGeracao: vi.fn() }))
 vi.mock('../api/anexos', async (original) => ({ ...(await original<object>()), listarAnexos: vi.fn().mockResolvedValue([]) }))
 vi.mock('../api/pendencias', () => ({
-  getPendencias: vi.fn().mockResolvedValue({ essenciais: { total: 0, resolvidos: 0 }, grupos: [], escalas_para_adicionar: [] }),
+  getPendencias: vi.fn().mockResolvedValue({ essenciais: { total: 0, resolvidos: 0 }, grupos: [], escalas_para_adicionar: [], estudo_de_caso: { editado: false } }),
+  atualizarLaudo: vi.fn(),
 }))
 
 const paciente = { id: 'p1', name: 'Bia Lima', birth_date: '2020-01-10', notes: null, sex: 'Feminino', school_info: null }
@@ -110,5 +112,27 @@ describe('Laudo Por IA', () => {
 
     expect(await screen.findByText(/Não foi possível ler 'escola\.pdf'/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Gerar laudo com IA' })).toBeEnabled()
+  })
+
+  it('"Atualizar laudo" aplica os dados, reescreve o estudo e gera o documento de novo', async () => {
+    vi.mocked(reports.getReport).mockResolvedValue({
+      id: 'l5',
+      answers_json: { nomePaciente: 'Bia Lima' },
+      computed_json: { origem: 'ia_pdf', arquivos: [], lacunas: [], campos_descartados: [] },
+      generated_text: '<html><body>Laudo</body></html>',
+    } as never)
+    vi.mocked(pendencias.atualizarLaudo).mockResolvedValue({ job_id: 'j9', campos_aplicados: 2, estudo: 'reescrevendo' })
+    vi.mocked(laudoIA.acompanharGeracao).mockResolvedValue({ id: 'l5' })
+    render(
+      <MemoryRouter initialEntries={['/laudo-ia?paciente=p1&laudo=l5']}>
+        <LaudoPorIA />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByRole('button', { name: 'Atualizar laudo' }))
+    expect(await screen.findByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l5&modo=gerar')
+    expect(pendencias.atualizarLaudo).toHaveBeenCalledWith('l5', false)
+    expect(laudoIA.acompanharGeracao).toHaveBeenCalledWith('j9', expect.any(Function))
+    mensagemDoFormulario({ tipo: 'laudo-ia:gerado', laudoId: 'l5' })
+    expect(await screen.findByText('Laudo atualizado com 2 dados novos. O estudo de caso foi reescrito.')).toBeInTheDocument()
   })
 })

@@ -3,6 +3,7 @@ app/services/pendencias.py. Mesmo controle de acesso dos laudos: cada
 psicóloga só vê os próprios."""
 
 from datetime import datetime, timezone
+from functools import partial
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -14,11 +15,25 @@ from app.api.deps import get_current_psychologist
 from app.api.patients import get_patient_or_404
 from app.api.reports import _get_report_do_psicologo
 from app.core.database import get_db
+from app.models.ai_settings import AISettings
 from app.models.patient_attachment import PatientAttachment
 from app.models.psychologist import Psychologist
 from app.models.report import Report
-from app.services.laudo_ia import CatalogoDoProtocolo
-from app.services.pendencias import ESCALAS, Pendencias
+from app.services import laudo_ia_jobs
+from app.services.ai import AIConfigurationError, resolve_ai_credentials
+from app.services.ai.agentes import DocumentoExtraido, documentos_em_texto, redigir_estudo_de_caso
+from app.services.ai.agentes.extracao import motivo_do_erro
+from app.services.laudo_ia import CatalogoDoProtocolo, TAMANHO_MAXIMO_TEXTO
+from app.services.laudo_ia_jobs import Andamento
+from app.services.pendencias import (
+    ESCALAS,
+    SECOES_DO_ESTUDO_DE_CASO,
+    Pendencias,
+    aplicar_dados_confirmados,
+    dados_confirmados_como_documento,
+    estudo_de_caso_editado,
+    secoes_dos_campos,
+)
 
 router = APIRouter(tags=["pendencias"])
 
@@ -46,7 +61,7 @@ def sugestoes_dos_anexos(db: Session, report: Report) -> list[dict]:
 
 def montar_pendencias(db: Session, report: Report, catalogo: CatalogoDoProtocolo) -> dict:
     computed = report.computed_json or {}
-    return Pendencias(
+    resultado = Pendencias(
         catalogo,
         report.answers_json,
         report.patient.dados_complementares,
@@ -54,6 +69,8 @@ def montar_pendencias(db: Session, report: Report, catalogo: CatalogoDoProtocolo
         computed.get("escalas_adicionadas", []),
         sugestoes_dos_anexos(db, report),
     ).montar()
+    resultado["estudo_de_caso"] = {"editado": estudo_de_caso_editado(report.answers_json, computed)}
+    return resultado
 
 
 @router.get("/api/reports/{report_id}/pendencias")
@@ -156,3 +173,96 @@ def salvar_dados_complementares(
     patient.dados_complementares = atuais
     db.commit()
     return {"dados": atuais}
+
+
+# --- atualizar o laudo com os dados confirmados ---------------------------------
+
+
+class AtualizarLaudoIn(BaseModel):
+    # Reescreve o estudo de caso mesmo se a psicóloga o editou (pedido explícito).
+    reescrever_estudo: bool = False
+
+
+def _reescrever_estudo(andamento: Andamento, *, bind, report_id: UUID, paciente: str, credenciais: dict) -> None:
+    """Só o redator do estudo de caso, sobre o JSON dos PDFs já lidos
+    (computed_json.documentos) + os dados confirmados — sem reler os PDFs."""
+    andamento.mensagem("Reescrevendo o estudo de caso com os dados novos…")
+    with Session(bind=bind) as db:
+        report = db.get(Report, report_id)
+        computed = dict(report.computed_json or {})
+        catalogo = catalogo_do_laudo(report)
+        confirmados = {
+            campo_id
+            for campo_id, dado in (report.patient.dados_complementares or {}).items()
+            if dado.get("situacao") == "preenchido" and report.answers_json.get(campo_id) not in (None, "")
+        } & {c.id for c in catalogo.campos}
+        documentos = [DocumentoExtraido.model_validate(d) for d in computed.get("documentos", [])]
+        if confirmados:
+            documentos.append(DocumentoExtraido.model_validate(dados_confirmados_como_documento(catalogo, report.answers_json, confirmados)))
+        try:
+            estudo = redigir_estudo_de_caso(
+                paciente=paciente,
+                documentos_texto=documentos_em_texto(documentos),
+                observacoes=computed.get("observacoes"),
+                **credenciais,
+            )
+        except Exception as exc:  # noqa: BLE001 - vira mensagem no andamento
+            andamento.falhar(
+                f"Os dados novos já estão no laudo, mas não foi possível reescrever o estudo de caso ({motivo_do_erro(exc)}). "
+                "Tente de novo ou gere o documento assim mesmo."
+            )
+            return
+        estudo = estudo.strip()[: TAMANHO_MAXIMO_TEXTO * 2]
+        report.answers_json = {**report.answers_json, "estudoCaso": estudo}
+        report.computed_json = {**computed, "estudo_de_caso_ia": estudo}
+        db.commit()
+    andamento.concluir(report_id)
+
+
+@router.post("/api/reports/{report_id}/atualizar")
+def atualizar_laudo(
+    report_id: UUID,
+    pedido: AtualizarLaudoIn,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> dict:
+    """1) aplica no laudo os dados confirmados (sem IA); 2) se mudaram
+    seções que alimentam o estudo de caso e ele não foi editado à mão (ou se
+    a psicóloga pedir), reescreve só o estudo de caso em segundo plano. A
+    tela depois gera o documento pelo formulário (sem IA)."""
+    from app.api.laudo_ia import _descricao_do_paciente  # evita import circular
+
+    report = _get_report_do_psicologo(report_id, db, current)
+    catalogo = catalogo_do_laudo(report)
+    if catalogo is None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=SEM_CATALOGO)
+    editado = estudo_de_caso_editado(report.answers_json, report.computed_json)
+    novas, aplicados = aplicar_dados_confirmados(catalogo, report.answers_json, report.patient.dados_complementares)
+    report.answers_json = novas
+    db.commit()
+
+    tocou_o_estudo = bool(secoes_dos_campos(catalogo, aplicados) & SECOES_DO_ESTUDO_DE_CASO)
+    if not (pedido.reescrever_estudo or (tocou_o_estudo and not editado)):
+        return {
+            "job_id": None,
+            "campos_aplicados": len(aplicados),
+            "estudo": "mantido_editado" if tocou_o_estudo else "sem_mudanca",
+        }
+
+    ai_settings = db.query(AISettings).filter(AISettings.owner_id == current.id).first()
+    try:
+        provider, model, api_key = resolve_ai_credentials(ai_settings)
+    except AIConfigurationError as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+    job = laudo_ia_jobs.criar(owner_id=current.id, patient_id=report.patient_id, nomes_dos_arquivos=[])
+    laudo_ia_jobs.executar(
+        job,
+        partial(
+            _reescrever_estudo,
+            bind=db.get_bind(),
+            report_id=report.id,
+            paciente=_descricao_do_paciente(report.patient),
+            credenciais={"provider": provider, "model": model, "api_key": api_key},
+        ),
+    )
+    return {"job_id": job["id"], "campos_aplicados": len(aplicados), "estudo": "reescrevendo"}

@@ -45,6 +45,7 @@ export interface GrupoPendente {
 
 export interface PendenciasDoLaudo {
   essenciais: { total: number; resolvidos: number }
+  estudo_de_caso?: { editado: boolean }
   grupos: GrupoPendente[]
   escalas_para_adicionar: { chave: string; titulo: string }[]
 }
@@ -67,3 +68,13 @@ export const marcarEscalasAplicadas = (laudoId: string, escalas: string[]) =>
 // null apaga o campo (desfazer).
 export const salvarDadosComplementares = (pacienteId: string, campos: Record<string, DadoComplementar | null>) =>
   apiPatch<{ dados: Record<string, DadoComplementar> }>(`/patients/${pacienteId}/dados-complementares`, { campos })
+
+export interface ResultadoDaAtualizacao {
+  job_id: string | null
+  campos_aplicados: number
+  estudo: 'sem_mudanca' | 'mantido_editado' | 'reescrevendo'
+}
+
+// Aplica no laudo os dados confirmados e, se for o caso, reescreve só o estudo de caso.
+export const atualizarLaudo = (laudoId: string, reescreverEstudo: boolean) =>
+  apiPost<ResultadoDaAtualizacao>(`/reports/${laudoId}/atualizar`, { reescrever_estudo: reescreverEstudo })

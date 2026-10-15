@@ -8,6 +8,7 @@ import type { CatalogoDoProtocolo } from '../../api/laudoIA'
 import type { GrupoPendente } from '../../api/pendencias'
 import { Alert, Button, IconButton, Menu } from '../ds'
 import { PendenciasDoLaudo } from './PendenciasDoLaudo'
+import type { EstadoDasPendencias } from './PendenciasDoLaudo'
 
 // Consulta enquanto alguma foto está sendo lida pela IA.
 const INTERVALO_DA_LEITURA_MS = 3000
@@ -16,12 +17,14 @@ interface Props {
   laudoId: string
   pacienteId: string
   obterCatalogo: () => Promise<CatalogoDoProtocolo>
-  children?: (estado: { alterado: boolean; salvando: boolean }) => ReactNode
+  children?: (estado: EstadoDasPendencias) => ReactNode
+  /** Incrementado por quem usa (ex.: depois de atualizar o laudo). */
+  recarregar?: number
 }
 
 // Pendências do laudo + anexar foto ou documento (geral e por seção). A IA
 // lê o anexo e as sugestões aparecem destacadas nos campos, para confirmar.
-export function CompletarLaudo({ laudoId, pacienteId, obterCatalogo, children }: Props) {
+export function CompletarLaudo({ laudoId, pacienteId, obterCatalogo, children, recarregar: recarregarExterno = 0 }: Props) {
   const [anexos, setAnexos] = useState<Anexo[]>([])
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState<string | null>(null)
@@ -173,7 +176,7 @@ export function CompletarLaudo({ laudoId, pacienteId, obterCatalogo, children }:
         laudoId={laudoId}
         pacienteId={pacienteId}
         obterCatalogo={obterCatalogo}
-        recarregar={recarregar}
+        recarregar={recarregar + recarregarExterno}
         topo={topo}
         acoesDaSecao={(g: GrupoPendente) => botaoAnexar(`Anexar foto ou documento para ${g.titulo}`, g.chave)}
       >

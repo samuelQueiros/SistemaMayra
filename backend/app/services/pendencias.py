@@ -291,3 +291,54 @@ def secoes_dos_campos(catalogo: CatalogoDoProtocolo, ids: set[str]) -> set[str]:
     """Chaves das seções (SECOES) a que pertencem os campos."""
     numeros = {_numero_da_secao(c.secao) for c in catalogo.campos if c.id in ids}
     return {s.chave for s in SECOES if s.numero in numeros}
+
+
+def _para_o_formulario(valor):
+    """Valor confirmado no formato que o formulário guarda (texto)."""
+    if isinstance(valor, float):
+        return f"{valor:g}"
+    return valor
+
+
+def aplicar_dados_confirmados(catalogo: CatalogoDoProtocolo, answers: dict, dados: dict | None) -> tuple[dict, set[str]]:
+    """Copia para as respostas do laudo os dados confirmados pela psicóloga
+    ("preenchido") de campos do protocolo que estão vazios. Nunca sobrescreve
+    o que já tem resposta; dispensados ("não se aplica"/"não informado") não
+    vão para o laudo."""
+    novas = dict(answers or {})
+    aplicados: set[str] = set()
+    ids = {c.id for c in catalogo.campos}
+    for campo_id, dado in (dados or {}).items():
+        if campo_id not in ids or dado.get("situacao") != "preenchido" or _vazio(dado.get("valor")):
+            continue
+        if _vazio(novas.get(campo_id)):
+            novas[campo_id] = _para_o_formulario(dado["valor"])
+            aplicados.add(campo_id)
+    return novas, aplicados
+
+
+def estudo_de_caso_editado(answers: dict, computed: dict) -> bool:
+    """A psicóloga mudou o estudo de caso escrito pela IA? Sem o original
+    guardado (laudos antigos), considera editado — nunca sobrescreve à toa."""
+    original = (computed or {}).get("estudo_de_caso_ia")
+    if original is None:
+        return True
+    return (answers or {}).get("estudoCaso", "").strip() != original.strip()
+
+
+def dados_confirmados_como_documento(catalogo: CatalogoDoProtocolo, answers: dict, ids: set[str]) -> dict:
+    """Dados novos no mesmo formato dos documentos lidos dos PDFs, para o
+    redator do estudo de caso (que não relê os PDFs)."""
+    rotulos = {c.id: c for c in catalogo.campos}
+    return {
+        "arquivo": "",
+        "tipo": "outro",
+        "titulo": "Dados complementares confirmados pela profissional",
+        "respondente": "",
+        "data": "",
+        "respostas": [
+            {"pergunta": f"{rotulos[i].secao} — {rotulos[i].rotulo}", "resposta": str(answers[i])}
+            for i in sorted(ids)
+        ],
+        "observacoes": "",
+    }

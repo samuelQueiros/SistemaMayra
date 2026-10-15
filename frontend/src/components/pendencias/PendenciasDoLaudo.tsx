@@ -29,6 +29,12 @@ const DISPENSAS: Record<Exclude<Situacao, 'preenchido'>, string> = {
   nao_informado: 'Não informado pela família',
 }
 
+export interface EstadoDasPendencias {
+  alterado: boolean
+  salvando: boolean
+  estudoEditado: boolean
+}
+
 // Alterações locais por campo: undefined = sem alteração; null = apagado.
 type Locais = Record<string, DadoComplementar | null>
 
@@ -38,7 +44,7 @@ interface Props {
   /** Catálogo do formulário, para laudos antigos que não guardaram uma cópia. */
   obterCatalogo: () => Promise<CatalogoDoProtocolo>
   /** Conteúdo abaixo da lista (ex.: botão "Atualizar laudo"). */
-  children?: (estado: { alterado: boolean; salvando: boolean }) => ReactNode
+  children?: (estado: EstadoDasPendencias) => ReactNode
   /** Área por seção (ex.: anexar foto); recebe a chave e o título da seção. */
   acoesDaSecao?: (grupo: GrupoPendente) => ReactNode
   /** Acima da lista (ex.: anexar foto geral). */
@@ -351,7 +357,7 @@ export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children
         </>
       )}
       {erro && <Alert tone="danger">{erro}</Alert>}
-      {children?.({ alterado, salvando })}
+      {children?.({ alterado, salvando, estudoEditado: !!pendencias.estudo_de_caso?.editado })}
     </div>
   )
 }

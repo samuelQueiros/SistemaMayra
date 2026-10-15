@@ -30,6 +30,7 @@ from app.services.ai.agentes.extracao import ErroNaEtapaDaIA, motivo_do_erro
 from app.services.ai.erros import cota_diaria_esgotada
 from app.services.laudo_ia import CatalogoDoProtocolo, preencher_protocolo, respostas_para_answers
 from app.services.laudo_ia_jobs import Andamento
+from app.services.pendencias import aplicar_dados_confirmados
 
 router = APIRouter(tags=["laudo-ia"])
 
@@ -129,6 +130,9 @@ def _gerar_laudo(
     andamento.mensagem("Salvando o laudo…")
     answers, descartados = respostas_para_answers(resultado.protocolo, catalogo)
     with Session(bind=bind) as db:
+        # Dados já confirmados pela psicóloga em laudos anteriores preenchem o
+        # que a IA deixou vazio (nunca sobrescrevem o que veio dos PDFs).
+        answers, _ = aplicar_dados_confirmados(catalogo, answers, db.get(Patient, patient_id).dados_complementares)
         current = db.get(Psychologist, owner_id)
         template = garantir_template_custom_form(db, current)
         report = Report(

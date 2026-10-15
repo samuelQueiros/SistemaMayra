@@ -213,3 +213,111 @@ def test_outra_psicologa_nao_salva_dados_do_paciente(client, laudo):
     outra = registrar_e_logar(client, email="outra@exemplo.com")
     resposta = client.patch(f"/api/patients/{pid}/dados-complementares", json={"campos": {}}, headers=outra)
     assert resposta.status_code == 404
+
+
+# --- atualizar o laudo -----------------------------------------------------------
+
+import app.api.pendencias as rotas_pendencias  # noqa: E402
+import app.services.ai.agentes.extracao as extracao  # noqa: E402
+
+
+@pytest.fixture
+def ia_do_estudo(monkeypatch, client, laudo):
+    headers, _, rid = laudo
+    client.put("/api/settings/ai", json={"provider": "anthropic", "model": "claude-sonnet-5", "api_key": "chave-de-teste-1234"}, headers=headers)
+    with client.db_session_factory() as db:
+        report = db.get(Report, UUID(rid))
+        report.answers_json = {**report.answers_json, "estudoCaso": "Estudo original da IA."}
+        report.computed_json = {
+            **report.computed_json,
+            "estudo_de_caso_ia": "Estudo original da IA.",
+            "documentos": [{"arquivo": "mae.pdf", "tipo": "formulario", "titulo": "Anamnese", "respostas": [{"pergunta": "Sono", "resposta": "Agitado"}]}],
+        }
+        db.commit()
+    chamadas = []
+
+    def redator(**kwargs):
+        chamadas.append(kwargs)
+        return "Estudo reescrito com os dados novos."
+
+    monkeypatch.setattr(rotas_pendencias, "redigir_estudo_de_caso", redator)
+    # Atualizar nunca relê os PDFs.
+    monkeypatch.setattr(extracao, "extrair_documento", lambda **kw: pytest.fail("releu um PDF"))
+    return chamadas
+
+
+def _confirmar(client, headers, pid, campos):
+    client.patch(f"/api/patients/{pid}/dados-complementares", json={"campos": campos}, headers=headers)
+
+
+def _atualizar(client, headers, rid, **corpo):
+    resposta = client.post(f"/api/reports/{rid}/atualizar", json=corpo, headers=headers)
+    assert resposta.status_code == 200, resposta.text
+    resultado = resposta.json()
+    if resultado["job_id"]:
+        import time
+
+        for _ in range(300):
+            andamento = client.get(f"/api/laudo-ia/jobs/{resultado['job_id']}", headers=headers).json()
+            if andamento["status"] in ("concluido", "erro"):
+                resultado["andamento"] = andamento
+                break
+            time.sleep(0.01)
+    return resultado, client.get(f"/api/reports/{rid}", headers=headers).json()
+
+
+def test_aplica_os_campos_sem_ia_quando_nao_muda_o_estudo(client, laudo, ia_do_estudo):
+    headers, pid, rid = laudo
+    _confirmar(client, headers, pid, {
+        "ata_item_0": {"valor": "2", "situacao": "preenchido"},
+        "dom_atencao": {"valor": 35.0, "situacao": "preenchido"},
+        "ata_item_1": {"situacao": "nao_se_aplica"},
+    })
+    resultado, laudo_atual = _atualizar(client, headers, rid)
+    assert resultado == {"job_id": None, "campos_aplicados": 2, "estudo": "sem_mudanca"}
+    assert laudo_atual["answers_json"]["ata_item_0"] == "2" and laudo_atual["answers_json"]["dom_atencao"] == "35"
+    assert "ata_item_1" not in laudo_atual["answers_json"]  # dispensado não vai para o laudo
+    assert not ia_do_estudo
+
+
+def test_dados_de_gestacao_reescrevem_so_o_estudo_sem_reler_pdfs(client, laudo, ia_do_estudo):
+    headers, pid, rid = laudo
+    _confirmar(client, headers, pid, {"parto": {"valor": "Cesáreo", "situacao": "preenchido"}})
+    resultado, laudo_atual = _atualizar(client, headers, rid)
+    assert resultado["estudo"] == "reescrevendo" and resultado["andamento"]["status"] == "concluido"
+    assert laudo_atual["answers_json"]["parto"] == "Cesáreo"
+    assert laudo_atual["answers_json"]["estudoCaso"] == "Estudo reescrito com os dados novos."
+    assert laudo_atual["computed_json"]["estudo_de_caso_ia"] == "Estudo reescrito com os dados novos."
+    [chamada] = ia_do_estudo
+    assert '"titulo":"Anamnese"' in chamada["documentos_texto"]  # JSON dos PDFs já lidos
+    assert "Dados complementares confirmados pela profissional" in chamada["documentos_texto"]
+    assert "Cesáreo" in chamada["documentos_texto"]
+
+
+def test_estudo_editado_a_mao_e_mantido_salvo_pedido(client, laudo, ia_do_estudo):
+    headers, pid, rid = laudo
+    client.put(f"/api/reports/{rid}/answers", json={"answers": {"anoEscolar": "2º Ano", "estudoCaso": "Texto ajustado pela psicóloga."}}, headers=headers)
+    _confirmar(client, headers, pid, {"parto": {"valor": "Normal", "situacao": "preenchido"}})
+    assert client.get(f"/api/reports/{rid}/pendencias", headers=headers).json()["estudo_de_caso"] == {"editado": True}
+
+    resultado, laudo_atual = _atualizar(client, headers, rid)
+    assert resultado["estudo"] == "mantido_editado" and not ia_do_estudo
+    assert laudo_atual["answers_json"]["estudoCaso"] == "Texto ajustado pela psicóloga."
+    assert laudo_atual["answers_json"]["parto"] == "Normal"
+
+    resultado, laudo_atual = _atualizar(client, headers, rid, reescrever_estudo=True)
+    assert resultado["estudo"] == "reescrevendo" and len(ia_do_estudo) == 1
+    assert laudo_atual["answers_json"]["estudoCaso"] == "Estudo reescrito com os dados novos."
+
+
+def test_dado_confirmado_nao_sobrescreve_resposta_do_laudo(client, laudo, ia_do_estudo):
+    headers, pid, rid = laudo
+    _confirmar(client, headers, pid, {"anoEscolar": {"valor": "5º Ano", "situacao": "preenchido"}})
+    _, laudo_atual = _atualizar(client, headers, rid)
+    assert laudo_atual["answers_json"]["anoEscolar"] == "2º Ano"
+
+
+def test_outra_psicologa_nao_atualiza_o_laudo(client, laudo):
+    _, _, rid = laudo
+    outra = registrar_e_logar(client, email="outra@exemplo.com")
+    assert client.post(f"/api/reports/{rid}/atualizar", json={}, headers=outra).status_code == 404
