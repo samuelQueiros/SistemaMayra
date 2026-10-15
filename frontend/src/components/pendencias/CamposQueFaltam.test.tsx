@@ -7,6 +7,7 @@ import { CamposQueFaltam } from './CamposQueFaltam'
 
 vi.mock('../../api/pendencias', () => ({
   getPendencias: vi.fn(),
+  excluirMetodos: vi.fn(),
   enviarCatalogoDoLaudo: vi.fn(),
   marcarEscalasAplicadas: vi.fn(),
   salvarDadosComplementares: vi.fn().mockResolvedValue({ dados: {} }),
@@ -151,4 +152,17 @@ describe('CamposQueFaltam', () => {
     renderizar()
     expect(await screen.findByText('Metacognição · Planejamento')).toBeInTheDocument()
   })
+})
+
+
+it('permite revisar e remover métodos mesmo com todos os campos preenchidos', async () => {
+  vi.mocked(api.getPendencias).mockResolvedValue({ ...PENDENCIAS, grupos: [], metodos: [{ chave: 'cars', titulo: 'CARS', incluido: true }] })
+  vi.mocked(api.excluirMetodos).mockResolvedValue({ ...PENDENCIAS, grupos: [], metodos: [{ chave: 'cars', titulo: 'CARS', incluido: false }] })
+  renderizar()
+  fireEvent.click(await screen.findByRole('button', { name: 'Revisar métodos' }))
+  const cars = await screen.findByRole('checkbox', { name: 'CARS' })
+  expect(cars).toBeChecked()
+  await act(async () => { fireEvent.click(cars) })
+  expect(api.excluirMetodos).toHaveBeenCalledWith('l1', ['cars'])
+  expect(screen.getByRole('checkbox', { name: 'CARS' })).not.toBeChecked()
 })

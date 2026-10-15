@@ -33,11 +33,13 @@ async function prepararEGerar() {
   )
   const pdf = new File(['%PDF-1.4'], 'anamnese.pdf', { type: 'application/pdf' })
   fireEvent.change(await screen.findByTestId('arquivos-pdf'), { target: { files: [pdf] } })
-  fireEvent.click(screen.getByRole('button', { name: 'Gerar laudo com IA' }))
+  fireEvent.change(screen.getByLabelText(/Data do relatório/), { target: { value: '2026-10-15' } })
+  fireEvent.change(screen.getByLabelText(/Cidade do relatório/), { target: { value: 'Gama – DF' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Gerar relatório com IA' }))
   return pdf
 }
 
-describe('Laudo Por IA', () => {
+describe('Relatório por IA', () => {
   beforeEach(() => {
     vi.mocked(patients.listPatients).mockResolvedValue([paciente])
     vi.mocked(reports.downloadReportDocx).mockResolvedValue(undefined)
@@ -57,7 +59,7 @@ describe('Laudo Por IA', () => {
     mensagemDoFormulario({ tipo: 'laudo-ia:catalogo', catalogo })
 
     expect(await screen.findByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l1&modo=gerar')
-    expect(laudoIA.gerarLaudoPorIA).toHaveBeenCalledWith('p1', [pdf], '', catalogo, expect.any(Function))
+    expect(laudoIA.gerarLaudoPorIA).toHaveBeenCalledWith('p1', [pdf], '', catalogo, expect.any(Function), '2026-10-15', 'Gama – DF')
     mensagemDoFormulario({ tipo: 'laudo-ia:gerado', laudoId: 'l1' })
 
     expect(await screen.findByText('Laudo gerado')).toBeInTheDocument()
@@ -111,7 +113,7 @@ describe('Laudo Por IA', () => {
     mensagemDoFormulario({ tipo: 'laudo-ia:catalogo', catalogo })
 
     expect(await screen.findByText(/Não foi possível ler 'escola\.pdf'/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Gerar laudo com IA' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Gerar relatório com IA' })).toBeEnabled()
   })
 
   it('"Atualizar laudo" aplica os dados, reescreve o estudo e gera o documento de novo', async () => {
@@ -147,4 +149,14 @@ describe('Laudo Por IA', () => {
     mensagemDoFormulario({ tipo: 'laudo-ia:gerado', laudoId: 'l5' })
     expect(await screen.findByText('Laudo atualizado com 2 dados novos. O estudo de caso foi reescrito.')).toBeInTheDocument()
   })
+})
+
+
+it('exige data do relatório antes de iniciar a geração', async () => {
+  vi.mocked(patients.listPatients).mockResolvedValue([paciente])
+  render(<MemoryRouter initialEntries={['/laudo-ia?paciente=p1']}><LaudoPorIA /></MemoryRouter>)
+  fireEvent.change(await screen.findByTestId('arquivos-pdf'), { target: { files: [new File(['%PDF'], 'a.pdf', { type: 'application/pdf' })] } })
+  expect(screen.getByRole('button', { name: 'Gerar relatório com IA' })).toBeDisabled()
+  fireEvent.change(screen.getByLabelText(/Data do relatório/), { target: { value: '2026-10-15' } })
+  expect(screen.getByRole('button', { name: 'Gerar relatório com IA' })).toBeEnabled()
 })

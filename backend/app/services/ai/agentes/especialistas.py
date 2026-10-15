@@ -58,7 +58,14 @@ def _system_especialista(especialista: Especialista) -> str:
         "cada campo e, em campos com opções, somente os valores de opção listados. "
         "Preencha apenas o que os documentos sustentam; o que faltar vai para "
         "'lacunas'. Hipóteses diagnósticas só podem ser marcadas quando os "
-        f"documentos as mencionarem — nunca conclua um diagnóstico. {LIMITES_DA_IA}"
+        "documentos as mencionarem — nunca conclua um diagnóstico. "
+        "Para os encaminhamentos (campos enc_*), analise as necessidades sustentadas "
+        "pelos documentos e selecione um ou mais encaminhamentos pertinentes dentre "
+        "as opções do catálogo, marcando 'sim'. Eles são sugestões para revisão da "
+        "profissional, não diagnósticos nem encaminhamentos já realizados. Não invente "
+        "opções e não marque todos indiscriminadamente; se não houver evidência "
+        "suficiente, informe a lacuna em vez de selecionar sem fundamento. "
+        f"{LIMITES_DA_IA}"
     )
 
 

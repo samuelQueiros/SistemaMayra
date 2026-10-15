@@ -59,7 +59,7 @@ export function CamposQueFaltam({ laudoId, pacienteId, obterCatalogo, onGerar, g
         style={{ display: 'grid', gap: 'var(--s-3)', padding: 'var(--s-4)', background: 'var(--primary-soft)', border: '1px solid var(--violeta-200)', borderRadius: 'var(--r-md)' }}
       >
         {grupos.length === 0 ? (
-          <p style={{ margin: 0 }}>Todos os campos do protocolo estão preenchidos.</p>
+          <div><p style={{ margin: 0 }}>Todos os campos do protocolo estão preenchidos.</p>{pendencias.metodos && <Button onClick={() => setModal({})}>Revisar métodos</Button>}</div>
         ) : (
           <>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--s-3)' }}>

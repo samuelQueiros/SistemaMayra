@@ -34,3 +34,5 @@ export async function fetchPatientPhotoUrl(patientId: string, photoId: string): 
   const blob = await response.blob()
   return URL.createObjectURL(blob)
 }
+
+export const deletePatient = (id: string) => apiDelete<void>(`/patients/${id}?confirmar_historico=true`)

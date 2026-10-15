@@ -3,7 +3,7 @@ import type { ReactNode, Ref } from 'react'
 import { ChevronDown, ChevronRight, Ellipsis, Plus, Undo2 } from 'lucide-react'
 import type { CatalogoDoProtocolo } from '../../api/laudoIA'
 import { carregarPendencias } from '../../api/carregarPendencias'
-import { marcarEscalasAplicadas, salvarDadosComplementares } from '../../api/pendencias'
+import { excluirMetodos, marcarEscalasAplicadas, salvarDadosComplementares } from '../../api/pendencias'
 import type {
   CampoDaPendencia,
   DadoComplementar,
@@ -13,7 +13,7 @@ import type {
   Situacao,
   Valor,
 } from '../../api/pendencias'
-import { Alert, Badge, Button, Input, Menu, ProgressBar, SaveStatus, SectionBand, Select } from '../ds'
+import { Alert, Badge, Button, Checkbox, Input, Menu, ProgressBar, SaveStatus, SectionBand, Select } from '../ds'
 import { rotuloParaExibicao } from '../../utils/exibicao'
 
 // Espera depois da última alteração antes de salvar (salvamento automático).
@@ -68,6 +68,8 @@ export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children
   const [pendencias, setPendencias] = useState<Pendencias | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [locais, setLocais] = useState<Locais>({})
+  const [mudandoMetodo, setMudandoMetodo] = useState(false)
+  const metodoEmCurso = useRef<Promise<boolean> | null>(null)
   const [status, setStatus] = useState('')
   const [abertos, setAbertos] = useState<Record<string, boolean>>({})
   const fila = useRef<Locais>({})
@@ -118,7 +120,8 @@ export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children
   useImperativeHandle(
     controle,
     () => ({
-      salvarAgora: () => {
+      salvarAgora: async () => {
+        if (metodoEmCurso.current && !await metodoEmCurso.current) return false
         if (temporizador.current) clearTimeout(temporizador.current)
         return salvar()
       },
@@ -171,6 +174,25 @@ export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children
   function preencher(campo: CampoDaPendencia, valor: Valor, extra: Partial<DadoComplementar> = {}) {
     const vazio = valor === null || valor === ''
     alterar({ [campo.id]: vazio ? null : { valor, situacao: 'preenchido', origem: 'digitado', ...extra } })
+  }
+
+  async function alternarMetodo(chave: string, incluir: boolean) {
+    if (!pendencias?.metodos || metodoEmCurso.current) return
+    const excluidos = pendencias.metodos.filter((m) => m.chave === chave ? !incluir : !m.incluido).map((m) => m.chave)
+    setMudandoMetodo(true)
+    setErro(null)
+    const pedido = excluirMetodos(laudoId, excluidos).then((dados) => {
+      setPendencias(dados)
+      setAlterado(true)
+      return true
+    }).catch(() => {
+      setErro('Não foi possível alterar os métodos. Tente novamente.')
+      return false
+    })
+    metodoEmCurso.current = pedido
+    await pedido
+    metodoEmCurso.current = null
+    setMudandoMetodo(false)
   }
 
   async function adicionarEscala(chave: string) {
@@ -363,6 +385,11 @@ export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children
         <h3 style={{ margin: 0, font: 'var(--type-h3)' }}>Dados que faltaram</h3>
         {status && <SaveStatus status={status} salvo={false} />}
       </div>
+      {pendencias.metodos && <section aria-label="Métodos do relatório">
+        <h3>Métodos do relatório</h3>
+        <p className="text-2">Desmarque os métodos que não devem aparecer. As respostas são preservadas. Use “Salvar e gerar o protocolo” para atualizar o documento; revise também os textos clínicos que mencionam esses métodos.</p>
+        {pendencias.metodos.map((m) => <Checkbox key={m.chave} label={m.titulo} checked={m.incluido} disabled={mudandoMetodo} onChange={(e) => void alternarMetodo(m.chave, e.target.checked)} />)}
+      </section>}
       {pendencias.grupos.length === 0 ? (
         <Alert tone="success">Os PDFs trouxeram tudo o que o protocolo pede.</Alert>
       ) : (

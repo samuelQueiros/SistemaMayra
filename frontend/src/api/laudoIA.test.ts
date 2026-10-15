@@ -28,10 +28,13 @@ describe('gerarLaudoPorIA', () => {
       .mockResolvedValueOnce(andamento({ status: 'concluido', report_id: 'l9' }))
     const avisos: string[] = []
 
-    const promessa = gerarLaudoPorIA('p1', [], '', { campos: [], contexto: '' }, (a) => avisos.push(a.mensagem))
+    const promessa = gerarLaudoPorIA('p1', [], '', { campos: [], contexto: '' }, (a) => avisos.push(a.mensagem), '2026-10-15', 'Gama – DF')
     await vi.runAllTimersAsync()
 
     await expect(promessa).resolves.toEqual({ id: 'l9' })
+    const formulario = vi.mocked(client.enviarFormulario).mock.calls[0][1]
+    expect(formulario.get('data_relatorio')).toBe('2026-10-15')
+    expect(formulario.get('cidade')).toBe('Gama – DF')
     expect(client.apiGet).toHaveBeenCalledWith('/laudo-ia/jobs/j1')
     expect(avisos[0]).toBe('Lendo documento 1 de 2…')
   })
@@ -40,7 +43,7 @@ describe('gerarLaudoPorIA', () => {
     vi.mocked(client.enviarFormulario).mockResolvedValue({ job_id: 'j2' })
     vi.mocked(client.apiGet).mockResolvedValue(andamento({ status: 'erro', erro: "Não foi possível ler 'escola.pdf'." }))
 
-    const promessa = gerarLaudoPorIA('p1', [], '', { campos: [], contexto: '' })
+    const promessa = gerarLaudoPorIA('p1', [], '', { campos: [], contexto: '' }, undefined, '2026-10-15', '')
     const verificacao = expect(promessa).rejects.toThrow("Não foi possível ler 'escola.pdf'.")
     await vi.runAllTimersAsync()
     await verificacao

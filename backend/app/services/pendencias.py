@@ -248,6 +248,8 @@ class Pendencias:
 
         escalas_fora: list[dict] = []
         for escala in ESCALAS:
+            if escala.chave in self.answers.get("__metodosExcluidos", []):
+                continue
             campos = [c for c in self.catalogo.campos if escala.padrao.match(c.id)]
             if not campos:
                 continue

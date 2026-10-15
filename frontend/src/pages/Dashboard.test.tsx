@@ -1,10 +1,12 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
+import * as patients from '../api/patients'
 import * as reports from '../api/reports'
 import Dashboard from './Dashboard'
 
 vi.mock('../api/patients', () => ({
+  deletePatient: vi.fn().mockResolvedValue(undefined),
   listPatients: vi.fn().mockResolvedValue([
     { id: 'p1', name: 'Ana Souza', birth_date: '2018-03-15', notes: null, sex: null, school_info: null },
     { id: 'p2', name: 'João Conceição', birth_date: '2019-07-02', notes: null, sex: null, school_info: null },
@@ -93,4 +95,22 @@ describe('pesquisa de pacientes', () => {
     fireEvent.change(busca, { target: { value: 'zzz' } })
     expect(screen.getByText('Nenhum paciente encontrado para "zzz".')).toBeInTheDocument()
   })
+})
+
+
+it('exclui apenas após confirmação e atualiza a lista', async () => {
+  render(<MemoryRouter><Dashboard /></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: 'Mais ações para Ana Souza' }))
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Excluir paciente' }))
+  const modal = screen.getByRole('dialog', { name: 'Excluir paciente' })
+  expect(patients.deletePatient).not.toHaveBeenCalled()
+  expect(within(modal).getByText(/permanentemente/)).toBeInTheDocument()
+  fireEvent.click(within(modal).getByRole('button', { name: 'Cancelar' }))
+  expect(patients.deletePatient).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: 'Mais ações para Ana Souza' }))
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Excluir paciente' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Excluir definitivamente' }))
+  await vi.waitFor(() => expect(screen.queryByText('Ana Souza')).not.toBeInTheDocument())
+  expect(patients.deletePatient).toHaveBeenCalledWith('p1')
+  expect(screen.getByText('João Conceição')).toBeInTheDocument()
 })

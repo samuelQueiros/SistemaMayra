@@ -6,7 +6,7 @@ import { Button, IconButton } from './ds'
 const tamanho = (bytes: number) => (bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`)
 
 // Área de arrastar/escolher PDFs + lista dos escolhidos (Relatório Por IA e
-// Laudo Por IA). `problema` valida a lista final; o erro vai para `onErro`.
+// Relatório por IA). `problema` valida a lista final; o erro vai para `onErro`.
 export function SeletorDePdfs({
   arquivos,
   onChange,

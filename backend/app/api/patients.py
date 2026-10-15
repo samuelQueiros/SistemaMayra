@@ -3,7 +3,7 @@ import uuid
 from pathlib import Path
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_psychologist
@@ -12,9 +12,11 @@ from app.core.uploads import ler_upload
 from app.models.patient import Patient
 from app.models.patient_photo import PatientPhoto
 from app.models.psychologist import Psychologist
-from app.models.report import Report
+from app.models.patient_attachment import PatientAttachment
+from app.models.guardian_form_submission import GuardianFormSubmission
+from app.models.consolidated_report import ConsolidatedReport
 from app.schemas.patient import PatientCreate, PatientOut, PatientPhotoOut, PatientUpdate
-from app.services.storage import get_photos_storage
+from app.services.storage import (get_photos_storage, get_reports_storage, get_form_pdfs_storage, get_attachments_storage, get_guardian_forms_storage)
 
 router = APIRouter(prefix="/api/patients", tags=["patients"])
 
@@ -78,21 +80,41 @@ def update_patient(
 @router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_patient(
     patient_id: UUID,
+    confirmar_historico: bool = Query(default=False),
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> None:
     patient = get_patient_or_404(patient_id, db, current)
-    tem_laudos = db.query(Report).filter(Report.patient_id == patient.id).first() is not None
-    if tem_laudos:
-        # Paciente com histórico clínico não pode ser apagado silenciosamente
-        # — evita perder laudos por engano (e, sem isso, o banco de dados
-        # real recusaria a exclusão de forma bem menos clara para quem usa
-        # o sistema).
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Este paciente tem protocolos no histórico e por isso não pode ser excluído.",
-        )
+    reports = list(patient.reports)
+    if reports and not confirmar_historico:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail="Confirme a exclusão definitiva do paciente e de todo o histórico.")
+    arquivos = [(get_photos_storage(), p.file_path) for p in patient.photos]
+    for model, storage in ((PatientAttachment, get_attachments_storage()),
+                           (GuardianFormSubmission, get_guardian_forms_storage()),
+                           (ConsolidatedReport, get_reports_storage())):
+        for registro in db.query(model).filter(model.patient_id == patient.id).all():
+            chave = getattr(registro, "file_path", None) or getattr(registro, "pdf_path", None)
+            if chave:
+                arquivos.append((storage, chave))
+            db.delete(registro)
+    # Anexos referenciam relatórios: apague os dependentes primeiro.
+    db.flush()
+    for report in reports:
+        if report.pdf_path:
+            arquivos.append((get_reports_storage(), report.pdf_path))
+        for arquivo in (report.computed_json or {}).get("arquivos", []):
+            if arquivo.get("chave"):
+                arquivos.append((get_form_pdfs_storage(), arquivo["chave"]))
+        for log in report.change_logs:
+            db.delete(log)
+        db.flush()
+        db.delete(report)
+    db.flush()
     db.delete(patient)
+    db.flush()
+    for storage, chave in arquivos:
+        storage.delete(chave)
     db.commit()
 
 

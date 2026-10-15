@@ -321,3 +321,26 @@ def test_outra_psicologa_nao_atualiza_o_laudo(client, laudo):
     _, _, rid = laudo
     outra = registrar_e_logar(client, email="outra@exemplo.com")
     assert client.post(f"/api/reports/{rid}/atualizar", json={}, headers=outra).status_code == 404
+
+
+def test_remove_metodos_preservando_respostas_e_permite_reincluir(client, laudo):
+    headers, _, rid = laudo
+    with client.db_session_factory() as db:
+        report = db.get(Report, UUID(rid))
+        report.answers_json = {**report.answers_json, 'cars_0': '2'}
+        db.commit()
+    url = f'/api/reports/{rid}/metodos-excluidos'
+    outra = registrar_e_logar(client, email='outra@example.com')
+    assert client.put(url, json={'escalas': ['cars']}, headers=outra).status_code == 404
+    assert client.put(url, json={'escalas': ['invalida']}, headers=headers).status_code == 400
+    resultado = client.put(url, json={'escalas': ['ata', 'cars']}, headers=headers)
+    assert resultado.status_code == 200
+    assert _grupo(resultado.json(), 'escala_ata') is None
+    assert _grupo(resultado.json(), 'escala_cars') is None
+    assert not next(m for m in resultado.json()['metodos'] if m['chave'] == 'cars')['incluido']
+    respostas = client.get(f'/api/reports/{rid}', headers=headers).json()['answers_json']
+    assert respostas['cars_0'] == '2'
+    assert respostas['__metodosExcluidos'] == ['ata', 'cars']
+    resultado = client.put(url, json={'escalas': []}, headers=headers).json()
+    assert _grupo(resultado, 'escala_cars') is not None
+    assert _grupo(resultado, 'escala_ata') is not None

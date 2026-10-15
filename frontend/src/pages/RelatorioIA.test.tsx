@@ -9,7 +9,7 @@ function Destino() {
 }
 
 describe('Endereço antigo de Relatório Por IA', () => {
-  it.each(['', '?paciente=p9'])('redireciona ao Laudo Por IA preservando %s', async (search) => {
+  it.each(['', '?paciente=p9'])('redireciona ao Relatório por IA preservando %s', async (search) => {
     render(
       <MemoryRouter initialEntries={[`/relatorio-ia${search}`]}>
         <Routes>

@@ -100,7 +100,7 @@ def _enviar(client, headers, pid, catalogo=None, arquivos=None):
         f"/api/patients/{pid}/laudo-ia",
         headers=headers,
         files=[("arquivos", (n, c, "application/pdf")) for n, c in (arquivos or [("anamnese.pdf", _pdf("Anamnese")), ("cars.pdf", _pdf("CARS"))])],
-        data={"catalogo": catalogo if catalogo is not None else json.dumps(CATALOGO), "observacoes": "Foco em atenção"},
+        data={"data_relatorio": "2026-10-15", "cidade": "Gama – DF", "catalogo": catalogo if catalogo is not None else json.dumps(CATALOGO), "observacoes": "Foco em atenção"},
     )
 
 
@@ -143,6 +143,8 @@ def test_cria_laudo_do_protocolo_padrao(client, ia_falsa):
     andamento = _concluir(client, headers, _enviar(client, headers, pid))
     assert andamento["status"] == "concluido", andamento
     laudo = client.get(f"/api/reports/{andamento['report_id']}", headers=headers).json()
+    assert laudo["answers_json"]["dataRelatorio"] == "2026-10-15"
+    assert laudo["answers_json"]["cidade"] == "Gama – DF"
     assert laudo["answers_json"]["parto"] == "Cesáreo"
     assert laudo["answers_json"]["estudoCaso"].startswith("Criança de 7 anos")
     assert laudo["computed_json"]["origem"] == "ia_pdf"
@@ -238,3 +240,12 @@ def test_dados_confirmados_antes_preenchem_o_que_a_ia_deixou_vazio(client, ia_fa
     assert answers["complicacaoParto"] == "Não"
     assert answers["parto"] == "Cesáreo"
     assert answers["queixaFamiliar"] == "Esquece tarefas."  # dispensado nunca apaga o que a IA leu
+
+
+@pytest.mark.parametrize('metadados', [{}, {'data_relatorio': 'inválida'}, {'data_relatorio': '2026-02-30'}, {'data_relatorio': '2026-10-15', 'cidade': 'Cidade inválida'}])
+def test_exige_data_valida_e_cidade_do_sistema(client, metadados):
+    headers, pid = _preparar(client)
+    resposta = client.post(f'/api/patients/{pid}/laudo-ia', headers=headers,
+        files=[('arquivos', ('teste.pdf', b'%PDF-1.4', 'application/pdf'))],
+        data={'catalogo': json.dumps(CATALOGO), **metadados})
+    assert resposta.status_code == 422

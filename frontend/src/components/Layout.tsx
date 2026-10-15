@@ -13,7 +13,7 @@ const NAV_ITEMS = [
     children: [
       { to: '/pacientes', label: 'Todos os pacientes' },
       { to: '/atendimento/novo', label: 'Novo atendimento' },
-      { to: '/laudo-ia', label: 'Laudo por IA' },
+      { to: '/laudo-ia', label: 'Relatório por IA' },
     ],
   },
   {

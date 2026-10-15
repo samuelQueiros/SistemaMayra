@@ -91,7 +91,7 @@ function EtiquetaDeSalvamento({ salvamento }: { salvamento: Salvamento }) {
 
 // Protocolo padrão (formulario-novo-paciente.html) embutido num iframe —
 // comportamento de sempre. Com `laudoId`, reabre um laudo já salvo (ex.:
-// gerado pelo Laudo Por IA) para ajustes.
+// gerado pelo Relatório por IA) para ajustes.
 function ProtocoloPadrao({ pacienteId, laudoId = null }: { pacienteId: string | null; laudoId?: string | null }) {
   const src = laudoId
     ? `/formulario-novo-paciente.html?laudo=${laudoId}`

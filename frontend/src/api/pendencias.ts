@@ -1,7 +1,7 @@
 import { apiGet, apiPatch, apiPost, apiPut } from './client'
 import type { CatalogoDoProtocolo } from './laudoIA'
 
-// Pendências de um laudo (o que faltou depois do Laudo por IA), calculadas
+// Pendências de um laudo (o que faltou depois do Relatório por IA), calculadas
 // pelo backend — ver backend/app/services/pendencias.py.
 
 export type Situacao = 'preenchido' | 'nao_se_aplica' | 'nao_informado'
@@ -44,6 +44,7 @@ export interface GrupoPendente {
 }
 
 export interface PendenciasDoLaudo {
+  metodos?: { chave: string; titulo: string; incluido: boolean }[]
   essenciais: { total: number; resolvidos: number }
   estudo_de_caso?: { editado: boolean }
   grupos: GrupoPendente[]
@@ -78,3 +79,6 @@ export interface ResultadoDaAtualizacao {
 // Aplica no laudo os dados confirmados e, se for o caso, reescreve só o estudo de caso.
 export const atualizarLaudo = (laudoId: string, reescreverEstudo: boolean) =>
   apiPost<ResultadoDaAtualizacao>(`/reports/${laudoId}/atualizar`, { reescrever_estudo: reescreverEstudo })
+
+export const excluirMetodos = (laudoId: string, escalas: string[]) =>
+  apiPut<PendenciasDoLaudo>(`/reports/${laudoId}/metodos-excluidos`, { escalas })

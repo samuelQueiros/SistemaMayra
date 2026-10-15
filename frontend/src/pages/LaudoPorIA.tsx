@@ -6,7 +6,7 @@ import { MAXIMO_DE_PDFS_LAUDO, acompanharGeracao, gerarLaudoPorIA, problemaNosPd
 import { atualizarLaudo } from '../api/pendencias'
 import type { AndamentoDoLaudoIA, CatalogoDoProtocolo, LaudoPorIA as Laudo } from '../api/laudoIA'
 import { downloadReportDocx, downloadReportPdf, getReport } from '../api/reports'
-import { Alert, Button, buttonClass, Card, PageHeader, Textarea } from '../components/ds'
+import { Alert, Button, buttonClass, Card, Input, Select, PageHeader, Textarea } from '../components/ds'
 import { EscolhaDePaciente } from '../components/pacientes/EscolhaDePaciente'
 import { SeletorDePdfs } from '../components/SeletorDePdfs'
 import { CamposQueFaltam } from '../components/pendencias/CamposQueFaltam'
@@ -34,7 +34,7 @@ interface MensagemDoFormulario {
   mensagem?: string
 }
 
-// Menu Pacientes → "Laudo Por IA": a psicóloga envia os PDFs (Google Forms e
+// Menu Pacientes → "Relatório por IA": a psicóloga envia os PDFs (Google Forms e
 // escalas), a IA escreve o estudo de caso e preenche o protocolo padrão, e o
 // próprio formulário (num iframe oculto) gera o laudo oficial com os
 // gráficos. Fluxo separado do preenchimento manual.
@@ -46,6 +46,8 @@ export default function LaudoPorIA() {
   const laudoDoHistorico = params.get('laudo')
   const [cadastrando, setCadastrando] = useState(false)
   const [arquivos, setArquivos] = useState<File[]>([])
+  const [dataRelatorio, setDataRelatorio] = useState('')
+  const [cidade, setCidade] = useState('')
   const [observacoes, setObservacoes] = useState('')
   const [etapa, setEtapa] = useState<Etapa>('preencher')
   const [erro, setErro] = useState<string | null>(null)
@@ -144,6 +146,7 @@ export default function LaudoPorIA() {
   }
 
   async function gerar() {
+    if (!dataRelatorio) { setErro('Informe a data do relatório.'); return }
     setErro(null)
     setLaudo(null)
     setLaudoSemDocumento(null)
@@ -154,7 +157,7 @@ export default function LaudoPorIA() {
       const { catalogo } = await esperarFormulario(`/formulario-novo-paciente.html?paciente=${pacienteId}&modo=catalogo`, 'laudo-ia:catalogo', 30000)
       if (!catalogo) throw new Error('Não foi possível ler os campos do protocolo.')
       setEtapa('ia')
-      const novo = await gerarLaudoPorIA(pacienteId, arquivos, observacoes, catalogo, setAndamento)
+      const novo = await gerarLaudoPorIA(pacienteId, arquivos, observacoes, catalogo, setAndamento, dataRelatorio, cidade)
       criado = novo.id
       setEtapa('documento')
       await esperarFormulario(`/formulario-novo-paciente.html?laudo=${novo.id}&modo=gerar`, 'laudo-ia:gerado', 120000)
@@ -176,7 +179,7 @@ export default function LaudoPorIA() {
     <div>
       <PageHeader
         eyebrow="Pacientes"
-        title="Laudo por IA"
+        title="Relatório por IA"
         description="Envie os PDFs do Google Forms e das escalas (CARS, ATA, SNAP-IV…). A IA faz o estudo de caso, preenche o protocolo padrão e o sistema gera o laudo com os gráficos. Você revisa e edita o Word."
       />
       <div style={{ display: 'grid', gap: 'var(--s-5)' }}>
@@ -194,6 +197,13 @@ export default function LaudoPorIA() {
         {pacienteId && !cadastrando && etapa !== 'pronto' && (
           <Card title="PDFs do paciente" subtitle={`De 1 a ${MAXIMO_DE_PDFS_LAUDO} PDFs: respostas do Google Forms (responsáveis, escola) e escalas pontuadas. Cada escala enviada gera o seu gráfico no laudo.`}>
             <div style={{ display: 'grid', gap: 'var(--s-4)' }}>
+              <div className="form-grid">
+                <Input id="data-relatorio-ia" label="Data do relatório" type="date" required value={dataRelatorio} disabled={ocupado} onChange={(e) => setDataRelatorio(e.target.value)} />
+                <Select id="cidade-relatorio-ia" label="Cidade do relatório (opcional)" placeholder="Selecione a cidade" value={cidade} disabled={ocupado} onChange={(e) => setCidade(e.target.value)} options={[
+                  { value: 'Cidade Ocidental – GO', label: 'Cidade Ocidental – GO' },
+                  { value: 'Gama – DF', label: 'Gama – DF' },
+                ]} />
+              </div>
               <SeletorDePdfs
                 arquivos={arquivos}
                 onChange={setArquivos}
@@ -239,8 +249,8 @@ export default function LaudoPorIA() {
                 </Alert>
               )}
               <div>
-                <Button icon={<Sparkles />} onClick={gerar} disabled={!arquivos.length} loading={ocupado} loadingLabel="Gerando…">
-                  Gerar laudo com IA
+                <Button icon={<Sparkles />} onClick={gerar} disabled={!arquivos.length || !dataRelatorio} loading={ocupado} loadingLabel="Gerando…">
+                  Gerar relatório com IA
                 </Button>
               </div>
             </div>

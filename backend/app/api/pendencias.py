@@ -69,6 +69,8 @@ def montar_pendencias(db: Session, report: Report, catalogo: CatalogoDoProtocolo
         computed.get("escalas_adicionadas", []),
         sugestoes_dos_anexos(db, report),
     ).montar()
+    excluidos = report.answers_json.get("__metodosExcluidos", [])
+    resultado["metodos"] = [{"chave": e.chave, "titulo": e.titulo, "incluido": e.chave not in excluidos} for e in ESCALAS]
     resultado["estudo_de_caso"] = {"editado": estudo_de_caso_editado(report.answers_json, computed)}
     return resultado
 
@@ -120,6 +122,24 @@ def marcar_escalas_aplicadas(
     catalogo = catalogo_do_laudo(report)
     if catalogo is None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=SEM_CATALOGO)
+    return montar_pendencias(db, report, catalogo)
+
+
+@router.put("/api/reports/{report_id}/metodos-excluidos")
+def excluir_metodos(
+    report_id: UUID,
+    dados: EscalasAplicadas,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> dict:
+    report = _get_report_do_psicologo(report_id, db, current)
+    catalogo = catalogo_do_laudo(report)
+    if catalogo is None:
+        raise HTTPException(status_code=409, detail=SEM_CATALOGO)
+    if not set(dados.escalas) <= {e.chave for e in ESCALAS}:
+        raise HTTPException(status_code=400, detail="Método desconhecido.")
+    report.answers_json = {**report.answers_json, "__metodosExcluidos": sorted(set(dados.escalas))}
+    db.commit()
     return montar_pendencias(db, report, catalogo)
 
 

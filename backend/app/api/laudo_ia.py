@@ -8,6 +8,8 @@ exatamente como no fluxo manual; a psicóloga baixa o Word para editar.
 Fluxo separado: não muda nada no preenchimento manual do protocolo."""
 
 import json
+from datetime import date
+from typing import Literal
 from functools import partial
 from uuid import UUID
 
@@ -111,6 +113,8 @@ def _gerar_laudo(
     catalogo: CatalogoDoProtocolo,
     observacoes: str | None,
     credenciais: dict,
+    data_relatorio: date,
+    cidade: str | None,
 ) -> None:
     """Roda fora da requisição (laudo_ia_jobs.executar), com sessão própria."""
     try:
@@ -133,6 +137,8 @@ def _gerar_laudo(
         # Dados já confirmados pela psicóloga em laudos anteriores preenchem o
         # que a IA deixou vazio (nunca sobrescrevem o que veio dos PDFs).
         answers, _ = aplicar_dados_confirmados(catalogo, answers, db.get(Patient, patient_id).dados_complementares)
+        answers["dataRelatorio"] = data_relatorio.isoformat()
+        answers["cidade"] = cidade or ""
         current = db.get(Psychologist, owner_id)
         template = garantir_template_custom_form(db, current)
         report = Report(
@@ -164,6 +170,8 @@ def criar_laudo_por_ia(
     patient_id: UUID,
     arquivos: list[UploadFile] = File(...),
     catalogo: str = Form(...),
+    data_relatorio: date = Form(...),
+    cidade: Literal["Cidade Ocidental – GO", "Gama – DF", ""] | None = Form(default=None),
     observacoes: str | None = Form(default=None),
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
@@ -189,6 +197,8 @@ def criar_laudo_por_ia(
             catalogo=catalogo_do_protocolo,
             observacoes=observacoes,
             credenciais=credenciais,
+            data_relatorio=data_relatorio,
+            cidade=cidade,
         ),
     )
     return GeracaoIniciada(job_id=job["id"])

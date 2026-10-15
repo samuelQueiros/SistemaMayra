@@ -1,7 +1,7 @@
 import { ApiError, apiGet, enviarFormulario } from './client'
 import type { Report } from './types'
 
-// Laudo Por IA: a IA lê os PDFs e preenche o protocolo padrão; o documento é
+// Relatório por IA: a IA lê os PDFs e preenche o protocolo padrão; o documento é
 // gerado pelo próprio formulário (ver pages/LaudoPorIA.tsx).
 export const MAXIMO_DE_PDFS_LAUDO = 10
 const TAMANHO_MAXIMO = 15 * 1024 * 1024
@@ -52,9 +52,13 @@ export async function gerarLaudoPorIA(
   arquivos: File[],
   observacoes: string,
   catalogo: CatalogoDoProtocolo,
-  aoProgredir?: (andamento: AndamentoDoLaudoIA) => void,
+  aoProgredir: ((andamento: AndamentoDoLaudoIA) => void) | undefined,
+  dataRelatorio: string,
+  cidade: string,
 ): Promise<{ id: string }> {
   const dados = new FormData()
+  dados.append('data_relatorio', dataRelatorio)
+  if (cidade) dados.append('cidade', cidade)
   arquivos.forEach((a) => dados.append('arquivos', a))
   dados.append('catalogo', JSON.stringify(catalogo))
   if (observacoes.trim()) dados.append('observacoes', observacoes.trim())

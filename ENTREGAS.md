@@ -2445,3 +2445,15 @@ lugar e rodar `npm run build`.
 - Se houver falha, o modal permanece aberto, mantém os dados e permite tentar novamente. Cliques repetidos, Escape e clique no fundo durante o salvamento não iniciam outra ação.
 - Validação: 71 testes do frontend passaram, incluindo regressões com conexão lenta, edições durante o envio e falha seguida de nova tentativa. Build aprovado; lint sem erros, com os 7 avisos já existentes.
 - As alterações visuais e seus novos arquivos continuam locais para inclusão no commit pelo responsável. Não foi realizado deploy nem validação visual em navegador nesta correção.
+
+## Cadastro, exclusão de pacientes e revisão do Relatório por IA
+
+**Status:** ✅ Implementado (2026-10-15), com validação automatizada local.
+
+- **Todos os pacientes:** novo botão “Cadastrar paciente”; no menu ⋯ de cada paciente, “Excluir paciente” abre confirmação com o nome e aviso de exclusão definitiva do cadastro e histórico. A exclusão confirmada remove relatórios, registros de alteração, fotos, anexos, formulários de responsáveis e PDFs armazenados. O acesso continua limitado à profissional dona do paciente.
+- **Cadastro:** nome, nascimento, sexo, escola, informações básicas/observações e seleção de várias fotos no mesmo formulário, disponível também no Relatório por IA. Se uma foto falhar, é possível reenviar as pendentes sem duplicar o paciente, ou continuar sem elas.
+- **Relatório por IA:** substitui o nome “Laudo por IA” no menu e na página. As rotas antigas continuam funcionando. Ao anexar PDFs, a data do relatório é obrigatória; a cidade é opcional, com Cidade Ocidental – GO e Gama – DF. Os valores informados são gravados no relatório e usados no documento final, independentemente da resposta da IA.
+- **Encaminhamentos:** a IA recebe instruções para sugerir uma ou mais opções do catálogo conforme as evidências dos documentos, sem inventar opções ou selecionar sem fundamento. Os encaminhamentos selecionados agora são listados no documento final e continuam editáveis no formulário.
+- **Métodos:** o modal permite desmarcar CARS, ATA, SNAP-IV, TOD, Portage e M-CHAT. A escolha é salva por relatório, preserva as respostas e permite reinclusão. “Salvar e gerar o protocolo” atualiza o documento, omitindo as seções/gráficos e os parágrafos padrão dos métodos removidos. Textos clínicos livres que mencionem esses métodos precisam ser revisados pela profissional. Mesmo sem campos pendentes, há “Revisar métodos”.
+- **Compatibilidade:** sem migração de banco. O frontend e o backend devem ser atualizados juntos, pois a geração agora exige `data_relatorio`. Nenhum commit ou deploy foi realizado nesta entrega.
+- **Validação concluída:** 337 testes do backend e 76 testes do frontend passaram; build de produção aprovado; lint sem erros (7 avisos existentes). Teste de composição executa o formulário real em DOM simulado e verifica data/cidade, encaminhamentos, remoção/reinclusão de métodos e preservação de respostas. A IA foi simulada nos testes; não houve chamada real ao provedor nem validação visual em navegador.

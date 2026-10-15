@@ -70,7 +70,7 @@ export default function HistoricoPaciente() {
     return (template?.schema_json as { rule_type?: string } | undefined)?.rule_type === 'protocolo'
   }
 
-  // Protocolo padrão (formulario-novo-paciente.html), manual ou gerado pelo Laudo Por IA.
+  // Protocolo padrão (formulario-novo-paciente.html), manual ou gerado pelo Relatório por IA.
   function ehProtocoloPadrao(report: ReportResumo) {
     const template = templates.find((t) => t.id === report.template_id)
     return (template?.schema_json as { rule_type?: string } | undefined)?.rule_type === 'custom_form'
@@ -154,13 +154,13 @@ export default function HistoricoPaciente() {
       {error && <Alert tone="danger">{error}</Alert>}
 
       {id && (
-        <Card title="Laudo por IA" style={{ marginTop: 'var(--s-5)' }}>
+        <Card title="Relatório por IA" style={{ marginTop: 'var(--s-5)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-4)', alignItems: 'center', justifyContent: 'space-between' }}>
             <p className="text-2" style={{ margin: 0, flex: '1 1 320px' }}>
               Envie os PDFs dos formulários e das escalas para gerar o estudo de caso e o laudo no protocolo padrão.
             </p>
             <Link to={`/laudo-ia?paciente=${id}`} className={buttonClass('tonal')}>
-              <Sparkles aria-hidden="true" /> Gerar laudo com IA
+              <Sparkles aria-hidden="true" /> Gerar relatório com IA
             </Link>
           </div>
         </Card>

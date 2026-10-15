@@ -1291,6 +1291,8 @@ function catalogoParaIA(){
 }
 window.catalogoParaIA=catalogoParaIA;
 
+let metodosExcluidos=[];
+const metodoIncluido=chave=>!metodosExcluidos.includes(chave);
 function coletarDados(){
   const dados={};
   dados.__fotosPacienteDados=fotosPacienteDados;
@@ -1298,6 +1300,7 @@ function coletarDados(){
   dados.__quadros={};document.querySelectorAll("#quadrosObservacao .quadro-hipotese").forEach(b=>{dados.__quadros[b.dataset.chave]={rotulo:b.dataset.rotulo,linhas:linhasDoQuadro(b.dataset.chave).length};});
   dados.__auto={};CAMPOS_AUTOMATICOS.forEach(id=>{const el=document.getElementById(id);if(el&&el.dataset.auto!==undefined)dados.__auto[id]=el.dataset.auto;});
   document.querySelectorAll("input, textarea, select").forEach(el=>{if(el.type==="file")return;const key=el.id||el.name;if(!key)return;if(el.type==="checkbox"||el.type==="radio")dados[key]=el.checked;else dados[key]=el.value;});
+  dados.__metodosExcluidos=metodosExcluidos;
   return dados;
 }
 // Select que recebe um valor fora das opções (ex.: laudo salvo quando o
@@ -1318,6 +1321,7 @@ function migrarQuadroAntigo(dados){
 }
 function aplicarDados(dados){
   dados=dados||{};
+  if(Array.isArray(dados.__metodosExcluidos))metodosExcluidos=dados.__metodosExcluidos;
   if(Array.isArray(dados.__fotosPacienteDados)){fotosPacienteDados=dados.__fotosPacienteDados;renderizarFotosPaciente();}
   if("__capaRelatorio" in dados){capaRelatorioDados=(dados.__capaRelatorio&&dados.__capaRelatorio.src)?dados.__capaRelatorio:null;versaoCapaRelatorio++;renderizarCapaRelatorio();}
   ["dataNascimento","dataRelatorio","anoEscolar","sexo"].forEach(k=>{if(typeof dados[k]==="string")setValor(k,dados[k]);});
@@ -1746,6 +1750,11 @@ function aplicarTextosPadrao(preencherVazios){
 
 // Texto-padrão (no gênero atual do paciente) do parágrafo de uma escala,
 // usado ao ligar o ícone correspondente.
+function chaveDoMetodo(id){return {CARS:"cars",ATA:"ata",SNAPIV:"snap",PORTAGE:"portage",TOD:"tod",MCHAT:"mchat"}[id];}
+function metodologiaDoRelatorio(){
+  return valor("metodologia").split(/\r?\n/).filter(linha=>!ESCALAS_METODOLOGIA.some(e=>!metodoIncluido(chaveDoMetodo(e.id))&&linha.trim().startsWith(e.marcador))).join("\n");
+}
+
 function paragrafoEscala(escalaId){
   return textosPadraoLaudo(formasGenero(valor("sexo")))._metodologiaPartes[escalaId];
 }
@@ -1754,6 +1763,7 @@ function paragrafoEscala(escalaId){
 // texto atual do campo Metodologia (o estado nunca é guardado à parte —
 // é sempre lido do próprio texto, então sobrevive a reload/rascunho salvo).
 function escalaAtivaNoTexto(escalaId){
+  if(!metodoIncluido(chaveDoMetodo(escalaId)))return false;
   const cfg=ESCALAS_METODOLOGIA.find(e=>e.id===escalaId);
   const ta=document.getElementById("metodologia");
   if(!cfg||!ta)return false;
@@ -1766,8 +1776,13 @@ function alternarEscalaMetodologia(escalaId){
   if(!cfg||!ta)return;
   const linhas=ta.value.split(/\r?\n/);
   const idxAtual=linhas.findIndex(linha=>linha.trim().startsWith(cfg.marcador));
-  if(idxAtual>=0){
+  const chave=chaveDoMetodo(escalaId);
+  if(!metodoIncluido(chave)){
+    metodosExcluidos=metodosExcluidos.filter(m=>m!==chave);
+    if(idxAtual<0)linhas.push(paragrafoEscala(escalaId));
+  }else if(idxAtual>=0){
     linhas.splice(idxAtual,1);
+    metodosExcluidos.push(chave);
   }else{
     let idxFechamento=linhas.findIndex(linha=>linha.trim().startsWith(FECHAMENTO_METODOLOGIA_MARCADOR));
     if(idxFechamento<0)idxFechamento=linhas.length;
@@ -2492,7 +2507,7 @@ async function gerarDocumentoLaudoHTML(){
   partes.push('<table class="cab-paciente"><tr><td class="cab-foto">'+(fotoCabecalho?'<img src="'+fotoCabecalho+'" data-mm="42" style="width:42mm;height:52mm">':"")+'</td><td class="cab-espaco"></td><td class="cab-info"><div class="cab-box">'+linhasCabecalho.map(l=>"<p>"+esc(l[0])+": "+esc(l[1])+"</p>").join("")+"</div></td></tr></table>");
   partes.push('<div class="faixa centro">PARECER NEUROPSICOPEDAGÓGICO<br>ANÁLISE COMPORTAMENTAL</div>');
   partes.push('<div class="caixa-cinza clara"><p><strong>NOTA SOBRE OS RESULTADOS:</strong> Os percentuais apresentados neste relatório possuem caráter descritivo e clínico-observacional, sendo construídos a partir do desempenho apresentado nas atividades propostas, dos registros realizados durante os atendimentos e da análise qualitativa dos dados obtidos. Esses valores não correspondem a percentis normativos, índices psicométricos ou escores provenientes de testes padronizados restritos a outras categorias profissionais. Constituem recurso de organização e representação visual dos achados e devem ser interpretados conjuntamente com as demais informações apresentadas neste relatório.</p></div>');
-  partes.push(blocoDeTexto(valor("metodologia"),Object.assign({primeiroSemRecuo:/^\s*\*\*(METODOLOGIA|PROTOCOLO UTILIZADO)/i.test(valor("metodologia"))},opcoesTexto)));
+  partes.push(blocoDeTexto(metodologiaDoRelatorio(),Object.assign({primeiroSemRecuo:/^\s*\*\*(METODOLOGIA|PROTOCOLO UTILIZADO)/i.test(valor("metodologia"))},opcoesTexto)));
   partes.push(texto("parecerContexto"));
 
   /* Anamnese e histórico de desenvolvimento */
@@ -2541,8 +2556,8 @@ async function gerarDocumentoLaudoHTML(){
   }
 
   /* Atendimentos + CARS */
-  const cars=valor("cars")!==""?Number(valor("cars")):null;
-  const imgCARS=graficoCARS();
+  const cars=metodoIncluido("cars")&&valor("cars")!==""?Number(valor("cars")):null;
+  const imgCARS=metodoIncluido("cars")?graficoCARS():null;
   if(valor("textoAtendimentos").trim()||imgCARS){
     partes.push(QUEBRA+texto("textoAtendimentos"));
     if(cars!==null){
@@ -2556,7 +2571,7 @@ async function gerarDocumentoLaudoHTML(){
   }
 
   /* ATA */
-  if(valor("ata")!==""){
+  if(metodoIncluido("ata")&&valor("ata")!==""){
     const imgATA=graficoATA();
     partes.push(QUEBRA+'<p class="recuo">Os comportamentos observados direta e indiretamente e de acordo com as observações, foram totalizados <strong>'+esc(valor("ata"))+" pontos</strong> na análise da escala <strong>ATA</strong>, o que significa que "+g.o+" paciente apresenta <strong>"+esc(valor("ataPercentual")||"0")+"% de características</strong> (rastreada por essa escala) que correspondem ao <strong>TEA- Transtorno do Espectro Autista.</strong></p>");
     partes.push('<p class="centro"><mark class="cinza"><strong><span style="font-size:8pt">Pontuação acima de 16 pontos&nbsp; - &nbsp;Atraso no desenvolvimento&nbsp; / &nbsp;Pontuação acima 20 pontos&nbsp; - &nbsp;Traços Autísticos</span></strong></mark></p>');
@@ -2596,7 +2611,7 @@ async function gerarDocumentoLaudoHTML(){
   const portage=portagePorArea();
   const idadeAnos=nascimento?Math.floor((idadeMeses()||0)/12):0;
   const imgPortage=graficoPortage(portage,idadeAnos);
-  if(imgPortage||valor("textoPortage").trim()){
+  if(metodoIncluido("portage")&&(imgPortage||valor("textoPortage").trim())){
     partes.push(QUEBRA);
     if(idadeForaDaFaixaPortage(idadeMeses())){
       partes.push('<div class="caixa-cinza clara"><p><strong>Observação sobre a faixa etária do Portage:</strong> o paciente encontra-se fora da faixa etária de referência do Inventário Portage Operacionalizado (0 a 6 anos). Os resultados apresentados foram utilizados exclusivamente como referência de repertório e levantamento de habilidades observadas, e não como parâmetro de comparação normativa para a idade cronológica atual.</p></div>');
@@ -2621,7 +2636,7 @@ async function gerarDocumentoLaudoHTML(){
   /* SNAP-IV */
   const snap=analisarSNAP();
   const imgsSNAP=graficosSNAP();
-  if(imgsSNAP){
+  if(metodoIncluido("snap")&&imgsSNAP){
     const LIMIAR=6;
     const des=snap.des, hip=snap.hip;
     const fraseDes=des>=LIMIAR?"considera-se que <strong>EXISTEM</strong> sintomas de <strong>DESATENÇÃO</strong>":"considera-se que <strong>NÃO EXISTEM</strong> sintomas suficientes de <strong>DESATENÇÃO</strong>";
@@ -2633,7 +2648,7 @@ async function gerarDocumentoLaudoHTML(){
 
   /* Protocolo TOD — só entra no relatório se algum item foi respondido */
   const tod=analisarTOD();
-  if(tod.pre>0){
+  if(metodoIncluido("tod")&&tod.pre>0){
     partes.push(QUEBRA+'<h3><mark class="cinza">Protocolo TOD — Transtorno Opositor Desafiador</mark></h3>');
     if(tod.completo){
       partes.push('<p class="recuo">Foram identificados <strong>'+tod.pos+" de "+todItens.length+"</strong> comportamentos compatíveis com o "+"Transtorno Opositor Desafiador (TOD), o que corresponde a <strong>"+tod.perc+'%</strong> dos itens do protocolo.</p>');
@@ -2646,7 +2661,7 @@ async function gerarDocumentoLaudoHTML(){
      automático (o instrumento não tem algoritmo de pontuação implementado
      neste sistema; a interpretação cabe à profissional). */
   const itensMCHAT=mchatItens.map((t,i)=>({item:t,resp:valor("mchat_"+i)})).filter(x=>x.resp!=="");
-  if(itensMCHAT.length){
+  if(metodoIncluido("mchat")&&itensMCHAT.length){
     const linhasMCHAT=itensMCHAT.map(x=>"<tr><td>"+esc(x.item)+"</td><td>"+(x.resp==="sim"?"Sim":"Não")+"</td></tr>").join("");
     partes.push(QUEBRA+'<h3><mark class="cinza">M-CHAT — Modified Checklist For Autism In Toddlers</mark></h3>');
     partes.push('<table class="tabela dupla compacta" data-larguras="130,40" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:130mm"><col style="width:40mm"></colgroup><tr><th>Item</th><th>Resposta</th></tr>'+linhasMCHAT+"</table>");
@@ -2681,6 +2696,8 @@ async function gerarDocumentoLaudoHTML(){
   partes.push(QUEBRA);
   if(valor("textoEncaminhamentoExames").trim())partes.push('<div class="caixa-cinza clara">'+blocoDeTexto(valor("textoEncaminhamentoExames"),opcoesTexto)+"</div>");
 
+  const encaminhamentosSelecionados=Array.from(document.querySelectorAll(".encaminhamento:checked")).map(el=>el.value);
+  if(encaminhamentosSelecionados.length)partes.push('<h3><mark class="cinza">Encaminhamentos</mark></h3><ul class="bullets">'+encaminhamentosSelecionados.map(e=>"<li>"+esc(e)+"</li>").join("")+"</ul>");
   const estudoDeCaso=valor("estudoCaso").trim(), observacoesClinicas=valor("observacoesClinicas").trim();
   if(estudoDeCaso||observacoesClinicas){
     partes.push('<h3><mark class="cinza">Estudo De Caso E Observações Clínicas</mark></h3>');
@@ -2711,7 +2728,7 @@ async function gerarDocumentoLaudoHTML(){
   const dataRel=dataRelatorioObj();
   const cidade=(valor("cidade")||"").replace(/\s*–\s*/g," - ");
   partes.push('<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>');
-  partes.push('<p class="direita" style="margin-top:4mm"><strong>'+esc(cidade)+", "+dataRel.getDate()+" de "+MESES_EXTENSO[dataRel.getMonth()]+" de "+dataRel.getFullYear()+".</strong></p>");
+  partes.push('<p class="direita" style="margin-top:4mm"><strong>'+(cidade?esc(cidade)+", ":"")+dataRel.getDate()+" de "+MESES_EXTENSO[dataRel.getMonth()]+" de "+dataRel.getFullYear()+".</strong></p>");
   partes.push('<div class="linha-assinatura"></div>');
   partes.push('<p class="centro compacto assinatura-nome">'+esc(perfil.nome)+"</p>");
   perfil.credenciais.forEach(t=>partes.push('<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">'+esc(t)+"</span></strong></mark></p>"));
