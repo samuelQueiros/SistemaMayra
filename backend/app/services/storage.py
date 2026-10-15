@@ -147,5 +147,9 @@ def get_reports_storage() -> Storage:
     return _build_storage("reports")
 
 
+def get_attachments_storage() -> Storage:
+    return _build_storage("anexos")
+
+
 def get_guardian_forms_storage() -> Storage:
     return _build_storage("guardian_forms")

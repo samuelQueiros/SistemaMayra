@@ -1,7 +1,7 @@
 import uuid
 from datetime import date
 
-from sqlalchemy import Date, ForeignKey, String, Text
+from sqlalchemy import Date, ForeignKey, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -18,6 +18,11 @@ class Patient(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     # Usados na seção "Identificação" do PDF completo (ver ENTREGAS.md).
     sex: Mapped[str | None] = mapped_column(String(20), default=None)
     school_info: Mapped[str | None] = mapped_column(Text, default=None)
+    # Dados confirmados pela psicóloga ao completar as pendências de um laudo,
+    # por campo do protocolo: {campo_id: {valor, situacao, origem, anexo_id,
+    # atualizado_em}}; situacao = preenchido | nao_se_aplica | nao_informado.
+    # Reaproveitados nos próximos Laudos por IA do paciente.
+    dados_complementares: Mapped[dict | None] = mapped_column(JSON, default=None)
 
     owner: Mapped["Psychologist"] = relationship(back_populates="patients")
     reports: Mapped[list["Report"]] = relationship(back_populates="patient")
