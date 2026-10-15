@@ -57,6 +57,8 @@ def motivo_do_erro(exc: Exception) -> str:
         return "o modelo configurado não foi encontrado no provedor"
     if status_http is not None and status_http >= 500:
         return "o provedor de IA está instável no momento"
+    if "connection" in type(exc).__name__.lower():
+        return "não foi possível conectar ao provedor de IA"
     return "erro inesperado do provedor de IA"
 
 

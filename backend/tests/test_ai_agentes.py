@@ -263,3 +263,10 @@ def test_falha_de_um_especialista_diz_qual_parte(monkeypatch):
     monkeypatch.setattr(laudo_ia, "redigir_estudo_de_caso", lambda **kw: "Estudo.")
     with pytest.raises(ErroNaEtapaDaIA, match='parte "escalas" \\(o provedor de IA está instável no momento\\)'):
         preencher_protocolo(provider="anthropic", model="m", api_key="k", paciente="C", pdfs=[], catalogo=_catalogo_real())
+
+
+def test_motivo_do_erro_de_conexao():
+    class APIConnectionError(Exception):
+        pass
+
+    assert extracao.motivo_do_erro(APIConnectionError("Connection error.")) == "não foi possível conectar ao provedor de IA"
