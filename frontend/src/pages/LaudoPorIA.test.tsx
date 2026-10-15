@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as patients from '../api/patients'
@@ -65,7 +65,10 @@ describe('Relatório por IA', () => {
 
     expect(await screen.findByText('Laudo gerado')).toBeInTheDocument()
     expect(await screen.findByText('Todos os campos do protocolo estão preenchidos.')).toBeInTheDocument()
-    expect(screen.getByTitle('Pré-visualização do laudo')).toBeInTheDocument()
+    // A prévia só aparece quando ela pede.
+    expect(screen.queryByTitle('Pré-visualização do laudo')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Ver prévia do relatório' }))
+    expect(await screen.findByTitle('Pré-visualização do laudo')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Baixar Word (DOCX)' }))
     expect(reports.downloadReportDocx).toHaveBeenCalledWith('l1', 'laudo_ia_Bia_Lima.docx')
   })
@@ -117,7 +120,7 @@ describe('Relatório por IA', () => {
     expect(screen.getByRole('button', { name: 'Gerar relatório com IA' })).toBeEnabled()
   })
 
-  it('"Atualizar laudo" aplica os dados, reescreve o estudo e gera o documento de novo', async () => {
+  it('abre direto nos campos que faltam e "Atualizar relatório" inclui os dados e gera o documento de novo', async () => {
     vi.mocked(reports.getReport).mockResolvedValue({
       id: 'l5',
       answers_json: { nomePaciente: 'Bia Lima' },
@@ -142,13 +145,15 @@ describe('Relatório por IA', () => {
         <LaudoPorIA />
       </MemoryRouter>,
     )
-    fireEvent.click(await screen.findByRole('button', { name: 'Preencher campos' }))
-    fireEvent.click(await screen.findByRole('button', { name: 'Salvar e gerar o protocolo' }))
+    // Sem clicar em "Preencher campos": o modal já abre.
+    const modal = await screen.findByRole('dialog', { name: 'Campos que faltam no laudo' })
+    fireEvent.click(within(modal).getByRole('button', { name: 'Atualizar relatório' }))
     expect(await screen.findByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l5&modo=gerar')
     expect(pendencias.atualizarLaudo).toHaveBeenCalledWith('l5', false)
     expect(laudoIA.acompanharGeracao).toHaveBeenCalledWith('j9', expect.any(Function))
     mensagemDoFormulario({ tipo: 'laudo-ia:gerado', laudoId: 'l5' })
-    expect(await screen.findByText('Laudo atualizado com 2 dados novos. O estudo de caso foi reescrito.')).toBeInTheDocument()
+    expect(await screen.findByText('Relatório atualizado com 2 dados novos. Os dados novos foram incluídos no estudo de caso.')).toBeInTheDocument()
+    expect(screen.queryByTitle('Pré-visualização do laudo')).not.toBeInTheDocument()
   })
 })
 
@@ -169,8 +174,9 @@ it('ao abrir pelo histórico mostra carregamento, sem exibir o formulário de ge
   vi.mocked(patients.listPatients).mockResolvedValue([paciente])
   vi.mocked(pendencias.getPendencias).mockResolvedValue({ essenciais: { total: 0, resolvidos: 0 }, grupos: [], escalas_para_adicionar: [] })
   render(<MemoryRouter initialEntries={['/laudo-ia?paciente=p1&laudo=l10']}><LaudoPorIA /></MemoryRouter>)
-  expect(screen.getByRole('status')).toHaveTextContent('Carregando os dados do relatório')
+  expect(screen.getByRole('status')).toHaveTextContent('Carregando os campos que faltam')
   expect(screen.queryByTestId('arquivos-pdf')).not.toBeInTheDocument()
+  expect(pendencias.getPendencias).toHaveBeenCalledWith('l10') // em paralelo com o resumo
   expect(reports.getReport).not.toHaveBeenCalled()
   await act(async () => { resolver({ id: 'l10', patient_id: 'p1', computed_json: { origem: 'ia_pdf' } } as never) })
   expect(await screen.findByText('Todos os campos do protocolo estão preenchidos.')).toBeInTheDocument()

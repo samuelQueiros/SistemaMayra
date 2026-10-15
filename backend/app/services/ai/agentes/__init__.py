@@ -13,6 +13,7 @@ from app.services.ai.agentes.especialistas import (
     ESCALAS,
     CamposDoEspecialista,
     Especialista,
+    integrar_dados_ao_estudo_de_caso,
     preencher_campos,
     redigir_estudo_de_caso,
 )
@@ -29,6 +30,7 @@ __all__ = [
     "documentos_em_texto",
     "em_paralelo",
     "extrair_documentos",
+    "integrar_dados_ao_estudo_de_caso",
     "preencher_campos",
     "redigir_estudo_de_caso",
 ]

@@ -4,6 +4,8 @@ import { Download, FileText, PencilLine, Plus, Sparkles } from 'lucide-react'
 import { ApiError } from '../api/client'
 import { MAXIMO_DE_PDFS_LAUDO, acompanharGeracao, gerarLaudoPorIA, problemaNosPdfsDoLaudo } from '../api/laudoIA'
 import { atualizarLaudo } from '../api/pendencias'
+import type { PendenciasDoLaudo } from '../api/pendencias'
+import { carregarPendencias } from '../api/carregarPendencias'
 import type { AndamentoDoLaudoIA, CatalogoDoProtocolo, LaudoPorIA as Laudo } from '../api/laudoIA'
 import { downloadReportDocx, downloadReportPdf, getReport, getReportResumo } from '../api/reports'
 import { Alert, Button, buttonClass, Card, Input, Select, PageHeader, Textarea } from '../components/ds'
@@ -57,25 +59,13 @@ export default function LaudoPorIA() {
   const [resultadoDaAtualizacao, setResultadoDaAtualizacao] = useState<{ tom: 'success' | 'danger'; texto: string } | null>(null)
   const [recarregarPendencias, setRecarregarPendencias] = useState(0)
   const [laudo, setLaudo] = useState<Laudo | null>(null)
+  // Pendências carregadas junto com o resumo: o modal abre direto, sem outra espera.
+  const [pendenciasIniciais, setPendenciasIniciais] = useState<PendenciasDoLaudo | null>(null)
   const [carregandoPrevia, setCarregandoPrevia] = useState(false)
   const [erroAbertura, setErroAbertura] = useState<string | null>(null)
   const [laudoSemDocumento, setLaudoSemDocumento] = useState<string | null>(null)
   const [iframeSrc, setIframeSrc] = useState<string | null>(null)
   const espera = useRef<{ tipo: string; resolver: (m: MensagemDoFormulario) => void; rejeitar: (e: Error) => void } | null>(null)
-
-  useEffect(() => {
-    if (!laudoDoHistorico || laudo?.id === laudoDoHistorico) return
-    let ativo = true
-    getReportResumo(laudoDoHistorico)
-      .then((r) => {
-        if (!ativo) return
-        setLaudo({ ...r, answers_json: {}, generated_text: null } as unknown as Laudo)
-        setErroAbertura(null)
-        setEtapa('pronto')
-      })
-      .catch(() => { if (ativo) setErroAbertura('Não foi possível abrir o relatório. Volte ao histórico e tente novamente.') })
-    return () => { ativo = false }
-  }, [laudoDoHistorico, laudo?.id])
 
   useEffect(() => {
     function onMessage(event: MessageEvent) {
@@ -128,24 +118,51 @@ export default function LaudoPorIA() {
     return catalogo
   }, [pacienteId])
 
-  // Aplica os dados confirmados, reescreve só o estudo de caso se for o caso
-  // (sem reler os PDFs) e gera o documento de novo pelo formulário (sem IA).
+  // Resumo (sem fotos nem HTML) e pendências em paralelo. Se as pendências
+  // falharem, o quadro "Campos que faltam" tenta de novo e mostra o erro.
+  const abrirResumo = useCallback(
+    (laudoId: string) =>
+      Promise.all([
+        getReportResumo(laudoId).then((r) => ({ ...r, answers_json: {}, generated_text: null }) as unknown as Laudo),
+        carregarPendencias(laudoId, obterCatalogo).catch(() => null),
+      ]),
+    [obterCatalogo],
+  )
+
+  useEffect(() => {
+    if (!laudoDoHistorico || laudo?.id === laudoDoHistorico) return
+    let ativo = true
+    abrirResumo(laudoDoHistorico)
+      .then(([r, pendencias]) => {
+        if (!ativo) return
+        setPendenciasIniciais(pendencias)
+        setLaudo(r)
+        setErroAbertura(null)
+        setEtapa('pronto')
+      })
+      .catch(() => { if (ativo) setErroAbertura('Não foi possível abrir o relatório. Volte ao histórico e tente novamente.') })
+    return () => { ativo = false }
+  }, [laudoDoHistorico, laudo?.id, abrirResumo])
+
+  // "Atualizar relatório": aplica os dados confirmados, a IA encaixa os novos
+  // no estudo de caso já escrito (sem reler os PDFs) e o formulário gera o
+  // documento de novo (sem IA). A prévia só é baixada se ela pedir.
   async function atualizar(laudoId: string, reescreverEstudo: boolean) {
     setResultadoDaAtualizacao(null)
     try {
-      setAtualizando('Aplicando os dados no laudo…')
+      setAtualizando('Aplicando os dados no relatório…')
       const r = await atualizarLaudo(laudoId, reescreverEstudo)
-      if (r.job_id) await acompanharGeracao(r.job_id, (a) => setAtualizando(a.mensagem || 'Reescrevendo o estudo de caso…'))
+      if (r.job_id) await acompanharGeracao(r.job_id, (a) => setAtualizando(a.mensagem || 'Incluindo os dados novos no estudo de caso…'))
       setAtualizando('Gerando o documento com os dados novos…')
       await esperarFormulario(`/formulario-novo-paciente.html?laudo=${laudoId}&modo=gerar`, 'laudo-ia:gerado', 120000)
-      setLaudo((await getReport(laudoId)) as unknown as Laudo)
+      setLaudo((atual) => (atual ? { ...atual, generated_text: null } : atual))
       setRecarregarPendencias((n) => n + 1)
       const estudo =
-        r.estudo === 'reescrevendo' ? ' O estudo de caso foi reescrito.' : r.estudo === 'mantido_editado' ? ' O estudo de caso editado por você foi mantido.' : ''
+        r.estudo === 'reescrevendo' ? ' Os dados novos foram incluídos no estudo de caso.' : r.estudo === 'mantido_editado' ? ' O estudo de caso editado por você foi mantido.' : ''
       const campos = r.campos_aplicados === 1 ? '1 dado novo' : `${r.campos_aplicados} dados novos`
-      setResultadoDaAtualizacao({ tom: 'success', texto: `Laudo atualizado com ${campos}.${estudo}` })
+      setResultadoDaAtualizacao({ tom: 'success', texto: `Relatório atualizado com ${campos}.${estudo}` })
     } catch (e) {
-      setResultadoDaAtualizacao({ tom: 'danger', texto: e instanceof Error ? e.message : 'Não foi possível atualizar o laudo.' })
+      setResultadoDaAtualizacao({ tom: 'danger', texto: e instanceof Error ? e.message : 'Não foi possível atualizar o relatório.' })
     } finally {
       setAtualizando(null)
     }
@@ -167,7 +184,9 @@ export default function LaudoPorIA() {
       criado = novo.id
       setEtapa('documento')
       await esperarFormulario(`/formulario-novo-paciente.html?laudo=${novo.id}&modo=gerar`, 'laudo-ia:gerado', 120000)
-      setLaudo((await getReport(novo.id)) as unknown as Laudo)
+      const [resumo, pendencias] = await abrirResumo(novo.id)
+      setPendenciasIniciais(pendencias)
+      setLaudo(resumo)
       setEtapa('pronto')
       // No endereço: recarregar ou voltar à página reabre este laudo e as pendências.
       setParams({ paciente: pacienteId, laudo: novo.id }, { replace: true })
@@ -186,11 +205,25 @@ export default function LaudoPorIA() {
     finally { setCarregandoPrevia(false) }
   }
 
+  // Formulário num iframe oculto (catálogo e geração do documento). Também na
+  // tela de carregamento: relatórios antigos leem o catálogo antes de abrir.
+  const formularioOculto = iframeSrc && (
+    <iframe
+      key={iframeSrc}
+      src={iframeSrc}
+      title="Gerando o laudo"
+      aria-hidden="true"
+      tabIndex={-1}
+      style={{ position: 'fixed', left: -10000, top: 0, width: 1100, height: 800, border: 0 }}
+    />
+  )
+
   if (laudoDoHistorico && laudo?.id !== laudoDoHistorico) {
     return <div className="page-stack">
       <PageHeader eyebrow="Pacientes" title="Campos que faltam" description="Revise os dados e os métodos deste relatório." />
-      {erroAbertura ? <Alert tone="danger">{erroAbertura}</Alert> : <p role="status" aria-live="polite">Carregando os dados do relatório…</p>}
+      {erroAbertura ? <Alert tone="danger">{erroAbertura}</Alert> : <p role="status" aria-live="polite">Carregando os campos que faltam…</p>}
       <Link to={`/pacientes/${pacienteId}/historico`} className={buttonClass('secondary')}>Voltar ao histórico</Link>
+      {formularioOculto}
     </div>
   }
 
@@ -298,7 +331,10 @@ export default function LaudoPorIA() {
               </div>
               {erro && <Alert tone="danger">{erro}</Alert>}
               <CamposQueFaltam
+                key={laudo.id}
                 laudoId={laudo.id}
+                pendenciasIniciais={pendenciasIniciais ?? undefined}
+                abrirAoCarregar
                 pacienteId={pacienteId}
                 obterCatalogo={obterCatalogo}
                 recarregar={recarregarPendencias}
@@ -316,6 +352,7 @@ export default function LaudoPorIA() {
                   disabled={!!atualizando}
                   onClick={() => {
                     setLaudo(null)
+                    setPendenciasIniciais(null)
                     setArquivos([])
                     setEtapa('preencher')
                     setParams({ paciente: pacienteId }, { replace: true })
@@ -341,16 +378,7 @@ export default function LaudoPorIA() {
         )}
       </div>
 
-      {iframeSrc && (
-        <iframe
-          key={iframeSrc}
-          src={iframeSrc}
-          title="Gerando o laudo"
-          aria-hidden="true"
-          tabIndex={-1}
-          style={{ position: 'fixed', left: -10000, top: 0, width: 1100, height: 800, border: 0 }}
-        />
-      )}
+      {formularioOculto}
     </div>
   )
 }

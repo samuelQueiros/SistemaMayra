@@ -240,7 +240,12 @@ def ia_do_estudo(monkeypatch, client, laudo):
         chamadas.append(kwargs)
         return "Estudo reescrito com os dados novos."
 
+    def integrador(**kwargs):
+        chamadas.append(kwargs)
+        return "Estudo original da IA, agora com os dados novos."
+
     monkeypatch.setattr(rotas_pendencias, "redigir_estudo_de_caso", redator)
+    monkeypatch.setattr(rotas_pendencias, "integrar_dados_ao_estudo_de_caso", integrador)
     # Atualizar nunca relê os PDFs.
     monkeypatch.setattr(extracao, "extrair_documento", lambda **kw: pytest.fail("releu um PDF"))
     return chamadas
@@ -280,18 +285,29 @@ def test_aplica_os_campos_sem_ia_quando_nao_muda_o_estudo(client, laudo, ia_do_e
     assert not ia_do_estudo
 
 
-def test_dados_de_gestacao_reescrevem_so_o_estudo_sem_reler_pdfs(client, laudo, ia_do_estudo):
+def test_dados_de_gestacao_sao_incluidos_no_estudo_atual_sem_documentos(client, laudo, ia_do_estudo):
     headers, pid, rid = laudo
     _confirmar(client, headers, pid, {"parto": {"valor": "Cesáreo", "situacao": "preenchido"}})
     resultado, laudo_atual = _atualizar(client, headers, rid)
     assert resultado["estudo"] == "reescrevendo" and resultado["andamento"]["status"] == "concluido"
     assert laudo_atual["answers_json"]["parto"] == "Cesáreo"
-    assert laudo_atual["answers_json"]["estudoCaso"] == "Estudo reescrito com os dados novos."
-    assert laudo_atual["computed_json"]["estudo_de_caso_ia"] == "Estudo reescrito com os dados novos."
+    novo = "Estudo original da IA, agora com os dados novos."
+    assert laudo_atual["answers_json"]["estudoCaso"] == novo
+    assert laudo_atual["computed_json"]["estudo_de_caso_ia"] == novo
+    assert laudo_atual["computed_json"]["estudo_campos_integrados"] == ["parto"]
     [chamada] = ia_do_estudo
-    assert '"titulo":"Anamnese"' in chamada["documentos_texto"]  # JSON dos PDFs já lidos
-    assert "Dados complementares confirmados pela profissional" in chamada["documentos_texto"]
-    assert "Cesáreo" in chamada["documentos_texto"]
+    # Só o texto atual e o dado novo: os documentos do caso não são reenviados.
+    assert chamada["estudo_atual"] == "Estudo original da IA."
+    assert "Cesáreo" in chamada["dados_novos"] and "documentos_texto" not in chamada
+
+
+def test_dado_ja_incluido_nao_volta_para_a_ia(client, laudo, ia_do_estudo):
+    headers, pid, rid = laudo
+    _confirmar(client, headers, pid, {"parto": {"valor": "Cesáreo", "situacao": "preenchido"}})
+    _atualizar(client, headers, rid)
+    resultado, _ = _atualizar(client, headers, rid)
+    assert resultado == {"job_id": None, "campos_aplicados": 0, "estudo": "sem_mudanca"}
+    assert len(ia_do_estudo) == 1
 
 
 def test_estudo_editado_a_mao_e_mantido_salvo_pedido(client, laudo, ia_do_estudo):
@@ -305,8 +321,21 @@ def test_estudo_editado_a_mao_e_mantido_salvo_pedido(client, laudo, ia_do_estudo
     assert laudo_atual["answers_json"]["estudoCaso"] == "Texto ajustado pela psicóloga."
     assert laudo_atual["answers_json"]["parto"] == "Normal"
 
+    # A pedido, os dados novos entram no texto editado (que é a base).
     resultado, laudo_atual = _atualizar(client, headers, rid, reescrever_estudo=True)
     assert resultado["estudo"] == "reescrevendo" and len(ia_do_estudo) == 1
+    assert ia_do_estudo[0]["estudo_atual"] == "Texto ajustado pela psicóloga."
+    assert laudo_atual["answers_json"]["estudoCaso"] == "Estudo original da IA, agora com os dados novos."
+
+
+def test_sem_estudo_anterior_redige_sobre_os_documentos_ja_lidos(client, laudo, ia_do_estudo):
+    headers, pid, rid = laudo
+    client.put(f"/api/reports/{rid}/answers", json={"answers": {"anoEscolar": "2º Ano", "estudoCaso": ""}}, headers=headers)
+    _confirmar(client, headers, pid, {"parto": {"valor": "Cesáreo", "situacao": "preenchido"}})
+    resultado, laudo_atual = _atualizar(client, headers, rid, reescrever_estudo=True)
+    assert resultado["andamento"]["status"] == "concluido"
+    [chamada] = ia_do_estudo
+    assert '"titulo":"Anamnese"' in chamada["documentos_texto"] and "Cesáreo" in chamada["documentos_texto"]
     assert laudo_atual["answers_json"]["estudoCaso"] == "Estudo reescrito com os dados novos."
 
 

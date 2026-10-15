@@ -12,8 +12,12 @@ interface Props {
   laudoId: string
   pacienteId: string
   obterCatalogo: () => Promise<CatalogoDoProtocolo>
-  /** "Salvar e gerar o protocolo": aplica os dados e gera o documento de novo. */
+  /** "Atualizar relatório": aplica os dados, encaixa os novos no estudo de caso e gera o documento de novo. */
   onGerar: (reescreverEstudo: boolean) => void
+  /** Já carregadas por quem usa (junto com o relatório): sem outra consulta. */
+  pendenciasIniciais?: Pendencias
+  /** Abre o modal assim que houver campos para preencher. */
+  abrirAoCarregar?: boolean
   gerando?: boolean
   /** Incrementado por quem usa (ex.: depois de gerar) para recarregar o resumo. */
   recarregar?: number
@@ -31,19 +35,31 @@ function descricaoDoGrupo(g: GrupoPendente) {
 
 // Resumo do que falta no laudo ("Há alguns campos que podem ser
 // preenchidos:") e, ao clicar, o modal com os campos para preencher.
-export function CamposQueFaltam({ laudoId, pacienteId, obterCatalogo, onGerar, gerando = false, recarregar = 0 }: Props) {
-  const [pendencias, setPendencias] = useState<Pendencias | null>(null)
+const temCamposPendentes = (p: Pendencias) => p.grupos.some((g) => g.itens.some((i) => !i.situacao))
+
+export function CamposQueFaltam({ laudoId, pacienteId, obterCatalogo, onGerar, gerando = false, recarregar = 0, pendenciasIniciais, abrirAoCarregar = false }: Props) {
+  const [pendencias, setPendencias] = useState<Pendencias | null>(pendenciasIniciais ?? null)
   const [erro, setErro] = useState<string | null>(null)
-  const [modal, setModal] = useState<{ secao?: string } | null>(null)
+  const [modal, setModal] = useState<{ secao?: string } | null>(
+    abrirAoCarregar && pendenciasIniciais && temCamposPendentes(pendenciasIniciais) ? {} : null,
+  )
   const [versao, setVersao] = useState(0)
+  const abriuSozinho = useRef(!!pendenciasIniciais)
 
   useEffect(() => {
+    if (pendenciasIniciais && recarregar === 0 && versao === 0) return
     let ativo = true
     carregarPendencias(laudoId, obterCatalogo)
-      .then((dados) => { if (ativo) { setPendencias(dados); setErro(null) } })
+      .then((dados) => {
+        if (!ativo) return
+        setPendencias(dados)
+        setErro(null)
+        if (abrirAoCarregar && !abriuSozinho.current && temCamposPendentes(dados)) setModal({})
+        abriuSozinho.current = true
+      })
       .catch(() => { if (ativo) setErro('Não foi possível verificar os campos que faltam.') })
     return () => { ativo = false }
-  }, [laudoId, obterCatalogo, recarregar, versao])
+  }, [laudoId, obterCatalogo, recarregar, versao, pendenciasIniciais, abrirAoCarregar])
 
   if (erro) return <Alert tone="danger">{erro}</Alert>
   if (!pendencias) return <p role="status">Carregando os campos que faltam…</p>
@@ -53,6 +69,11 @@ export function CamposQueFaltam({ laudoId, pacienteId, obterCatalogo, onGerar, g
     setModal(null)
     setVersao((v) => v + 1) // atualiza o resumo com o que foi preenchido
   }
+  const atualizarRelatorio = (
+    <Button icon={<RefreshCw />} disabled={gerando} onClick={() => onGerar(false)}>
+      Atualizar relatório
+    </Button>
+  )
 
   return (
     <>
@@ -61,7 +82,13 @@ export function CamposQueFaltam({ laudoId, pacienteId, obterCatalogo, onGerar, g
         style={{ display: 'grid', gap: 'var(--s-3)', padding: 'var(--s-4)', background: 'var(--primary-soft)', border: '1px solid var(--violeta-200)', borderRadius: 'var(--r-md)' }}
       >
         {grupos.length === 0 ? (
-          <div><p style={{ margin: 0 }}>Todos os campos do protocolo estão preenchidos.</p>{pendencias.metodos && <Button onClick={() => setModal({})}>Revisar métodos</Button>}</div>
+          <div style={{ display: 'grid', gap: 'var(--s-3)' }}>
+            <p style={{ margin: 0 }}>Todos os campos do protocolo estão preenchidos.</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)' }}>
+              {pendencias.metodos && <Button variant="secondary" onClick={() => setModal({})}>Revisar métodos</Button>}
+              {atualizarRelatorio}
+            </div>
+          </div>
         ) : (
           <>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--s-3)' }}>
@@ -93,8 +120,9 @@ export function CamposQueFaltam({ laudoId, pacienteId, obterCatalogo, onGerar, g
                 </li>
               ))}
             </ul>
-            <div>
-              <Button onClick={() => setModal({})}>Preencher campos</Button>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)' }}>
+              <Button variant="secondary" onClick={() => setModal({})}>Preencher campos</Button>
+              {atualizarRelatorio}
             </div>
           </>
         )}
@@ -172,8 +200,8 @@ function ModalDosCampos({ pendenciasIniciais, laudoId, pacienteId, obterCatalogo
             {({ estudoEditado }) =>
               estudoEditado ? (
                 <Checkbox
-                  label="Reescrever o estudo de caso com os dados novos"
-                  description="Você editou o estudo de caso: sem marcar aqui, o texto atual é mantido."
+                  label="Incluir os dados novos no estudo de caso que você editou"
+                  description="Sem marcar, o seu texto fica como está; os campos do protocolo são atualizados do mesmo jeito."
                   checked={reescrever}
                   onChange={(e) => setReescrever(e.target.checked)}
                 />
@@ -193,7 +221,7 @@ function ModalDosCampos({ pendenciasIniciais, laudoId, pacienteId, obterCatalogo
               if (await salvarTudo()) onGerar(reescrever)
             }}
           >
-            Salvar e gerar o protocolo
+            Atualizar relatório
           </Button>
         </div>
       </Card>

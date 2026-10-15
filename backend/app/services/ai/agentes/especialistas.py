@@ -119,3 +119,39 @@ def redigir_estudo_de_caso(
         chat_model, [SystemMessage(content=ESTUDO_DE_CASO_SYSTEM_PROMPT), HumanMessage(content=conteudo)]
     )
     return resultado.estudo_de_caso
+
+
+INTEGRAR_AO_ESTUDO_SYSTEM_PROMPT = (
+    f"{PERSONA} Você recebe o ESTUDO DE CASO já redigido para este paciente e "
+    "DADOS NOVOS confirmados pela profissional depois que ele foi escrito. "
+    "Devolva o estudo de caso completo, incorporando os dados novos de forma "
+    "coerente com o texto existente: mantenha a estrutura, a ordem, o tom, a "
+    "terminologia e todo o conteúdo que continua válido; insira cada informação "
+    "nova no trecho a que ela pertence (gestação, desenvolvimento, rotina, "
+    "escola…), integrada à prosa e não como lista anexada ao fim; ajuste apenas "
+    "as frases que os dados novos completam, corrigem ou tornam desatualizadas "
+    "(por exemplo, algo dado como não informado). Se um dado novo já constar no "
+    "texto, não o repita. Quando divergir do texto, prevalece o dado confirmado "
+    "pela profissional. Não remova informações que os dados novos não contradizem "
+    "e não acrescente interpretações que eles não sustentem. "
+    f"{LIMITES_DA_IA} Escreva em português do Brasil. {ESTILO_DE_ESCRITA}"
+)
+
+
+def integrar_dados_ao_estudo_de_caso(
+    *, provider: str, model: str, api_key: str, paciente: str, estudo_atual: str, dados_novos: str, observacoes: str | None = None
+) -> str:
+    """Atualização incremental: só o texto atual + os dados novos (sem os
+    documentos do caso) — mais barata e preserva o que a IA já escreveu."""
+    chat_model = get_structured_model(provider, model, api_key, EstudoDeCaso, limites.ESTUDO_DE_CASO)
+    conteudo = (
+        _cabecalho(paciente, observacoes)
+        + "\nESTUDO DE CASO ATUAL:\n"
+        + estudo_atual
+        + "\n\nDADOS NOVOS CONFIRMADOS PELA PROFISSIONAL (seção — campo: resposta):\n"
+        + dados_novos
+    )
+    resultado = _invocar_com_retentativas(
+        chat_model, [SystemMessage(content=INTEGRAR_AO_ESTUDO_SYSTEM_PROMPT), HumanMessage(content=conteudo)]
+    )
+    return resultado.estudo_de_caso

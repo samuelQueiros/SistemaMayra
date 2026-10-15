@@ -21,18 +21,22 @@ from app.models.psychologist import Psychologist
 from app.models.report import Report
 from app.services import laudo_ia_jobs
 from app.services.ai import AIConfigurationError, resolve_ai_credentials
-from app.services.ai.agentes import DocumentoExtraido, documentos_em_texto, redigir_estudo_de_caso
+from app.services.ai.agentes import (
+    DocumentoExtraido,
+    documentos_em_texto,
+    integrar_dados_ao_estudo_de_caso,
+    redigir_estudo_de_caso,
+)
 from app.services.ai.agentes.extracao import motivo_do_erro
 from app.services.laudo_ia import CatalogoDoProtocolo, TAMANHO_MAXIMO_TEXTO
 from app.services.laudo_ia_jobs import Andamento
 from app.services.pendencias import (
     ESCALAS,
-    SECOES_DO_ESTUDO_DE_CASO,
     Pendencias,
     aplicar_dados_confirmados,
+    campos_novos_para_o_estudo,
     dados_confirmados_como_documento,
     estudo_de_caso_editado,
-    secoes_dos_campos,
 )
 
 router = APIRouter(tags=["pendencias"])
@@ -199,42 +203,57 @@ def salvar_dados_complementares(
 
 
 class AtualizarLaudoIn(BaseModel):
-    # Reescreve o estudo de caso mesmo se a psicóloga o editou (pedido explícito).
+    # Inclui os dados novos mesmo no estudo de caso editado à mão (pedido explícito).
     reescrever_estudo: bool = False
 
 
 def _reescrever_estudo(andamento: Andamento, *, bind, report_id: UUID, paciente: str, credenciais: dict) -> None:
-    """Só o redator do estudo de caso, sobre o JSON dos PDFs já lidos
-    (computed_json.documentos) + os dados confirmados — sem reler os PDFs."""
-    andamento.mensagem("Reescrevendo o estudo de caso com os dados novos…")
+    """"Atualizar relatório": a IA recebe só o estudo de caso atual + os dados
+    novos e os encaixa no texto (coerente com o que já foi escrito, sem os
+    documentos do caso). Sem estudo anterior, redige do zero sobre o JSON dos
+    PDFs já lidos (computed_json.documentos) — nunca relê os PDFs."""
     with Session(bind=bind) as db:
         report = db.get(Report, report_id)
         computed = dict(report.computed_json or {})
         catalogo = catalogo_do_laudo(report)
-        confirmados = {
-            campo_id
-            for campo_id, dado in (report.patient.dados_complementares or {}).items()
-            if dado.get("situacao") == "preenchido" and report.answers_json.get(campo_id) not in (None, "")
-        } & {c.id for c in catalogo.campos}
-        documentos = [DocumentoExtraido.model_validate(d) for d in computed.get("documentos", [])]
-        if confirmados:
-            documentos.append(DocumentoExtraido.model_validate(dados_confirmados_como_documento(catalogo, report.answers_json, confirmados)))
+        dados = report.patient.dados_complementares or {}
+        estudo_atual = (report.answers_json.get("estudoCaso") or "").strip()
+        novos = campos_novos_para_o_estudo(catalogo, report.answers_json, dados, computed.get("estudo_campos_integrados"))
         try:
-            estudo = redigir_estudo_de_caso(
-                paciente=paciente,
-                documentos_texto=documentos_em_texto(documentos),
-                observacoes=computed.get("observacoes"),
-                **credenciais,
-            )
+            if estudo_atual:
+                andamento.mensagem("Incluindo os dados novos no estudo de caso…")
+                texto = dados_confirmados_como_documento(catalogo, report.answers_json, novos)["respostas"]
+                estudo = integrar_dados_ao_estudo_de_caso(
+                    paciente=paciente,
+                    estudo_atual=estudo_atual,
+                    dados_novos="\n".join(f"- {r['pergunta']}: {r['resposta']}" for r in texto),
+                    observacoes=computed.get("observacoes"),
+                    **credenciais,
+                )
+            else:
+                andamento.mensagem("Escrevendo o estudo de caso com os dados novos…")
+                documentos = [DocumentoExtraido.model_validate(d) for d in computed.get("documentos", [])]
+                if novos:
+                    documentos.append(DocumentoExtraido.model_validate(dados_confirmados_como_documento(catalogo, report.answers_json, novos)))
+                estudo = redigir_estudo_de_caso(
+                    paciente=paciente,
+                    documentos_texto=documentos_em_texto(documentos),
+                    observacoes=computed.get("observacoes"),
+                    **credenciais,
+                )
         except Exception as exc:  # noqa: BLE001 - vira mensagem no andamento
             andamento.falhar(
-                f"Os dados novos já estão no laudo, mas não foi possível reescrever o estudo de caso ({motivo_do_erro(exc)}). "
+                f"Os dados novos já estão no relatório, mas não foi possível atualizar o estudo de caso ({motivo_do_erro(exc)}). "
                 "Tente de novo ou gere o documento assim mesmo."
             )
             return
         estudo = estudo.strip()[: TAMANHO_MAXIMO_TEXTO * 2]
         report.answers_json = {**report.answers_json, "estudoCaso": estudo}
-        report.computed_json = {**computed, "estudo_de_caso_ia": estudo}
+        report.computed_json = {
+            **computed,
+            "estudo_de_caso_ia": estudo,
+            "estudo_campos_integrados": sorted(set(computed.get("estudo_campos_integrados", [])) | novos),
+        }
         db.commit()
     andamento.concluir(report_id)
 
@@ -246,10 +265,10 @@ def atualizar_laudo(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> dict:
-    """1) aplica no laudo os dados confirmados (sem IA); 2) se mudaram
-    seções que alimentam o estudo de caso e ele não foi editado à mão (ou se
-    a psicóloga pedir), reescreve só o estudo de caso em segundo plano. A
-    tela depois gera o documento pelo formulário (sem IA)."""
+    """1) aplica no laudo os dados confirmados (sem IA); 2) se há dados novos
+    das seções que alimentam o estudo de caso e ele não foi editado à mão (ou
+    se a psicóloga pedir), a IA os encaixa no estudo atual em segundo plano.
+    A tela depois gera o documento pelo formulário (sem IA)."""
     from app.api.laudo_ia import _descricao_do_paciente  # evita import circular
 
     report = _get_report_do_psicologo(report_id, db, current, defer(Report.generated_text))
@@ -261,12 +280,19 @@ def atualizar_laudo(
     report.answers_json = novas
     db.commit()
 
-    tocou_o_estudo = bool(secoes_dos_campos(catalogo, aplicados) & SECOES_DO_ESTUDO_DE_CASO)
-    if not (pedido.reescrever_estudo or (tocou_o_estudo and not editado)):
+    integrados = (report.computed_json or {}).get("estudo_campos_integrados")
+    novos = campos_novos_para_o_estudo(catalogo, novas, report.patient.dados_complementares, integrados)
+    sem_estudo = not (novas.get("estudoCaso") or "").strip()
+    # Sem estudo anterior (laudo antigo), só a pedido; com estudo, só se há o que incluir.
+    if sem_estudo:
+        deve = pedido.reescrever_estudo
+    else:
+        deve = bool(novos) and (pedido.reescrever_estudo or not editado)
+    if not deve:
         return {
             "job_id": None,
             "campos_aplicados": len(aplicados),
-            "estudo": "mantido_editado" if tocou_o_estudo else "sem_mudanca",
+            "estudo": "mantido_editado" if novos and editado else "sem_mudanca",
         }
 
     ai_settings = db.query(AISettings).filter(AISettings.owner_id == current.id).first()

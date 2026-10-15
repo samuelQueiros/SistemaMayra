@@ -389,7 +389,7 @@ export function PendenciasDoLaudo({ pendenciasIniciais, laudoId, pacienteId, obt
       </div>
       {pendencias.metodos && <section aria-label="Métodos do relatório" className="form-section">
         <h3 style={{ margin: 0 }}>Métodos do relatório</h3>
-        <p className="text-2" style={{ margin: 0 }}>Desmarque os métodos que não devem aparecer. As respostas são preservadas. Use “Salvar e gerar o protocolo” para atualizar o documento; revise também os textos clínicos que mencionam esses métodos.</p>
+        <p className="text-2" style={{ margin: 0 }}>Desmarque os métodos que não devem aparecer. As respostas são preservadas. Use “Atualizar relatório” para atualizar o documento; revise também os textos clínicos que mencionam esses métodos.</p>
         {pendencias.metodos.map((m) => <Checkbox key={m.chave} label={m.titulo} checked={m.incluido} disabled={mudandoMetodo} onChange={(e) => void alternarMetodo(m.chave, e.target.checked)} />)}
       </section>}
       {pendencias.grupos.length === 0 ? (

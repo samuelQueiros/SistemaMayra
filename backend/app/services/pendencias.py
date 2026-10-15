@@ -344,3 +344,16 @@ def dados_confirmados_como_documento(catalogo: CatalogoDoProtocolo, answers: dic
         ],
         "observacoes": "",
     }
+
+
+def campos_novos_para_o_estudo(catalogo: CatalogoDoProtocolo, answers: dict, dados: dict | None, integrados: list[str] | None) -> set[str]:
+    """Dados confirmados, já no laudo, das seções que alimentam o estudo de
+    caso e que o texto ainda não incorporou (`computed_json.estudo_campos_integrados`)."""
+    numeros = {s.numero for s in SECOES if s.chave in SECOES_DO_ESTUDO_DE_CASO}
+    do_estudo = {c.id for c in catalogo.campos if _numero_da_secao(c.secao) in numeros}
+    confirmados = {
+        campo_id
+        for campo_id, dado in (dados or {}).items()
+        if dado.get("situacao") == "preenchido" and not _vazio((answers or {}).get(campo_id))
+    }
+    return (confirmados & do_estudo) - set(integrados or [])

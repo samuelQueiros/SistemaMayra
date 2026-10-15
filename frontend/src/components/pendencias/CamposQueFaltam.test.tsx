@@ -42,7 +42,7 @@ describe('CamposQueFaltam', () => {
 
   afterEach(() => vi.useRealTimers())
 
-  it.each(['Salvar', 'Salvar e gerar o protocolo'])('%s aguarda o autosave e as edições novas', async (acao) => {
+  it.each(['Salvar', 'Atualizar relatório'])('%s aguarda o autosave e as edições novas', async (acao) => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     let primeiro!: (v: { dados: {} }) => void
     let segundo!: (v: { dados: {} }) => void
@@ -83,13 +83,13 @@ describe('CamposQueFaltam', () => {
     fireEvent.change(campo, { target: { value: 'Normal' } })
     await act(async () => { vi.advanceTimersByTime(900) })
     fireEvent.change(campo, { target: { value: 'Cesáreo' } })
-    fireEvent.click(within(modal).getByRole('button', { name: 'Salvar e gerar o protocolo' }))
+    fireEvent.click(within(modal).getByRole('button', { name: 'Atualizar relatório' }))
     await act(async () => { falhar(new Error('Sem conexão')) })
     expect(onGerar).not.toHaveBeenCalled()
     expect(modal).toBeInTheDocument()
     expect(campo).toHaveValue('Cesáreo')
     expect(screen.getByText('Não foi possível salvar. Verifique a conexão e tente de novo.')).toBeInTheDocument()
-    await act(async () => { fireEvent.click(within(modal).getByRole('button', { name: 'Salvar e gerar o protocolo' })) })
+    await act(async () => { fireEvent.click(within(modal).getByRole('button', { name: 'Atualizar relatório' })) })
     expect(api.salvarDadosComplementares).toHaveBeenLastCalledWith('p1', { parto: { valor: 'Cesáreo', situacao: 'preenchido', origem: 'digitado' } })
     expect(onGerar).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -123,13 +123,13 @@ describe('CamposQueFaltam', () => {
     vi.useRealTimers()
   })
 
-  it('"Salvar e gerar o protocolo" salva, fecha e pede a geração', async () => {
+  it('"Atualizar relatório" salva, fecha e pede a geração', async () => {
     const onGerar = renderizar()
     fireEvent.click(await screen.findByRole('button', { name: 'Preencher campos' }))
     const modal = await screen.findByRole('dialog')
     fireEvent.change(await within(modal).findByRole('textbox', { name: 'Parto' }), { target: { value: 'Normal' } })
     await act(async () => {
-      fireEvent.click(within(modal).getByRole('button', { name: 'Salvar e gerar o protocolo' }))
+      fireEvent.click(within(modal).getByRole('button', { name: 'Atualizar relatório' }))
     })
     expect(api.salvarDadosComplementares).toHaveBeenCalledTimes(1)
     expect(onGerar).toHaveBeenCalledWith(false)
