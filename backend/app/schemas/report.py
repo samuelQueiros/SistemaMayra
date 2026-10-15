@@ -96,7 +96,7 @@ class ReportOut(BaseModel):
 
 
 # Chaves de computed_json que as listas usam (classificação no Histórico).
-CHAVES_DE_RESUMO = ("classification", "classifications")
+CHAVES_DE_RESUMO = ("classification", "classifications", "origem")
 
 
 class ReportResumoOut(BaseModel):

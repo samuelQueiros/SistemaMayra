@@ -18,6 +18,8 @@ interface SelectProps {
   required?: boolean
   onChange?: ChangeEventHandler<HTMLSelectElement>
   style?: CSSProperties
+  /** Nome acessível quando não há `label` visível. */
+  'aria-label'?: string
 }
 
 export function Select({
@@ -31,6 +33,7 @@ export function Select({
   required = false,
   onChange,
   style,
+  'aria-label': ariaLabel,
 }: SelectProps) {
   const auto = useId()
   const selectId = id ?? auto
@@ -54,6 +57,7 @@ export function Select({
           disabled={disabled}
           required={required}
           onChange={onChange}
+          aria-label={ariaLabel}
           aria-describedby={hint ? `${selectId}-ajuda` : undefined}
         >
           <option value="">{placeholder}</option>

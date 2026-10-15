@@ -1,4 +1,4 @@
-import { Camera, Download, Ellipsis, FileText, Pencil, Plus, Sparkles, Stethoscope, Trash2 } from 'lucide-react'
+import { Camera, ClipboardCheck, Download, Ellipsis, FileText, Pencil, Plus, Sparkles, Stethoscope, Trash2 } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
@@ -253,6 +253,9 @@ export default function HistoricoPaciente() {
                                 icon={<Ellipsis />}
                                 items={[
                                   { label: 'Editar', icon: <Pencil />, onSelect: () => startEdit(report) },
+                                  ...(report.computed_json?.origem === 'ia_pdf'
+                                    ? [{ label: 'Completar dados', icon: <ClipboardCheck />, to: `/laudo-ia?paciente=${id}&laudo=${report.id}` }]
+                                    : []),
                                   {
                                     label: clinicalOpenId === report.id ? 'Ocultar seções clínicas' : 'Seções clínicas',
                                     icon: <Stethoscope />,

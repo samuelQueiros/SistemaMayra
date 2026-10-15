@@ -176,3 +176,40 @@ def test_outra_psicologa_nao_ve_as_pendencias(client, laudo):
     assert client.get(f"/api/reports/{rid}/pendencias", headers=outra).status_code == 404
     assert client.post(f"/api/reports/{rid}/pendencias", json=CATALOGO_DADOS, headers=outra).status_code == 404
     assert client.put(f"/api/reports/{rid}/escalas-aplicadas", json={"escalas": []}, headers=outra).status_code == 404
+
+
+# --- dados complementares (salvamento automático) --------------------------------
+
+
+def test_salvamento_mescla_por_campo_e_aparece_nas_pendencias(client, laudo):
+    headers, pid, rid = laudo
+    url = f"/api/patients/{pid}/dados-complementares"
+    client.patch(url, json={"campos": {"parto": {"valor": "Cesáreo", "situacao": "preenchido"}}}, headers=headers)
+    resposta = client.patch(url, json={"campos": {"sofrimentoFetal": {"situacao": "nao_informado"}}}, headers=headers)
+    dados = resposta.json()["dados"]
+    assert dados["parto"]["valor"] == "Cesáreo" and dados["sofrimentoFetal"]["situacao"] == "nao_informado"
+    assert "atualizado_em" in dados["parto"]
+
+    gestacao = _grupo(client.get(f"/api/reports/{rid}/pendencias", headers=headers).json(), "gestacao")
+    parto = next(i for i in gestacao["itens"] if i["chave"] == "parto")
+    assert parto["valores"]["parto"] == "Cesáreo" and parto["situacao"] == "preenchido"
+
+    # Desfazer: null apaga o campo.
+    dados = client.patch(url, json={"campos": {"sofrimentoFetal": None}}, headers=headers).json()["dados"]
+    assert "sofrimentoFetal" not in dados and "parto" in dados
+
+
+def test_salvamento_valida_campos_e_anexos(client, laudo):
+    headers, pid, _ = laudo
+    url = f"/api/patients/{pid}/dados-complementares"
+    assert client.patch(url, json={"campos": {"x y": {"situacao": "preenchido"}}}, headers=headers).status_code == 422
+    assert client.patch(url, json={"campos": {"parto": {"situacao": "talvez"}}}, headers=headers).status_code == 422
+    anexo_alheio = {"parto": {"valor": "Normal", "situacao": "preenchido", "origem": "anexo", "anexo_id": "00000000-0000-0000-0000-000000000001"}}
+    assert client.patch(url, json={"campos": anexo_alheio}, headers=headers).status_code == 400
+
+
+def test_outra_psicologa_nao_salva_dados_do_paciente(client, laudo):
+    _, pid, _ = laudo
+    outra = registrar_e_logar(client, email="outra@exemplo.com")
+    resposta = client.patch(f"/api/patients/{pid}/dados-complementares", json={"campos": {}}, headers=outra)
+    assert resposta.status_code == 404

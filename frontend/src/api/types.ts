@@ -110,6 +110,8 @@ export interface ComputedResult {
   // Só presente quando o template usa rule_type "age_equivalent_percentage".
   areas?: Record<string, AgeEquivalentAreaResult>
   chronological_age_months?: number
+  // "ia_pdf" nos laudos criados pelo Laudo por IA (vem também no resumo da lista).
+  origem?: string
 }
 
 export interface DiagnosticHypothesis {

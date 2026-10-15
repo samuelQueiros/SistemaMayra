@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Download, FileText, PencilLine, Sparkles } from 'lucide-react'
 import { ApiError } from '../api/client'
@@ -8,6 +8,7 @@ import { downloadReportDocx, downloadReportPdf, getReport } from '../api/reports
 import { Alert, Button, buttonClass, Card, PageHeader, Textarea } from '../components/ds'
 import { EscolhaDePaciente } from '../components/pacientes/EscolhaDePaciente'
 import { SeletorDePdfs } from '../components/SeletorDePdfs'
+import { PendenciasDoLaudo } from '../components/pendencias/PendenciasDoLaudo'
 
 type Etapa = 'preencher' | 'catalogo' | 'ia' | 'documento' | 'pronto'
 
@@ -40,6 +41,8 @@ export default function LaudoPorIA() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const pacienteId = params.get('paciente') ?? ''
+  // Aberto pelo Histórico ("Completar dados") para um laudo já gerado.
+  const laudoDoHistorico = params.get('laudo')
   const [cadastrando, setCadastrando] = useState(false)
   const [arquivos, setArquivos] = useState<File[]>([])
   const [observacoes, setObservacoes] = useState('')
@@ -50,6 +53,16 @@ export default function LaudoPorIA() {
   const [laudoSemDocumento, setLaudoSemDocumento] = useState<string | null>(null)
   const [iframeSrc, setIframeSrc] = useState<string | null>(null)
   const espera = useRef<{ tipo: string; resolver: (m: MensagemDoFormulario) => void; rejeitar: (e: Error) => void } | null>(null)
+
+  useEffect(() => {
+    if (!laudoDoHistorico) return
+    getReport(laudoDoHistorico)
+      .then((r) => {
+        setLaudo(r as unknown as Laudo)
+        setEtapa('pronto')
+      })
+      .catch(() => setErro('Não foi possível abrir o laudo.'))
+  }, [laudoDoHistorico])
 
   useEffect(() => {
     function onMessage(event: MessageEvent) {
@@ -90,6 +103,17 @@ export default function LaudoPorIA() {
       setIframeSrc(src)
     })
   }
+
+  // Catálogo do formulário, para laudos antigos que não guardaram uma cópia.
+  const esperarRef = useRef(esperarFormulario)
+  useEffect(() => {
+    esperarRef.current = esperarFormulario
+  })
+  const obterCatalogo = useCallback(async () => {
+    const { catalogo } = await esperarRef.current(`/formulario-novo-paciente.html?paciente=${pacienteId}&modo=catalogo`, 'laudo-ia:catalogo', 30000)
+    if (!catalogo) throw new Error('Não foi possível ler os campos do protocolo.')
+    return catalogo
+  }, [pacienteId])
 
   async function gerar() {
     setErro(null)
@@ -132,7 +156,7 @@ export default function LaudoPorIA() {
           onEscolher={(id) => {
             setLaudo(null)
             setEtapa('preencher')
-            setParams(id ? { paciente: id } : {}, { replace: true })
+            setParams(id ? { paciente: id } : {}, { replace: true }) // sem ?laudo=
           }}
           onCadastrandoChange={setCadastrando}
         />
@@ -196,16 +220,6 @@ export default function LaudoPorIA() {
         {etapa === 'pronto' && laudo && (
           <Card title="Laudo gerado" subtitle="Mesmo modelo do protocolo padrão, com os gráficos. Baixe o Word para editar ou ajuste no formulário.">
             <div style={{ display: 'grid', gap: 'var(--s-4)' }}>
-              {laudo.computed_json.lacunas.length > 0 && (
-                <Alert tone="warning">
-                  <strong>Os PDFs não trouxeram:</strong>
-                  <ul style={{ margin: '4px 0 0', paddingLeft: 20 }}>
-                    {laudo.computed_json.lacunas.map((l) => (
-                      <li key={l}>{l}</li>
-                    ))}
-                  </ul>
-                </Alert>
-              )}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-3)' }}>
                 <Button variant="tonal" icon={<Download />} onClick={() => downloadReportDocx(laudo.id, nomeArquivo('docx')).catch(() => setErro('Não foi possível gerar o Word.'))}>
                   Baixar Word (DOCX)
@@ -221,6 +235,7 @@ export default function LaudoPorIA() {
                 </Link>
               </div>
               {erro && <Alert tone="danger">{erro}</Alert>}
+              <PendenciasDoLaudo laudoId={laudo.id} pacienteId={pacienteId} obterCatalogo={obterCatalogo} />
               {laudo.generated_text && (
                 <iframe
                   title="Pré-visualização do laudo"

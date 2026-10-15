@@ -9,6 +9,9 @@ import LaudoPorIA from './LaudoPorIA'
 vi.mock('../api/patients', () => ({ listPatients: vi.fn(), createPatient: vi.fn() }))
 vi.mock('../api/reports', () => ({ getReport: vi.fn(), downloadReportDocx: vi.fn(), downloadReportPdf: vi.fn() }))
 vi.mock('../api/laudoIA', async (original) => ({ ...(await original<typeof laudoIA>()), gerarLaudoPorIA: vi.fn() }))
+vi.mock('../api/pendencias', () => ({
+  getPendencias: vi.fn().mockResolvedValue({ essenciais: { total: 0, resolvidos: 0 }, grupos: [], escalas_para_adicionar: [] }),
+}))
 
 const paciente = { id: 'p1', name: 'Bia Lima', birth_date: '2020-01-10', notes: null, sex: 'Feminino', school_info: null }
 const catalogo = { campos: [{ id: 'parto', tipo: 'opcao' }], contexto: '' }
@@ -55,7 +58,7 @@ describe('Laudo Por IA', () => {
     mensagemDoFormulario({ tipo: 'laudo-ia:gerado', laudoId: 'l1' })
 
     expect(await screen.findByText('Laudo gerado')).toBeInTheDocument()
-    expect(screen.getByText('Sem dados do Portage.')).toBeInTheDocument()
+    expect(await screen.findByText('Dados que faltaram')).toBeInTheDocument()
     expect(screen.getByTitle('Pré-visualização do laudo')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Baixar Word (DOCX)' }))
     expect(reports.downloadReportDocx).toHaveBeenCalledWith('l1', 'laudo_ia_Bia_Lima.docx')

@@ -32,3 +32,22 @@ export function idadeParaExibicao(dataNascimento: string | null | undefined, hoj
   const textoAnos = `${anos} ${anos === 1 ? 'ano' : 'anos'}`
   return anos < 3 && resto ? `${textoAnos} e ${resto} ${resto === 1 ? 'mês' : 'meses'}` : textoAnos
 }
+
+const NOMES_PROPRIOS = new Set(['Portage', 'Word', 'Google', 'Forms'])
+
+/** Rótulo do formulário só com a primeira letra maiúscula ("Idade Da Mãe
+ * Durante A Gestação" → "Idade da mãe durante a gestação"). Siglas (ATA,
+ * SNAP-IV), números e nomes próprios ficam como estão — mesma regra de
+ * paraExibicao() no formulario-novo-paciente.html. */
+export function rotuloParaExibicao(rotulo: string): string {
+  let primeira = true
+  return rotulo.replace(/[A-Za-zÀ-ÿ0-9][A-Za-zÀ-ÿ0-9'’/-]*/g, (palavra) => {
+    if (primeira) {
+      primeira = false
+      return palavra
+    }
+    const sigla = palavra.split(/[/-]/).some((parte) => parte.length >= 2 && parte === parte.toLocaleUpperCase('pt-BR'))
+    if (sigla || /\d/.test(palavra) || NOMES_PROPRIOS.has(palavra)) return palavra
+    return palavra.toLocaleLowerCase('pt-BR')
+  })
+}
