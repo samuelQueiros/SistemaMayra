@@ -2457,3 +2457,14 @@ lugar e rodar `npm run build`.
 - **Métodos:** o modal permite desmarcar CARS, ATA, SNAP-IV, TOD, Portage e M-CHAT. A escolha é salva por relatório, preserva as respostas e permite reinclusão. “Salvar e gerar o protocolo” atualiza o documento, omitindo as seções/gráficos e os parágrafos padrão dos métodos removidos. Textos clínicos livres que mencionem esses métodos precisam ser revisados pela profissional. Mesmo sem campos pendentes, há “Revisar métodos”.
 - **Compatibilidade:** sem migração de banco. O frontend e o backend devem ser atualizados juntos, pois a geração agora exige `data_relatorio`. Nenhum commit ou deploy foi realizado nesta entrega.
 - **Validação concluída:** 337 testes do backend e 76 testes do frontend passaram; build de produção aprovado; lint sem erros (7 avisos existentes). Teste de composição executa o formulário real em DOM simulado e verifica data/cidade, encaminhamentos, remoção/reinclusão de métodos e preservação de respostas. A IA foi simulada nos testes; não houve chamada real ao provedor nem validação visual em navegador.
+
+## Abertura das pendências, novo relatório e espaçamentos (2026-10-15)
+
+**Status:** ✅ Implementado e validado localmente.
+
+- “Campos que faltam” no histórico abre com estado de carregamento próprio, sem mostrar temporariamente o formulário de nova geração. Busca apenas o resumo do relatório (`GET /reports/{id}/resumo`), sem transferir respostas com fotos ou o documento completo. A prévia fica disponível pelo botão “Ver prévia do relatório”.
+- O modal reutiliza as pendências recém-carregadas, evitando uma segunda consulta ao abrir. A API de pendências também deixa de carregar o HTML pesado do relatório do banco. Relatórios antigos sem catálogo ainda precisam carregar o formulário uma vez para recuperar o catálogo.
+- “Gerar outro laudo” virou “Gerar novo relatório”, com botão primário, ícone, descrição e posição anterior à prévia longa. O relatório existente permanece no histórico.
+- Espaçamentos consistentes entre os cartões, campos de cadastro, métodos e ações. Cartões usam padding menor no celular; o botão de novo relatório ocupa a largura disponível.
+- Conferência das seções clínicas: os dados em `clinical_sections_json` são salvos, mas só entram na exportação dos modelos legados. Os fluxos atuais (`custom_form`, `protocolo`, `relatorio_ia_pdf`) exportam o HTML em `generated_text`; suas edições devem ser feitas pelo formulário/editor correspondente. Nenhum dado ou funcionalidade dessa tela foi removido.
+- Validação: 77 testes do frontend e os 338 testes do backend (suíte completa) passaram. Build aprovado; lint sem erros, com 7 avisos existentes. Sem medição de latência em produção ou validação visual em navegador. Atualizar frontend e backend juntos; sem commit/deploy nesta entrega.

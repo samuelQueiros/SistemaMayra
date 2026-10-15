@@ -39,6 +39,7 @@ export interface EstadoDasPendencias {
 type Locais = Record<string, DadoComplementar | null>
 
 interface Props {
+  pendenciasIniciais?: Pendencias
   laudoId: string
   pacienteId: string
   /** Catálogo do formulário, para laudos antigos que não guardaram uma cópia. */
@@ -64,8 +65,8 @@ function rotuloDaOpcao(o: { valor: string; rotulo: string }) {
   return o.rotulo.length > 70 ? `${o.valor} — ${o.rotulo.slice(0, 67)}…` : o.rotulo
 }
 
-export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children, acoesDaSecao, topo, recarregar = 0, controle, secaoInicial }: Props) {
-  const [pendencias, setPendencias] = useState<Pendencias | null>(null)
+export function PendenciasDoLaudo({ pendenciasIniciais, laudoId, pacienteId, obterCatalogo, children, acoesDaSecao, topo, recarregar = 0, controle, secaoInicial }: Props) {
+  const [pendencias, setPendencias] = useState<Pendencias | null>(pendenciasIniciais ?? null)
   const [erro, setErro] = useState<string | null>(null)
   const [locais, setLocais] = useState<Locais>({})
   const [mudandoMetodo, setMudandoMetodo] = useState(false)
@@ -82,8 +83,9 @@ export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children
   }, [laudoId, obterCatalogo])
 
   useEffect(() => {
+    if (pendenciasIniciais && recarregar === 0) return
     carregar().catch(() => setErro('Não foi possível carregar o que falta preencher.'))
-  }, [carregar, recarregar])
+  }, [carregar, recarregar, pendenciasIniciais])
 
   const salvar = useCallback((): Promise<boolean> => {
     if (temporizador.current) clearTimeout(temporizador.current)
@@ -385,9 +387,9 @@ export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children
         <h3 style={{ margin: 0, font: 'var(--type-h3)' }}>Dados que faltaram</h3>
         {status && <SaveStatus status={status} salvo={false} />}
       </div>
-      {pendencias.metodos && <section aria-label="Métodos do relatório">
-        <h3>Métodos do relatório</h3>
-        <p className="text-2">Desmarque os métodos que não devem aparecer. As respostas são preservadas. Use “Salvar e gerar o protocolo” para atualizar o documento; revise também os textos clínicos que mencionam esses métodos.</p>
+      {pendencias.metodos && <section aria-label="Métodos do relatório" className="form-section">
+        <h3 style={{ margin: 0 }}>Métodos do relatório</h3>
+        <p className="text-2" style={{ margin: 0 }}>Desmarque os métodos que não devem aparecer. As respostas são preservadas. Use “Salvar e gerar o protocolo” para atualizar o documento; revise também os textos clínicos que mencionam esses métodos.</p>
         {pendencias.metodos.map((m) => <Checkbox key={m.chave} label={m.titulo} checked={m.incluido} disabled={mudandoMetodo} onChange={(e) => void alternarMetodo(m.chave, e.target.checked)} />)}
       </section>}
       {pendencias.grupos.length === 0 ? (

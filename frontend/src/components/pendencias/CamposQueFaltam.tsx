@@ -38,13 +38,15 @@ export function CamposQueFaltam({ laudoId, pacienteId, obterCatalogo, onGerar, g
   const [versao, setVersao] = useState(0)
 
   useEffect(() => {
+    let ativo = true
     carregarPendencias(laudoId, obterCatalogo)
-      .then(setPendencias)
-      .catch(() => setErro('Não foi possível verificar os campos que faltam.'))
+      .then((dados) => { if (ativo) { setPendencias(dados); setErro(null) } })
+      .catch(() => { if (ativo) setErro('Não foi possível verificar os campos que faltam.') })
+    return () => { ativo = false }
   }, [laudoId, obterCatalogo, recarregar, versao])
 
   if (erro) return <Alert tone="danger">{erro}</Alert>
-  if (!pendencias) return null
+  if (!pendencias) return <p role="status">Carregando os campos que faltam…</p>
 
   const grupos = pendencias.grupos.filter((g) => g.itens.some((i) => !i.situacao))
   const fechar = () => {
@@ -103,6 +105,7 @@ export function CamposQueFaltam({ laudoId, pacienteId, obterCatalogo, onGerar, g
           pacienteId={pacienteId}
           obterCatalogo={obterCatalogo}
           secaoInicial={modal.secao}
+          pendenciasIniciais={pendencias}
           gerando={gerando}
           onFechar={fechar}
           onGerar={(reescrever) => {
@@ -116,6 +119,7 @@ export function CamposQueFaltam({ laudoId, pacienteId, obterCatalogo, onGerar, g
 }
 
 interface ModalProps {
+  pendenciasIniciais: Pendencias
   laudoId: string
   pacienteId: string
   obterCatalogo: () => Promise<CatalogoDoProtocolo>
@@ -125,7 +129,7 @@ interface ModalProps {
   onGerar: (reescreverEstudo: boolean) => void
 }
 
-function ModalDosCampos({ laudoId, pacienteId, obterCatalogo, secaoInicial, gerando, onFechar, onGerar }: ModalProps) {
+function ModalDosCampos({ pendenciasIniciais, laudoId, pacienteId, obterCatalogo, secaoInicial, gerando, onFechar, onGerar }: ModalProps) {
   const controle = useRef<ControleDasPendencias | null>(null)
   const [reescrever, setReescrever] = useState(false)
   const [salvando, setSalvando] = useState(false)
@@ -164,7 +168,7 @@ function ModalDosCampos({ laudoId, pacienteId, obterCatalogo, secaoInicial, gera
         style={{ width: 'min(920px, 100%)', maxHeight: '90vh' }}
       >
         <div style={{ overflowY: 'auto', flex: 1, paddingRight: 'var(--s-2)' }}>
-          <CompletarLaudo laudoId={laudoId} pacienteId={pacienteId} obterCatalogo={obterCatalogo} controle={controle} secaoInicial={secaoInicial}>
+          <CompletarLaudo pendenciasIniciais={pendenciasIniciais} laudoId={laudoId} pacienteId={pacienteId} obterCatalogo={obterCatalogo} controle={controle} secaoInicial={secaoInicial}>
             {({ estudoEditado }) =>
               estudoEditado ? (
                 <Checkbox

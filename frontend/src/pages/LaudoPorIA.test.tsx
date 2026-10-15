@@ -8,7 +8,7 @@ import * as pendencias from '../api/pendencias'
 import LaudoPorIA from './LaudoPorIA'
 
 vi.mock('../api/patients', () => ({ listPatients: vi.fn(), createPatient: vi.fn() }))
-vi.mock('../api/reports', () => ({ getReport: vi.fn(), downloadReportDocx: vi.fn(), downloadReportPdf: vi.fn() }))
+vi.mock('../api/reports', () => ({ getReport: vi.fn(), getReportResumo: vi.fn(), downloadReportDocx: vi.fn(), downloadReportPdf: vi.fn() }))
 vi.mock('../api/laudoIA', async (original) => ({ ...(await original<typeof laudoIA>()), gerarLaudoPorIA: vi.fn(), acompanharGeracao: vi.fn() }))
 vi.mock('../api/anexos', async (original) => ({ ...(await original<object>()), listarAnexos: vi.fn().mockResolvedValue([]) }))
 vi.mock('../api/pendencias', () => ({
@@ -42,6 +42,7 @@ async function prepararEGerar() {
 describe('Relatório por IA', () => {
   beforeEach(() => {
     vi.mocked(patients.listPatients).mockResolvedValue([paciente])
+    vi.mocked(reports.getReportResumo).mockImplementation((id) => reports.getReport(id))
     vi.mocked(reports.downloadReportDocx).mockResolvedValue(undefined)
   })
 
@@ -159,4 +160,24 @@ it('exige data do relatório antes de iniciar a geração', async () => {
   expect(screen.getByRole('button', { name: 'Gerar relatório com IA' })).toBeDisabled()
   fireEvent.change(screen.getByLabelText(/Data do relatório/), { target: { value: '2026-10-15' } })
   expect(screen.getByRole('button', { name: 'Gerar relatório com IA' })).toBeEnabled()
+})
+
+
+it('ao abrir pelo histórico mostra carregamento, sem exibir o formulário de geração nem baixar o documento', async () => {
+  let resolver!: (value: Awaited<ReturnType<typeof reports.getReportResumo>>) => void
+  vi.mocked(reports.getReportResumo).mockImplementation(() => new Promise(resolve => { resolver = resolve }))
+  vi.mocked(patients.listPatients).mockResolvedValue([paciente])
+  vi.mocked(pendencias.getPendencias).mockResolvedValue({ essenciais: { total: 0, resolvidos: 0 }, grupos: [], escalas_para_adicionar: [] })
+  render(<MemoryRouter initialEntries={['/laudo-ia?paciente=p1&laudo=l10']}><LaudoPorIA /></MemoryRouter>)
+  expect(screen.getByRole('status')).toHaveTextContent('Carregando os dados do relatório')
+  expect(screen.queryByTestId('arquivos-pdf')).not.toBeInTheDocument()
+  expect(reports.getReport).not.toHaveBeenCalled()
+  await act(async () => { resolver({ id: 'l10', patient_id: 'p1', computed_json: { origem: 'ia_pdf' } } as never) })
+  expect(await screen.findByText('Todos os campos do protocolo estão preenchidos.')).toBeInTheDocument()
+  expect(reports.getReport).not.toHaveBeenCalled()
+  expect(screen.getByRole('button', { name: 'Gerar novo relatório' })).toBeInTheDocument()
+  vi.mocked(reports.getReport).mockResolvedValue({ id: 'l10', answers_json: {}, generated_text: '<p>Prévia</p>' } as never)
+  fireEvent.click(screen.getByRole('button', { name: 'Ver prévia do relatório' }))
+  expect(await screen.findByTitle('Pré-visualização do laudo')).toBeInTheDocument()
+  expect(reports.getReport).toHaveBeenCalledWith('l10')
 })

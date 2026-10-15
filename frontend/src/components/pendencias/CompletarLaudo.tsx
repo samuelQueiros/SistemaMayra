@@ -5,7 +5,7 @@ import { ApiError } from '../../api/client'
 import { TIPOS_DE_ANEXO, apagarAnexo, enviarAnexo, listarAnexos, urlDoAnexo } from '../../api/anexos'
 import type { Anexo } from '../../api/anexos'
 import type { CatalogoDoProtocolo } from '../../api/laudoIA'
-import type { GrupoPendente } from '../../api/pendencias'
+import type { GrupoPendente, PendenciasDoLaudo as Pendencias } from '../../api/pendencias'
 import { Alert, Button, IconButton, Menu } from '../ds'
 import { PendenciasDoLaudo } from './PendenciasDoLaudo'
 import type { ControleDasPendencias, EstadoDasPendencias } from './PendenciasDoLaudo'
@@ -14,6 +14,7 @@ import type { ControleDasPendencias, EstadoDasPendencias } from './PendenciasDoL
 const INTERVALO_DA_LEITURA_MS = 3000
 
 interface Props {
+  pendenciasIniciais?: Pendencias
   laudoId: string
   pacienteId: string
   obterCatalogo: () => Promise<CatalogoDoProtocolo>
@@ -26,7 +27,7 @@ interface Props {
 
 // Pendências do laudo + anexar foto ou documento (geral e por seção). A IA
 // lê o anexo e as sugestões aparecem destacadas nos campos, para confirmar.
-export function CompletarLaudo({ laudoId, pacienteId, obterCatalogo, children, recarregar: recarregarExterno = 0, controle, secaoInicial }: Props) {
+export function CompletarLaudo({ pendenciasIniciais, laudoId, pacienteId, obterCatalogo, children, recarregar: recarregarExterno = 0, controle, secaoInicial }: Props) {
   const [anexos, setAnexos] = useState<Anexo[]>([])
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState<string | null>(null)
@@ -175,6 +176,7 @@ export function CompletarLaudo({ laudoId, pacienteId, obterCatalogo, children, r
         }}
       />
       <PendenciasDoLaudo
+        pendenciasIniciais={pendenciasIniciais}
         laudoId={laudoId}
         pacienteId={pacienteId}
         obterCatalogo={obterCatalogo}

@@ -9,7 +9,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, StringConstraints
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from app.api.deps import get_current_psychologist
 from app.api.patients import get_patient_or_404
@@ -79,7 +79,7 @@ def montar_pendencias(db: Session, report: Report, catalogo: CatalogoDoProtocolo
 def ver_pendencias(
     report_id: UUID, db: Session = Depends(get_db), current: Psychologist = Depends(get_current_psychologist)
 ) -> dict:
-    report = _get_report_do_psicologo(report_id, db, current)
+    report = _get_report_do_psicologo(report_id, db, current, defer(Report.generated_text))
     catalogo = catalogo_do_laudo(report)
     if catalogo is None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=SEM_CATALOGO)
@@ -95,7 +95,7 @@ def guardar_catalogo_e_ver_pendencias(
 ) -> dict:
     """Laudos criados antes da cópia do catálogo: a tela lê o catálogo no
     formulário (modo=catalogo) e manda aqui uma vez."""
-    report = _get_report_do_psicologo(report_id, db, current)
+    report = _get_report_do_psicologo(report_id, db, current, defer(Report.generated_text))
     report.computed_json = {**(report.computed_json or {}), "catalogo": catalogo.model_dump()}
     db.commit()
     return montar_pendencias(db, report, catalogo)
@@ -113,7 +113,7 @@ def marcar_escalas_aplicadas(
     current: Psychologist = Depends(get_current_psychologist),
 ) -> dict:
     """"Também apliquei": escalas sem PDF que entram nas pendências."""
-    report = _get_report_do_psicologo(report_id, db, current)
+    report = _get_report_do_psicologo(report_id, db, current, defer(Report.generated_text))
     validas = {e.chave for e in ESCALAS}
     if not set(dados.escalas) <= validas:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Escala desconhecida.")
@@ -132,7 +132,7 @@ def excluir_metodos(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> dict:
-    report = _get_report_do_psicologo(report_id, db, current)
+    report = _get_report_do_psicologo(report_id, db, current, defer(Report.generated_text))
     catalogo = catalogo_do_laudo(report)
     if catalogo is None:
         raise HTTPException(status_code=409, detail=SEM_CATALOGO)
@@ -252,7 +252,7 @@ def atualizar_laudo(
     tela depois gera o documento pelo formulário (sem IA)."""
     from app.api.laudo_ia import _descricao_do_paciente  # evita import circular
 
-    report = _get_report_do_psicologo(report_id, db, current)
+    report = _get_report_do_psicologo(report_id, db, current, defer(Report.generated_text))
     catalogo = catalogo_do_laudo(report)
     if catalogo is None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=SEM_CATALOGO)

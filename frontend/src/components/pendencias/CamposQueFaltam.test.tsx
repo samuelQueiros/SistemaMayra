@@ -119,7 +119,7 @@ describe('CamposQueFaltam', () => {
     })
     expect(api.salvarDadosComplementares).toHaveBeenCalledWith('p1', { parto: { valor: 'Cesáreo', situacao: 'preenchido', origem: 'digitado' } })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(api.getPendencias).toHaveBeenCalledTimes(3) // resumo, modal, resumo de novo
+    expect(api.getPendencias).toHaveBeenCalledTimes(2) // resumo reutilizado no modal; recarga ao fechar
     vi.useRealTimers()
   })
 

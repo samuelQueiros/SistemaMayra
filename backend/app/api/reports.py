@@ -139,6 +139,16 @@ def get_report(
     return _get_report_do_psicologo(report_id, db, current)
 
 
+@router.get("/api/reports/{report_id}/resumo", response_model=ReportResumoOut)
+def get_report_resumo(
+    report_id: UUID,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
+) -> Report:
+    """Abre a revisão sem transferir fotos, capa e HTML do documento."""
+    return _get_report_do_psicologo(report_id, db, current, *SEM_COLUNAS_PESADAS)
+
+
 @router.post("/api/reports/{report_id}/generate-text", response_model=ReportOut)
 def generate_text(
     report_id: UUID,

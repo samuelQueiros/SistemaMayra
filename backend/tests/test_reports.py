@@ -163,3 +163,29 @@ def test_lista_de_laudos_e_autosave_sao_leves(client):
     # Enviar a chave (ex.: lista vazia) substitui as fotos.
     client.put(f"/api/reports/{laudo['id']}/answers", json={"answers": {"__fotosPacienteDados": []}}, headers=headers)
     assert client.get(f"/api/reports/{laudo['id']}", headers=headers).json()["answers_json"]["__fotosPacienteDados"] == []
+
+
+def test_resumo_individual_nao_transfere_documento_e_exige_proprietario(client):
+    from uuid import UUID
+    from app.models.report import Report
+    headers = registrar_e_logar(client)
+    pid = _criar_paciente(client, headers)
+    tid = _criar_template(client, headers)
+    rid = client.post(f'/api/patients/{pid}/reports', json={'template_id': tid, 'answers': RESPOSTAS_VALIDAS}, headers=headers).json()['id']
+    with client.db_session_factory() as db:
+        report = db.get(Report, UUID(rid))
+        report.answers_json = {'__fotosPacienteDados': ['foto-pesada']}
+        report.generated_text = '<html>documento-com-imagens</html>'
+        report.computed_json = {'origem': 'ia_pdf', 'catalogo': {'campos': ['campo']}}
+        db.commit()
+    resposta = client.get(f'/api/reports/{rid}/resumo', headers=headers)
+    assert resposta.status_code == 200
+    assert resposta.json()['id'] == rid
+    assert resposta.json()['computed_json'] == {'origem': 'ia_pdf'}
+    assert 'answers_json' not in resposta.json()
+    assert 'generated_text' not in resposta.json()
+    completo = client.get(f'/api/reports/{rid}', headers=headers).json()
+    assert completo['generated_text'] == '<html>documento-com-imagens</html>'
+    outra = registrar_e_logar(client, email='outra@example.com')
+    assert client.get(f'/api/reports/{rid}/resumo', headers=outra).status_code == 404
+    assert client.get(f'/api/reports/{rid}/resumo').status_code == 401

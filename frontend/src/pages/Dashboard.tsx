@@ -82,7 +82,7 @@ export default function Dashboard() {
   )
 
   return (
-    <div>
+    <div className="page-stack">
       <PageHeader
         eyebrow="Pacientes"
         title="Todos os pacientes"

@@ -1558,3 +1558,49 @@ input[type='file']::file-selector-button:hover {
   color: var(--text);
   overflow-wrap: anywhere;
 }
+
+
+/* Ritmo entre blocos e campos; sem margens duplicadas dentro do grid. */
+.page-stack {
+  display: grid;
+  gap: var(--s-6);
+  min-width: 0;
+}
+.page-stack > .page-header,
+.page-stack > .stat-grid {
+  margin-bottom: 0;
+}
+.form-section {
+  display: grid;
+  gap: var(--s-4);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.card-body > :first-child { margin-top: 0; }
+.card-body > :last-child { margin-bottom: 0; }
+.card-header + .card-body { padding-top: var(--s-5); }
+.report-next-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-5);
+  padding: var(--s-5);
+  border: 1px solid var(--violeta-200);
+  border-radius: var(--r-md);
+  background: var(--primary-soft);
+}
+.report-next-action p {
+  flex: 1 1 240px;
+  margin: 0;
+  color: var(--text-2);
+}
+@media (max-width: 640px) {
+  .card { --card-pad: 16px; }
+  .page-stack { gap: var(--s-5); }
+  .card-header { gap: var(--s-3); }
+  .report-next-action { padding: var(--s-4); }
+  .report-next-action > .btn { width: 100%; }
+  .dialog-alto > .card-body { padding-bottom: max(var(--card-pad), env(safe-area-inset-bottom)); }
+}

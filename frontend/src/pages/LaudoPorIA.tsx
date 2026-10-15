@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Download, FileText, PencilLine, Sparkles } from 'lucide-react'
+import { Download, FileText, PencilLine, Plus, Sparkles } from 'lucide-react'
 import { ApiError } from '../api/client'
 import { MAXIMO_DE_PDFS_LAUDO, acompanharGeracao, gerarLaudoPorIA, problemaNosPdfsDoLaudo } from '../api/laudoIA'
 import { atualizarLaudo } from '../api/pendencias'
 import type { AndamentoDoLaudoIA, CatalogoDoProtocolo, LaudoPorIA as Laudo } from '../api/laudoIA'
-import { downloadReportDocx, downloadReportPdf, getReport } from '../api/reports'
+import { downloadReportDocx, downloadReportPdf, getReport, getReportResumo } from '../api/reports'
 import { Alert, Button, buttonClass, Card, Input, Select, PageHeader, Textarea } from '../components/ds'
 import { EscolhaDePaciente } from '../components/pacientes/EscolhaDePaciente'
 import { SeletorDePdfs } from '../components/SeletorDePdfs'
@@ -57,18 +57,24 @@ export default function LaudoPorIA() {
   const [resultadoDaAtualizacao, setResultadoDaAtualizacao] = useState<{ tom: 'success' | 'danger'; texto: string } | null>(null)
   const [recarregarPendencias, setRecarregarPendencias] = useState(0)
   const [laudo, setLaudo] = useState<Laudo | null>(null)
+  const [carregandoPrevia, setCarregandoPrevia] = useState(false)
+  const [erroAbertura, setErroAbertura] = useState<string | null>(null)
   const [laudoSemDocumento, setLaudoSemDocumento] = useState<string | null>(null)
   const [iframeSrc, setIframeSrc] = useState<string | null>(null)
   const espera = useRef<{ tipo: string; resolver: (m: MensagemDoFormulario) => void; rejeitar: (e: Error) => void } | null>(null)
 
   useEffect(() => {
     if (!laudoDoHistorico || laudo?.id === laudoDoHistorico) return
-    getReport(laudoDoHistorico)
+    let ativo = true
+    getReportResumo(laudoDoHistorico)
       .then((r) => {
-        setLaudo(r as unknown as Laudo)
+        if (!ativo) return
+        setLaudo({ ...r, answers_json: {}, generated_text: null } as unknown as Laudo)
+        setErroAbertura(null)
         setEtapa('pronto')
       })
-      .catch(() => setErro('Não foi possível abrir o laudo.'))
+      .catch(() => { if (ativo) setErroAbertura('Não foi possível abrir o relatório. Volte ao histórico e tente novamente.') })
+    return () => { ativo = false }
   }, [laudoDoHistorico, laudo?.id])
 
   useEffect(() => {
@@ -172,11 +178,27 @@ export default function LaudoPorIA() {
     }
   }
 
+  async function abrirPrevia() {
+    if (!laudo || carregandoPrevia) return
+    setCarregandoPrevia(true)
+    try { setLaudo((await getReport(laudo.id)) as unknown as Laudo) }
+    catch { setErro('Não foi possível carregar a prévia do relatório.') }
+    finally { setCarregandoPrevia(false) }
+  }
+
+  if (laudoDoHistorico && laudo?.id !== laudoDoHistorico) {
+    return <div className="page-stack">
+      <PageHeader eyebrow="Pacientes" title="Campos que faltam" description="Revise os dados e os métodos deste relatório." />
+      {erroAbertura ? <Alert tone="danger">{erroAbertura}</Alert> : <p role="status" aria-live="polite">Carregando os dados do relatório…</p>}
+      <Link to={`/pacientes/${pacienteId}/historico`} className={buttonClass('secondary')}>Voltar ao histórico</Link>
+    </div>
+  }
+
   const ocupado = etapa !== 'preencher' && etapa !== 'pronto'
   const nomeArquivo = (formato: 'pdf' | 'docx') => `laudo_ia_${(laudo?.answers_json?.nomePaciente as string | undefined)?.trim().replace(/\s+/g, '_') || 'paciente'}.${formato}`
 
   return (
-    <div>
+    <div className="page-stack">
       <PageHeader
         eyebrow="Pacientes"
         title="Relatório por IA"
@@ -285,6 +307,25 @@ export default function LaudoPorIA() {
               />
               {atualizando && <Alert tone="info">{atualizando}</Alert>}
               {resultadoDaAtualizacao && <Alert tone={resultadoDaAtualizacao.tom}>{resultadoDaAtualizacao.texto}</Alert>}
+              <div className="report-next-action">
+                <Button
+                  type="button"
+                  variant="primary"
+                  icon={<Plus />}
+                  size="lg"
+                  disabled={!!atualizando}
+                  onClick={() => {
+                    setLaudo(null)
+                    setArquivos([])
+                    setEtapa('preencher')
+                    setParams({ paciente: pacienteId }, { replace: true })
+                  }}
+                >
+                  Gerar novo relatório
+                </Button>
+                <p>Inicie outro relatório para este paciente. O atual permanece salvo no histórico.</p>
+              </div>
+              {!laudo.generated_text && <Button variant="secondary" icon={<FileText />} loading={carregandoPrevia} loadingLabel="Carregando prévia…" onClick={() => void abrirPrevia()}>Ver prévia do relatório</Button>}
               {laudo.generated_text && (
                 <iframe
                   title="Pré-visualização do laudo"
@@ -294,20 +335,7 @@ export default function LaudoPorIA() {
                   style={{ minHeight: '80vh' }}
                 />
               )}
-              <div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    setLaudo(null)
-                    setArquivos([])
-                    setEtapa('preencher')
-                    setParams({ paciente: pacienteId }, { replace: true })
-                  }}
-                >
-                  Gerar outro laudo
-                </Button>
-              </div>
+
             </div>
           </Card>
         )}

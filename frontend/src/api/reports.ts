@@ -6,6 +6,8 @@ export const createReport = (patientId: string, templateId: string, answers: Ans
 
 export const listReports = (patientId: string) => apiGet<ReportResumo[]>(`/patients/${patientId}/reports`)
 
+export const getReportResumo = (id: string) => apiGet<ReportResumo>(`/reports/${id}/resumo`)
+
 export const getReport = (id: string) => apiGet<Report>(`/reports/${id}`)
 
 export const generateReportText = (reportId: string) =>

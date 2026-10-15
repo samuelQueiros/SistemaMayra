@@ -44,7 +44,7 @@ export function NovoPacienteForm({ onCriado, onCancelar }: { onCriado: (p: Patie
 
   return (
     <form onSubmit={salvar} style={{ display: 'grid', gap: 'var(--s-4)' }} aria-label="Cadastrar novo paciente">
-      <fieldset disabled={salvando || !!criado} style={{ border: 0, padding: 0, margin: 0 }}><div className="form-grid">
+      <fieldset disabled={salvando || !!criado} className="form-section"><div className="form-grid">
         <Input id="novo-paciente-nome" label="Nome do paciente" value={nome} onChange={(e) => setNome(e.target.value)} required />
         <Input id="novo-paciente-nascimento" label="Data de nascimento" type="date" value={nascimento} onChange={(e) => setNascimento(e.target.value)} required />
         <Select
