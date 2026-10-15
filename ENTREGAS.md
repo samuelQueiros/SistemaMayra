@@ -2382,3 +2382,18 @@ lugar e rodar `npm run build`.
 - **2 processos do servidor** (`WEB_CONCURRENCY=2`): gerar um PDF pesado não trava as outras telas. RAM em repouso 142 → 300 MB. O limite de tentativas de login passa a contar por processo (até 10 em vez de 5 no pior caso).
 - **Como testar:** abrir Registro de atividades, Todos os pacientes e o Histórico; preencher um atendimento (autosave) e baixar PDF/Word; conferir a capa padrão no PDF.
 - **Ficou de fora (baixo impacto):** remover o pacote `langchain` não usado e o pytest da imagem, `.dockerignore` mais completo, apagar `ScoreChart.tsx`/`react-chartjs-2` órfãos.
+
+## Laudo por IA: não trava mais com 3 ou mais PDFs
+
+**Status:** ✅ Pronto (2026-10-14) — branch `laudo-ia-estavel`
+
+- **Causa:** todos os PDFs eram lidos pela IA ao mesmo tempo. Com 3 ou mais, a conta do provedor batia no limite de uso por minuto, e o sistema tentava de novo cedo demais. Além disso, as chamadas não tinham tempo-limite (podiam esperar até ~90 min) e tudo acontecia numa única conexão aberta por 4 a 7 minutos, que a rede ou o proxy podiam cortar, deixando a tela sem resposta.
+- **O que mudou:**
+  - A geração agora roda em segundo plano. A tela mostra o andamento ("Lendo documento 2 de 4…", "Preenchendo o protocolo…", "Redigindo o estudo de caso…") e a situação de cada PDF.
+  - No máximo 3 PDFs lidos ao mesmo tempo. Quando o provedor pede para esperar, o sistema espera o tempo pedido.
+  - Toda chamada à IA tem tempo-limite e tamanho máximo de resposta. Erro de chave ou de modelo aparece na hora, sem novas tentativas.
+  - Se um PDF falhar, a mensagem diz qual foi e por quê. Os PDFs já lidos ficam guardados: tentar de novo só relê o que falhou.
+  - Com GPT-5, a leitura dos PDFs usa raciocínio curto (é só transcrição), o que deixa essa etapa mais rápida.
+- **Não mudou:** regras de pontuação, o laudo gerado e o Word/PDF.
+- **Como testar:** Laudo por IA com 4 ou 5 PDFs; acompanhar as mensagens de andamento; gerar de novo com os mesmos PDFs (fica mais rápido).
+- **Arquivos principais:** `backend/app/services/laudo_ia_jobs.py`, `backend/app/api/laudo_ia.py`, `backend/app/services/ai/provider.py`, `backend/app/services/ai/chains.py`, `backend/app/services/ai/agentes/`, `frontend/src/pages/LaudoPorIA.tsx`, `frontend/src/api/laudoIA.ts`.
