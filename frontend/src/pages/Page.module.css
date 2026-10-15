@@ -16,9 +16,11 @@
 .table td {
   text-align: left;
   vertical-align: middle;
-  padding: 14px var(--s-3);
-  border-bottom: 1px solid var(--n-100);
+  padding: 16px var(--s-3);
+  border-bottom: 1px solid var(--divider);
   font: var(--type-body);
+  color: var(--text-body);
+  transition: background var(--dur-fast) var(--ease);
 }
 
 .table th:first-child,
@@ -33,9 +35,10 @@
 
 .table th {
   padding-top: 0;
-  padding-bottom: 10px;
+  padding-bottom: 12px;
+  border-bottom-color: var(--border);
   font: var(--type-overline);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-2);
   white-space: nowrap;
@@ -46,7 +49,7 @@
 }
 
 .table tbody tr:hover td {
-  background: var(--n-25);
+  background: rgba(240, 234, 251, .45);
 }
 
 .table .lucide {
@@ -90,6 +93,7 @@
 .patientName {
   display: block;
   font: var(--type-body-strong);
+  letter-spacing: -0.01em;
   color: var(--text);
 }
 
@@ -97,4 +101,81 @@
   display: block;
   font: var(--type-caption);
   color: var(--text-2);
+}
+
+.rowActionsEnd {
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
+/* Celular: cada linha da tabela vira um cartão (nome e nascimento em cima,
+   ações embaixo), sem rolagem lateral. */
+@media (max-width: 640px) {
+  .tableWrap:has(.tableStack) {
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tableStack {
+    min-width: 0;
+  }
+
+  .tableStack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .tableStack,
+  .tableStack tbody {
+    display: block;
+  }
+
+  .tableStack tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-4) 0;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .tableStack tbody tr:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .tableStack td,
+  .tableStack td:first-child,
+  .tableStack td:last-child {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: none !important;
+  }
+
+  .tableStack td:nth-child(2) {
+    font: var(--type-caption);
+    color: var(--text-2);
+  }
+
+  .tableStack td:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .tableStack .patientCell {
+    min-width: 0;
+  }
+
+  .tableStack .rowActionsEnd {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .tableStack .rowActionsEnd > a {
+    flex: 1 1 auto;
+  }
 }

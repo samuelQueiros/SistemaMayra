@@ -1,26 +1,49 @@
+/* Fundo da área interna: lavanda muito claro, com as formas fluidas da
+   identidade bem suaves nos cantos (camada fixa, não rola com a página). */
 .wrapper {
+  position: relative;
+  isolation: isolate;
   min-height: 100vh;
   display: flex;
   background: var(--bg-app);
 }
 
-/* A coluna branca acompanha a página inteira; o menu fica preso no topo. */
+.wrapper::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(248, 247, 252, .80) 0%, rgba(248, 247, 252, .93) 45%, rgba(248, 247, 252, .97) 100%),
+    url('/identidade/fundo.jpg') center / cover no-repeat;
+}
+
+/* Menu flutuante, com cantos arredondados, preso no topo. */
 .sidebar {
   display: flex;
   align-self: stretch;
-  background: var(--n-0);
-  border-right: 1px solid var(--n-100);
+  flex: 0 0 auto;
+  padding: var(--s-4) 0 var(--s-4) var(--s-4);
 }
 
 .sidebar > nav {
   position: sticky;
-  top: 0;
-  height: 100vh;
+  top: var(--s-4);
+  height: calc(100vh - var(--s-8));
+  min-height: 0;
   overflow-y: auto;
-  border-right: 0;
+  border-radius: var(--r-xl);
+  box-shadow: 0 20px 50px rgba(33, 21, 68, .28), 0 2px 6px rgba(33, 21, 68, .18);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .2) transparent;
 }
 
 .mobileBar {
+  display: none;
+}
+
+.backdrop {
   display: none;
 }
 
@@ -33,14 +56,32 @@
 .contentInner {
   max-width: var(--content-max);
   margin: 0 auto;
+  animation: entrar var(--dur-slow) var(--ease);
+}
+
+/* Só opacidade: um transform aqui viraria referência dos menus/diálogos fixos. */
+@keyframes entrar {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
 }
 
 .footer {
   display: flex;
   align-items: center;
   gap: var(--s-3);
-  padding: var(--s-3) var(--s-2) 0;
-  border-top: 1px solid var(--n-100);
+  padding: var(--s-3);
+  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .08);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
 .user {
@@ -51,57 +92,83 @@
 }
 
 .userName {
-  font: var(--type-body-strong);
-  color: var(--text);
+  font: 600 14px/1.3 var(--font-body);
+  color: #FFFFFF;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .userRole {
-  font: var(--type-caption);
-  color: var(--text-2);
+  font: 400 12px/1.4 var(--font-body);
+  color: rgba(255, 255, 255, .6);
 }
 
-@media (max-width: 860px) {
-  /* No celular o menu empilha acima do conteúdo (sem largura fixa). */
+/* Botão "Sair" sobre o fundo escuro do menu. */
+.footer :global(.btn-ghost) {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  color: rgba(255, 255, 255, .72);
+}
+
+.footer :global(.btn-ghost:hover) {
+  background: rgba(255, 255, 255, .12);
+  color: #FFFFFF;
+}
+
+/* Tablet e celular: menu em gaveta lateral sobre o conteúdo. */
+@media (max-width: 1024px) {
   .wrapper {
     flex-direction: column;
   }
 
   .sidebar {
-    display: none;
-    border-right: 0;
-  }
-
-  .sidebar > nav {
-    position: static;
-    height: auto;
-    overflow: visible;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    padding: var(--s-3);
+    transform: translateX(calc(-100% - 8px));
+    transition: transform var(--dur-slow) var(--ease);
+    visibility: hidden;
   }
 
   .sidebar.open {
+    transform: translateX(0);
+    visibility: visible;
+  }
+
+  .sidebar > nav {
+    position: relative;
+    top: 0;
+    height: 100%;
+    max-width: calc(100vw - 48px);
+  }
+
+  .backdrop {
     display: block;
-    border-bottom: 1px solid var(--n-100);
-  }
-
-  .sidebar.open > nav {
-    width: 100%;
-    border-right: 0;
-  }
-
-  .sidebar.open > nav > div:first-child {
-    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: var(--overlay);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    animation: aparecer var(--dur) var(--ease);
   }
 
   .mobileBar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--s-3);
     padding: var(--s-2) var(--s-4);
-    background: var(--n-0);
-    border-bottom: 1px solid var(--n-100);
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--border);
   }
 
   .mobileBrand {
@@ -109,13 +176,20 @@
     align-items: center;
     gap: var(--s-2);
     font: 700 16px var(--font-display);
+    letter-spacing: -0.02em;
     color: var(--text);
   }
 
   .mobileBrand img {
-    height: 32px;
+    height: 30px;
   }
 
+  .content {
+    padding: var(--s-6) var(--s-6);
+  }
+}
+
+@media (max-width: 640px) {
   .content {
     padding: var(--s-5) var(--s-4);
   }

@@ -1,30 +1,13 @@
 import { CalendarClock, ClipboardList, ClipboardPlus, Download, Ellipsis, FileText, History, Plus, Search, Stethoscope, Users } from 'lucide-react'
-import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listPatients } from '../api/patients'
 import { getStatsSummary } from '../api/stats'
 import type { Patient, StatsSummary } from '../api/types'
-import { Alert, buttonClass, Card, EmptyState, Input, Menu, PageHeader, PatientAvatar } from '../components/ds'
+import { Alert, buttonClass, Card, EmptyState, Input, Menu, PageHeader, PatientAvatar, StatCard } from '../components/ds'
 import { BaixarRelatorioDialog } from '../components/pacientes/BaixarRelatorioDialog'
 import { idadeParaExibicao, nomeParaExibicao } from '../utils/exibicao'
 import styles from './Page.module.css'
-
-function BlocoEstatistica({ icon, tom, valor, legenda }: { icon: ReactNode; tom: 'violeta' | 'ceu' | 'sol'; valor: string | number; legenda: string }) {
-  return (
-    <Card>
-      <div className="stat">
-        <span className={`stat-icon stat-icon-${tom}`} aria-hidden="true">
-          {icon}
-        </span>
-        <div>
-          <span className="stat-value">{valor}</span>
-          <span className="stat-label">{legenda}</span>
-        </div>
-      </div>
-    </Card>
-  )
-}
 
 const semAcento = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
@@ -93,11 +76,11 @@ export default function Dashboard() {
 
       {!loading && (
         <div className="stat-grid">
-          <BlocoEstatistica icon={<Users />} tom="violeta" valor={patients.length} legenda="Pacientes cadastrados" />
+          <StatCard icon={<Users />} tone="violeta" value={patients.length} label="Pacientes cadastrados" />
           {stats && (
             <>
-              <BlocoEstatistica icon={<FileText />} tom="ceu" valor={stats.total_reports} legenda="Protocolos registrados" />
-              <BlocoEstatistica icon={<CalendarClock />} tom="sol" valor={stats.reports_last_30_days} legenda="Protocolos nos últimos 30 dias" />
+              <StatCard icon={<FileText />} tone="ceu" value={stats.total_reports} label="Protocolos registrados" />
+              <StatCard icon={<CalendarClock />} tone="sol" value={stats.reports_last_30_days} label="Protocolos nos últimos 30 dias" />
             </>
           )}
         </div>
@@ -127,7 +110,7 @@ export default function Dashboard() {
 
         {!loading && filtrados.length > 0 && (
           <div className={styles.tableWrap}>
-            <table className={styles.table}>
+            <table className={`${styles.table} ${styles.tableStack}`}>
               <thead>
                 <tr>
                   <th>Paciente</th>
@@ -154,7 +137,7 @@ export default function Dashboard() {
                       </td>
                       <td style={{ whiteSpace: 'nowrap' }}>{new Date(`${patient.birth_date}T00:00:00`).toLocaleDateString('pt-BR')}</td>
                       <td>
-                        <div className={styles.rowActions} style={{ justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+                        <div className={`${styles.rowActions} ${styles.rowActionsEnd}`}>
                           <Link className={buttonClass('primary', 'sm')} to={`/atendimento/novo?paciente=${patient.id}`}>
                             <ClipboardPlus aria-hidden="true" /> Atendimento
                           </Link>

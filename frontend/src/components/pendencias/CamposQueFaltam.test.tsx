@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as anexos from '../../api/anexos'
 import * as api from '../../api/pendencias'
 import type { PendenciasDoLaudo as Pendencias } from '../../api/pendencias'
@@ -36,7 +36,62 @@ function renderizar(onGerar = vi.fn()) {
 describe('CamposQueFaltam', () => {
   beforeEach(() => {
     vi.mocked(api.getPendencias).mockResolvedValue(PENDENCIAS)
-    vi.mocked(api.salvarDadosComplementares).mockClear()
+    vi.mocked(api.salvarDadosComplementares).mockReset().mockResolvedValue({ dados: {} })
+  })
+
+  afterEach(() => vi.useRealTimers())
+
+  it.each(['Salvar', 'Salvar e gerar o protocolo'])('%s aguarda o autosave e as edições novas', async (acao) => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    let primeiro!: (v: { dados: {} }) => void
+    let segundo!: (v: { dados: {} }) => void
+    vi.mocked(api.salvarDadosComplementares)
+      .mockImplementationOnce(() => new Promise(resolve => { primeiro = resolve }))
+      .mockImplementationOnce(() => new Promise(resolve => { segundo = resolve }))
+    const onGerar = renderizar()
+    fireEvent.click(await screen.findByRole('button', { name: 'Preencher campos' }))
+    const modal = await screen.findByRole('dialog')
+    const campo = await within(modal).findByRole('textbox', { name: 'Parto' })
+    fireEvent.change(campo, { target: { value: 'Normal' } })
+    await act(async () => { vi.advanceTimersByTime(900) })
+    fireEvent.change(campo, { target: { value: 'Cesáreo' } })
+    await act(async () => { vi.advanceTimersByTime(900) })
+    expect(api.salvarDadosComplementares).toHaveBeenCalledTimes(1)
+    await act(async () => { fireEvent.click(within(modal).getByRole('button', { name: acao })) })
+    expect(onGerar).not.toHaveBeenCalled()
+    expect(modal).toBeInTheDocument()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    fireEvent.click(modal)
+    await act(async () => { primeiro({ dados: {} }) })
+    expect(api.salvarDadosComplementares).toHaveBeenLastCalledWith('p1', { parto: { valor: 'Cesáreo', situacao: 'preenchido', origem: 'digitado' } })
+    expect(onGerar).not.toHaveBeenCalled()
+    expect(modal).toBeInTheDocument()
+    await act(async () => { segundo({ dados: {} }) })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(onGerar).toHaveBeenCalledTimes(acao === 'Salvar' ? 0 : 1)
+  })
+
+  it('mantém os dados após falha no autosave e permite tentar novamente', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    let falhar!: (e: Error) => void
+    vi.mocked(api.salvarDadosComplementares).mockImplementationOnce(() => new Promise((_, reject) => { falhar = reject }))
+    const onGerar = renderizar()
+    fireEvent.click(await screen.findByRole('button', { name: 'Preencher campos' }))
+    const modal = await screen.findByRole('dialog')
+    const campo = await within(modal).findByRole('textbox', { name: 'Parto' })
+    fireEvent.change(campo, { target: { value: 'Normal' } })
+    await act(async () => { vi.advanceTimersByTime(900) })
+    fireEvent.change(campo, { target: { value: 'Cesáreo' } })
+    fireEvent.click(within(modal).getByRole('button', { name: 'Salvar e gerar o protocolo' }))
+    await act(async () => { falhar(new Error('Sem conexão')) })
+    expect(onGerar).not.toHaveBeenCalled()
+    expect(modal).toBeInTheDocument()
+    expect(campo).toHaveValue('Cesáreo')
+    expect(screen.getByText('Não foi possível salvar. Verifique a conexão e tente de novo.')).toBeInTheDocument()
+    await act(async () => { fireEvent.click(within(modal).getByRole('button', { name: 'Salvar e gerar o protocolo' })) })
+    expect(api.salvarDadosComplementares).toHaveBeenLastCalledWith('p1', { parto: { valor: 'Cesáreo', situacao: 'preenchido', origem: 'digitado' } })
+    expect(onGerar).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('mostra tudo o que falta, sem ids técnicos, nas cores do sistema', async () => {

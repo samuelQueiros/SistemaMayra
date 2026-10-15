@@ -71,6 +71,7 @@ export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children
   const [status, setStatus] = useState('')
   const [abertos, setAbertos] = useState<Record<string, boolean>>({})
   const fila = useRef<Locais>({})
+  const envioEmCurso = useRef<Promise<boolean> | null>(null)
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [alterado, setAlterado] = useState(false)
 
@@ -82,21 +83,36 @@ export function PendenciasDoLaudo({ laudoId, pacienteId, obterCatalogo, children
     carregar().catch(() => setErro('Não foi possível carregar o que falta preencher.'))
   }, [carregar, recarregar])
 
-  const salvar = useCallback(async (): Promise<boolean> => {
+  const salvar = useCallback((): Promise<boolean> => {
+    if (temporizador.current) clearTimeout(temporizador.current)
     temporizador.current = null
-    const lote = fila.current
-    if (!Object.keys(lote).length) return true
-    fila.current = {}
-    setStatus('Salvando…')
-    try {
-      await salvarDadosComplementares(pacienteId, lote)
+    // Todas as chamadas aguardam o mesmo envio, inclusive o botão do modal.
+    if (envioEmCurso.current) return envioEmCurso.current
+    if (!Object.keys(fila.current).length) return Promise.resolve(true)
+
+    const enviar = async (): Promise<boolean> => {
+      setStatus('Salvando…')
+      // Edições feitas durante a requisição seguem em um novo lote, em ordem.
+      while (Object.keys(fila.current).length) {
+        const lote = fila.current
+        fila.current = {}
+        try {
+          await salvarDadosComplementares(pacienteId, lote)
+        } catch {
+          fila.current = { ...lote, ...fila.current }
+          if (temporizador.current) clearTimeout(temporizador.current)
+          temporizador.current = null
+          setStatus('Alterações ainda não salvas — tente de novo em instantes.')
+          return false
+        }
+      }
       setStatus(`Salvo às ${horaAgora()}`)
       return true
-    } catch {
-      fila.current = { ...lote, ...fila.current }
-      setStatus('Alterações ainda não salvas — tente de novo em instantes.')
-      return false
     }
+    envioEmCurso.current = enviar().finally(() => {
+      envioEmCurso.current = null
+    })
+    return envioEmCurso.current
   }, [pacienteId])
 
   useImperativeHandle(

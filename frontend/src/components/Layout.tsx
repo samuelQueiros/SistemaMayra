@@ -55,7 +55,7 @@ export default function Layout() {
     <div className={styles.wrapper}>
       <div className={styles.mobileBar}>
         <span className={styles.mobileBrand}>
-          <img src="/logo-neuropp.png" alt="" />
+          <img src="/identidade/logo-marca.png" alt="" />
           Mayra Vanessa
         </span>
         <IconButton
@@ -69,8 +69,9 @@ export default function Layout() {
       <div className={`${styles.sidebar} ${menuOpen ? styles.open : ''}`} onClick={(event) => {
         if (!event.defaultPrevented && (event.target as Element).closest('a, [data-confirmar-saida]')) setMenuOpen(false)
       }}>
-        <SidebarNav items={NAV_ITEMS} logoUrl="/logo-neuropp.png" footer={footer} />
+        <SidebarNav items={NAV_ITEMS} logoUrl="/identidade/logo-marca-clara.png" footer={footer} />
       </div>
+      {menuOpen && <div className={styles.backdrop} aria-hidden="true" onClick={() => setMenuOpen(false)} />}
 
       <main className={styles.content}>
         <div className={styles.contentInner}>

@@ -2420,3 +2420,28 @@ lugar e rodar `npm run build`.
 - No lugar da lista de campos aberta na página, o laudo mostra um quadro nas cores do sistema: **"Há alguns campos que podem ser preenchidos:"**, com **tudo** o que falta, por seção (essenciais e opcionais, sem nomes internos) e a contagem dos essenciais.
 - Clicar numa seção (ou em "Preencher campos") abre um **modal** com os campos, o anexar foto e as sugestões. Embaixo ficam **"Salvar"** (salva e fecha) e **"Salvar e gerar o protocolo"** (salva, aplica no laudo e gera o documento de novo).
 - **Para voltar a essa tela:** o quadro continua no laudo depois de fechar o modal, e no Histórico do paciente cada laudo por IA tem o botão **"Campos que faltam"**.
+
+
+## Nova identidade visual "Lavanda Premium"
+
+**Status:** ✅ Pronto (2026-10-14)
+
+- **O que mudou (só aparência):** paleta roxa/lavanda nova, fonte Plus Jakarta Sans, gradientes, sombras suaves em tom roxo e superfícies translúcidas, em todas as telas e também no protocolo padrão.
+- **Login:** fundo com as formas fluidas da identidade, cartão de vidro com a logo nova, ícones nos campos, botão "mostrar senha" e botão Entrar em gradiente.
+- **Menu lateral:** roxo profundo flutuante, com a marca no topo e o item ativo em destaque. No tablet e no celular o menu abre como gaveta lateral.
+- **Todos os pacientes:** cartões de números com ícone em fundo pastel e uma onda decorativa; tabela mais limpa. No celular, cada paciente vira um cartão com as ações embaixo (sem rolar para o lado).
+- **Botões, campos, abas, menus e diálogos** seguem o mesmo padrão (raio 12px, foco roxo, campos de 48px).
+- **Não mudou:** login, rotas, dados, regras de pontuação, textos do protocolo, laudo, PDF e Word.
+- **Como testar:** entrar no sistema; percorrer Todos os pacientes, Novo atendimento, Configurações e Registro de atividades; repetir no celular (menu pelo ícone ☰).
+- **Arquivos principais:** `frontend/public/identidade/` (tokens, logos, fundo), `frontend/public/fonts/PlusJakartaSans-latin.woff2`, `frontend/src/styles/base.css`, `frontend/src/components/Layout.*`, `frontend/src/components/ds/SidebarNav.module.css`, `frontend/src/components/ds/StatCard.tsx`, `frontend/src/components/ds/Input.tsx`, `frontend/src/pages/Login.*`, `frontend/src/pages/Dashboard.tsx`, `frontend/src/pages/Page.module.css`.
+
+
+## Correção do salvamento antes de gerar o protocolo
+
+**Status:** ✅ Implementado e validado localmente (2026-10-14)
+
+- “Salvar” e “Salvar e gerar o protocolo” aguardam o salvamento automático em andamento, incluindo novas edições feitas durante o envio.
+- Os lotes são enviados em sequência para evitar que uma resposta antiga sobrescreva uma edição recente.
+- Se houver falha, o modal permanece aberto, mantém os dados e permite tentar novamente. Cliques repetidos, Escape e clique no fundo durante o salvamento não iniciam outra ação.
+- Validação: 71 testes do frontend passaram, incluindo regressões com conexão lenta, edições durante o envio e falha seguida de nova tentativa. Build aprovado; lint sem erros, com os 7 avisos já existentes.
+- As alterações visuais e seus novos arquivos continuam locais para inclusão no commit pelo responsável. Não foi realizado deploy nem validação visual em navegador nesta correção.

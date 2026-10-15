@@ -129,6 +129,7 @@ function ModalDosCampos({ laudoId, pacienteId, obterCatalogo, secaoInicial, gera
   const controle = useRef<ControleDasPendencias | null>(null)
   const [reescrever, setReescrever] = useState(false)
   const [salvando, setSalvando] = useState(false)
+  const acaoEmCurso = useRef(false)
   const [erro, setErro] = useState<string | null>(null)
 
   useEffect(() => {
@@ -138,10 +139,13 @@ function ModalDosCampos({ laudoId, pacienteId, obterCatalogo, secaoInicial, gera
   })
 
   async function salvarTudo() {
+    if (acaoEmCurso.current) return false
+    acaoEmCurso.current = true
     setErro(null)
     setSalvando(true)
     const ok = (await controle.current?.salvarAgora()) ?? true
     setSalvando(false)
+    acaoEmCurso.current = false
     if (!ok) setErro('Não foi possível salvar. Verifique a conexão e tente de novo.')
     return ok
   }
@@ -180,7 +184,7 @@ function ModalDosCampos({ laudoId, pacienteId, obterCatalogo, secaoInicial, gera
           </Button>
           <Button
             icon={<RefreshCw />}
-            disabled={gerando}
+            disabled={gerando || salvando}
             onClick={async () => {
               if (await salvarTudo()) onGerar(reescrever)
             }}

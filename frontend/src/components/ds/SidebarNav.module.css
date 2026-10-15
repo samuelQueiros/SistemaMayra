@@ -1,58 +1,97 @@
+/* Menu lateral: roxo profundo com gradiente vertical suave, brilho roxo
+   discreto no topo e no rodapé, itens claros sobre o escuro. */
 .nav {
+  position: relative;
+  isolation: isolate;
   width: var(--sidebar-w);
   min-height: 100%;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: var(--s-6);
-  padding: var(--s-5) var(--s-4);
-  background: var(--n-0);
-  border-right: 1px solid var(--n-100);
+  padding: var(--s-6) var(--s-4) var(--s-4);
+  background: var(--grad-sidebar);
+  color: rgba(255, 255, 255, .92);
+  overflow: hidden;
+}
+
+/* Iluminação: um halo lavanda no topo e uma curva fluida no rodapé. */
+.nav::before,
+.nav::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+.nav::before {
+  top: -120px;
+  left: -60px;
+  width: 320px;
+  height: 260px;
+  background: radial-gradient(closest-side, rgba(158, 130, 217, .32), transparent);
+}
+
+.nav::after {
+  bottom: -180px;
+  right: -140px;
+  width: 380px;
+  height: 380px;
+  background:
+    radial-gradient(closest-side, rgba(123, 75, 191, .55), rgba(83, 23, 166, .18) 70%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10);
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  padding: 0 var(--s-2);
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-2) var(--s-1);
+  text-align: center;
 }
 
 .logo {
-  width: 56px;
-  height: 40px;
+  width: 108px;
+  height: auto;
   object-fit: contain;
-  border-radius: var(--r-sm);
   flex: 0 0 auto;
+  filter: drop-shadow(0 6px 14px rgba(1, 4, 64, .35));
 }
 
 .brandText {
   display: grid;
+  gap: 2px;
   line-height: 1.2;
   min-width: 0;
 }
 
 .brandText strong {
-  font: 700 16px/1.2 var(--font-display);
-  color: var(--text);
+  font: 700 17px/1.2 var(--font-display);
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
 }
 
 .brandText span {
-  font: var(--type-caption);
-  color: var(--text-2);
+  font: 500 12px/1.4 var(--font-body);
+  letter-spacing: .02em;
+  color: rgba(255, 255, 255, .62);
 }
 
 .sections {
   display: grid;
   gap: var(--s-1);
+  padding-top: var(--s-4);
+  border-top: 1px solid rgba(255, 255, 255, .08);
 }
 
 .sectionLabel {
-  margin: var(--s-4) 0 var(--s-1);
+  margin: var(--s-5) 0 var(--s-2);
   padding: 0 var(--s-3);
   font: var(--type-overline);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-2);
+  color: rgba(255, 255, 255, .5);
 }
 
 .sectionLabel:first-child {
@@ -76,9 +115,9 @@
   gap: var(--s-3);
   padding: 0 var(--s-3);
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   background: transparent;
-  color: var(--text-body);
+  color: rgba(255, 255, 255, .74);
   font: 500 15px/1.3 var(--font-body);
   text-align: left;
   text-decoration: none;
@@ -87,8 +126,13 @@
 }
 
 .item:hover {
-  background: var(--n-50);
-  color: var(--text);
+  background: rgba(255, 255, 255, .08);
+  color: #FFFFFF;
+}
+
+.item:focus-visible,
+.subitem:focus-visible {
+  box-shadow: 0 0 0 2px rgba(193, 169, 217, .9);
 }
 
 .heading,
@@ -99,7 +143,12 @@
 
 .icon {
   display: inline-flex;
-  color: var(--text-2);
+  color: rgba(255, 255, 255, .6);
+  transition: color var(--dur) var(--ease);
+}
+
+.item:hover .icon {
+  color: #FFFFFF;
 }
 
 .icon :global(.lucide) {
@@ -112,27 +161,32 @@
   min-width: 0;
 }
 
+/* Item ativo: gradiente roxo com brilho sutil. */
 .active,
 .active:hover {
-  background: var(--violeta-50);
-  color: var(--violeta-700);
-  font-weight: 700;
+  background: linear-gradient(135deg, rgba(123, 75, 191, .95) 0%, rgba(158, 130, 217, .75) 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(1, 4, 64, .28), inset 0 1px 0 rgba(255, 255, 255, .18);
 }
 
 .active .icon,
 .groupActive .icon {
-  color: var(--violeta-600);
+  color: #FFFFFF;
 }
 
-.groupActive {
-  color: var(--violeta-700);
-  font-weight: 700;
+/* Grupo com uma subopção ativa: lavanda translúcido. */
+.groupActive,
+.groupActive:hover {
+  background: rgba(255, 255, 255, .10);
+  color: #FFFFFF;
+  font-weight: 600;
 }
 
 .submenu {
-  margin: 2px 0 var(--s-2) 21px;
+  margin: 4px 0 var(--s-2) 21px;
   padding-left: 0;
-  border-left: 1px solid var(--n-100);
+  border-left: 1px solid rgba(255, 255, 255, .12);
 }
 
 .subitem {
@@ -140,33 +194,32 @@
   display: flex;
   align-items: center;
   min-height: 40px;
-  padding: 0 var(--s-3) 0 var(--s-4);
-  margin-left: -1px;
-  border-left: 2px solid transparent;
-  border-radius: 0 var(--r-sm) var(--r-sm) 0;
-  color: var(--text-body);
+  margin-left: 10px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-sm);
+  color: rgba(255, 255, 255, .68);
   font: 500 14px/1.3 var(--font-body);
   text-decoration: none;
   transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 
 .subitem:hover {
-  background: var(--n-50);
-  color: var(--text);
+  background: rgba(255, 255, 255, .08);
+  color: #FFFFFF;
 }
 
 .subActive,
 .subActive:hover {
-  border-left-color: var(--violeta-600);
-  background: var(--violeta-50);
-  color: var(--violeta-700);
-  font-weight: 700;
+  background: linear-gradient(135deg, rgba(123, 75, 191, .95) 0%, rgba(158, 130, 217, .75) 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(1, 4, 64, .28), inset 0 1px 0 rgba(255, 255, 255, .18);
 }
 
 .chevron {
   width: 18px;
   height: 18px;
-  color: var(--text-2);
+  color: rgba(255, 255, 255, .55);
   transition: transform var(--dur) var(--ease);
 }
 

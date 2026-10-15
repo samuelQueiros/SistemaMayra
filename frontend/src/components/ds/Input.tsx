@@ -15,6 +15,9 @@ interface InputProps {
   step?: string | number
   /** Ícone à esquerda (ex.: lupa da busca). */
   prefix?: ReactNode
+  /** Elemento à direita, dentro do campo (ex.: botão de mostrar a senha). */
+  suffix?: ReactNode
+  autoComplete?: string
   disabled?: boolean
   readOnly?: boolean
   required?: boolean
@@ -36,6 +39,8 @@ export function Input({
   max,
   step,
   prefix,
+  suffix,
+  autoComplete,
   disabled = false,
   readOnly = false,
   required = false,
@@ -61,6 +66,7 @@ export function Input({
     required,
     onChange,
     list,
+    autoComplete,
     'aria-label': ariaLabel,
     'aria-invalid': error ? true : undefined,
     'aria-describedby': ajuda ? idAjuda : undefined,
@@ -77,12 +83,15 @@ export function Input({
           )}
         </label>
       )}
-      {prefix ? (
+      {prefix || suffix ? (
         <span className="control" data-invalid={error ? 'true' : undefined} data-disabled={disabled || readOnly ? 'true' : undefined}>
-          <span className="control-prefix" aria-hidden="true">
-            {prefix}
-          </span>
+          {prefix && (
+            <span className="control-prefix" aria-hidden="true">
+              {prefix}
+            </span>
+          )}
           <input {...comum} />
+          {suffix && <span className="control-suffix">{suffix}</span>}
         </span>
       ) : (
         <input className="input" {...comum} />
