@@ -8,7 +8,7 @@ import { downloadReportDocx, downloadReportPdf, getReport } from '../api/reports
 import { Alert, Button, buttonClass, Card, PageHeader, Textarea } from '../components/ds'
 import { EscolhaDePaciente } from '../components/pacientes/EscolhaDePaciente'
 import { SeletorDePdfs } from '../components/SeletorDePdfs'
-import { PendenciasDoLaudo } from '../components/pendencias/PendenciasDoLaudo'
+import { CompletarLaudo } from '../components/pendencias/CompletarLaudo'
 
 type Etapa = 'preencher' | 'catalogo' | 'ia' | 'documento' | 'pronto'
 
@@ -235,7 +235,7 @@ export default function LaudoPorIA() {
                 </Link>
               </div>
               {erro && <Alert tone="danger">{erro}</Alert>}
-              <PendenciasDoLaudo laudoId={laudo.id} pacienteId={pacienteId} obterCatalogo={obterCatalogo} />
+              <CompletarLaudo laudoId={laudo.id} pacienteId={pacienteId} obterCatalogo={obterCatalogo} />
               {laudo.generated_text && (
                 <iframe
                   title="Pré-visualização do laudo"

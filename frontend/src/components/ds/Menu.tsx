@@ -2,7 +2,7 @@ import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { buttonClass } from './buttonClass'
-import type { ButtonSize } from './buttonClass'
+import type { ButtonSize, ButtonVariant } from './buttonClass'
 
 export interface MenuItem {
   label: string
@@ -19,12 +19,15 @@ interface MenuProps {
   icon: ReactNode
   items: MenuItem[]
   size?: ButtonSize
+  /** Texto visível no botão (sem ele, o botão é só o ícone). */
+  text?: string
+  variant?: ButtonVariant
 }
 
 // Menu suspenso de ações secundárias (botão ⋯). Setas navegam, Esc fecha e
 // devolve o foco ao botão, clique fora fecha. A lista é `position: fixed`
 // para não ser cortada pela rolagem horizontal das tabelas.
-export function Menu({ label, icon, items, size = 'md' }: MenuProps) {
+export function Menu({ label, icon, items, size = 'md', text, variant }: MenuProps) {
   const [posicao, setPosicao] = useState<CSSProperties | null>(null)
   const aberto = posicao !== null
   const raiz = useRef<HTMLDivElement>(null)
@@ -90,8 +93,8 @@ export function Menu({ label, icon, items, size = 'md' }: MenuProps) {
       <button
         ref={botao}
         type="button"
-        className={buttonClass('ghost', size, 'btn-icon')}
-        aria-label={label}
+        className={text ? buttonClass(variant ?? 'secondary', size) : buttonClass('ghost', size, 'btn-icon')}
+        aria-label={text ? undefined : label}
         title={label}
         aria-haspopup="menu"
         aria-expanded={aberto}
@@ -105,6 +108,7 @@ export function Menu({ label, icon, items, size = 'md' }: MenuProps) {
         }}
       >
         {icon}
+        {text}
       </button>
       {aberto && (
         <ul className="menu-list" role="menu" id={id} aria-label={label} onKeyDown={aoTeclar} style={posicao ?? undefined}>

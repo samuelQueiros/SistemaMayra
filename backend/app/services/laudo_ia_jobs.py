@@ -147,6 +147,19 @@ class Andamento:
         self._gravar()
 
 
+def em_segundo_plano(trabalho: Callable[[], None], descricao: str) -> None:
+    """Outras tarefas de IA (ex.: ler um anexo) na mesma fila deste processo.
+    Quem chama registra o desfecho; aqui só garante que um erro não suma."""
+
+    def rodar() -> None:
+        try:
+            trabalho()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("%s falhou: %s", descricao, type(exc).__name__)
+
+    _executor.submit(rodar)
+
+
 def executar(job: dict, trabalho: Callable[[Andamento], None]) -> None:
     """Agenda `trabalho(andamento)` na fila de gerações deste processo. Um
     erro não tratado vira mensagem genérica no andamento (sem conteúdo no log)."""

@@ -9,6 +9,7 @@ import LaudoPorIA from './LaudoPorIA'
 vi.mock('../api/patients', () => ({ listPatients: vi.fn(), createPatient: vi.fn() }))
 vi.mock('../api/reports', () => ({ getReport: vi.fn(), downloadReportDocx: vi.fn(), downloadReportPdf: vi.fn() }))
 vi.mock('../api/laudoIA', async (original) => ({ ...(await original<typeof laudoIA>()), gerarLaudoPorIA: vi.fn() }))
+vi.mock('../api/anexos', async (original) => ({ ...(await original<object>()), listarAnexos: vi.fn().mockResolvedValue([]) }))
 vi.mock('../api/pendencias', () => ({
   getPendencias: vi.fn().mockResolvedValue({ essenciais: { total: 0, resolvidos: 0 }, grupos: [], escalas_para_adicionar: [] }),
 }))

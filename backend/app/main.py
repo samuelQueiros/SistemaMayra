@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.gzip import DEFAULT_EXCLUDED_CONTENT_TYPES, GZipMiddleware
 
 from app import models  # noqa: F401 -- garante que todos os modelos sejam registrados no ORM
-from app.api import ai_settings, auth, documents, guardian_forms, laudo_ia, patients, pendencias, protocolos, relatorios_pdf, reports, stats, templates
+from app.api import ai_settings, anexos, auth, documents, guardian_forms, laudo_ia, patients, pendencias, protocolos, relatorios_pdf, reports, stats, templates
 from app.core.config import settings
 from app.core.cabecalhos import registrar_cabecalhos_de_seguranca
 from app.core.errors import registrar_tratadores_de_erro
@@ -43,6 +43,7 @@ app.include_router(protocolos.router)
 app.include_router(relatorios_pdf.router)
 app.include_router(laudo_ia.router)
 app.include_router(pendencias.router)
+app.include_router(anexos.router)
 app.include_router(reports.router)
 app.include_router(ai_settings.router)
 app.include_router(stats.router)

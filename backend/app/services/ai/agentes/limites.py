@@ -12,3 +12,5 @@ from app.services.ai.provider import LimitesDaChamada
 EXTRACAO = LimitesDaChamada(timeout_s=240, max_tokens=24_000, raciocinio_leve=True)
 ESPECIALISTA = LimitesDaChamada(timeout_s=240, max_tokens=32_000)
 ESTUDO_DE_CASO = LimitesDaChamada(timeout_s=240, max_tokens=16_000)
+# Leitura de uma foto/documento anexado: só os campos que faltam.
+ANEXO = LimitesDaChamada(timeout_s=180, max_tokens=8_000, raciocinio_leve=True)

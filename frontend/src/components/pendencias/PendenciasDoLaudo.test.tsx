@@ -117,4 +117,22 @@ describe('PendenciasDoLaudo', () => {
     expect(await screen.findByText('Gestação e parto')).toBeInTheDocument()
     expect(api.enviarCatalogoDoLaudo).toHaveBeenCalledWith('l1', catalogo)
   })
+
+  it('sugestão vinda de foto aparece destacada e só entra ao confirmar', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const comSugestao = structuredClone(PENDENCIAS)
+    comSugestao.grupos[0].itens[0].sugestoes = [{ campo_id: 'parto', valor: 'Cesáreo', trecho: 'parto cesárea', anexo_id: 'a1', anexo_nome: 'ficha.jpg' }]
+    vi.mocked(api.getPendencias).mockResolvedValue(comSugestao)
+    renderizar()
+    expect(await screen.findByText('“ficha.jpg”')).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Parto' })).toHaveValue('') // ainda não aplicada
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+    expect(screen.getByRole('combobox', { name: 'Parto' })).toHaveValue('Cesáreo')
+    expect(screen.queryByText('“ficha.jpg”')).not.toBeInTheDocument()
+    await act(async () => vi.advanceTimersByTime(900))
+    expect(api.salvarDadosComplementares).toHaveBeenLastCalledWith('p1', {
+      parto: { valor: 'Cesáreo', situacao: 'preenchido', origem: 'anexo', anexo_id: 'a1' },
+    })
+    vi.useRealTimers()
+  })
 })
