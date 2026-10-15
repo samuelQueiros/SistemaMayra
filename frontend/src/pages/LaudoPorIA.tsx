@@ -172,7 +172,7 @@ export default function LaudoPorIA() {
               )}
               {ocupado && (
                 <Alert tone="info">
-                  <span role="status">{(etapa === 'ia' && andamento?.mensagem) || MENSAGEM_DA_ETAPA[etapa]}</span>
+                  {(etapa === 'ia' && andamento?.mensagem) || MENSAGEM_DA_ETAPA[etapa]}
                   {etapa === 'ia' && andamento && andamento.documentos.length > 1 && (
                     <ul style={{ margin: '4px 0 0', paddingLeft: 20 }}>
                       {andamento.documentos.map((d) => (

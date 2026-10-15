@@ -84,3 +84,54 @@ def test_truncar_corta_no_limite_mesmo_apos_remover_html():
     resultado = _truncar(html, limite=10)
 
     assert resultado == "a" * 10 + "…"
+
+
+class _ErroDoProvedor(Exception):
+    def __init__(self, status_code, mensagem="erro"):
+        super().__init__(mensagem)
+        self.status_code = status_code
+
+
+def test_erro_de_configuracao_nao_e_repetido(monkeypatch):
+    from unittest.mock import Mock
+
+    espera = Mock()
+    monkeypatch.setattr("app.services.ai.chains.time.sleep", espera)
+    modelo = Mock()
+    modelo.invoke.side_effect = _ErroDoProvedor(401, "invalid api key")
+
+    with pytest.raises(_ErroDoProvedor):
+        _invocar_com_retentativas(modelo, [])
+
+    modelo.invoke.assert_called_once()
+    espera.assert_not_called()
+
+
+def test_limite_por_minuto_espera_o_tempo_pedido_pelo_provedor(monkeypatch):
+    esperas = []
+    monkeypatch.setattr("app.services.ai.chains.time.sleep", esperas.append)
+
+    class Falha429(_ChatModelFalsoQueFalhaNVezes):
+        def invoke(self, messages):
+            self.chamadas += 1
+            if self.chamadas == 1:
+                raise _ErroDoProvedor(429, "Rate limit reached for tokens per min. Please try again in 8.5s.")
+            return "ok"
+
+    assert _invocar_com_retentativas(Falha429(0), []) == "ok"
+    assert esperas == [9.5]  # o pedido + 1 s de folga (antes: 1,5 s fixo)
+
+
+def test_tempo_esgotado_tenta_so_mais_uma_vez(monkeypatch):
+    from unittest.mock import Mock
+
+    monkeypatch.setattr("app.services.ai.chains.time.sleep", lambda *_: None)
+
+    class APITimeoutError(Exception):
+        pass
+
+    modelo = Mock()
+    modelo.invoke.side_effect = APITimeoutError("Request timed out.")
+    with pytest.raises(APITimeoutError):
+        _invocar_com_retentativas(modelo, [], tentativas=3)
+    assert modelo.invoke.call_count == 2

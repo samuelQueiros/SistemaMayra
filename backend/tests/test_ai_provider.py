@@ -46,3 +46,40 @@ def test_todo_provedor_tem_modelo_sugerido_e_link_da_chave():
 @pytest.mark.parametrize("provider", list(PROVEDORES))
 def test_saida_estruturada_funciona_para_todos(provider):
     assert get_structured_model(provider, "modelo-qualquer", "chave-fake", ReportSections) is not None
+
+
+# --- limites por chamada --------------------------------------------------------
+
+from app.services.ai.provider import LimitesDaChamada  # noqa: E402
+
+LIMITES = LimitesDaChamada(timeout_s=99, max_tokens=1234, raciocinio_leve=True)
+
+
+@pytest.mark.parametrize(
+    "provider, campo_timeout, campo_tokens",
+    [
+        ("anthropic", "default_request_timeout", "max_tokens"),
+        ("openai", "request_timeout", "max_tokens"),
+        ("google", "timeout", "max_output_tokens"),
+        ("openrouter", "request_timeout", "max_tokens"),
+    ],
+)
+def test_limites_chegam_a_cada_conector_sem_retentativas_do_sdk(provider, campo_timeout, campo_tokens):
+    model = get_chat_model(provider, "modelo-qualquer", "chave-fake", LIMITES)
+    assert getattr(model, campo_timeout) == 99
+    assert getattr(model, campo_tokens) == 1234
+    assert model.max_retries == 0
+
+
+def test_sem_limites_explicitos_ainda_ha_teto_de_tempo():
+    # Antes: Claude sem tempo-limite nenhum e resposta do tamanho máximo do modelo.
+    model = get_chat_model("anthropic", "claude-sonnet-5", "chave-fake")
+    assert model.default_request_timeout is not None and model.max_tokens <= 32_000
+
+
+@pytest.mark.parametrize(
+    "provider, modelo, esperado",
+    [("openai", "gpt-5", "low"), ("openai", "o3-mini", "low"), ("openai", "gpt-5-chat-latest", None), ("openai", "gpt-4o", None), ("openrouter", "openai/gpt-5", None)],
+)
+def test_raciocinio_leve_so_em_modelos_de_raciocinio_da_openai(provider, modelo, esperado):
+    assert get_chat_model(provider, modelo, "chave-fake", LIMITES).reasoning_effort == esperado

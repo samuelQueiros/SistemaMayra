@@ -188,3 +188,78 @@ def test_orquestracao_extrai_e_roda_especialistas_e_redator_em_paralelo(monkeypa
         provider="anthropic", model="m", api_key="k", paciente="Criança", pdfs=[], catalogo=_catalogo_real(), com_estudo_de_caso=False
     )
     assert not any(c[0] == "redator" for c in chamadas)
+
+
+# --- extração resiliente ---------------------------------------------------------
+
+
+def test_extracao_le_no_maximo_3_pdfs_ao_mesmo_tempo(monkeypatch):
+    simultaneos, maximo = [0], [0]
+    trava = threading.Lock()
+
+    class Contador(ModeloFalso):
+        def invoke(self, messages):
+            with trava:
+                simultaneos[0] += 1
+                maximo[0] = max(maximo[0], simultaneos[0])
+            threading.Event().wait(0.05)  # time.sleep está desligado neste arquivo
+            with trava:
+                simultaneos[0] -= 1
+            return DOCUMENTO
+
+    monkeypatch.setattr(extracao, "get_structured_model", lambda *a: Contador())
+    pdfs = [{"nome": f"f{i}.pdf", "conteudo": _pdf(f"F{i}"), "texto": ""} for i in range(6)]
+    assert len(extracao.extrair_documentos(provider="anthropic", model="m", api_key="k", pdfs=pdfs)) == 6
+    assert maximo[0] == extracao.MAXIMO_DE_LEITURAS_SIMULTANEAS == 3
+
+
+def test_pdf_com_erro_e_nomeado_e_os_lidos_ficam_guardados(monkeypatch):
+    class Timeout(Exception):
+        pass
+
+    falhar = {"ligado": True}
+
+    class FalhaNaEscola(ModeloFalso):
+        def invoke(self, messages):
+            self.chamadas.append(messages)
+            arquivo = messages[1].content[0]["text"]
+            if falhar["ligado"] and "escola.pdf" in arquivo:
+                raise Timeout("Request timed out.")
+            return DOCUMENTO
+
+    modelo = FalhaNaEscola()
+    monkeypatch.setattr(extracao, "get_structured_model", lambda *a: modelo)
+    pdfs = [{"nome": n, "conteudo": _pdf(n), "texto": ""} for n in ("mae.pdf", "escola.pdf", "cars.pdf")]
+    avisos = []
+
+    with pytest.raises(extracao.ErroNaLeituraDosDocumentos) as erro:
+        extracao.extrair_documentos(
+            provider="anthropic", model="m", api_key="k", pdfs=pdfs, ao_progredir=lambda evento, **d: avisos.append((evento, d.get("nome")))
+        )
+    mensagem = str(erro.value)
+    assert "'escola.pdf' (o provedor de IA demorou demais para responder)" in mensagem
+    assert "Os outros 2 documentos já foram lidos" in mensagem
+    assert ("documento_com_erro", "escola.pdf") in avisos and ("documento_lido", "mae.pdf") in avisos
+
+    # Tentar de novo: só o que falhou volta à IA.
+    falhar["ligado"] = False
+    modelo.chamadas.clear()
+    documentos = extracao.extrair_documentos(provider="anthropic", model="m", api_key="k", pdfs=pdfs)
+    assert [d.arquivo for d in documentos] == ["mae.pdf", "escola.pdf", "cars.pdf"]
+    assert len(modelo.chamadas) == 1
+
+
+def test_falha_de_um_especialista_diz_qual_parte(monkeypatch):
+    from app.services.ai.agentes.extracao import ErroNaEtapaDaIA
+
+    monkeypatch.setattr(laudo_ia, "extrair_documentos", lambda **kw: [DOCUMENTO])
+
+    def especialista(**kw):
+        if kw["especialista"].nome == "escalas":
+            raise RuntimeError("Error code: 503 - overloaded")
+        return CamposDoEspecialista(campos=[])
+
+    monkeypatch.setattr(laudo_ia, "preencher_campos", especialista)
+    monkeypatch.setattr(laudo_ia, "redigir_estudo_de_caso", lambda **kw: "Estudo.")
+    with pytest.raises(ErroNaEtapaDaIA, match='parte "escalas" \\(o provedor de IA está instável no momento\\)'):
+        preencher_protocolo(provider="anthropic", model="m", api_key="k", paciente="C", pdfs=[], catalogo=_catalogo_real())

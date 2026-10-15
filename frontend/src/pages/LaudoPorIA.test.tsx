@@ -72,4 +72,39 @@ describe('Laudo Por IA', () => {
     expect(await screen.findByText(/Falhou ao gerar\./)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'abra no formulário' })).toHaveAttribute('href', '/atendimento/novo?laudo=l2')
   })
+
+  it('mostra o andamento por etapa e cada documento enquanto a IA trabalha', async () => {
+    let terminar: (v: { id: string }) => void = () => {}
+    vi.mocked(laudoIA.gerarLaudoPorIA).mockImplementation((_p, _a, _o, _c, aoProgredir) => {
+      aoProgredir?.({
+        id: 'j1',
+        status: 'processando',
+        mensagem: 'Lendo documento 2 de 3…',
+        documentos: [
+          { nome: 'mae.pdf', status: 'lido' },
+          { nome: 'escola.pdf', status: 'lendo' },
+          { nome: 'cars.pdf', status: 'aguardando' },
+        ],
+        report_id: null,
+        erro: null,
+      })
+      return new Promise((resolve) => (terminar = resolve))
+    })
+    await prepararEGerar()
+    mensagemDoFormulario({ tipo: 'laudo-ia:catalogo', catalogo })
+
+    expect(await screen.findByText('Lendo documento 2 de 3…')).toBeInTheDocument()
+    expect(screen.getByText('mae.pdf: lido ✓')).toBeInTheDocument()
+    expect(screen.getByText('escola.pdf: lendo…')).toBeInTheDocument()
+    await act(async () => terminar({ id: 'l3' }))
+  })
+
+  it('mostra a mensagem da geração quando um documento não pôde ser lido', async () => {
+    vi.mocked(laudoIA.gerarLaudoPorIA).mockRejectedValue(new Error("Não foi possível ler 'escola.pdf' (o provedor de IA demorou demais para responder)."))
+    await prepararEGerar()
+    mensagemDoFormulario({ tipo: 'laudo-ia:catalogo', catalogo })
+
+    expect(await screen.findByText(/Não foi possível ler 'escola\.pdf'/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Gerar laudo com IA' })).toBeEnabled()
+  })
 })
