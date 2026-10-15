@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Download, FileText, PencilLine, Sparkles } from 'lucide-react'
 import { ApiError } from '../api/client'
 import { MAXIMO_DE_PDFS_LAUDO, gerarLaudoPorIA, problemaNosPdfsDoLaudo } from '../api/laudoIA'
-import type { CatalogoDoProtocolo, LaudoPorIA as Laudo } from '../api/laudoIA'
+import type { AndamentoDoLaudoIA, CatalogoDoProtocolo, LaudoPorIA as Laudo } from '../api/laudoIA'
 import { downloadReportDocx, downloadReportPdf, getReport } from '../api/reports'
 import { Alert, Button, buttonClass, Card, PageHeader, Textarea } from '../components/ds'
 import { EscolhaDePaciente } from '../components/pacientes/EscolhaDePaciente'
@@ -14,9 +14,16 @@ type Etapa = 'preencher' | 'catalogo' | 'ia' | 'documento' | 'pronto'
 const MENSAGEM_DA_ETAPA: Record<Etapa, string> = {
   preencher: '',
   catalogo: 'Preparando o protocolo do paciente…',
-  ia: 'Um agente de IA por PDF está transcrevendo os arquivos; em seguida, os especialistas (anamnese, escalas, desenvolvimento e estudo de caso) preenchem o protocolo ao mesmo tempo…',
+  ia: 'Enviando os PDFs…',
   documento: 'Gerando o laudo padrão com os gráficos…',
   pronto: '',
+}
+
+const SITUACAO_DO_DOCUMENTO: Record<AndamentoDoLaudoIA['documentos'][number]['status'], string> = {
+  aguardando: 'aguardando',
+  lendo: 'lendo…',
+  lido: 'lido ✓',
+  erro: 'não foi possível ler',
 }
 
 interface MensagemDoFormulario {
@@ -38,6 +45,7 @@ export default function LaudoPorIA() {
   const [observacoes, setObservacoes] = useState('')
   const [etapa, setEtapa] = useState<Etapa>('preencher')
   const [erro, setErro] = useState<string | null>(null)
+  const [andamento, setAndamento] = useState<AndamentoDoLaudoIA | null>(null)
   const [laudo, setLaudo] = useState<Laudo | null>(null)
   const [laudoSemDocumento, setLaudoSemDocumento] = useState<string | null>(null)
   const [iframeSrc, setIframeSrc] = useState<string | null>(null)
@@ -87,13 +95,14 @@ export default function LaudoPorIA() {
     setErro(null)
     setLaudo(null)
     setLaudoSemDocumento(null)
+    setAndamento(null)
     let criado: string | null = null
     try {
       setEtapa('catalogo')
       const { catalogo } = await esperarFormulario(`/formulario-novo-paciente.html?paciente=${pacienteId}&modo=catalogo`, 'laudo-ia:catalogo', 30000)
       if (!catalogo) throw new Error('Não foi possível ler os campos do protocolo.')
       setEtapa('ia')
-      const novo = await gerarLaudoPorIA(pacienteId, arquivos, observacoes, catalogo)
+      const novo = await gerarLaudoPorIA(pacienteId, arquivos, observacoes, catalogo, setAndamento)
       criado = novo.id
       setEtapa('documento')
       await esperarFormulario(`/formulario-novo-paciente.html?laudo=${novo.id}&modo=gerar`, 'laudo-ia:gerado', 120000)
@@ -161,7 +170,20 @@ export default function LaudoPorIA() {
                   )}
                 </Alert>
               )}
-              {ocupado && <Alert tone="info">{MENSAGEM_DA_ETAPA[etapa]}</Alert>}
+              {ocupado && (
+                <Alert tone="info">
+                  <span role="status">{(etapa === 'ia' && andamento?.mensagem) || MENSAGEM_DA_ETAPA[etapa]}</span>
+                  {etapa === 'ia' && andamento && andamento.documentos.length > 1 && (
+                    <ul style={{ margin: '4px 0 0', paddingLeft: 20 }}>
+                      {andamento.documentos.map((d) => (
+                        <li key={d.nome}>
+                          {d.nome}: {SITUACAO_DO_DOCUMENTO[d.status]}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </Alert>
+              )}
               <div>
                 <Button icon={<Sparkles />} onClick={gerar} disabled={!arquivos.length} loading={ocupado} loadingLabel="Gerando…">
                   Gerar laudo com IA

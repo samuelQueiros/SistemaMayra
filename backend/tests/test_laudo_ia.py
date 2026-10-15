@@ -104,6 +104,20 @@ def _enviar(client, headers, pid, catalogo=None, arquivos=None):
     )
 
 
+def _concluir(client, headers, resposta) -> dict:
+    """A geração roda em segundo plano: acompanha o andamento até o fim."""
+    import time
+
+    assert resposta.status_code == 202, resposta.text
+    job_id = resposta.json()["job_id"]
+    for _ in range(500):
+        andamento = client.get(f"/api/laudo-ia/jobs/{job_id}", headers=headers).json()
+        if andamento["status"] in ("concluido", "erro"):
+            return andamento
+        time.sleep(0.01)
+    raise AssertionError("a geração não terminou")
+
+
 def test_cota_diaria_retorna_orientacao_e_nao_cria_laudo(client, monkeypatch):
     headers, pid = _preparar(client)
 
@@ -114,10 +128,10 @@ def test_cota_diaria_retorna_orientacao_e_nao_cria_laudo(client, monkeypatch):
         )
 
     monkeypatch.setattr(modulo, "preencher_protocolo", falhar)
-    resposta = _enviar(client, headers, pid)
+    andamento = _concluir(client, headers, _enviar(client, headers, pid))
 
-    assert resposta.status_code == 429
-    mensagem = resposta.json()["detail"]
+    assert andamento["status"] == "erro"
+    mensagem = andamento["erro"]
     assert "cota diária" in mensagem
     assert "Verifique a chave" not in mensagem
     assert "RESOURCE_EXHAUSTED" not in mensagem
@@ -126,10 +140,9 @@ def test_cota_diaria_retorna_orientacao_e_nao_cria_laudo(client, monkeypatch):
 
 def test_cria_laudo_do_protocolo_padrao(client, ia_falsa):
     headers, pid = _preparar(client)
-    resposta = _enviar(client, headers, pid)
-
-    assert resposta.status_code == 201, resposta.text
-    laudo = resposta.json()
+    andamento = _concluir(client, headers, _enviar(client, headers, pid))
+    assert andamento["status"] == "concluido", andamento
+    laudo = client.get(f"/api/reports/{andamento['report_id']}", headers=headers).json()
     assert laudo["answers_json"]["parto"] == "Cesáreo"
     assert laudo["answers_json"]["estudoCaso"].startswith("Criança de 7 anos")
     assert laudo["computed_json"]["origem"] == "ia_pdf"

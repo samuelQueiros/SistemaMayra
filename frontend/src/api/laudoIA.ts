@@ -1,4 +1,4 @@
-import { enviarFormulario } from './client'
+import { ApiError, apiGet, enviarFormulario } from './client'
 import type { Report } from './types'
 
 // Laudo Por IA: a IA lê os PDFs e preenche o protocolo padrão; o documento é
@@ -29,10 +29,50 @@ export function problemaNosPdfsDoLaudo(arquivos: File[]): string | null {
   return null
 }
 
-export function gerarLaudoPorIA(patientId: string, arquivos: File[], observacoes: string, catalogo: CatalogoDoProtocolo) {
+// Andamento da geração em segundo plano (GET /api/laudo-ia/jobs/{id}).
+export interface AndamentoDoLaudoIA {
+  id: string
+  status: 'na_fila' | 'processando' | 'concluido' | 'erro'
+  mensagem: string
+  documentos: { nome: string; status: 'aguardando' | 'lendo' | 'lido' | 'erro' }[]
+  report_id: string | null
+  erro: string | null
+}
+
+const INTERVALO_DE_CONSULTA_MS = 2000
+// Falhas de rede seguidas toleradas ao consultar o andamento (a geração
+// continua no servidor mesmo se a conexão oscilar).
+const FALHAS_DE_REDE_TOLERADAS = 5
+
+const esperar = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// Começa a geração e acompanha até o fim; devolve o id do laudo criado.
+export async function gerarLaudoPorIA(
+  patientId: string,
+  arquivos: File[],
+  observacoes: string,
+  catalogo: CatalogoDoProtocolo,
+  aoProgredir?: (andamento: AndamentoDoLaudoIA) => void,
+): Promise<{ id: string }> {
   const dados = new FormData()
   arquivos.forEach((a) => dados.append('arquivos', a))
   dados.append('catalogo', JSON.stringify(catalogo))
   if (observacoes.trim()) dados.append('observacoes', observacoes.trim())
-  return enviarFormulario<LaudoPorIA>(`/patients/${patientId}/laudo-ia`, dados)
+  const { job_id } = await enviarFormulario<{ job_id: string }>(`/patients/${patientId}/laudo-ia`, dados)
+
+  let falhasDeRede = 0
+  for (;;) {
+    await esperar(INTERVALO_DE_CONSULTA_MS)
+    let andamento: AndamentoDoLaudoIA
+    try {
+      andamento = await apiGet<AndamentoDoLaudoIA>(`/laudo-ia/jobs/${job_id}`)
+      falhasDeRede = 0
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 0 && ++falhasDeRede <= FALHAS_DE_REDE_TOLERADAS) continue
+      throw e
+    }
+    aoProgredir?.(andamento)
+    if (andamento.status === 'concluido' && andamento.report_id) return { id: andamento.report_id }
+    if (andamento.status === 'erro') throw new Error(andamento.erro || 'Não foi possível gerar o laudo.')
+  }
 }
