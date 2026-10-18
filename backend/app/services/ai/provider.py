@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 
 from pydantic import BaseModel
@@ -19,8 +20,9 @@ class LimitesDaChamada:
 
     timeout_s: float = 240
     max_tokens: int = 32_000
-    # Raciocínio curto nos modelos que "pensam" antes de responder (GPT-5, o3...):
-    # para transcrever um PDF não precisa de mais, e fica bem mais rápido.
+    # Raciocínio curto nos modelos que "pensam" antes de responder (GPT-5, o3,
+    # Gemini 2.5/3...): para transcrever um PDF ou mapear respostas para os
+    # campos do catálogo não precisa de mais, e fica bem mais rápido.
     raciocinio_leve: bool = False
 
 
@@ -30,6 +32,20 @@ LIMITES_PADRAO = LimitesDaChamada()
 def _modelo_de_raciocinio_openai(model: str) -> bool:
     nome = model.lower()
     return (nome.startswith("gpt-5") or nome[:2] in ("o1", "o3", "o4")) and "chat" not in nome
+
+
+def _raciocinio_leve_gemini(model: str) -> dict:
+    """O Gemini 3 pensa no nível "high" por padrão em toda chamada — era o
+    que mais atrasava o Laudo Por IA (cada agente levava minutos). O 2.5
+    usa orçamento de tokens de raciocínio em vez de nível."""
+    versao = re.match(r"gemini-(\d+)(?:\.(\d+))?", model.lower())
+    if versao is None:
+        return {}
+    if int(versao.group(1)) >= 3:
+        return {"thinking_level": "low"}
+    if (int(versao.group(1)), int(versao.group(2) or 0)) >= (2, 5):
+        return {"thinking_budget": 1024}
+    return {}
 
 
 def get_chat_model(provider: str, model: str, api_key: str, limites: LimitesDaChamada = LIMITES_PADRAO) -> BaseChatModel:
@@ -60,12 +76,14 @@ def get_chat_model(provider: str, model: str, api_key: str, limites: LimitesDaCh
     if provider == "google":
         from langchain_google_genai import ChatGoogleGenerativeAI
 
+        extras = _raciocinio_leve_gemini(model) if limites.raciocinio_leve else {}
         return ChatGoogleGenerativeAI(
             model=model,
             google_api_key=api_key,
             timeout=limites.timeout_s,
             max_output_tokens=limites.max_tokens,
             max_retries=0,
+            **extras,
         )
 
     info = provedor(provider)

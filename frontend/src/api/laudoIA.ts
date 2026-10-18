@@ -37,6 +37,9 @@ export interface AndamentoDoLaudoIA {
   documentos: { nome: string; status: 'aguardando' | 'lendo' | 'lido' | 'erro' }[]
   report_id: string | null
   erro: string | null
+  /** 0-100: quanto já foi feito e até onde vai a etapa em curso. */
+  progresso?: number
+  progresso_teto?: number
 }
 
 const INTERVALO_DE_CONSULTA_MS = 2000

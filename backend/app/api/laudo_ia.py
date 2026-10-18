@@ -125,6 +125,8 @@ class AndamentoOut(BaseModel):
     documentos: list[dict]
     report_id: str | None
     erro: str | None
+    progresso: int = 0
+    progresso_teto: int = 0
 
 
 def _gerar_laudo(
@@ -157,7 +159,7 @@ def _gerar_laudo(
         andamento.falhar(_erro_da_ia(exc, credenciais["provider"], credenciais["model"])[1])
         return
 
-    andamento.mensagem("Salvando o laudo…")
+    andamento.mensagem("Salvando o laudo…", progresso=95, teto=99)
     answers, descartados = respostas_para_answers(resultado.protocolo, catalogo)
     answers.update(_respostas_calculadas(resultado.documentos, catalogo))
     # Hipóteses e encaminhamentos: escolhidos pela psicóloga, nunca pela IA.

@@ -1,6 +1,8 @@
 import base64
+import hashlib
 import io
 from datetime import date, datetime
+from pathlib import Path
 
 import matplotlib
 
@@ -8,6 +10,7 @@ matplotlib.use("Agg")  # backend sem interface gráfica, seguro em servidor
 import matplotlib.pyplot as plt
 from weasyprint import HTML
 
+from app.services import laudo_documento
 from app.services.laudo_documento import _buscador_somente_data_uri, html_para_pdf
 from app.services.storage import get_photos_storage, get_reports_storage
 
@@ -19,6 +22,32 @@ _CORES = ["#7561ae", "#d9709f", "#8fb4d6", "#f5a623", "#3fa35b", "#b3a5e2", "#e7
 # em generated_text: o protocolo fixo, os modelos de protocolo configuráveis
 # e o relatório por IA a partir de PDFs de formulários.
 RULE_TYPES_COM_HTML_PRONTO = {"custom_form", "protocolo", "relatorio_ia_pdf"}
+
+# O mesmo HTML gera sempre o mesmo PDF: guardado pelo conteúdo, baixar de
+# novo não passa outra vez pelo WeasyPrint (segundos de CPU por laudo). A
+# versão do conversor entra na chave: mudou laudo_documento.py, refaz.
+_VERSAO_DO_CONVERSOR = hashlib.sha256(Path(laudo_documento.__file__).read_bytes()).hexdigest()[:8]
+
+
+def _chave_do_pdf_pronto(report, html: str) -> str:
+    resumo = hashlib.sha256(html.encode("utf-8")).hexdigest()[:16]
+    return f"{report.id}-{resumo}-{_VERSAO_DO_CONVERSOR}.pdf"
+
+
+def _pdf_do_html_pronto(report) -> tuple[str, bytes]:
+    html = report.generated_text or "<p>Laudo vazio.</p>"
+    chave = _chave_do_pdf_pronto(report, html)
+    storage = get_reports_storage()
+    if report.pdf_path == chave and storage.exists(chave):
+        return chave, storage.read(chave)
+    pdf_bytes = html_para_pdf(html)
+    storage.save(chave, pdf_bytes)
+    if report.pdf_path and report.pdf_path != chave:
+        try:
+            storage.delete(report.pdf_path)  # versão anterior do laudo
+        except Exception:  # noqa: BLE001 - só limpeza; o PDF novo já está salvo
+            pass
+    return chave, pdf_bytes
 
 
 def render_report_pdf(*, patient, template, report, psychologist=None) -> tuple[str, bytes]:
@@ -36,9 +65,7 @@ def render_report_pdf(*, patient, template, report, psychologist=None) -> tuple[
         # formulário standalone, salvo em generated_text via PUT
         # /api/reports/{id}/text — não passa pelas tabelas de
         # pontuação/gráfico Matplotlib do motor de regras dinâmico.
-        pdf_bytes = html_para_pdf(report.generated_text or "<p>Laudo vazio.</p>")
-        get_reports_storage().save(chave, pdf_bytes)
-        return chave, pdf_bytes
+        return _pdf_do_html_pronto(report)
 
     grafico_data_uri = _gerar_grafico(template.schema_json, report.computed_json or {})
     html = _montar_html(patient, template, report, grafico_data_uri, psychologist)

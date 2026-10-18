@@ -71,5 +71,23 @@ def test_mensagens_de_andamento_por_etapa():
     andamento.concluir("r1")
     final = jobs.ler(job["id"])
     assert final["status"] == "concluido" and final["report_id"] == "r1"
+    assert final["progresso"] == 100
+
+
+def test_progresso_avanca_por_documento_e_por_agente():
+    job = jobs.criar(owner_id="o", patient_id="p", nomes_dos_arquivos=["a.pdf", "b.pdf"])
+    andamento = jobs.Andamento(job)
+    andamento("lendo_documento", indice=1, total=2, nome="a.pdf")
+    lido = jobs.ler(job["id"])
+    assert (lido["progresso"], lido["progresso_teto"]) == (5, 33)
+    andamento("documento_lido", indice=1, total=2, nome="a.pdf")
+    andamento("documento_com_erro", indice=2, total=2, nome="b.pdf")
+    assert jobs.ler(job["id"])["progresso"] == 60
+    andamento("preenchendo", etapas=["anamnese", "escalas", "desenvolvimento", "estudo_de_caso"])
+    andamento("etapa_concluida", etapa="escalas")
+    lido = jobs.ler(job["id"])
+    assert lido["progresso"] == 69 and lido["progresso_teto"] == 95
+    andamento.mensagem("Salvando o laudo…", progresso=95, teto=99)
+    assert jobs.ler(job["id"])["progresso"] == 95
 
 

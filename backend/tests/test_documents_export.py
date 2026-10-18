@@ -191,6 +191,29 @@ def test_historico_baixa_word_e_pdf_do_laudo_do_formulario(client):
     assert pdf.content.startswith(b"%PDF")
 
 
+def test_pdf_do_mesmo_html_vem_do_cache_e_o_editado_e_refeito(client, monkeypatch):
+    import app.services.pdf as pdf_module
+
+    headers = registrar_e_logar(client)
+    report_id = _criar_laudo_do_formulario(client, headers, HTML_LAUDO)
+    geracoes = []
+    original = pdf_module.html_para_pdf
+    monkeypatch.setattr(pdf_module, "html_para_pdf", lambda html: geracoes.append(1) or original(html))
+
+    primeiro = client.get(f"/api/reports/{report_id}/pdf", headers=headers)
+    segundo = client.get(f"/api/reports/{report_id}/pdf", headers=headers)
+    assert primeiro.status_code == segundo.status_code == 200
+    assert segundo.content == primeiro.content
+    assert len(geracoes) == 1
+
+    client.put(f"/api/reports/{report_id}/text", json={"generated_text": HTML_LAUDO.replace("Criança Teste", "Outro Nome")}, headers=headers)
+    assert client.get(f"/api/reports/{report_id}/pdf", headers=headers).status_code == 200
+    assert len(geracoes) == 2
+    # Só o PDF da versão atual fica guardado.
+    pasta = storage_module._LOCAL_STORAGE_ROOT / "reports"
+    assert len([a for a in pasta.iterdir() if a.name.startswith(report_id)]) == 1
+
+
 def test_historico_word_sem_documento_gerado_da_400(client):
     headers = registrar_e_logar(client)
     report_id = _criar_laudo_do_formulario(client, headers)

@@ -947,6 +947,46 @@ input[type='file']::file-selector-button:hover {
   transition: width var(--dur-slow) var(--ease);
 }
 
+.progress-track:has(.progress-fill-viva) {
+  height: 10px;
+}
+
+.progress-fill-viva {
+  background-image:
+    linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .45) 50%, transparent 70%),
+    var(--grad-primary);
+  background-size: 200% 100%, 100% 100%;
+  animation: progresso-vivo 1.6s linear infinite;
+  transition: width 600ms linear;
+}
+
+@keyframes progresso-vivo {
+  from { background-position: 150% 0, 0 0; }
+  to { background-position: -50% 0, 0 0; }
+}
+
+.geracao-progresso {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border: 1px solid var(--info-bd);
+  border-radius: var(--r-md);
+  background: var(--info-bg);
+}
+
+.geracao-progresso-rodape {
+  margin: 0;
+  font: var(--type-caption);
+  color: var(--text-2);
+}
+
+.geracao-progresso ul {
+  margin: 0;
+  padding-left: 20px;
+  font: var(--type-caption);
+  color: var(--text-body);
+}
+
 /* ------------------------------------------------------------ Abas */
 
 .tabs {

@@ -13,6 +13,8 @@ import { EscolhaDePaciente } from '../components/pacientes/EscolhaDePaciente'
 import { EscolhasDoLaudo } from '../components/EscolhasDoLaudo'
 import { SeletorDePdfs } from '../components/SeletorDePdfs'
 import { CamposQueFaltam } from '../components/pendencias/CamposQueFaltam'
+import { ProgressoDaGeracao } from '../components/ProgressoDaGeracao'
+import type { Progresso } from '../components/ProgressoDaGeracao'
 
 type Etapa = 'preencher' | 'catalogo' | 'ia' | 'documento' | 'pronto'
 
@@ -29,6 +31,23 @@ const SITUACAO_DO_DOCUMENTO: Record<AndamentoDoLaudoIA['documentos'][number]['st
   lendo: 'lendo…',
   lido: 'lido ✓',
   erro: 'não foi possível ler',
+}
+
+// Faixas da barra: ler o protocolo, enviar, IA no servidor (0-100 dele) e
+// gerar o documento com os gráficos no navegador.
+const PROGRESSO_DA_ETAPA: Record<Etapa, Progresso> = {
+  preencher: { alvo: 0, teto: 0 },
+  catalogo: { alvo: 0, teto: 4 },
+  ia: { alvo: 4, teto: 8 },
+  documento: { alvo: 86, teto: 98 },
+  pronto: { alvo: 100, teto: 100 },
+}
+
+// Andamento do servidor (0-100) dentro da faixa [de, ate] da barra.
+function naFaixa(andamento: AndamentoDoLaudoIA | null, de: number, ate: number): Progresso | null {
+  if (!andamento || andamento.progresso === undefined) return null
+  const escala = (v: number) => de + ((ate - de) * v) / 100
+  return { alvo: escala(andamento.progresso), teto: escala(andamento.progresso_teto ?? andamento.progresso) }
 }
 
 interface MensagemDoFormulario {
@@ -59,6 +78,7 @@ export default function LaudoPorIA() {
   const [andamento, setAndamento] = useState<AndamentoDoLaudoIA | null>(null)
   // "Atualizar laudo" (dados que faltaram): andamento, resultado e recarga das pendências.
   const [atualizando, setAtualizando] = useState<string | null>(null)
+  const [progressoDaAtualizacao, setProgressoDaAtualizacao] = useState<Progresso>({ alvo: 0, teto: 0 })
   const [resultadoDaAtualizacao, setResultadoDaAtualizacao] = useState<{ tom: 'success' | 'danger'; texto: string } | null>(null)
   const [recarregarPendencias, setRecarregarPendencias] = useState(0)
   const [laudo, setLaudo] = useState<Laudo | null>(null)
@@ -115,11 +135,26 @@ export default function LaudoPorIA() {
   useEffect(() => {
     esperarRef.current = esperarFormulario
   })
-  const obterCatalogo = useCallback(async () => {
-    const { catalogo } = await esperarRef.current(`/formulario-novo-paciente.html?paciente=${pacienteId}&modo=catalogo`, 'laudo-ia:catalogo', 30000)
-    if (!catalogo) throw new Error('Não foi possível ler os campos do protocolo.')
+  // Lido uma vez por paciente (o formulário inteiro carrega num iframe) e
+  // guardado: "Gerar" não espera de novo por ele.
+  const catalogoEmCache = useRef<{ pacienteId: string; catalogo: Promise<CatalogoDoProtocolo> } | null>(null)
+  const obterCatalogo = useCallback(() => {
+    if (catalogoEmCache.current?.pacienteId === pacienteId) return catalogoEmCache.current.catalogo
+    const catalogo = esperarRef.current(`/formulario-novo-paciente.html?paciente=${pacienteId}&modo=catalogo`, 'laudo-ia:catalogo', 30000).then((m) => {
+      if (!m.catalogo) throw new Error('Não foi possível ler os campos do protocolo.')
+      return m.catalogo
+    })
+    catalogoEmCache.current = { pacienteId, catalogo }
+    catalogo.catch(() => {
+      if (catalogoEmCache.current?.catalogo === catalogo) catalogoEmCache.current = null
+    })
     return catalogo
   }, [pacienteId])
+
+  // Já lê o catálogo enquanto a psicóloga escolhe os PDFs.
+  useEffect(() => {
+    if (pacienteId && !laudoDoHistorico && !cadastrando && etapa === 'preencher') obterCatalogo().catch(() => undefined)
+  }, [pacienteId, laudoDoHistorico, cadastrando, etapa, obterCatalogo])
 
   // Resumo (sem fotos nem HTML) e pendências em paralelo. Se as pendências
   // falharem, o quadro "Campos que faltam" tenta de novo e mostra o erro.
@@ -154,9 +189,18 @@ export default function LaudoPorIA() {
     setResultadoDaAtualizacao(null)
     try {
       setAtualizando('Aplicando os dados no relatório…')
+      setProgressoDaAtualizacao({ alvo: 0, teto: 10 })
       const r = await atualizarLaudo(laudoId, reescreverEstudo)
-      if (r.job_id) await acompanharGeracao(r.job_id, (a) => setAtualizando(a.mensagem || 'Incluindo os dados novos no estudo de caso…'))
+      if (r.job_id) {
+        setProgressoDaAtualizacao({ alvo: 10, teto: 20 })
+        await acompanharGeracao(r.job_id, (a) => {
+          setAtualizando(a.mensagem || 'Incluindo os dados novos no estudo de caso…')
+          const p = naFaixa(a, 10, 80)
+          if (p) setProgressoDaAtualizacao(p)
+        })
+      }
       setAtualizando('Gerando o documento com os dados novos…')
+      setProgressoDaAtualizacao({ alvo: 80, teto: 98 })
       await esperarFormulario(`/formulario-novo-paciente.html?laudo=${laudoId}&modo=gerar`, 'laudo-ia:gerado', 120000)
       setLaudo((atual) => (atual ? { ...atual, generated_text: null } : atual))
       setRecarregarPendencias((n) => n + 1)
@@ -180,8 +224,7 @@ export default function LaudoPorIA() {
     let criado: string | null = null
     try {
       setEtapa('catalogo')
-      const { catalogo } = await esperarFormulario(`/formulario-novo-paciente.html?paciente=${pacienteId}&modo=catalogo`, 'laudo-ia:catalogo', 30000)
-      if (!catalogo) throw new Error('Não foi possível ler os campos do protocolo.')
+      const catalogo = await obterCatalogo()
       setEtapa('ia')
       const novo = await gerarLaudoPorIA(pacienteId, arquivos, observacoes, catalogo, setAndamento, dataRelatorio, cidade, { hipoteses, encaminhamentos })
       criado = novo.id
@@ -305,10 +348,11 @@ export default function LaudoPorIA() {
                 </Alert>
               )}
               {ocupado && (
-                <Alert tone="info">
-                  {(etapa === 'ia' && andamento?.mensagem) || MENSAGEM_DA_ETAPA[etapa]}
-                  {etapa === 'ia' && andamento && andamento.documentos.length > 1 && (
-                    <ul style={{ margin: '4px 0 0', paddingLeft: 20 }}>
+                <ProgressoDaGeracao
+                  {...((etapa === 'ia' && naFaixa(andamento, 5, 85)) || PROGRESSO_DA_ETAPA[etapa])}
+                  mensagem={(etapa === 'ia' && andamento?.mensagem) || MENSAGEM_DA_ETAPA[etapa]}
+                  detalhes={etapa === 'ia' && andamento && andamento.documentos.length > 1 && (
+                    <ul>
                       {andamento.documentos.map((d) => (
                         <li key={d.nome}>
                           {d.nome}: {SITUACAO_DO_DOCUMENTO[d.status]}
@@ -316,7 +360,7 @@ export default function LaudoPorIA() {
                       ))}
                     </ul>
                   )}
-                </Alert>
+                />
               )}
               <div>
                 <Button icon={<Sparkles />} onClick={gerar} disabled={!arquivos.length || !dataRelatorio} loading={ocupado} loadingLabel="Gerando…">
@@ -356,7 +400,7 @@ export default function LaudoPorIA() {
                 gerando={!!atualizando}
                 onGerar={(reescrever) => void atualizar(laudo.id, reescrever)}
               />
-              {atualizando && <Alert tone="info">{atualizando}</Alert>}
+              {atualizando && <ProgressoDaGeracao {...progressoDaAtualizacao} mensagem={atualizando} />}
               {resultadoDaAtualizacao && <Alert tone={resultadoDaAtualizacao.tom}>{resultadoDaAtualizacao.texto}</Alert>}
               <div className="report-next-action">
                 <Button

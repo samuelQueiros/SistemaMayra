@@ -39,6 +39,16 @@ MENSAGEM_INTERROMPIDA = (
 )
 
 _executor = ThreadPoolExecutor(max_workers=_GERACOES_SIMULTANEAS, thread_name_prefix="laudo-ia")
+# Leituras de anexos numa fila própria: antes dividiam a fila das gerações e
+# algumas fotos enviadas nas pendências deixavam o próximo laudo "na fila".
+_executor_de_anexos = ThreadPoolExecutor(max_workers=2, thread_name_prefix="laudo-ia-anexo")
+
+# Faixas da barra de progresso (0-100): leitura dos PDFs até 60, agentes até
+# 95, salvar até 100. A tela anda devagar até `progresso_teto` enquanto a
+# etapa atual não termina, para nunca parecer travada.
+_INICIO_DA_LEITURA = 5
+_FIM_DA_LEITURA = 60
+_FIM_DOS_AGENTES = 95
 
 
 def _agora() -> datetime:
@@ -79,6 +89,9 @@ def criar(*, owner_id, patient_id, nomes_dos_arquivos: list[str]) -> dict:
         "mensagem": "Aguardando para começar…",
         "documentos": [{"nome": nome, "status": "aguardando"} for nome in nomes_dos_arquivos],
         "etapas_pendentes": [],
+        "etapas_total": 0,
+        "progresso": 0,
+        "progresso_teto": 2,
         "report_id": None,
         "erro": None,
         "criado_em": _agora().isoformat(),
@@ -100,6 +113,23 @@ class Andamento:
             self.job.update(mudancas)
             _salvar(self.job)
 
+    def _calcular_progresso(self) -> None:
+        """Quanto já foi feito e até onde chega quando o que está em curso
+        terminar (leitura dos PDFs → agentes)."""
+        job = self.job
+        documentos = job["documentos"]
+        if job.get("etapas_total"):
+            feitas = job["etapas_total"] - len(job["etapas_pendentes"])
+            faixa = _FIM_DOS_AGENTES - _FIM_DA_LEITURA
+            job["progresso"] = _FIM_DA_LEITURA + round(faixa * feitas / job["etapas_total"])
+            job["progresso_teto"] = _FIM_DOS_AGENTES
+        elif documentos:
+            fatia = (_FIM_DA_LEITURA - _INICIO_DA_LEITURA) / len(documentos)
+            prontos = sum(d["status"] in ("lido", "erro") for d in documentos)
+            lendo = sum(d["status"] == "lendo" for d in documentos)
+            job["progresso"] = _INICIO_DA_LEITURA + round(fatia * prontos)
+            job["progresso_teto"] = _INICIO_DA_LEITURA + round(fatia * (prontos + max(lendo, 1)))
+
     def _documento(self, indice: int, status: str) -> None:
         self.job["documentos"][indice - 1]["status"] = status
 
@@ -120,6 +150,7 @@ class Andamento:
                 self._documento(dados["indice"], "erro")
             elif evento == "preenchendo":
                 self.job["etapas_pendentes"] = list(dados["etapas"])
+                self.job["etapas_total"] = len(dados["etapas"])
             elif evento == "etapa_concluida":
                 self.job["etapas_pendentes"] = [e for e in self.job["etapas_pendentes"] if e != dados["etapa"]]
             else:
@@ -132,13 +163,21 @@ class Andamento:
                     partes = ", ".join(ROTULOS_DAS_ETAPAS.get(e, e) for e in pendentes if e != "estudo_de_caso")
                     extra = " e redigindo o estudo de caso" if "estudo_de_caso" in pendentes else ""
                     self.job["mensagem"] = f"Preenchendo o protocolo ({partes}){extra}…"
+            self._calcular_progresso()
             _salvar(self.job)
 
-    def mensagem(self, texto: str) -> None:
-        self._gravar(mensagem=texto)
+    def mensagem(self, texto: str, progresso: int | None = None, teto: int | None = None) -> None:
+        mudancas: dict = {"mensagem": texto}
+        if progresso is not None:
+            mudancas["progresso"] = progresso
+        if teto is not None:
+            mudancas["progresso_teto"] = teto
+        self._gravar(**mudancas)
 
     def concluir(self, report_id) -> None:
-        self._gravar(status="concluido", mensagem="Laudo pronto.", report_id=str(report_id), etapas_pendentes=[])
+        self._gravar(
+            status="concluido", mensagem="Laudo pronto.", report_id=str(report_id), etapas_pendentes=[], progresso=100, progresso_teto=100
+        )
 
     def falhar(self, erro: str) -> None:
         self._gravar(status="erro", mensagem="", erro=erro)
@@ -157,7 +196,7 @@ def em_segundo_plano(trabalho: Callable[[], None], descricao: str) -> None:
         except Exception as exc:  # noqa: BLE001
             logger.warning("%s falhou: %s", descricao, type(exc).__name__)
 
-    _executor.submit(rodar)
+    _executor_de_anexos.submit(rodar)
 
 
 def executar(job: dict, trabalho: Callable[[Andamento], None]) -> None:
@@ -166,7 +205,9 @@ def executar(job: dict, trabalho: Callable[[Andamento], None]) -> None:
     andamento = Andamento(job)
 
     def rodar() -> None:
-        andamento._gravar(status="processando", mensagem="Começando…")
+        # Sem PDFs para ler (ex.: "Atualizar relatório"), é uma chamada só.
+        teto = _INICIO_DA_LEITURA if job["documentos"] else 90
+        andamento._gravar(status="processando", mensagem="Começando…", progresso=2, progresso_teto=teto)
         parar = threading.Event()
 
         def bater() -> None:
