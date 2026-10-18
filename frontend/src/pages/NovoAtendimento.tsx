@@ -157,7 +157,7 @@ function ProtocoloPadrao({ pacienteId, laudoId = null }: { pacienteId: string | 
         title={laudoId ? 'Ajustar laudo' : 'Novo atendimento'}
         description={
           laudoId
-            ? 'Revise e ajuste o protocolo deste laudo. As alterações são salvas automaticamente; clique em "Salvar laudo" para atualizar o documento.'
+            ? 'Revise e ajuste o protocolo deste laudo. As alterações são salvas automaticamente; clique em "Atualizar Relatório" para atualizar o documento.'
             : 'Preencha o protocolo completo. Ao salvar, o paciente e o protocolo ficam registrados no histórico.'
         }
         actions={<EtiquetaDeSalvamento salvamento={salvamento} />}

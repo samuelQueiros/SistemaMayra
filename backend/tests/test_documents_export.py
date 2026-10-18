@@ -137,8 +137,10 @@ def test_docx_tem_capa_em_secao_propria():
 def test_docx_preserva_destaques():
     doc = Document(io.BytesIO(html_para_docx(HTML_LAUDO)))
     runs = [r for p in doc.paragraphs for r in p.runs]
-    cinza = next(r for r in runs if r.text == "Avaliação Neuropsicopedagógica")
-    assert cinza.bold and cinza.font.highlight_color is not None
+    # Os antigos destaques cinza viraram sombreamento azul-claro (modelo do relatório).
+    destaque = next(r for r in runs if r.text == "Avaliação Neuropsicopedagógica")
+    sombreamento = destaque._r.rPr.find(qn("w:shd"))
+    assert destaque.bold and sombreamento is not None and sombreamento.get(qn("w:fill")) == "DBE5F1"
     amarelo = next(r for r in runs if r.text == "destaque amarelo")
     assert amarelo.font.highlight_color is not None
     assinatura = next(r for r in runs if r.text == "Mayra Vanessa Andrade da Cunha")

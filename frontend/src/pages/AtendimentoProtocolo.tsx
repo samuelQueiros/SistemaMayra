@@ -220,7 +220,7 @@ export default function AtendimentoProtocolo() {
       <PageHeader
         eyebrow="Atendimento"
         title={modelo.name}
-        description={laudoId ? 'Alterações são salvas automaticamente no sistema.' : 'Preencha e clique em "Salvar laudo" para registrar o paciente e o protocolo.'}
+        description={laudoId ? 'Alterações são salvas automaticamente no sistema.' : 'Preencha e clique em "Atualizar Relatório" para registrar o paciente e o protocolo.'}
         meta={status.startsWith('Alterações ainda não salvas') ? <span className="caption">{status}</span> : undefined}
         actions={<SaveStatus status={status} salvo={!!laudoId} />}
       />
@@ -265,7 +265,7 @@ export default function AtendimentoProtocolo() {
               </Button>
             )}
             <Button icon={<Save />} onClick={salvarNoSistema} loading={ocupado === 'salvar'} loadingLabel="Salvando…" disabled={!!ocupado}>
-              {laudoId ? 'Atualizar laudo' : 'Salvar laudo'}
+              Atualizar Relatório
             </Button>
           </div>
         </div>

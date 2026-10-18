@@ -23,11 +23,11 @@ p.centro{text-align:center}
 p.direita{text-align:right}
 p.compacto{margin:0;line-height:1.25}
 mark{color:#000;padding:0 1pt}
-mark.cinza{background:#d9d9d9}
+mark.cinza{background:#dbe5f1}
 mark.amarelo{background:#ffff00}
-.faixa{background:#bfbfbf;font-weight:bold;padding:1mm 2mm;margin:5mm 0 3mm;line-height:1.45}
+.faixa{background:#c6d9f1;font-weight:bold;padding:1mm 2mm;margin:5mm 0 3mm;line-height:1.45}
 .faixa.centro{text-align:center}
-.faixa-topico{background:#a6a6a6;font-weight:bold;font-size:9.5pt;padding:1mm 2mm;margin:4mm 0 3mm;break-after:avoid;page-break-after:avoid}
+.faixa-topico{background:#b8cce4;font-weight:bold;font-size:9.5pt;padding:1mm 2mm;margin:4mm 0 3mm;break-after:avoid;page-break-after:avoid}
 h2{font-size:12.5pt;text-align:center;margin:3mm 0 5mm;break-after:avoid;page-break-after:avoid}
 h2.roxo{color:#5c4b92}
 h2.marcado{font-size:10pt;margin:5mm 0 3mm}
@@ -58,16 +58,20 @@ table.centro td{text-align:center}
 .fotos img{margin:0 5mm}
 table.cab-paciente{margin:0 0 3mm}
 table.cab-paciente td{vertical-align:middle;padding:0}
-td.cab-foto{width:48mm}
-td.cab-espaco{width:8mm}
-.cab-box{border:.75pt solid #000;padding:5mm 3mm}
+td.cab-foto{width:42mm}
+td.cab-espaco{width:4mm}
+.cab-box{border:.75pt solid #000;padding:5mm 3mm;width:112mm;margin:0 auto}
 .cab-box p{text-align:center;font-weight:bold;margin:2.2mm 0;line-height:1.25;font-size:10.5pt}
-.caixa-cinza{background:#a6a6a6;padding:3mm 4mm;margin:4mm 0;font-weight:bold}
-.caixa-cinza.clara{background:#bfbfbf}
+.caixa-cinza{background:#c6d9f1;padding:3mm 4mm;margin:4mm 0;font-weight:bold;break-inside:avoid;page-break-inside:avoid}
+.caixa-cinza.clara{background:#dbe5f1}
 .caixa-cinza p{margin:0 0 3pt}
 .linha-assinatura{border-top:.75pt solid #000;width:95mm;margin:16mm auto 1mm}
 .assinatura-nome{font-family:"Arial Narrow","Liberation Sans Narrow",Arial,sans-serif;font-style:italic;font-size:15pt}
 .quebra{break-before:page;page-break-before:always;height:0;margin:0}
+h3.area{text-align:center;font-size:10.5pt;margin:6mm 0 3mm}
+td.sem-quebra{white-space:nowrap}
+.galeria{text-align:center;margin:4mm 0 0}
+.galeria img{display:inline-block;margin:3mm 2.5mm;border:.75pt solid #000}
 @media screen{
   body{background:#e7e7ee;padding:14px 0}
   .moldura,.rodape-pagina{display:none}

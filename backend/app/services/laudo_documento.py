@@ -41,7 +41,15 @@ RECUO_PRIMEIRA_LINHA_MM = 12.5
 # transbordar e criar uma página em branco.
 LARGURA_CAPA_DOCX_MM = 208
 
-_DESTAQUES = {"cinza": WD_COLOR_INDEX.GRAY_25, "amarelo": WD_COLOR_INDEX.YELLOW}
+_DESTAQUES = {"amarelo": WD_COLOR_INDEX.YELLOW}
+# Cores do modelo do relatório (CSS_LAUDO do formulário): os antigos fundos
+# cinza viraram azul-claro. O Word não tem azul-claro entre as cores de
+# realce, então o destaque "cinza" vira sombreamento do trecho.
+COR_DESTAQUE = "DBE5F1"
+COR_FAIXA = "C6D9F1"
+COR_FAIXA_TOPICO = "B8CCE4"
+COR_CAIXA = "C6D9F1"
+COR_CAIXA_CLARA = "DBE5F1"
 _ALINHAMENTOS = {
     "centro": WD_ALIGN_PARAGRAPH.CENTER,
     "direita": WD_ALIGN_PARAGRAPH.RIGHT,
@@ -376,8 +384,10 @@ class _ConversorDocx:
         run.bold = formato.get("negrito") or None
         run.italic = formato.get("italico") or None
         run.underline = formato.get("sublinhado") or None
-        if formato.get("destaque"):
+        if formato.get("destaque") in _DESTAQUES:
             run.font.highlight_color = _DESTAQUES[formato["destaque"]]
+        elif formato.get("destaque"):
+            _sombrear(run._r.get_or_add_rPr(), COR_DESTAQUE)
         cor = _cor_hex(formato.get("cor"))
         if cor is not None:
             run.font.color.rgb = cor
@@ -423,6 +433,14 @@ class _ConversorDocx:
         p.paragraph_format.keep_with_next = True
         p.paragraph_format.space_before = Pt(6)
         self._inline(p, el, {"negrito": True, "destaque": "cinza"})
+
+    def _titulo_de_area(self, el) -> None:
+        """"ÁREA DO DESENVOLVIMENTO: …" acima de cada quadro, centralizado e sem fundo."""
+        p = self._novo_paragrafo(alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
+        p.paragraph_format.keep_with_next = True
+        p.paragraph_format.space_before = Pt(10)
+        p.paragraph_format.space_after = Pt(6)
+        self._inline(p, el, {"negrito": True, "tamanho": 10.5})
 
     def _titulo(self, el) -> None:
         classes = _classes(el)
@@ -495,6 +513,30 @@ class _ConversorDocx:
             _adicionar_imagem(p.add_run(), img.get("src"), largura)
         self.doc.add_paragraph().paragraph_format.space_after = Pt(0)
 
+    def _galeria(self, el) -> None:
+        """Página final de fotos: duas por linha, mesmo tamanho."""
+        imagens = [img for img in el.iter("img") if _imagem_bytes(img.get("src")) is not None]
+        if not imagens:
+            return
+        self._antes_de_tabela()
+        colunas = 2
+        linhas = (len(imagens) + colunas - 1) // colunas
+        tabela = self.doc.add_table(rows=linhas, cols=colunas)
+        tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
+        _sem_bordas_tabela(tabela)
+        largura_coluna = 85
+        _fixar_colunas(tabela, [largura_coluna] * colunas)
+        for i, img in enumerate(imagens):
+            celula = tabela.cell(i // colunas, i % colunas)
+            _largura_celula(celula, largura_coluna)
+            p = celula.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.paragraph_format.space_after = Pt(6)
+            _adicionar_imagem(p.add_run(), img.get("src"), min(_mm_do_elemento(img, 78), largura_coluna - 4))
+        for linha in tabela.rows:
+            _nao_quebrar_linha(linha)
+        self.doc.add_paragraph().paragraph_format.space_after = Pt(0)
+
     def _cabecalho_paciente(self, el) -> None:
         """Bloco inicial: foto à esquerda e caixa com a identificação."""
         self._antes_de_tabela()
@@ -503,7 +545,7 @@ class _ConversorDocx:
         tabela = self.doc.add_table(rows=1, cols=3)
         tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
         _sem_bordas_tabela(tabela)
-        _fixar_colunas(tabela, [48, 8, 114])
+        _fixar_colunas(tabela, [44, 10, 112])
         c_foto, c_espaco, c_caixa = tabela.rows[0].cells
         if foto is not None:
             p = c_foto.paragraphs[0]
@@ -597,11 +639,11 @@ class _ConversorDocx:
         elif "cab-paciente" in classes:
             self._cabecalho_paciente(el)
         elif "faixa" in classes:
-            self._faixa(el, "BFBFBF")
+            self._faixa(el, COR_FAIXA)
         elif "faixa-topico" in classes:
-            self._faixa(el, "A6A6A6")
+            self._faixa(el, COR_FAIXA_TOPICO)
         elif "caixa-cinza" in classes:
-            self._caixa(el, "BFBFBF" if "clara" in classes else "A6A6A6")
+            self._caixa(el, COR_CAIXA_CLARA if "clara" in classes else COR_CAIXA)
         elif "linha-assinatura" in classes:
             p = self._novo_paragrafo(alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
             p.paragraph_format.left_indent = Mm(38)
@@ -618,6 +660,8 @@ class _ConversorDocx:
             p._p.get_or_add_pPr().append(p_bdr)
         elif "grafico" in classes:
             self._imagem_centralizada(el)
+        elif "galeria" in classes:
+            self._galeria(el)
         elif "graficos-lado" in classes or "fotos" in classes:
             self._linha_de_imagens(el)
         elif tag == "table":
@@ -626,6 +670,8 @@ class _ConversorDocx:
             self._lista(el)
         elif tag in ("h1", "h2"):
             self._titulo(el)
+        elif tag == "h3" and "area" in classes:
+            self._titulo_de_area(el)
         elif tag == "h3":
             self._titulo_marcado(el)
         elif tag == "p":
