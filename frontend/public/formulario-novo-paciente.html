@@ -2080,6 +2080,17 @@ function encurtar(s,max){
   const corte=s.slice(0,max).replace(/\s+\S*$/,"");
   return (corte||s.slice(0,max))+"...";
 }
+// Rótulo do eixo dos gráficos por extenso, em linhas de até `max` letras
+// (o Chart.js desenha cada item do array numa linha).
+function quebrarRotulo(s,max){
+  const linhas=[];let atual="";
+  for(const palavra of String(s).split(/\s+/).filter(Boolean)){
+    if(atual&&(atual+" "+palavra).length>max){linhas.push(atual);atual=palavra;}
+    else atual=atual?atual+" "+palavra:palavra;
+  }
+  if(atual)linhas.push(atual);
+  return linhas;
+}
 const MESES_EXTENSO=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 function dataRelatorioObj(){
   const d=valor("dataRelatorio");
@@ -2166,22 +2177,22 @@ const numeroBR=v=>String(v).replace(".",",");
 function graficoCARS(){
   const valores=carsItens.map((_,i)=>valor("cars_"+i)===""?null:Number(valor("cars_"+i)));
   if(!valores.some(v=>v!==null))return null;
-  return graficoPNG({type:"line",data:{labels:carsItens.map(it=>encurtar(fraseCaso(it[0]),17)),datasets:[{data:valores,borderColor:PALETA_LAUDO.serie,borderWidth:3.5,pointRadius:0,tension:0,spanGaps:true,
+  return graficoPNG({type:"line",data:{labels:carsItens.map(it=>quebrarRotulo(fraseCaso(it[0]),24)),datasets:[{data:valores,borderColor:PALETA_LAUDO.serie,borderWidth:3.5,pointRadius:0,tension:0,spanGaps:true,
     rotulos:{fonte:"bold 14px Arial",cor:PALETA_LAUDO.texto,formato:v=>numeroBR(v),posicao:v=>v<=0.5?"acima":"abaixo"}}]},
     options:{layout:{padding:{top:8,right:26,left:14,bottom:6}},
       plugins:{legend:{display:false},tooltip:{enabled:false},title:{display:true,text:"Pontuação por Área - CARS",color:PALETA_LAUDO.textoSuave,font:{size:19,weight:"bold",family:FONTE_GRAFICO},padding:{bottom:16}}},
-      scales:{y:{min:0,max:4.4,ticks:{display:false,stepSize:1},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},border:{color:PALETA_LAUDO.gradeForte},ticks:{color:PALETA_LAUDO.texto,maxRotation:45,minRotation:45,font:{size:14,family:FONTE_GRAFICO}}}}}},1000,430);
+      scales:{y:{min:0,max:4.4,ticks:{display:false,stepSize:1},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},border:{color:PALETA_LAUDO.gradeForte},ticks:{color:PALETA_LAUDO.texto,maxRotation:90,minRotation:90,autoSkip:false,font:{size:13,family:FONTE_GRAFICO}}}}}},1000,600);
 }
 
 function graficoATA(){
   const valores=ATA_ITENS.map((_,i)=>valor("ata_item_"+i)===""?null:Number(valor("ata_item_"+i)));
   if(!valores.some(v=>v!==null))return null;
   const media=valores.map((v,i)=>i===0||v===null||valores[i-1]===null?null:(v+valores[i-1])/2);
-  return graficoPNG({type:"bar",data:{labels:ATA_ITENS.map(it=>encurtar(it[0].toUpperCase(),22)),datasets:[
+  return graficoPNG({type:"bar",data:{labels:ATA_ITENS.map(it=>quebrarRotulo(it[0].toUpperCase(),28)),datasets:[
       {type:"line",data:media,borderColor:PALETA_LAUDO.serieEscura,borderWidth:2,borderDash:[3,4],pointRadius:0,spanGaps:false},
       {data:valores,backgroundColor:PALETA_LAUDO.serie,barPercentage:0.75,categoryPercentage:0.85,rotulos:{fonte:"15px Arial",cor:PALETA_LAUDO.tinta}}]},
     options:{layout:{padding:{top:22,right:18,left:10,bottom:8}},plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.grade,espessura:1}},
-      scales:{y:{min:0,max:2,ticks:{stepSize:1,color:PALETA_LAUDO.texto,font:{size:14}},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:45,minRotation:45,autoSkip:false,font:{size:12,family:FONTE_GRAFICO}}}}}},1000,560);
+      scales:{y:{min:0,max:2,ticks:{stepSize:1,color:PALETA_LAUDO.texto,font:{size:14}},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:90,minRotation:90,autoSkip:false,font:{size:11,family:FONTE_GRAFICO}}}}}},1000,720);
 }
 
 // Habilidades acadêmicas da seção 8 (ano escolar): só as avaliadas.
@@ -2231,7 +2242,7 @@ function graficoHabilidadesGerais(grupo,itens){
   const avaliadas=itens.filter(h=>h.status);
   if(!avaliadas.length)return null;
   const serie=(status,v)=>avaliadas.map(h=>h.status===status?v:null);
-  return graficoPNG({type:"bar",data:{labels:avaliadas.map(h=>encurtar(h.nome,16)),datasets:[
+  return graficoPNG({type:"bar",data:{labels:avaliadas.map(h=>quebrarRotulo(h.nome,12)),datasets:[
       {label:"SIM",data:serie("Sim",1),backgroundColor:"#4472c4"},
       {label:"AS VEZES",data:serie("Às Vezes",0.5),backgroundColor:"#ffff00"},
       {label:"NÃO",data:serie("Não",0.2),backgroundColor:"#ff0000"}]},
@@ -2240,7 +2251,7 @@ function graficoHabilidadesGerais(grupo,itens){
         legend:{position:"bottom",labels:{boxWidth:12,boxHeight:12,color:PALETA_LAUDO.texto,font:{size:15,family:FONTE_GRAFICO}}},
         title:{display:true,text:grupo.grafico||grupo.titulo,color:PALETA_LAUDO.texto,font:{size:24,weight:"bold",family:FONTE_GRAFICO},padding:{bottom:14}}},
       scales:{y:{min:0,max:1,ticks:{stepSize:0.5,color:PALETA_LAUDO.texto,font:{size:15},callback:v=>numeroBR(Number(v).toFixed(1))},grid:{color:PALETA_LAUDO.grade},border:{display:false}},
-        x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:45,minRotation:45,autoSkip:false,font:{size:14,family:FONTE_GRAFICO}}}}}},1000,400);
+        x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:0,minRotation:0,autoSkip:false,font:{size:13,family:FONTE_GRAFICO}}}}}},1000,440);
 }
 function habilidadesAcademicasAvaliadas(){
   const lista=habilidadesPorAno[valor("anoEscolar")]||[];
@@ -2250,7 +2261,7 @@ function graficoHabilidadesAcademicas(habilidades){
   const pontuadas=habilidades.filter(h=>h.status!=="Não Observado");
   if(!pontuadas.length)return null;
   const serie=(status,v)=>pontuadas.map(h=>h.status===status?v:null);
-  return graficoPNG({type:"bar",data:{labels:pontuadas.map(h=>encurtar(h.nome,16)),datasets:[
+  return graficoPNG({type:"bar",data:{labels:pontuadas.map(h=>quebrarRotulo(h.nome,12)),datasets:[
       {label:"SATISFATÓRIO",data:serie("Satisfatório",1),backgroundColor:PALETA_LAUDO.status.bom},
       {label:"EM DESENVOLVIMENTO",data:serie("Em Desenvolvimento",0.5),backgroundColor:PALETA_LAUDO.status.atencao},
       {label:"INSATISFATÓRIO",data:serie("Insatisfatório",0.2),backgroundColor:PALETA_LAUDO.status.critico}]},
@@ -2259,7 +2270,7 @@ function graficoHabilidadesAcademicas(habilidades){
         legend:{position:"bottom",labels:{boxWidth:12,boxHeight:12,color:PALETA_LAUDO.texto,font:{size:15,family:FONTE_GRAFICO}}},
         title:{display:true,text:"HABILIDADES ACADÊMICAS – "+valor("anoEscolar").toUpperCase(),color:PALETA_LAUDO.texto,font:{size:24,weight:"bold",family:FONTE_GRAFICO},padding:{bottom:14}}},
       scales:{y:{min:0,max:1,ticks:{stepSize:0.5,color:PALETA_LAUDO.texto,font:{size:15},callback:v=>numeroBR(Number(v).toFixed(1))},grid:{color:PALETA_LAUDO.grade},border:{display:false}},
-        x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:45,minRotation:45,autoSkip:false,font:{size:14,family:FONTE_GRAFICO}}}}}},1000,400);
+        x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:0,minRotation:0,autoSkip:false,font:{size:13,family:FONTE_GRAFICO}}}}}},1000,440);
 }
 
 function graficoPortage(portage,idadeAnos){
@@ -3042,11 +3053,21 @@ function mostrarPreviaDoLaudo(html){
     erro.status = status;
     return erro;
   }
+  // Sem resposta do servidor nesse tempo, a requisição desiste com erro em
+  // vez de deixar a tela esperando para sempre (o Relatório por IA ficava
+  // em "Gerando o laudo…" até estourar o prazo, sem dizer o que travou).
+  const LIMITE_DA_REQUISICAO_MS = 120000;
   async function requisitar(path, init) {
     let r;
     try {
-      r = await fetch('/api' + path, init);
+      const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(LIMITE_DA_REQUISICAO_MS) : undefined;
+      r = await fetch('/api' + path, Object.assign({ signal }, init));
     } catch (e) {
+      if (e && (e.name === 'TimeoutError' || e.name === 'AbortError')) {
+        const erro = new Error('O servidor demorou demais para responder (' + path.split('?')[0] + '). Tente novamente.');
+        erro.status = 0;
+        throw erro;
+      }
       throw erroAmigavel(0);
     }
     if (!r.ok) {
@@ -3225,6 +3246,7 @@ function mostrarPreviaDoLaudo(html){
   async function carregarLaudo() {
     if (!laudoId || !token) return;
     try {
+      if (modoGerar) avisarJanelaPai({ tipo: 'laudo-ia:etapa', etapa: 'abrindo o laudo' });
       const laudo = await apiFetch('/reports/' + laudoId);
       laudoAtual = laudo;
       assinaturaPesadaNoBanco = assinaturaPesada(laudo.answers_json || {});
@@ -3233,6 +3255,7 @@ function mostrarPreviaDoLaudo(html){
       aplicarDados(laudo.answers_json || {});
       atualizarCamposBasePaciente();
       aplicarTextosPadrao(true);
+      if (modoGerar) avisarJanelaPai({ tipo: 'laudo-ia:etapa', etapa: 'carregando as fotos do paciente' });
       await carregarFotosDaGaleria();
       mostrarBotaoConcluir();
       definirStatus('Laudo aberto do sistema. Alterações são salvas automaticamente.', 'salvo');
@@ -3255,8 +3278,11 @@ function mostrarPreviaDoLaudo(html){
       if (primeira) setValor('hipoteseSelecionada', primeira);
     }
     if (valor('estudoCaso').trim()) gerarQuadroPeloEstudoCaso();
+    avisarJanelaPai({ tipo: 'laudo-ia:etapa', etapa: 'salvando as respostas' });
     await salvarRespostasNoBanco();
+    avisarJanelaPai({ tipo: 'laudo-ia:etapa', etapa: 'montando o documento com os gráficos' });
     const html = await gerarDocumentoLaudoHTML();
+    avisarJanelaPai({ tipo: 'laudo-ia:etapa', etapa: 'salvando o documento' });
     await apiFetch('/reports/' + laudoAtual.id + '/text', {
       method: 'PUT',
       body: JSON.stringify({ generated_text: html }),
@@ -3559,6 +3585,13 @@ function mostrarPreviaDoLaudo(html){
     if (!confirm('Começar um novo protocolo apagará todos os campos desta tela.\n\nO que já foi salvo no sistema continua no histórico do paciente. Deseja continuar?')) return;
     try { localStorage.removeItem(CHAVE_SALVAMENTO_LOCAL); } catch (e) { /* armazenamento bloqueado */ }
     location.href = location.pathname;
+  }
+
+  // Geração automática (Relatório por IA): um erro solto no formulário vai
+  // para a tela como diagnóstico (aparece se a geração não terminar).
+  if (modoGerar) {
+    window.addEventListener('error', (e) => avisarJanelaPai({ tipo: 'laudo-ia:etapa', erro: e.message || 'erro desconhecido' }));
+    window.addEventListener('unhandledrejection', (e) => avisarJanelaPai({ tipo: 'laudo-ia:etapa', erro: (e.reason && e.reason.message) || 'erro desconhecido' }));
   }
 
   document.addEventListener('DOMContentLoaded', () => {

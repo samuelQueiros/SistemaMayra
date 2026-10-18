@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as patients from '../api/patients'
@@ -59,7 +59,7 @@ describe('Relatório por IA', () => {
     expect(screen.getByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?paciente=p1&modo=catalogo')
     mensagemDoFormulario({ tipo: 'laudo-ia:catalogo', catalogo })
 
-    expect(await screen.findByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l1&modo=gerar')
+    expect(await screen.findByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l1&modo=gerar&tentativa=1')
     expect(laudoIA.gerarLaudoPorIA).toHaveBeenCalledWith('p1', [pdf], '', catalogo, expect.any(Function), '2026-10-15', 'Gama – DF', { hipoteses: [], encaminhamentos: [] })
     mensagemDoFormulario({ tipo: 'laudo-ia:gerado', laudoId: 'l1' })
 
@@ -73,16 +73,37 @@ describe('Relatório por IA', () => {
     expect(reports.downloadReportDocx).toHaveBeenCalledWith('l1', 'laudo_ia_Bia_Lima.docx')
   })
 
-  it('se o documento falhar, avisa e oferece abrir o laudo criado no formulário', async () => {
+  it('se o documento falhar duas vezes, avisa e permite gerar só o documento de novo', async () => {
     vi.mocked(laudoIA.gerarLaudoPorIA).mockResolvedValue({ id: 'l2' } as laudoIA.LaudoPorIA)
+    vi.mocked(reports.getReport).mockResolvedValue({
+      id: 'l2',
+      answers_json: {},
+      computed_json: { origem: 'ia_pdf', arquivos: [], lacunas: [], campos_descartados: [] },
+      generated_text: null,
+    } as never)
     await prepararEGerar()
     mensagemDoFormulario({ tipo: 'laudo-ia:catalogo', catalogo })
     await screen.findByTitle('Gerando o laudo')
     await act(async () => {})
+    mensagemDoFormulario({ tipo: 'laudo-ia:etapa', etapa: 'salvando as respostas' })
+    expect(await screen.findByText(/salvando as respostas/)).toBeInTheDocument()
+    mensagemDoFormulario({ tipo: 'laudo-ia:erro', mensagem: 'Falhou ao gerar.' })
+    // Segunda tentativa automática, num iframe novo.
+    await waitFor(() => expect(screen.getByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l2&modo=gerar&tentativa=2'))
+    await act(async () => {})
     mensagemDoFormulario({ tipo: 'laudo-ia:erro', mensagem: 'Falhou ao gerar.' })
 
     expect(await screen.findByText(/Falhou ao gerar\./)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'abra no formulário' })).toHaveAttribute('href', '/atendimento/novo?laudo=l2')
+    expect(screen.getByRole('link', { name: 'Abrir no formulário' })).toHaveAttribute('href', '/atendimento/novo?laudo=l2')
+    expect(laudoIA.gerarLaudoPorIA).toHaveBeenCalledTimes(1)
+
+    // Refaz só o documento: sem chamar a IA de novo.
+    fireEvent.click(screen.getByRole('button', { name: 'Gerar o documento de novo' }))
+    await waitFor(() => expect(screen.getByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l2&modo=gerar&tentativa=1'))
+    await act(async () => {})
+    mensagemDoFormulario({ tipo: 'laudo-ia:gerado', laudoId: 'l2' })
+    expect(await screen.findByText('Laudo gerado')).toBeInTheDocument()
+    expect(laudoIA.gerarLaudoPorIA).toHaveBeenCalledTimes(1)
   })
 
   it('mostra o andamento por etapa e cada documento enquanto a IA trabalha', async () => {
@@ -148,7 +169,7 @@ describe('Relatório por IA', () => {
     // Sem clicar em "Preencher campos": o modal já abre.
     const modal = await screen.findByRole('dialog', { name: 'Campos que faltam no laudo' })
     fireEvent.click(within(modal).getByRole('button', { name: 'Atualizar relatório' }))
-    expect(await screen.findByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l5&modo=gerar')
+    expect(await screen.findByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l5&modo=gerar&tentativa=1')
     expect(pendencias.atualizarLaudo).toHaveBeenCalledWith('l5', false)
     expect(laudoIA.acompanharGeracao).toHaveBeenCalledWith('j9', expect.any(Function))
     mensagemDoFormulario({ tipo: 'laudo-ia:gerado', laudoId: 'l5' })

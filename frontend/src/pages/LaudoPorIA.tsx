@@ -54,7 +54,13 @@ interface MensagemDoFormulario {
   tipo: string
   catalogo?: CatalogoDoProtocolo
   mensagem?: string
+  // 'laudo-ia:etapa': em que passo o formulário está, ou um erro solto nele.
+  etapa?: string
+  erro?: string
 }
+
+// Prazo sem notícia do formulário: cada aviso de etapa recomeça a contagem.
+const PRAZO_DO_DOCUMENTO_MS = 90000
 
 // Menu Pacientes → "Relatório por IA": a psicóloga envia os PDFs (Google Forms e
 // escalas), a IA escreve o estudo de caso e preenche o protocolo padrão, e o
@@ -88,7 +94,13 @@ export default function LaudoPorIA() {
   const [erroAbertura, setErroAbertura] = useState<string | null>(null)
   const [laudoSemDocumento, setLaudoSemDocumento] = useState<string | null>(null)
   const [iframeSrc, setIframeSrc] = useState<string | null>(null)
-  const espera = useRef<{ tipo: string; resolver: (m: MensagemDoFormulario) => void; rejeitar: (e: Error) => void } | null>(null)
+  const [etapaDoFormulario, setEtapaDoFormulario] = useState('')
+  const espera = useRef<{
+    tipo: string
+    resolver: (m: MensagemDoFormulario) => void
+    rejeitar: (e: Error) => void
+    vivo: (m: MensagemDoFormulario) => void
+  } | null>(null)
 
   useEffect(() => {
     function onMessage(event: MessageEvent) {
@@ -97,25 +109,45 @@ export default function LaudoPorIA() {
       const atual = espera.current
       if (!atual || !dados?.tipo?.startsWith('laudo-ia:')) return
       if (dados.tipo === 'laudo-ia:erro') atual.rejeitar(new Error(dados.mensagem || 'O formulário não conseguiu gerar o laudo.'))
+      else if (dados.tipo === 'laudo-ia:etapa') atual.vivo(dados)
       else if (dados.tipo === atual.tipo) atual.resolver(dados)
     }
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
   }, [])
 
-  // Abre o formulário no iframe oculto e espera a mensagem `tipo`.
+  // Abre o formulário no iframe oculto e espera a mensagem `tipo`. O prazo
+  // conta o tempo sem notícia: cada aviso de etapa do formulário recomeça.
   function esperarFormulario(src: string, tipo: string, limiteMs: number) {
     return new Promise<MensagemDoFormulario>((resolve, reject) => {
+      let etapa = ''
+      let ultimoErro = ''
+      let timer: ReturnType<typeof setTimeout> | undefined
       const terminar = () => {
         clearTimeout(timer)
         espera.current = null
         setIframeSrc(null)
+        setEtapaDoFormulario('')
       }
-      const timer = setTimeout(() => {
-        terminar()
-        reject(new Error('O formulário demorou demais para responder. Tente de novo.'))
-      }, limiteMs)
+      const armar = () => {
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          terminar()
+          const onde = etapa ? ` (parou em: ${etapa})` : ''
+          const erro = ultimoErro ? ` Erro no formulário: ${ultimoErro}.` : ''
+          reject(new Error(`O formulário demorou demais para responder${onde}.${erro} Tente de novo.`))
+        }, limiteMs)
+      }
+      armar()
       espera.current = {
+        vivo: (m) => {
+          if (m.etapa) {
+            etapa = m.etapa
+            setEtapaDoFormulario(m.etapa)
+          }
+          if (m.erro) ultimoErro = m.erro
+          armar()
+        },
         tipo,
         resolver: (m) => {
           terminar()
@@ -201,7 +233,7 @@ export default function LaudoPorIA() {
       }
       setAtualizando('Gerando o documento com os dados novos…')
       setProgressoDaAtualizacao({ alvo: 80, teto: 98 })
-      await esperarFormulario(`/formulario-novo-paciente.html?laudo=${laudoId}&modo=gerar`, 'laudo-ia:gerado', 120000)
+      await gerarDocumento(laudoId)
       setLaudo((atual) => (atual ? { ...atual, generated_text: null } : atual))
       setRecarregarPendencias((n) => n + 1)
       const estudo =
@@ -228,17 +260,45 @@ export default function LaudoPorIA() {
       setEtapa('ia')
       const novo = await gerarLaudoPorIA(pacienteId, arquivos, observacoes, catalogo, setAndamento, dataRelatorio, cidade, { hipoteses, encaminhamentos })
       criado = novo.id
-      setEtapa('documento')
-      await esperarFormulario(`/formulario-novo-paciente.html?laudo=${novo.id}&modo=gerar`, 'laudo-ia:gerado', 120000)
-      const [resumo, pendencias] = await abrirResumo(novo.id)
-      setPendenciasIniciais(pendencias)
-      setLaudo(resumo)
-      setEtapa('pronto')
-      // No endereço: recarregar ou voltar à página reabre este laudo e as pendências.
-      setParams({ paciente: pacienteId, laudo: novo.id }, { replace: true })
+      await concluirDocumento(novo.id)
     } catch (e) {
       setErro(e instanceof ApiError ? e.message : e instanceof Error ? e.message : 'Não foi possível gerar o laudo.')
       setLaudoSemDocumento(criado)
+      setEtapa('preencher')
+    }
+  }
+
+  // Documento gerado pelo formulário no iframe oculto. Uma segunda tentativa
+  // automática (iframe novo) cobre uma falha passageira de rede ou do servidor.
+  async function gerarDocumento(laudoId: string) {
+    const src = (tentativa: number) => `/formulario-novo-paciente.html?laudo=${laudoId}&modo=gerar&tentativa=${tentativa}`
+    try {
+      await esperarFormulario(src(1), 'laudo-ia:gerado', PRAZO_DO_DOCUMENTO_MS)
+    } catch {
+      await esperarFormulario(src(2), 'laudo-ia:gerado', PRAZO_DO_DOCUMENTO_MS)
+    }
+  }
+
+  async function concluirDocumento(laudoId: string) {
+    setEtapa('documento')
+    await gerarDocumento(laudoId)
+    const [resumo, pendencias] = await abrirResumo(laudoId)
+    setPendenciasIniciais(pendencias)
+    setLaudo(resumo)
+    setEtapa('pronto')
+    // No endereço: recarregar ou voltar à página reabre este laudo e as pendências.
+    setParams({ paciente: pacienteId, laudo: laudoId }, { replace: true })
+  }
+
+  // "Gerar o documento de novo": a IA já terminou e o laudo existe; refaz só o documento.
+  async function refazerDocumento(laudoId: string) {
+    setErro(null)
+    setAndamento(null)
+    try {
+      await concluirDocumento(laudoId)
+      setLaudoSemDocumento(null)
+    } catch (e) {
+      setErro(e instanceof ApiError ? e.message : e instanceof Error ? e.message : 'Não foi possível gerar o documento.')
       setEtapa('preencher')
     }
   }
@@ -342,7 +402,15 @@ export default function LaudoPorIA() {
                   {erro}
                   {laudoSemDocumento && (
                     <>
-                      {' '}O laudo foi criado com as respostas da IA: <Link to={`/atendimento/novo?laudo=${laudoSemDocumento}`}>abra no formulário</Link> e clique em "Atualizar Relatório" para gerar o documento.
+                      {' '}As respostas da IA já estão salvas — não é preciso enviar os PDFs de novo.
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--s-3)', marginTop: 'var(--s-3)' }}>
+                        <Button size="sm" icon={<FileText />} onClick={() => void refazerDocumento(laudoSemDocumento)}>
+                          Gerar o documento de novo
+                        </Button>
+                        <Link to={`/atendimento/novo?laudo=${laudoSemDocumento}`} className={buttonClass('ghost', 'sm')}>
+                          Abrir no formulário
+                        </Link>
+                      </div>
                     </>
                   )}
                 </Alert>
@@ -350,7 +418,7 @@ export default function LaudoPorIA() {
               {ocupado && (
                 <ProgressoDaGeracao
                   {...((etapa === 'ia' && naFaixa(andamento, 5, 85)) || PROGRESSO_DA_ETAPA[etapa])}
-                  mensagem={(etapa === 'ia' && andamento?.mensagem) || MENSAGEM_DA_ETAPA[etapa]}
+                  mensagem={(etapa === 'ia' && andamento?.mensagem) || (etapa === 'documento' && etapaDoFormulario ? `${MENSAGEM_DA_ETAPA.documento.replace(/…$/, '')}: ${etapaDoFormulario}…` : MENSAGEM_DA_ETAPA[etapa])}
                   detalhes={etapa === 'ia' && andamento && andamento.documentos.length > 1 && (
                     <ul>
                       {andamento.documentos.map((d) => (

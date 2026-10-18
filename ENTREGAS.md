@@ -2523,3 +2523,16 @@ Correções pedidas na gravação de 2026-10-16. O relatório do João Neto pass
 - **Varredura do restante:** listas, Dashboard, Histórico, gzip, cache dos arquivos estáticos e carregamento sob demanda das páginas já tinham sido otimizados nas varreduras de 13 e 14/10. Não encontrei outro gargalo relevante.
 - **Como testar:** Relatório por IA → escolher paciente e PDFs → "Gerar relatório com IA" → acompanhar a barra; o tempo de cada etapa fica em `computed_json.tempos` do laudo (`extracao_s`, `especialistas_s`). Baixar o PDF duas vezes: a segunda deve ser imediata.
 - **Validação:** 359 testes do backend e 86 do frontend passaram (novos: raciocínio leve no Gemini 3/2.5, progresso por documento e por agente, PDF reaproveitado e refeito após edição, barra que avança sem passar do fim da etapa). Type-check e build aprovados. A IA foi simulada nos testes.
+
+### Complemento (2026-10-18): documento do Relatório por IA à prova de travamento e gráficos com nomes completos
+
+- **Erro "O formulário demorou demais para responder":** depois que a IA termina, o documento é montado pelo formulário num iframe oculto. Se uma requisição ficava presa no servidor, o formulário esperava em silêncio e a tela desistia após 120 s, sem dizer o que travou. Não foi possível reproduzir localmente (Chromium e Firefox, com fotos grandes e todos os campos preenchidos geram em ~10 s). Agora:
+  - o formulário avisa a etapa em que está ("carregando as fotos do paciente", "salvando as respostas", "montando o documento com os gráficos", "salvando o documento"), que aparece na barra de progresso;
+  - o prazo é de 90 s **sem notícia** (cada etapa recomeça a contagem); estourado, a mensagem diz onde parou e o último erro do formulário;
+  - toda requisição do formulário desiste após 120 s com mensagem clara, em vez de esperar para sempre;
+  - uma segunda tentativa automática, num iframe novo;
+  - se ainda falhar, o botão **"Gerar o documento de novo"** refaz só o documento, sem chamar a IA nem reenviar os PDFs (as respostas já estão salvas).
+- **Gráficos com nomes completos:** os rótulos não são mais cortados com "...". Habilidades cognitivas, socioemocionais, motoras e acadêmicas mostram o nome inteiro na horizontal, em até 3 linhas. CARS e ATA mostram o nome inteiro na vertical (são 15 e 22 itens, que não cabem deitados). Vale para relatórios novos e para os regerados com "Atualizar Relatório".
+- **Atenção no deploy:** em 18/10 o servidor ainda servia o bundle anterior (`index-DJi323je.js`), sem as mudanças de velocidade e da barra de progresso. Confirme que a imagem foi reconstruída. Na frente do app está o **nginx** (não o Caddy citado no `DEPLOY.md`): confira `client_max_body_size` (relatórios com fotos passam de 1 MB, o padrão do nginx) e `proxy_read_timeout`.
+- **Arquivos:** `frontend/public/formulario-novo-paciente.html`, `frontend/src/pages/LaudoPorIA.tsx` (+ teste).
+- **Validação:** 86 testes do frontend; build aprovado; fluxo completo no Firefox e no Chromium com a IA simulada; gráficos renderizados e conferidos.
