@@ -47,6 +47,8 @@ kbd{display:inline-block;min-width:22px;padding:0 6px;border:1px solid var(--bor
 .aviso.interno{background:var(--n-50);border-color:var(--n-200);color:var(--text-body);font-size:13px}
 .bloco{background:var(--bg-subtle);border:1px solid var(--divider);border-radius:var(--r-md);padding:14px;margin:10px 0}
 .detalhe-sim{display:none;margin-top:8px}
+.hipotese-subtipos{display:none;margin:2px 0 10px 28px;padding-left:12px;border-left:2px solid var(--violeta-200)}
+.hipotese-subtipos.aberto{display:block}
 
 /* Sim/Não e escalas: grupo de botões de alternância. */
 .simnao{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
@@ -85,7 +87,7 @@ kbd{display:inline-block;min-width:22px;padding:0 6px;border:1px solid var(--bor
 .habilidade-item strong{padding-top:8px}
 @media(max-width:780px){.habilidade-item{grid-template-columns:1fr}}
 
-/* Botões: secundário por padrão (só "Salvar laudo" é primário).
+/* Botões: secundário por padrão (só "Atualizar Relatório" é primário).
    Altura 44, raio 10, Figtree 600 15px. Amarelo nunca em botão. */
 button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--h-md);border:1px solid var(--border);border-radius:var(--r-md);padding:0 18px;background:var(--n-0);color:var(--violeta-700);font:600 15px/1.2 var(--font-body);cursor:pointer;transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease),color var(--dur) var(--ease),box-shadow var(--dur) var(--ease),transform var(--dur) var(--ease)}
 button:hover{border-color:var(--violeta-300);background:var(--n-25)}
@@ -322,7 +324,7 @@ input[type=file]:focus-visible::file-selector-button{box-shadow:var(--focus-ring
 </div>
 
 <div class="aviso no-print">
-<strong>Como preencher o protocolo:</strong> percorra as fases na ordem que preferir. No topo, a fase atual fica <strong class="cor-atual">violeta</strong>, a concluída fica <strong class="cor-concluida">verde ✓</strong> (todos os campos obrigatórios <span class="cor-obrigatorio">*</span> preenchidos), a começada com pendências fica <strong class="cor-pendente">amarela com !</strong> e a não iniciada fica cinza — no fim de cada fase aparece o que ainda falta. Depois do primeiro <strong>Salvar laudo</strong>, cada alteração é salva sozinha.
+<strong>Como preencher o protocolo:</strong> percorra as fases na ordem que preferir. No topo, a fase atual fica <strong class="cor-atual">violeta</strong>, a concluída fica <strong class="cor-concluida">verde ✓</strong> (todos os campos obrigatórios <span class="cor-obrigatorio">*</span> preenchidos), a começada com pendências fica <strong class="cor-pendente">amarela com !</strong> e a não iniciada fica cinza — no fim de cada fase aparece o que ainda falta. Depois do primeiro <strong>Atualizar Relatório</strong>, cada alteração é salva sozinha.
 <div class="legenda-essencial">Atalhos: <kbd>Ctrl</kbd>+<kbd>S</kbd> salva · <kbd>Alt</kbd>+<kbd>→</kbd> / <kbd>Alt</kbd>+<kbd>←</kbd> trocam de fase.</div>
 </div>
 
@@ -364,7 +366,7 @@ input[type=file]:focus-visible::file-selector-button{box-shadow:var(--focus-ring
 
 <h2>3. Histórico De Desenvolvimento Da Criança</h2>
 <div class="grid">
-<div><label>Filho Único</label><input type="hidden" id="filhoUnico"><div class="simnao" data-campo="filhoUnico"><button type="button" onclick="selecionarSimNao('filhoUnico','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('filhoUnico','Não')">Não</button></div><textarea id="filhoUnicoDescricao" class="detalhe-sim" placeholder="Se não, descreva irmãos, idades e dinâmica familiar."></textarea></div>
+<div><label>Filho Único</label><input type="hidden" id="filhoUnico"><div class="simnao" data-campo="filhoUnico"><button type="button" onclick="selecionarSimNao('filhoUnico','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('filhoUnico','Não')">Não</button></div><textarea id="filhoUnicoDescricao" class="detalhe-sim" placeholder="Irmãos: idade de cada um e se tem laudo (ex.: 9 anos, com laudo de TEA; 4 anos, sem laudo)."></textarea></div>
 <div><label>Convivência Social</label><input type="hidden" id="convivenciaSocial"><div class="simnao" data-campo="convivenciaSocial"><button type="button" onclick="selecionarSimNao('convivenciaSocial','Sim')">Sim</button><button type="button" onclick="selecionarSimNao('convivenciaSocial','Não')">Não</button></div><textarea id="convivenciaSocialDescricao" class="detalhe-sim" placeholder="Se sim, descreva como ocorre a convivência social, frequência e contexto."></textarea></div>
 <div><label>Andou Com</label><div class="grid"><select id="andouAno"><option value="">Ano</option><option>Antes de 1 ano</option><option>1 ano</option><option>2 anos</option><option>3 anos</option><option>4 anos ou mais</option><option>Não informado</option></select><select id="andouMes"><option value="">Mês</option><option>0 meses</option><option>1 mês</option><option>2 meses</option><option>3 meses</option><option>4 meses</option><option>5 meses</option><option>6 meses</option><option>7 meses</option><option>8 meses</option><option>9 meses</option><option>10 meses</option><option>11 meses</option><option>Não informado</option></select></div><textarea id="desenvolvimentoMotor" placeholder="Observações sobre desenvolvimento motor, marcha, equilíbrio ou coordenação."></textarea></div>
 <div><label>Falou Com</label><div class="grid"><select id="falouAno"><option value="">Ano</option><option>Antes de 1 ano</option><option>1 ano</option><option>2 anos</option><option>3 anos</option><option>4 anos ou mais</option><option>Não informado</option></select><select id="falouMes"><option value="">Mês</option><option>0 meses</option><option>1 mês</option><option>2 meses</option><option>3 meses</option><option>4 meses</option><option>5 meses</option><option>6 meses</option><option>7 meses</option><option>8 meses</option><option>9 meses</option><option>10 meses</option><option>11 meses</option><option>Não informado</option></select></div><textarea id="desenvolvimentoFala" placeholder="Observações sobre primeiras palavras, frases, compreensão ou comunicação."></textarea></div>
@@ -423,18 +425,58 @@ input[type=file]:focus-visible::file-selector-button{box-shadow:var(--focus-ring
 
 
 <h2>9. Hipóteses Diagnósticas Investigadas</h2>
+<div class="aviso">Marque uma ou mais hipóteses (tabela CID-10 × CID-11). Ao marcar TEA, TDAH, DI, linguagem ou aprendizagem, abrem os subtipos: marque os que se aplicam. O relatório lista todas as marcadas — o subtipo, quando houver.</div>
 <div class="bloco">
-<label><input type="checkbox" class="hipotese" id="hip_tea" value="TEA – Transtorno Do Espectro Autista (CID-11: 6A02)"> TEA – Transtorno Do Espectro Autista (CID-11: 6A02)</label>
-<label><input type="checkbox" class="hipotese" id="hip_tdah" value="TDAH – Transtorno Do Déficit De Atenção/Hiperatividade (CID-11: 6A05)"> TDAH – Transtorno Do Déficit De Atenção/Hiperatividade (CID-11: 6A05)</label>
-<label><input type="checkbox" class="hipotese" id="hip_di" value="DI – Transtorno Do Desenvolvimento Intelectual / Deficiência Intelectual (CID-11: 6A00)"> DI – Transtorno Do Desenvolvimento Intelectual / Deficiência Intelectual (CID-11: 6A00)</label>
-<label><input type="checkbox" class="hipotese" id="hip_ta" value="Transtorno Do Desenvolvimento Da Aprendizagem (CID-11: 6A03)"> Transtorno Do Desenvolvimento Da Aprendizagem (CID-11: 6A03)</label>
-<label><input type="checkbox" class="hipotese" id="hip_tod" value="TOD – Transtorno Opositivo Desafiador (CID-11: 6C90.1)"> TOD – Transtorno Opositivo Desafiador (CID-11: 6C90.1)</label>
-<label><input type="checkbox" class="hipotese" id="hip_tpac" value="TPAC – Transtorno Do Processamento Auditivo Central"> TPAC – Transtorno Do Processamento Auditivo Central</label>
+<h3>TEA – Transtorno do Espectro Autista</h3>
+<label><input type="checkbox" class="hipotese" id="hip_tea" value="TEA – Transtorno do Espectro Autista (CID-11 6A02 / CID-10 F84.0 / F84.1 / F84.5 / F84.9)"> TEA – Transtorno do Espectro Autista (CID-11 6A02 / CID-10 F84.0 / F84.1 / F84.5 / F84.9)</label>
+<div class="hipotese-subtipos" data-pai="hip_tea">
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_0" value="TEA sem deficiência intelectual e com linguagem funcional preservada (CID-11 6A02.0 / CID-10 F84.x)"> TEA sem deficiência intelectual e com linguagem funcional preservada (CID-11 6A02.0 / CID-10 F84.x)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_1" value="TEA com deficiência intelectual e linguagem funcional preservada (CID-11 6A02.1 / CID-10 F84.x + F70–F79)"> TEA com deficiência intelectual e linguagem funcional preservada (CID-11 6A02.1 / CID-10 F84.x + F70–F79)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_2" value="TEA sem deficiência intelectual e com prejuízo da linguagem funcional (CID-11 6A02.2 / CID-10 F84.x)"> TEA sem deficiência intelectual e com prejuízo da linguagem funcional (CID-11 6A02.2 / CID-10 F84.x)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_3" value="TEA com deficiência intelectual e prejuízo da linguagem funcional (CID-11 6A02.3 / CID-10 F84.x + F70–F79)"> TEA com deficiência intelectual e prejuízo da linguagem funcional (CID-11 6A02.3 / CID-10 F84.x + F70–F79)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_5" value="TEA com deficiência intelectual e ausência/quase ausência de linguagem funcional (CID-11 6A02.5 / CID-10 F84.x + F70–F79)"> TEA com deficiência intelectual e ausência/quase ausência de linguagem funcional (CID-11 6A02.5 / CID-10 F84.x + F70–F79)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_z" value="TEA não especificado (CID-11 6A02.Z / CID-10 F84.9)"> TEA não especificado (CID-11 6A02.Z / CID-10 F84.9)</label>
+</div>
+<h3>TDAH e Deficiência Intelectual</h3>
+<label><input type="checkbox" class="hipotese" id="hip_tdah" value="TDAH – Transtorno do Déficit de Atenção e Hiperatividade (CID-11 6A05 / CID-10 F90.0)"> TDAH – Transtorno do Déficit de Atenção e Hiperatividade (CID-11 6A05 / CID-10 F90.0)</label>
+<div class="hipotese-subtipos" data-pai="hip_tdah">
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_tdah" id="hip_tdah_6a05_0" value="TDAH predominantemente desatento (CID-11 6A05.0 / CID-10 F90.0)"> TDAH predominantemente desatento (CID-11 6A05.0 / CID-10 F90.0)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_tdah" id="hip_tdah_6a05_1" value="TDAH predominantemente hiperativo/impulsivo (CID-11 6A05.1 / CID-10 F90.0)"> TDAH predominantemente hiperativo/impulsivo (CID-11 6A05.1 / CID-10 F90.0)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_tdah" id="hip_tdah_6a05_2" value="TDAH combinado (CID-11 6A05.2 / CID-10 F90.0)"> TDAH combinado (CID-11 6A05.2 / CID-10 F90.0)</label>
+</div>
+<label><input type="checkbox" class="hipotese" id="hip_di" value="DI – Deficiência Intelectual (Transtorno do Desenvolvimento Intelectual) (CID-11 6A00 / CID-10 F70–F79)"> DI – Deficiência Intelectual (Transtorno do Desenvolvimento Intelectual) (CID-11 6A00 / CID-10 F70–F79)</label>
+<div class="hipotese-subtipos" data-pai="hip_di">
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_di" id="hip_di_6a00_0" value="Deficiência intelectual leve (CID-11 6A00.0 / CID-10 F70)"> Deficiência intelectual leve (CID-11 6A00.0 / CID-10 F70)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_di" id="hip_di_6a00_1" value="Deficiência intelectual moderada (CID-11 6A00.1 / CID-10 F71)"> Deficiência intelectual moderada (CID-11 6A00.1 / CID-10 F71)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_di" id="hip_di_6a00_2" value="Deficiência intelectual grave (CID-11 6A00.2 / CID-10 F72)"> Deficiência intelectual grave (CID-11 6A00.2 / CID-10 F72)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_di" id="hip_di_6a00_3" value="Deficiência intelectual profunda (CID-11 6A00.3 / CID-10 F73)"> Deficiência intelectual profunda (CID-11 6A00.3 / CID-10 F73)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_di" id="hip_di_6a00_z" value="Deficiência intelectual não especificada (CID-11 6A00.Z / CID-10 F79)"> Deficiência intelectual não especificada (CID-11 6A00.Z / CID-10 F79)</label>
+</div>
+<h3>Linguagem e Aprendizagem</h3>
+<label><input type="checkbox" class="hipotese" id="hip_linguagem" value="Transtorno do Desenvolvimento da Fala ou da Linguagem (CID-11 6A01 / CID-10 F80)"> Transtorno do Desenvolvimento da Fala ou da Linguagem (CID-11 6A01 / CID-10 F80)</label>
+<div class="hipotese-subtipos" data-pai="hip_linguagem">
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_linguagem" id="hip_linguagem_6a01_0" value="Transtorno dos sons da fala / fonológico (CID-11 6A01.0 / CID-10 F80.0)"> Transtorno dos sons da fala / fonológico (CID-11 6A01.0 / CID-10 F80.0)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_linguagem" id="hip_linguagem_6a01_21" value="Transtorno de linguagem expressiva (CID-11 6A01.21 / CID-10 F80.1)"> Transtorno de linguagem expressiva (CID-11 6A01.21 / CID-10 F80.1)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_linguagem" id="hip_linguagem_6a01_20" value="Transtorno de linguagem receptiva e expressiva (CID-11 6A01.20 / CID-10 F80.2)"> Transtorno de linguagem receptiva e expressiva (CID-11 6A01.20 / CID-10 F80.2)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_linguagem" id="hip_linguagem_6a01_22" value="Alteração predominantemente pragmática da linguagem (CID-11 6A01.22)"> Alteração predominantemente pragmática da linguagem (CID-11 6A01.22)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_linguagem" id="hip_linguagem_6a01_z" value="Transtorno de linguagem não especificado (CID-11 6A01.Z / CID-10 F80.9)"> Transtorno de linguagem não especificado (CID-11 6A01.Z / CID-10 F80.9)</label>
+</div>
+<label><input type="checkbox" class="hipotese" id="hip_ta" value="Transtorno do Desenvolvimento da Aprendizagem (CID-11 6A03 / CID-10 F81)"> Transtorno do Desenvolvimento da Aprendizagem (CID-11 6A03 / CID-10 F81)</label>
+<div class="hipotese-subtipos" data-pai="hip_ta">
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_ta" id="hip_ta_6a03_0" value="Transtorno específico da leitura / dislexia (CID-11 6A03.0 / CID-10 F81.0)"> Transtorno específico da leitura / dislexia (CID-11 6A03.0 / CID-10 F81.0)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_ta" id="hip_ta_6a03_1" value="Transtorno da expressão escrita (CID-11 6A03.1 / CID-10 F81.1 / F81.8)"> Transtorno da expressão escrita (CID-11 6A03.1 / CID-10 F81.1 / F81.8)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_ta" id="hip_ta_6a03_2" value="Transtorno da matemática / discalculia (CID-11 6A03.2 / CID-10 F81.2)"> Transtorno da matemática / discalculia (CID-11 6A03.2 / CID-10 F81.2)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_ta" id="hip_ta_6a03_z" value="Transtorno da aprendizagem não especificado (CID-11 6A03.Z / CID-10 F81.9)"> Transtorno da aprendizagem não especificado (CID-11 6A03.Z / CID-10 F81.9)</label>
+</div>
+<h3>Outros</h3>
+<label><input type="checkbox" class="hipotese" id="hip_coordenacao" value="Transtorno do Desenvolvimento da Coordenação Motora (CID-11 6A04 / CID-10 F82)"> Transtorno do Desenvolvimento da Coordenação Motora (CID-11 6A04 / CID-10 F82)</label>
+<label><input type="checkbox" class="hipotese" id="hip_tod" value="TOD – Transtorno Opositivo Desafiador (CID-11 6C90 / CID-10 F91.3)"> TOD – Transtorno Opositivo Desafiador (CID-11 6C90 / CID-10 F91.3)</label>
+<label><input type="checkbox" class="hipotese" id="hip_conduta" value="Transtorno de Conduta (CID-11 6C91 / CID-10 F91.x)"> Transtorno de Conduta (CID-11 6C91 / CID-10 F91.x)</label>
+<label><input type="checkbox" class="hipotese" id="hip_tpac" value="TPAC – Transtorno do Processamento Auditivo Central"> TPAC – Transtorno do Processamento Auditivo Central</label>
 </div>
 <label>Hipóteses Como Devem Sair No Relatório (Opcional — Uma Por Linha; Substitui As Marcadas Acima)</label><textarea id="hipotesesTexto" placeholder="Ex.:&#10;TDAH - Transtorno de Déficit de Atenção Hiperatividade, combinada (CID 11 6A05.2)&#10;TPAC - Transtorno do Processamento Auditivo Central (CID 10 H93)"></textarea>
-<label>Hipótese Diagnóstica Selecionada Para Este Paciente</label>
-<select id="hipoteseSelecionada"><option value="">Marque/digite as hipóteses investigadas acima e selecione aqui a que se aplica</option></select>
-<div class="aviso">O relatório final exibe <strong>somente</strong> a hipótese selecionada aqui — nunca a lista completa das hipóteses investigadas acima.</div>
+<!-- Relatório lista todas as hipóteses marcadas (videochamada de 2026-10-16); o campo antigo fica oculto para laudos já salvos. -->
+<select id="hipoteseSelecionada" hidden aria-hidden="true"><option value=""></option></select>
 
 
 <h2>10. Quadros De Comportamento</h2>
@@ -525,12 +567,11 @@ input[type=file]:focus-visible::file-selector-button{box-shadow:var(--focus-ring
 <label>Síntese Clínica</label><textarea id="textoSintese" style="min-height:360px"></textarea>
 <label>Corroboração SNAP-IV (Antes Do Gráfico De Funções Executivas)</label><textarea id="textoCorroboracao" style="min-height:130px"></textarea>
 <label>Conclusão Sobre TEA (Após O Gráfico De Domínios) — {PROBABILIDADE_TEA} Vira O Percentual Calculado</label><textarea id="textoConclusaoTEA" style="min-height:260px"></textarea>
-<label>Encaminhamento Para Exames Complementares (Caixa Cinza Da Última Página)</label><textarea id="textoEncaminhamentoExames" style="min-height:140px"></textarea>
 
 
 <h2>19. Encaminhamentos</h2>
 <div class="bloco">
-<div class="aviso interno" style="margin-top:0">Uso interno: esta seção não aparece no relatório final (modelo oficial do parecer).</div>
+<div class="aviso" style="margin-top:0">Os encaminhamentos marcados saem em tópicos no final do relatório.</div>
 <label><input type="checkbox" class="encaminhamento" id="enc_neuropediatra" value="Neuropediatra"> Neuropediatra</label>
 <label><input type="checkbox" class="encaminhamento" id="enc_avaliacao_neuropsicologica" value="Avaliação Neuropsicológica"> Avaliação Neuropsicológica</label>
 <label><input type="checkbox" class="encaminhamento" id="enc_avaliacao_do_processamento_auditivo_central_tpac" value="Avaliação Do Processamento Auditivo Central – TPAC"> Avaliação Do Processamento Auditivo Central – TPAC</label>
@@ -598,86 +639,97 @@ function notificar(mensagem,tipo,opcoes){
 }
 
 
+// Habilidades esperadas em cada ano escolar, seguindo a progressão da BNCC
+// (Língua Portuguesa, Matemática e organização dos estudos). A psicóloga
+// avalia cada uma (Satisfatório / Em Desenvolvimento / Insatisfatório).
 const habilidadesPorAno = {
   "Educação Infantil":[
-    ["Reconhecimento De Cores","Identifica e nomeia cores primárias e secundárias em atividades lúdicas."],
-    ["Reconhecimento De Formas","Reconhece formas geométricas simples e realiza pareamento visual."],
-    ["Coordenação Motora Fina","Realiza atividades de pinça, traçado, recorte, encaixe e manipulação de pequenos objetos."],
-    ["Nome Próprio","Reconhece o próprio nome e inicia tentativas de registro gráfico, conforme etapa de desenvolvimento."],
-    ["Consciência Fonológica Inicial","Percebe sons, rimas, aliterações e segmentações simples por meio de brincadeiras."],
-    ["Atenção Compartilhada","Mantém atenção com o adulto em propostas dirigidas e alterna olhar entre objeto, terapeuta e tarefa."],
-    ["Sequência Lógica Simples","Ordena imagens, fatos ou ações simples com início, meio e fim."]
+    ["Reconhecimento Do Próprio Nome","Reconhece o próprio nome escrito e inicia tentativas de registro."],
+    ["Consciência Fonológica Inicial","Percebe rimas, sons iniciais e brinca com os sons das palavras."],
+    ["Contagem E Quantidade","Conta oralmente e relaciona número e quantidade até 10."],
+    ["Cores, Formas E Tamanhos","Identifica cores, formas geométricas simples e noções de grande/pequeno."],
+    ["Coordenação Motora Fina E Grafismo","Realiza pinça, encaixe, recorte e traçados com intenção gráfica."],
+    ["Reconto Oral","Reconta histórias e acontecimentos com início, meio e fim."]
   ],
   "1º Ano":[
-    ["Reconhecimento De Letras","Identifica letras do alfabeto e diferencia letras de números/símbolos."],
-    ["Relação Grafema-Fonema","Relaciona letras aos sons correspondentes, ainda que com apoio."],
-    ["Leitura De Sílabas","Realiza leitura de sílabas simples e inicia combinação silábica."],
-    ["Escrita Do Nome Completo","Registra o nome completo com autonomia progressiva."],
-    ["Sequência Numérica Inicial","Reconhece, ordena e registra números iniciais."],
-    ["Correspondência Número-Quantidade","Relaciona número à quantidade em situações concretas."]
+    ["Letras E Relação Letra-Som","Identifica as letras do alfabeto e relaciona letras aos sons."],
+    ["Escrita De Palavras","Escreve palavras simples de forma alfabética, ainda com trocas."],
+    ["Leitura De Palavras E Frases Curtas","Lê palavras e frases curtas com apoio."],
+    ["Escrita Do Nome Completo","Escreve o nome completo com autonomia."],
+    ["Números Até 100","Conta, lê, escreve e ordena números até 100."],
+    ["Adição E Subtração Com Material Concreto","Resolve situações simples de juntar e retirar com material concreto."]
   ],
   "2º Ano":[
-    ["Leitura De Palavras","Realiza leitura de palavras simples e amplia reconhecimento lexical."],
-    ["Escrita Espontânea","Produz palavras e pequenas frases, ainda com possíveis trocas ortográficas."],
-    ["Pequenos Textos","Lê e compreende pequenos textos com apoio visual ou mediação."],
-    ["Operações Simples","Realiza adição e subtração simples com ou sem material concreto."],
-    ["Interpretação Oral","Responde perguntas simples sobre histórias, comandos e situações apresentadas."]
+    ["Leitura De Textos Curtos","Lê com fluência textos curtos e compreende o essencial."],
+    ["Escrita De Frases E Pequenos Textos","Produz frases e pequenos textos com sentido."],
+    ["Ortografia Inicial","Escreve sílabas complexas e palavras de uso frequente corretamente."],
+    ["Sistema De Numeração Até 1000","Compreende unidade, dezena e centena."],
+    ["Adição E Subtração","Resolve adição e subtração, inclusive com reagrupamento."],
+    ["Interpretação De Textos Curtos","Responde a perguntas sobre textos lidos ou ouvidos."]
   ],
   "3º Ano":[
-    ["Fluência De Leitura","Lê frases e pequenos textos com maior continuidade e compreensão."],
-    ["Produção De Frases","Organiza frases com sentido, respeitando estrutura básica."],
-    ["Interpretação Textual Simples","Localiza informações explícitas e realiza inferências simples."],
-    ["Operações Matemáticas Básicas","Resolve adição, subtração e inicia multiplicação/divisão conforme proposta escolar."],
-    ["Organização Do Pensamento","Sequencia ideias em atividades orais, escritas e lógicas."]
+    ["Fluência De Leitura","Lê frases e textos com ritmo, entonação e compreensão."],
+    ["Produção De Textos Com Pontuação","Produz textos curtos com pontuação e paragrafação iniciais."],
+    ["Interpretação Textual","Localiza informações explícitas e faz inferências simples."],
+    ["Multiplicação E Divisão Iniciais","Compreende multiplicação e divisão em situações-problema simples."],
+    ["Situações-Problema","Resolve problemas de adição e subtração com estratégias próprias."],
+    ["Medidas, Horas E Calendário","Lê horas, usa o calendário e compara medidas."]
   ],
   "4º Ano":[
-    ["Leitura Compreensiva","Compreende textos com maior extensão e identifica ideia principal."],
-    ["Produção Textual Estruturada","Produz textos com início, desenvolvimento e fechamento."],
-    ["Resolução De Problemas Matemáticos","Interpreta enunciados e seleciona estratégias de cálculo."],
-    ["Organização Do Pensamento Escrito","Planeja respostas e melhora coesão nas produções."],
-    ["Autonomia Acadêmica","Executa tarefas com menor dependência de mediação."]
+    ["Leitura Compreensiva","Compreende textos mais longos e identifica a ideia principal."],
+    ["Produção Textual Com Parágrafos","Organiza textos em parágrafos, com início, desenvolvimento e fechamento."],
+    ["Ortografia E Concordância","Aplica regras ortográficas e de concordância."],
+    ["Multiplicação E Divisão","Usa os algoritmos da multiplicação e da divisão."],
+    ["Frações Simples","Reconhece metade, terço e quarto em situações concretas."],
+    ["Problemas De Várias Etapas","Interpreta enunciados e resolve problemas com mais de uma operação."]
   ],
   "5º Ano":[
-    ["Leitura Compreensiva","Compreende textos narrativos, informativos e questões de interpretação."],
-    ["Produção Textual Estruturada","Elabora textos com organização, pontuação e sequência lógica."],
-    ["Resolução De Problemas Matemáticos","Resolve problemas envolvendo operações básicas e raciocínio lógico."],
-    ["Organização Do Pensamento Escrito","Registra respostas completas e coerentes."],
-    ["Autonomia Acadêmica","Organiza materiais, rotina e execução de tarefas com independência progressiva."]
+    ["Interpretação E Inferência","Interpreta textos de gêneros variados e faz inferências."],
+    ["Texto Coeso","Produz textos narrativos e informativos com coesão."],
+    ["Revisão Da Própria Escrita","Revisa e corrige a própria produção escrita."],
+    ["Decimais E Frações Equivalentes","Compara e opera com números decimais e frações equivalentes."],
+    ["Porcentagens Simples","Calcula porcentagens simples (10%, 25%, 50%)."],
+    ["Tabelas E Gráficos","Lê e interpreta tabelas e gráficos."]
   ],
   "6º Ano":[
-    ["Interpretação Textual Complexa","Compreende textos mais extensos, identifica informações explícitas e implícitas."],
-    ["Produção Argumentativa Inicial","Organiza opinião, justificativa e sequência de ideias."],
-    ["Raciocínio Lógico Matemático","Resolve situações-problema com maior abstração."],
-    ["Planejamento De Respostas Escritas","Planeja, revisa e estrutura respostas completas."],
-    ["Autonomia Acadêmica","Demonstra organização para demandas escolares, estudos e responsabilidades."]
+    ["Leitura De Notícias E Artigos","Compreende notícias, reportagens e textos informativos."],
+    ["Argumentação Simples","Defende um ponto de vista com argumentos simples."],
+    ["Classes De Palavras","Reconhece classes de palavras e sua função no texto."],
+    ["Operações Com Frações E Decimais","Opera com frações e números decimais."],
+    ["Múltiplos, Divisores E Primos","Identifica múltiplos, divisores e números primos."],
+    ["Organização Dos Estudos","Organiza materiais, tarefas e prazos com autonomia crescente."]
   ],
   "7º Ano":[
-    ["Interpretação Textual Complexa","Analisa textos, comandos e informações com maior exigência inferencial."],
-    ["Produção Argumentativa","Defende ideias com justificativas e organização textual."],
-    ["Raciocínio Lógico Matemático","Utiliza estratégias para resolução de problemas e conteúdos abstratos."],
-    ["Planejamento De Respostas Escritas","Organiza respostas discursivas com clareza e sequência lógica."],
-    ["Autonomia Acadêmica","Gerencia tarefas, prazos e estudos com acompanhamento reduzido."]
+    ["Fato E Opinião","Distingue fato de opinião em textos diversos."],
+    ["Texto Opinativo","Produz textos opinativos com argumentos e conclusão."],
+    ["Números Inteiros","Compreende e opera com números negativos."],
+    ["Equações Do 1º Grau","Resolve equações do 1º grau em situações-problema."],
+    ["Razão, Proporção E Porcentagem","Resolve problemas de proporcionalidade e porcentagem."],
+    ["Planejamento E Autonomia","Planeja e conclui tarefas com pouca mediação."]
   ],
   "8º Ano":[
-    ["Interpretação Textual Complexa","Compreende diferentes gêneros textuais e relações de sentido."],
-    ["Produção Argumentativa","Produz textos com tese, argumentos e conclusão inicial."],
-    ["Raciocínio Lógico Matemático","Aplica conceitos matemáticos em situações-problema."],
-    ["Planejamento De Respostas Escritas","Formula respostas completas, coerentes e contextualizadas."],
-    ["Autonomia Acadêmica","Mantém maior responsabilidade sobre estudo, organização e rotina escolar."]
+    ["Textos Complexos E Intertextualidade","Compreende textos mais complexos e relações entre textos."],
+    ["Produção Dissertativa","Produz textos dissertativos com argumentação organizada."],
+    ["Concordância, Regência E Pontuação","Usa a norma-padrão na escrita."],
+    ["Potências E Raízes","Calcula potências e raízes."],
+    ["Expressões Algébricas E Sistemas","Resolve expressões algébricas e sistemas de equações simples."],
+    ["Média E Gráficos","Calcula média e interpreta gráficos estatísticos."]
   ],
   "9º Ano":[
-    ["Interpretação Textual Complexa","Realiza análise crítica de textos e comandos acadêmicos."],
-    ["Produção Argumentativa","Estrutura argumentos, exemplos e conclusão com maior consistência."],
-    ["Raciocínio Lógico Matemático","Resolve problemas com abstração, planejamento e flexibilidade cognitiva."],
-    ["Planejamento De Respostas Escritas","Planeja respostas, revisa ideias e organiza conteúdo escrito."],
-    ["Autonomia Acadêmica","Demonstra responsabilidade progressiva por rendimento, prazos e estratégias de estudo."]
+    ["Leitura Crítica","Analisa criticamente textos argumentativos e midiáticos."],
+    ["Texto Dissertativo-Argumentativo","Produz textos dissertativo-argumentativos com proposta de intervenção."],
+    ["Noção De Função","Compreende relações entre grandezas como funções."],
+    ["Equação Do 2º Grau","Resolve equações do 2º grau em situações-problema."],
+    ["Geometria","Aplica o teorema de Pitágoras e relações métricas."],
+    ["Autorregulação Nos Estudos","Gerencia estudos, prazos e responsabilidades escolares."]
   ],
   "Ensino Médio":[
-    ["Interpretação Textual Complexa","Analisa textos, questões e comandos com exigência crítica e inferencial."],
-    ["Produção Argumentativa","Produz respostas e textos argumentativos com organização, coerência e repertório."],
-    ["Raciocínio Lógico Matemático","Resolve situações-problema com raciocínio abstrato e planejamento."],
-    ["Planejamento De Respostas Escritas","Organiza ideias, prioriza informações e estrutura respostas acadêmicas."],
-    ["Autonomia Acadêmica","Gerencia rotina de estudos, prazos, responsabilidades e autorregulação escolar."]
+    ["Textos Complexos E Multimodais","Compreende textos complexos, verbais e não verbais."],
+    ["Redação Dissertativo-Argumentativa","Produz redação no modelo do ENEM, com coesão e argumentação."],
+    ["Funções E Raciocínio Lógico","Aplica funções e raciocínio lógico na resolução de problemas."],
+    ["Interpretação De Dados","Analisa dados, tabelas e gráficos para tomar decisões."],
+    ["Gestão Do Tempo De Estudo","Organiza a rotina de estudos e cumpre prazos."],
+    ["Planejamento Acadêmico","Define metas e planeja o próprio percurso de estudos."]
   ]
 };
 function atualizarHabilidadesAcademicas(){
@@ -748,6 +800,67 @@ const HIPOTESES_QUADRO = [
   {chave:"TOD",  rotulo:"TOD", padrao:/\bTOD\b|opositi?or/i},
   {chave:"TPAC", rotulo:"TPAC", padrao:/TPAC|processamento auditivo/i}
 ];
+// Nome por extenso na faixa "HIPÓTESE DE …" do relatório.
+const NOMES_DAS_HIPOTESES = {
+  TEA:"Transtorno do Espectro Autista – TEA",
+  TDAH:"Transtorno do Déficit de Atenção e Hiperatividade – TDAH",
+  DI:"Deficiência Intelectual – DI",
+  TA:"Transtorno da Aprendizagem",
+  TOD:"Transtorno Opositor Desafiador – TOD",
+  TPAC:"Transtorno do Processamento Auditivo Central – TPAC"
+};
+function nomeDaHipoteseNoRelatorio(h){return NOMES_DAS_HIPOTESES[h.chave]||h.rotulo;}
+
+// Áreas do desenvolvimento do modelo do relatório. Cada linha do quadro pode
+// trazer a sua (campo "Área Do Desenvolvimento"); sem ela, a área é deduzida
+// do critério DSM e do comportamento.
+const AREAS_DO_DESENVOLVIMENTO = [
+  "Comunicação, Interação Social e Adaptação Escolar",
+  "Regulação Emocional e Comportamental",
+  "Comportamentos Restritivos e Repetitivos",
+  "Sensorial, Alimentar e Autonomia",
+  "Sono e Rotina",
+  "Atenção",
+  "Hiperatividade e Impulsividade",
+  "Comportamento Desafiador e Opositor",
+  "Autoridade",
+  "Regulação Emocional e Frustração",
+  "Controle Comportamental e Negociação",
+  "Social e Relacionamento",
+  "Acadêmica e Escolar"
+];
+function areaSugerida(chave,linha){
+  const t=(linha.slice(0,4).join(" ")).toLowerCase();
+  if(/\bsono\b|dormi|noturn/.test(t))return "Sono e Rotina";
+  if(chave==="TOD"){
+    if(/escola|acadêm|pedag/.test(t))return "Acadêmica e Escolar";
+    if(/amizade|colega|grupo|relacionamento/.test(t))return "Social e Relacionamento";
+    if(/negocia|troca|recompensa/.test(t))return "Controle Comportamental e Negociação";
+    if(/autoridade/.test(t))return "Autoridade";
+    if(/frustra|irrita|descontrole/.test(t))return "Regulação Emocional e Frustração";
+    return "Comportamento Desafiador e Opositor";
+  }
+  if(chave==="TDAH"){
+    if(/hiperativ|impulsiv|inquiet|agita/.test(t))return "Hiperatividade e Impulsividade";
+    return "Atenção";
+  }
+  if(/\bb4\b|sensori|alimenta|seletividade|autocuidado|autonomia/.test(t))return "Sensorial, Alimentar e Autonomia";
+  if(/frustra|irrita|emocion|choro|birra|agress/.test(t))return "Regulação Emocional e Comportamental";
+  if(/\bb[123]\b|estereotip|repetitiv|rigidez|rotina|mudança|interesse/.test(t))return "Comportamentos Restritivos e Repetitivos";
+  return "Comunicação, Interação Social e Adaptação Escolar";
+}
+// Linhas do quadro agrupadas por área, na ordem em que as áreas aparecem.
+function agruparPorArea(chave,linhas){
+  const grupos=new Map();
+  linhas.forEach(l=>{
+    const area=(l[4]||"").trim()||areaSugerida(chave,l);
+    if(!grupos.has(area))grupos.set(area,[]);
+    grupos.get(area).push(l);
+  });
+  return grupos;
+}
+function destaqueAmarelo(texto){return '<mark class="amarelo"><strong>'+esc(texto)+"</strong></mark>";}
+
 // Regras de regrasInterpretativasOutrosTranstornos() → hipótese do quadro.
 const HIPOTESE_DA_REGRA = {
   "Indicadores De Desatenção":"TDAH",
@@ -947,7 +1060,7 @@ function bancoDoQuadro(chave){
   const linhas=regrasInterpretativasOutrosTranstornos().filter(r=>HIPOTESE_DA_REGRA[r.c]===chave).map(linha);
   return linhas.length?linhas:[["","","",""]];
 }
-const CAMPOS_QUADRO=["comp","desc","rel","dsm"];
+const CAMPOS_QUADRO=["comp","desc","rel","dsm","area"];
 function idCelulaQuadro(chave,i,campo){return "qd_"+chave+"_"+i+"_"+campo;}
 function blocoDoQuadro(chave){return document.querySelector('#quadrosObservacao .quadro-hipotese[data-chave="'+chave+'"]');}
 function renderizarQuadroHipotese(chave,rotulo,linhas){
@@ -956,9 +1069,17 @@ function renderizarQuadroHipotese(chave,rotulo,linhas){
   let bloco=blocoDoQuadro(chave);
   if(!bloco){bloco=document.createElement("div");bloco.className="quadro-hipotese";bloco.dataset.chave=chave;area.appendChild(bloco);}
   bloco.dataset.rotulo=rotulo;
-  const rotulos=["Comportamento Identificado","Caracterização Observada","Relação Com "+rotulo,"Associação Aos Critérios DSM-5-TR"];
+  const rotulos=["Comportamento Identificado","Caracterização Observada","Relação Com "+rotulo,"Associação Aos Critérios DSM-5-TR","Área Do Desenvolvimento (Agrupa O Quadro No Relatório)"];
+  const celula=(campo,c,o,i)=>campo==="area"
+    ?'<label>'+t(rotulos[c])+'</label><input type="text" list="areasDoDesenvolvimento" id="'+idCelulaQuadro(chave,i,campo)+'" value="'+t(o[c]).replace(/"/g,"&quot;")+'" placeholder="'+t(areaSugerida(chave,o.map(x=>x||"")))+'">'
+    :'<label>'+t(rotulos[c])+'</label><textarea id="'+idCelulaQuadro(chave,i,campo)+'">'+t(o[c])+'</textarea>';
+  if(!document.getElementById("areasDoDesenvolvimento")){
+    const lista=document.createElement("datalist");lista.id="areasDoDesenvolvimento";
+    lista.innerHTML=AREAS_DO_DESENVOLVIMENTO.map(a=>'<option value="'+t(a)+'">').join("");
+    document.body.appendChild(lista);
+  }
   bloco.innerHTML='<h3>Quadro – Relação Com '+t(rotulo)+'</h3>'+linhas.map((o,i)=>'<div class="bloco"><h3>Linha '+(i+1)+'</h3>'+
-    CAMPOS_QUADRO.map((campo,c)=>'<label>'+t(rotulos[c])+'</label><textarea id="'+idCelulaQuadro(chave,i,campo)+'">'+t(o[c])+'</textarea>').join("")+
+    CAMPOS_QUADRO.map((campo,c)=>celula(campo,c,o,i)).join("")+
     '<button type="button" class="botao-limpar no-print" onclick="removerLinhaQuadro(\''+chave+'\','+i+')">Remover esta linha</button></div>').join("")+
     '<div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 18px"><button type="button" onclick="adicionarLinhaQuadro(\''+chave+'\')">+ Adicionar linha</button><button type="button" class="botao-limpar" onclick="restaurarQuadroDoModelo(\''+chave+'\')">Restaurar linhas do modelo</button></div>';
 }
@@ -981,7 +1102,7 @@ function sincronizarQuadros(){
 }
 function adicionarLinhaQuadro(chave){
   const bloco=blocoDoQuadro(chave);if(!bloco)return;
-  const linhas=linhasDoQuadro(chave);linhas.push(["","","",""]);
+  const linhas=linhasDoQuadro(chave);linhas.push(["","","","",""]);
   renderizarQuadroHipotese(chave,bloco.dataset.rotulo,linhas);salvarDadosNoNavegador(false);
   const nova=document.getElementById(idCelulaQuadro(chave,linhas.length-1,"comp"));if(nova)nova.focus();
 }
@@ -1251,7 +1372,10 @@ function rotuloParaIA(el){
   if(el.type==="checkbox"){const l=el.closest("label");return l?l.textContent.trim():el.value;}
   for(let no=el,n=0;no&&n<3;no=no.parentElement,n++){
     for(let irmao=no.previousElementSibling;irmao;irmao=irmao.previousElementSibling){
-      if(/^(LABEL|SPAN|STRONG)$/.test(irmao.tagName))return irmao.textContent.trim()+(el.classList.contains("detalhe-sim")?" — descrição (se Sim)":"");
+      if(/^(LABEL|SPAN|STRONG)$/.test(irmao.tagName)){
+        if(el.id==="filhoUnicoDescricao")return "Irmãos — idade de cada irmão e se tem laudo, com e sem laudo (se Filho Único = Não)";
+        return irmao.textContent.trim()+(el.classList.contains("detalhe-sim")?" — descrição (se Sim)":"");
+      }
     }
   }
   return el.id;
@@ -1283,8 +1407,7 @@ function catalogoParaIA(){
   const contexto=[
     "Habilidades acadêmicas: escolha primeiro [anoEscolar]; hab_status_N e hab_obs_N referem-se à habilidade de número N (começando em 0) da lista do ano escolhido:",
     ...Object.entries(habilidadesPorAno).map(([ano,lista])=>"- "+ano+": "+lista.map((h,i)=>i+"="+h[0]).join("; ")),
-    "Hipóteses diagnósticas (campos hip_*): marque só as que os PDFs mencionam como investigadas/encaminhadas.",
-    "Portage: os itens listados são os da faixa etária do paciente.",
+    "Portage: preencha todos os itens listados que o documento do Portage responde.",
     "Campos de descrição (\"se Sim\") só quando o campo correspondente for Sim."
   ].join("\n");
   return {campos,contexto};
@@ -1593,7 +1716,7 @@ function formasGenero(sexo){
 function textosPadraoLaudo(g){
   const t = {};
   const paragrafosMetodologia = {
-    intro: "**PROTOCOLO UTILIZADO**: Realizada análise dos comportamentos quanto ao desenvolvimento sócio comunicativo e cognitivo, baseado no **DSM - V**, registrado a partir de observações clínicas e escalas de avaliação **(ATA, CARS, SNAP IV, TOD e PORTAGE),** a depender da necessidade do processo da avaliação e da suspeita apresentada.",
+    intro: "**METODOLOGIA E PROTOCOLOS UTILIZADOS**: Realizada análise dos comportamentos quanto ao desenvolvimento sócio comunicativo e cognitivo, baseado no **DSM - V**, registrado a partir de observações clínicas e escalas de avaliação **(ATA, CARS, SNAP IV, TOD e PORTAGE),** a depender da necessidade do processo da avaliação e da suspeita apresentada.",
     CARS: "**Escala CARS** - **(Childhood Autism Rating Scale)**, em português escala de pontuação para Autismo na infância, é um questionário frequentemente utilizado por profissionais da área da saúde para averiguar a possibilidade da presença de Autismo em crianças e adolescentes **(2 anos de idade e adolescentes até 17 anos e 11 meses)** e é considerada uma ferramenta pré-diagnóstica bastante confiável. Dentre todas as escalas de avaliação do Autismo, a **CARS** é a de maior validação e preferência.",
     ATA: "**Escala ATA** - Escala de avaliação de Traços Autísticos **(ATA)** validade e confiabilidade de uma escala para a detecção de condutas autísticas Francisco B. Assumpção Jr., Evelyn Kuczynski, Marcia Rego Gabriel, Cristiane Castanho Rocca. Sua aplicação é indicada em **crianças a partir de 2 anos de idade** (Assumpção et al., 2008). O estudo de validade e confiabilidade da **ATA** foi realizado em amostra brasileira com idades entre **2 e 18 anos.**",
     SNAPIV: "Escala **SNAP-IV** é composta pela descrição de 18 sintomas do **TDAH** e entre os sintomas de desatenção **(9 primeiros itens)** e hiperatividade/impulsividade **(itens 10 ao 18)**, os quais devem ser pontuados por pais e/ou professores, em uma escala de quatro níveis de gravidade. Existem chances de "+g.o+" paciente ser portador"+g.r+" de **TDAH** caso seja identificado pelo menos **6** em cada uma das partes “bastante” e/ou “demais”.",
@@ -1698,7 +1821,6 @@ function textosPadraoLaudo(g){
     "==O relato da família e o resultado dos protocolos sugerem que fatores contextuais podem estar reforçando certos comportamentos, os quais não são totalmente capturados pelas ferramentas de avaliação utilizadas (não restritas). É importante considerar que "+g.o+" paciente ainda pode se beneficiar de estímulos apropriados para o seu desenvolvimento.==",
     g.O+" paciente apresenta muitos dos critérios necessários para a confirmação diagnóstica de **Transtorno do Espectro Autista (TEA)**, evidenciando características consistentes em diferentes contextos de avaliação. Dessa forma, recomenda-se que a família, em momento oportuno, realize uma avaliação complementar, preferencialmente de natureza **Neuropsicológica**, a fim de mensurar com maior precisão o funcionamento das **Funções Executivas Superiores** "+g.do+" paciente. Considerando, porém, a idade atual e a condição social e financeira da família, compreende-se que tal encaminhamento não é viável no momento, tornando pertinente e necessária, neste estágio, !!a emissão do laudo confirmatório de TEA, como medida prioritária para garantir acesso aos direitos e intervenções adequadas.!!"
   ].join("\n");
-  t.textoEncaminhamentoExames = "Encaminhei também "+g.o+" paciente para avaliação complementar com exames de Audiometria, Teste de Processamento Auditivo Central (TPAC) e P300, com o objetivo de confirmar o diagnóstico de possíveis alterações no Processamento Auditivo Central. A realização desses exames se fez necessária devido às características apresentadas "+g.pelo+" paciente, como dificuldades de atenção sustentada, organização e memória auditiva, além de comportamentos de desatenção e impulsividade. A investigação diagnóstica será essencial para melhor entendimento do quadro e definição das intervenções adequadas.";
   t.fe_manif_0 = "Observa-se comprometimento acentuado no monitoramento da própria conduta. "+g.O+" paciente demonstra pouca percepção das consequências de suas ações e reduzida capacidade de reconhecer espontaneamente quando um comportamento é inadequado, perigoso ou prejudicial ao outro. Mesmo após orientações, pode repetir a mesma resposta, necessitando de mediação constante para interromper, compreender o ocorrido e reorganizar sua conduta.";
   t.fe_manif_1 = "Apresenta importante dificuldade para organizar ações de maneira antecipada e funcional. Seu comportamento tende a ser imediato e guiado pelo desejo do momento, com pouca previsão das etapas ou consequências. Necessita de elevada estruturação externa para iniciar, permanecer e concluir propostas, apresentando dificuldade para sustentar sequências, seguir uma organização previamente estabelecida e ajustar o próprio comportamento diante das demandas.";
   t.fe_manif_2 = "Esta função mostra-se severamente comprometida. "+g.O+" paciente apresenta grande dificuldade para esperar, aceitar negativas, interromper ações e conter impulsos. Diante de limites ou frustrações, pode responder com agressividade, fuga, autoagressão ou intensa desorganização comportamental. Comandos de interrupção frequentemente não produzem resposta imediata, inclusive em situações de risco, evidenciando necessidade de supervisão e intervenção externa constantes.";
@@ -1752,7 +1874,17 @@ function aplicarTextosPadrao(preencherVazios){
 // usado ao ligar o ícone correspondente.
 function chaveDoMetodo(id){return {CARS:"cars",ATA:"ata",SNAPIV:"snap",PORTAGE:"portage",TOD:"tod",MCHAT:"mchat"}[id];}
 function metodologiaDoRelatorio(){
-  return valor("metodologia").split(/\r?\n/).filter(linha=>!ESCALAS_METODOLOGIA.some(e=>!metodoIncluido(chaveDoMetodo(e.id))&&linha.trim().startsWith(e.marcador))).join("\n");
+  return valor("metodologia").replace(/\*\*PROTOCOLO UTILIZADO\*\*/g,"**METODOLOGIA E PROTOCOLOS UTILIZADOS**")
+    .split(/\r?\n/).filter(linha=>!ESCALAS_METODOLOGIA.some(e=>!metodoNoRelatorio(chaveDoMetodo(e.id))&&linha.trim().startsWith(e.marcador))).join("\n");
+}
+// M-CHAT é o instrumento dos 16 aos 30 meses: nessa idade ele entra no lugar
+// do SNAP-IV; fora dela, não aparece no relatório.
+function idadeDoMCHAT(){const m=idadeMeses();return m!==null&&m>=16&&m<=30;}
+function metodoNoRelatorio(chave){
+  if(!metodoIncluido(chave))return false;
+  if(chave==="mchat")return idadeDoMCHAT();
+  if(chave==="snap")return !idadeDoMCHAT();
+  return true;
 }
 
 function paragrafoEscala(escalaId){
@@ -1839,11 +1971,9 @@ function calcularATA(){
   atualizarPercentualATA();
 }
 function atualizarPercentualATA(){
-  const pontos=ATA_ITENS.map((_,i)=>valor("ata_item_"+i)).filter(v=>v!=="");
-  let perc="";
-  if(pontos.length===ATA_ITENS.length)perc=String(Math.round(pontos.filter(v=>v==="2").length/ATA_ITENS.length*100));
-  else if(valor("ata")!=="")perc=String(Math.min(100,Math.round(Number(valor("ata"))/44*100)));
-  if(perc!=="")preencherAutomatico("ataPercentual",perc);
+  // % de características = pontos ÷ máximo da escala (22 itens × 2 pontos).
+  if(valor("ata")==="")return;
+  preencherAutomatico("ataPercentual",String(Math.min(100,Math.round(Number(valor("ata"))/(ATA_ITENS.length*2)*100))));
 }
 function atualizarPercentualCARS(){
   if(valor("cars")==="")return;
@@ -1882,14 +2012,9 @@ function atualizarIdadeCognitivaDoCabecalho(){
   const p=portagePorArea(); if(!p)return;
   const valores=p.areas.map(a=>a.anos);
   const min=Math.min(...valores), max=Math.max(...valores);
+  // Modelo do relatório: só a faixa (menor à maior idade por área).
   const faixa=min===max?anosDecimaisParaTexto(min):anosDecimaisParaTexto(min)+" à "+anosDecimaisParaTexto(max);
-  // Fora da faixa etária do Portage (>6 anos): não apresenta a idade
-  // equivalente como se fosse comparação normativa — deixa explícito que é
-  // repertório de referência (ponto 7 da revisão).
-  const texto=idadeForaDaFaixaPortage(idadeMeses())
-    ?"Repertório de referência pelo Portage: "+faixa+" (fora da faixa etária do instrumento — não é comparação normativa)"
-    :faixa;
-  preencherAutomatico("idadeCognitivaRelatorio",texto);
+  preencherAutomatico("idadeCognitivaRelatorio",faixa);
 }
 
 /* ---------------------------------------------------------------- utilitários de texto */
@@ -2038,7 +2163,7 @@ function graficoATA(){
       {type:"line",data:media,borderColor:PALETA_LAUDO.serieEscura,borderWidth:2,borderDash:[3,4],pointRadius:0,spanGaps:false},
       {data:valores,backgroundColor:PALETA_LAUDO.serie,barPercentage:0.75,categoryPercentage:0.85,rotulos:{fonte:"15px Arial",cor:PALETA_LAUDO.tinta}}]},
     options:{layout:{padding:{top:22,right:18,left:10,bottom:8}},plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.grade,espessura:1}},
-      scales:{y:{min:0,max:3,ticks:{stepSize:1,color:PALETA_LAUDO.texto,font:{size:14}},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:45,minRotation:45,autoSkip:false,font:{size:12,family:FONTE_GRAFICO}}}}}},1000,560);
+      scales:{y:{min:0,max:2,ticks:{stepSize:1,color:PALETA_LAUDO.texto,font:{size:14}},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:45,minRotation:45,autoSkip:false,font:{size:12,family:FONTE_GRAFICO}}}}}},1000,560);
 }
 
 // Habilidades acadêmicas da seção 8 (ano escolar): só as avaliadas.
@@ -2344,11 +2469,11 @@ p.centro{text-align:center}
 p.direita{text-align:right}
 p.compacto{margin:0;line-height:1.25}
 mark{color:#000;padding:0 1pt}
-mark.cinza{background:#d9d9d9}
+mark.cinza{background:#dbe5f1}
 mark.amarelo{background:#ffff00}
-.faixa{background:#bfbfbf;font-weight:bold;padding:1mm 2mm;margin:5mm 0 3mm;line-height:1.45}
+.faixa{background:#c6d9f1;font-weight:bold;padding:1mm 2mm;margin:5mm 0 3mm;line-height:1.45}
 .faixa.centro{text-align:center}
-.faixa-topico{background:#a6a6a6;font-weight:bold;font-size:9.5pt;padding:1mm 2mm;margin:4mm 0 3mm;break-after:avoid;page-break-after:avoid}
+.faixa-topico{background:#b8cce4;font-weight:bold;font-size:9.5pt;padding:1mm 2mm;margin:4mm 0 3mm;break-after:avoid;page-break-after:avoid}
 h2{font-size:12.5pt;text-align:center;margin:3mm 0 5mm;break-after:avoid;page-break-after:avoid}
 h2.roxo{color:#5c4b92}
 h2.marcado{font-size:10pt;margin:5mm 0 3mm}
@@ -2379,16 +2504,20 @@ table.centro td{text-align:center}
 .fotos img{margin:0 5mm}
 table.cab-paciente{margin:0 0 3mm}
 table.cab-paciente td{vertical-align:middle;padding:0}
-td.cab-foto{width:48mm}
-td.cab-espaco{width:8mm}
-.cab-box{border:.75pt solid #000;padding:5mm 3mm}
+td.cab-foto{width:42mm}
+td.cab-espaco{width:4mm}
+.cab-box{border:.75pt solid #000;padding:5mm 3mm;width:112mm;margin:0 auto}
 .cab-box p{text-align:center;font-weight:bold;margin:2.2mm 0;line-height:1.25;font-size:10.5pt}
-.caixa-cinza{background:#a6a6a6;padding:3mm 4mm;margin:4mm 0;font-weight:bold}
-.caixa-cinza.clara{background:#bfbfbf}
+.caixa-cinza{background:#c6d9f1;padding:3mm 4mm;margin:4mm 0;font-weight:bold;break-inside:avoid;page-break-inside:avoid}
+.caixa-cinza.clara{background:#dbe5f1}
 .caixa-cinza p{margin:0 0 3pt}
 .linha-assinatura{border-top:.75pt solid #000;width:95mm;margin:16mm auto 1mm}
 .assinatura-nome{font-family:"Arial Narrow","Liberation Sans Narrow",Arial,sans-serif;font-style:italic;font-size:15pt}
 .quebra{break-before:page;page-break-before:always;height:0;margin:0}
+h3.area{text-align:center;font-size:10.5pt;margin:6mm 0 3mm}
+td.sem-quebra{white-space:nowrap}
+.galeria{text-align:center;margin:4mm 0 0}
+.galeria img{display:inline-block;margin:3mm 2.5mm;border:.75pt solid #000}
 @media screen{
   body{background:#e7e7ee;padding:14px 0}
   .moldura,.rodape-pagina{display:none}
@@ -2412,6 +2541,7 @@ function listaHipotesesInvestigadas(){
 // está marcado/digitado acima, preservando a seleção atual quando ainda
 // é uma opção válida.
 function atualizarOpcoesHipoteseSelecionada(){
+  atualizarSubtiposDeHipotese();
   const sel=document.getElementById("hipoteseSelecionada");
   if(!sel)return;
   const atual=sel.value;
@@ -2421,6 +2551,30 @@ function atualizarOpcoesHipoteseSelecionada(){
   if(opcoes.includes(atual))sel.value=atual;
   atualizarVisibilidadeAnalisePorArea();
   sincronizarQuadros();
+}
+
+// Subtipos (CID-11) só aparecem com a hipótese principal marcada; desmarcar
+// a principal desmarca os subtipos.
+function atualizarSubtiposDeHipotese(){
+  document.querySelectorAll(".hipotese-subtipos").forEach(bloco=>{
+    const pai=document.getElementById(bloco.dataset.pai);
+    const aberto=!!(pai&&pai.checked);
+    bloco.classList.toggle("aberto",aberto);
+    if(!aberto)bloco.querySelectorAll("input:checked").forEach(cb=>{cb.checked=false;});
+  });
+}
+
+// Hipóteses do relatório: o texto livre, se preenchido; senão cada hipótese
+// marcada — pelos subtipos marcados, quando houver.
+function hipotesesParaRelatorio(){
+  const livres=valor("hipotesesTexto").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  if(livres.length)return livres;
+  const lista=[];
+  document.querySelectorAll(".hipotese:checked").forEach(pai=>{
+    const subtipos=Array.from(document.querySelectorAll('.hipotese-sub[data-pai="'+pai.id+'"]:checked')).map(cb=>cb.value);
+    lista.push(...(subtipos.length?subtipos:[pai.value]));
+  });
+  return lista;
 }
 
 // Análise por área (faixas cinza): exclusiva do TDAH.
@@ -2488,12 +2642,11 @@ async function gerarDocumentoLaudoHTML(){
   const partes=[];
   const capa=await gerarCapaRelatorio(valor("nomePaciente"));
 
-  // Fotos: 1ª no cabeçalho; 2ª a 4ª depois das escalas; demais (ou a 1ª de
-  // novo, como no modelo) depois da análise por área.
+  // Fotos: a 1ª no cabeçalho; todas na galeria da última página
+  // ("Registros dos atendimentos") — nunca no meio do texto.
   const fotos=fotosPacienteDados.map(f=>f.src);
   const fotoCabecalho=fotos[0]?await prepararFoto(fotos[0],42/52):null;
-  const fotosMeio=(await Promise.all(fotos.slice(1,4).map(src=>prepararFoto(src)))).filter(Boolean);
-  const fotosFinais=(await Promise.all((fotos.length>4?fotos.slice(4):fotos.slice(0,1)).map(src=>prepararFoto(src)))).filter(Boolean);
+  const fotosGaleria=(await Promise.all(fotos.map(src=>prepararFoto(src,4/3)))).filter(Boolean);
 
   /* Página 1 — identificação */
   const nascimento=dataNascimentoObj();
@@ -2504,10 +2657,13 @@ async function gerarDocumentoLaudoHTML(){
     ["Idade Cognitiva",valor("idadeCognitivaRelatorio")],
     ["Marco de Desenvolvimento",valor("marcoRelatorio")]
   ].filter(l=>l[1]);
-  partes.push('<table class="cab-paciente"><tr><td class="cab-foto">'+(fotoCabecalho?'<img src="'+fotoCabecalho+'" data-mm="42" style="width:42mm;height:52mm">':"")+'</td><td class="cab-espaco"></td><td class="cab-info"><div class="cab-box">'+linhasCabecalho.map(l=>"<p>"+esc(l[0])+": "+esc(l[1])+"</p>").join("")+"</div></td></tr></table>");
-  partes.push('<div class="faixa centro">PARECER NEUROPSICOPEDAGÓGICO<br>ANÁLISE COMPORTAMENTAL</div>');
-  partes.push('<div class="caixa-cinza clara"><p><strong>NOTA SOBRE OS RESULTADOS:</strong> Os percentuais apresentados neste relatório possuem caráter descritivo e clínico-observacional, sendo construídos a partir do desempenho apresentado nas atividades propostas, dos registros realizados durante os atendimentos e da análise qualitativa dos dados obtidos. Esses valores não correspondem a percentis normativos, índices psicométricos ou escores provenientes de testes padronizados restritos a outras categorias profissionais. Constituem recurso de organização e representação visual dos achados e devem ser interpretados conjuntamente com as demais informações apresentadas neste relatório.</p></div>');
-  partes.push(blocoDeTexto(metodologiaDoRelatorio(),Object.assign({primeiroSemRecuo:/^\s*\*\*(METODOLOGIA|PROTOCOLO UTILIZADO)/i.test(valor("metodologia"))},opcoesTexto)));
+  const caixaCabecalho='<div class="cab-box">'+linhasCabecalho.map(l=>"<p>"+esc(l[0])+": "+esc(l[1])+"</p>").join("")+"</div>";
+  partes.push(fotoCabecalho
+    ?'<table class="cab-paciente"><tr><td class="cab-foto"><img src="'+fotoCabecalho+'" data-mm="42" style="width:42mm;height:52mm"></td><td class="cab-espaco"></td><td class="cab-info">'+caixaCabecalho+"</td></tr></table>"
+    :'<table class="cab-paciente"><tr><td class="cab-info">'+caixaCabecalho+"</td></tr></table>");
+  partes.push('<div class="faixa centro">PARECER NEUROPSICOPEDAGÓGICO ANÁLISE COMPORTAMENTAL</div>');
+  const notaSobreOsResultados='<div class="caixa-cinza clara"><p><strong>NOTA SOBRE OS RESULTADOS:</strong> Os percentuais apresentados neste relatório possuem caráter descritivo e clínico-observacional, sendo construídos a partir do desempenho apresentado nas atividades propostas, dos registros realizados durante os atendimentos e da análise qualitativa dos dados obtidos. Esses valores não correspondem a percentis normativos, índices psicométricos ou escores provenientes de testes padronizados restritos a outras categorias profissionais. Constituem recurso de organização e representação visual dos achados e devem ser interpretados conjuntamente com as demais informações apresentadas neste relatório.</p></div>';
+  partes.push(blocoDeTexto(metodologiaDoRelatorio(),Object.assign({primeiroSemRecuo:/^\s*\*\*(METODOLOGIA|PROTOCOLO UTILIZADO)/i.test(metodologiaDoRelatorio())},opcoesTexto)));
   partes.push(texto("parecerContexto"));
 
   /* Anamnese e histórico de desenvolvimento */
@@ -2534,7 +2690,8 @@ async function gerarDocumentoLaudoHTML(){
   const responsavel=valor("responsavel").toLowerCase();
   const rotuloQueixa="Queixa principal "+(/\bm[ãa]e\b/.test(responsavel)?"da mãe":/\bpai\b/.test(responsavel)?"do pai":"da família");
   const historico=[
-    itemLista(g.o==="a"?"Filha única":"Filho único",simNao("filhoUnico","Não")),
+    itemLista(g.o==="a"?"Filha única":"Filho único",valor("filhoUnico")),
+    itemLista("Irmãos",valor("filhoUnico")==="Não"?ponto(valor("filhoUnicoDescricao").trim()):""),
     itemLista("Convivência social",simNao("convivenciaSocial","Sim")),
     itemLista("Desenvolvimento motor",juntar(valor("desenvolvimentoMotor"),andou?g.O+" paciente começou a andar com "+andou:"")),
     itemLista("Desenvolvimento da fala",juntar(valor("desenvolvimentoFala"),falou?g.O+" paciente começou a falar com "+falou:"")),
@@ -2544,57 +2701,58 @@ async function gerarDocumentoLaudoHTML(){
   if(historico)partes.push('<h3><mark class="cinza">HISTÓRICO DE DESENVOLVIMENTO DA CRIANÇA:</mark></h3><ul class="bullets">'+historico+"</ul>");
   if(valor("aspectosComportamentais").trim())partes.push('<h3><mark class="cinza">ASPECTOS COMPORTAMENTAIS</mark></h3>'+texto("aspectosComportamentais"));
 
-  /* Quadros comparativos: seção própria, só com os quadros — um por
-     hipótese marcada, todos no mesmo padrão. */
-  const quadros=hipotesesDoQuadro().map(h=>({h,linhas:linhasDoQuadro(h.chave).filter(l=>l.some(x=>x.trim()))})).filter(q=>q.linhas.length);
-  if(quadros.length){
-    partes.push(QUEBRA+"<h2>Quadros Comparativos – Análise dos Comportamentos</h2>");
-    quadros.forEach(q=>{
-      partes.push('<h3><mark class="cinza">Relação Com '+esc(q.h.rotulo)+"</mark></h3>");
-      partes.push('<table class="tabela dupla centro quadro" data-larguras="38,46,43,43" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:38mm"><col style="width:46mm"><col style="width:43mm"><col style="width:43mm"></colgroup><tr><th>Comportamento Identificado</th><th>Caracterização Observada</th><th>Relação Com '+esc(q.h.rotulo)+"</th><th>Associação Aos Critérios DSM-5-TR</th></tr>"+q.linhas.map(l=>"<tr>"+l.map(x=>"<td>"+esc(x)+"</td>").join("")+"</tr>").join("")+"</table>");
+  /* Quadros de comportamento separados por área do desenvolvimento
+     (modelo do relatório): a 1ª hipótese sem faixa; as demais abertas pela
+     faixa "HIPÓTESE DE …". */
+  const quadros=hipotesesDoQuadro().map(h=>({h,linhas:linhasDoQuadro(h.chave).filter(l=>l.slice(0,4).some(x=>x.trim()))})).filter(q=>q.linhas.length);
+  quadros.forEach((q,indice)=>{
+    if(indice>0)partes.push('<div class="faixa centro">HIPÓTESE DE '+esc(nomeDaHipoteseNoRelatorio(q.h).toUpperCase())+"</div>");
+    agruparPorArea(q.h.chave,q.linhas).forEach((linhas,area)=>{
+      partes.push('<h3 class="area">ÁREA DO DESENVOLVIMENTO: '+esc(area)+"</h3>");
+      partes.push('<table class="tabela dupla centro quadro" data-larguras="34,58,40,38" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:34mm"><col style="width:58mm"><col style="width:40mm"><col style="width:38mm"></colgroup><tr><th>Comportamento Observado</th><th>Descrição Detalhada</th><th>Possíveis Características Associadas ao '+esc(q.h.rotulo)+"</th><th>Associação aos Critérios DSM-5-TR</th></tr>"+linhas.map(l=>"<tr>"+l.slice(0,4).map(x=>"<td>"+esc(x)+"</td>").join("")+"</tr>").join("")+"</table>");
     });
-  }
+  });
 
   /* Atendimentos + CARS */
   const cars=metodoIncluido("cars")&&valor("cars")!==""?Number(valor("cars")):null;
   const imgCARS=metodoIncluido("cars")?graficoCARS():null;
   if(valor("textoAtendimentos").trim()||imgCARS){
-    partes.push(QUEBRA+texto("textoAtendimentos"));
+    partes.push(texto("textoAtendimentos"));
     if(cars!==null){
       const faixa=cars<30?"não apresentou":"apresentou";
-      partes.push('<p class="recuo">Segue abaixo rastreamento dos comportamentos utilizando a Escala CARS, que caracterizam o TEA-Transtorno do Espectro Autista. A escala '+faixa+" atraso importante de desenvolvimento dos comportamentos com um resultado de "+esc(numeroBR(cars))+" PONTOS"+(valor("carsPercentualFalhas")!==""?", e de "+esc(valor("carsPercentualFalhas"))+"% de falhas do que se espera para sua idade de acordo com o marco de desenvolvimento infantil":"")+".</p>");
+      partes.push('<p class="recuo">Segue abaixo rastreamento dos comportamentos utilizando a Escala CARS, que caracterizam o TEA-Transtorno do Espectro Autista. A escala '+faixa+" atraso importante de desenvolvimento dos comportamentos com um resultado de "+destaqueAmarelo(numeroBR(cars)+" PONTOS")+(valor("carsPercentualFalhas")!==""?", e de "+destaqueAmarelo(valor("carsPercentualFalhas")+"% de falhas")+" do que se espera para sua idade de acordo com o marco de desenvolvimento infantil":"")+".</p>");
     }
     if(imgCARS){
       partes.push('<div class="grafico"><img src="'+imgCARS+'" data-mm="170" style="width:170mm"></div>');
-      partes.push('<p class="centro"><mark class="cinza"><strong><span style="font-size:7.5pt">Classificação:&nbsp; Normal - &nbsp;15 à 29,5 pontos&nbsp; / &nbsp;Autismo leve-moderado &nbsp;- 30 à 36,5 pontos&nbsp; / &nbsp;Autismo grave – acima de 37 pontos</span></strong></mark></p>');
+      const faixasCARS=[["Normal - &nbsp;15 à 29,5 pontos",c=>c<30],["Autismo leve-moderado &nbsp;- 30 à 36,5 pontos",c=>c>=30&&c<37],["Autismo grave – acima de 37 pontos",c=>c>=37]];
+      partes.push('<p class="centro"><strong><span style="font-size:7.5pt"><mark class="cinza">Classificação:&nbsp;</mark> '+faixasCARS.map(([t,naFaixa])=>'<mark class="'+(cars!==null&&naFaixa(cars)?"amarelo":"cinza")+'">'+t+"</mark>").join(" / ")+"</span></strong></p>");
     }
   }
 
   /* ATA */
   if(metodoIncluido("ata")&&valor("ata")!==""){
     const imgATA=graficoATA();
-    partes.push(QUEBRA+'<p class="recuo">Os comportamentos observados direta e indiretamente e de acordo com as observações, foram totalizados <strong>'+esc(valor("ata"))+" pontos</strong> na análise da escala <strong>ATA</strong>, o que significa que "+g.o+" paciente apresenta <strong>"+esc(valor("ataPercentual")||"0")+"% de características</strong> (rastreada por essa escala) que correspondem ao <strong>TEA- Transtorno do Espectro Autista.</strong></p>");
-    partes.push('<p class="centro"><mark class="cinza"><strong><span style="font-size:8pt">Pontuação acima de 16 pontos&nbsp; - &nbsp;Atraso no desenvolvimento&nbsp; / &nbsp;Pontuação acima 20 pontos&nbsp; - &nbsp;Traços Autísticos</span></strong></mark></p>');
+    const pontosATA=Number(valor("ata"));
+    partes.push('<p class="recuo">Os comportamentos observados direta e indiretamente e de acordo com as observações, foram totalizados '+destaqueAmarelo(valor("ata")+" pontos na análise da escala ATA")+", o que significa que "+g.o+" paciente apresenta "+destaqueAmarelo((valor("ataPercentual")||"0")+"% de características")+" (rastreada por essa escala) que correspondem ao <strong>TEA- Transtorno do Espectro Autista.</strong></p>");
+    const faixaATA=(texto,atingida)=>'<mark class="'+(atingida?"amarelo":"cinza")+'">'+texto+"</mark>";
+    partes.push('<p class="centro"><strong><span style="font-size:8pt">'+faixaATA("Pontuação acima de 16 pontos&nbsp; - &nbsp;Atraso no desenvolvimento",pontosATA>16&&pontosATA<=20)+"&nbsp; / &nbsp;"+faixaATA("Pontuação acima 20 pontos&nbsp; - &nbsp;Traços Autísticos",pontosATA>20)+"</span></strong></p>");
     if(imgATA)partes.push('<div class="grafico"><img src="'+imgATA+'" data-mm="165" style="width:165mm"></div>');
     if(ATA_ITENS.some((_,i)=>valor("ata_perc_"+i)!=="")){
-      const celula=(i)=>'<td style="background:#ede9fa"><strong><span style="font-size:7pt">'+esc(ATA_ITENS[i][1])+'</span></strong></td><td class="centro" style="background:#ede9fa"><strong><span style="font-size:7pt">'+esc(valor("ata_perc_"+i)?valor("ata_perc_"+i)+"%":"-")+"</span></strong></td>";
+      const celula=(i)=>'<td style="background:#dbe5f1"><strong><span style="font-size:7pt">'+esc(ATA_ITENS[i][1])+'</span></strong></td><td class="centro" style="background:#dbe5f1"><strong><span style="font-size:7pt">'+esc(valor("ata_perc_"+i)?valor("ata_perc_"+i)+"%":"-")+"</span></strong></td>";
       let linhas="";
       for(let i=0;i<11;i++)linhas+="<tr>"+celula(i)+celula(i+11)+"</tr>";
       partes.push('<table class="tabela simples" data-larguras="62,21,62,21" data-fonte="7" style="width:166mm;margin:6mm auto 0"><colgroup><col style="width:62mm"><col style="width:21mm"><col style="width:62mm"><col style="width:21mm"></colgroup>'+linhas+"</table>");
     }
   }
 
-  /* Conclusão das escalas + fotos */
-  if(valor("textoPosEscalas").trim()||fotosMeio.length){
-    partes.push(QUEBRA+texto("textoPosEscalas"));
-    if(fotosMeio.length)partes.push('<div class="fotos">'+fotosMeio.map(src=>'<img src="'+src+'" data-mm="44" style="width:44mm">').join("")+"</div>");
-  }
+  /* Conclusão das escalas */
+  if(valor("textoPosEscalas").trim())partes.push(texto("textoPosEscalas"));
 
   /* Habilidades acadêmicas (seção 8): tabela + gráfico por status */
   const habAcademicas=habilidadesAcademicasAvaliadas();
   if(habAcademicas.length){
-    partes.push(QUEBRA+'<h2 class="marcado"><mark class="cinza">HABILIDADES ACADÊMICAS – '+esc(valor("anoEscolar").toUpperCase())+"</mark></h2>");
-    partes.push('<table class="tabela dupla compacta" data-larguras="48,32,90" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:48mm"><col style="width:32mm"><col style="width:90mm"></colgroup><tr><th>Habilidade</th><th>Desempenho</th><th>Observação</th></tr>'+habAcademicas.map(h=>"<tr><td>"+esc(h.nome)+"</td><td>"+esc(h.status)+"</td><td>"+esc(h.obs)+"</td></tr>").join("")+"</table>");
+    partes.push('<h2 class="marcado"><mark class="cinza">HABILIDADES ACADÊMICAS – '+esc(valor("anoEscolar").toUpperCase())+"</mark></h2>");
+    partes.push('<table class="tabela dupla compacta" data-larguras="46,38,86" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:46mm"><col style="width:38mm"><col style="width:86mm"></colgroup><tr><th>Habilidade</th><th>Desempenho</th><th>Observação</th></tr>'+habAcademicas.map(h=>"<tr><td>"+esc(h.nome)+'</td><td class="sem-quebra">'+esc(h.status)+"</td><td>"+esc(h.obs)+"</td></tr>").join("")+"</table>");
     const imgHab=graficoHabilidadesAcademicas(habAcademicas);
     if(imgHab)partes.push('<div class="grafico"><img src="'+imgHab+'" data-mm="150" style="width:150mm"></div>');
     partes.push(texto("textoHabilidades"));
@@ -2603,7 +2761,7 @@ async function gerarDocumentoLaudoHTML(){
   /* Perfil das funções executivas */
   const linhasFE=FE_LAUDO.map((f,i)=>valor("fe_manif_"+i).trim()?'<tr><td style="color:#5c4b92"><strong>'+esc(f.nome)+"</strong></td><td>"+esc(f.esperado)+"</td><td>"+esc(valor("fe_manif_"+i))+"</td></tr>":"").join("");
   if(linhasFE){
-    partes.push(QUEBRA+'<h2 class="roxo">PERFIL CLÍNICO-OBSERVACIONAL DAS FUNÇÕES EXECUTIVAS</h2>');
+    partes.push('<h2 class="roxo">PERFIL CLÍNICO-OBSERVACIONAL DAS FUNÇÕES EXECUTIVAS</h2>');
     partes.push('<table class="tabela roxa centro" data-larguras="26,52,92" data-fonte="8.5" style="font-size:8.5pt"><colgroup><col style="width:26mm"><col style="width:52mm"><col style="width:92mm"></colgroup><tr><th style="background:#5c4b92;color:#ffffff">Função Executiva</th><th style="background:#5c4b92;color:#ffffff">Desenvolvimento funcional esperado</th><th style="background:#5c4b92;color:#ffffff">Manifestação observada durante o processo avaliativo</th></tr>'+linhasFE+"</table>");
   }
 
@@ -2612,10 +2770,6 @@ async function gerarDocumentoLaudoHTML(){
   const idadeAnos=nascimento?Math.floor((idadeMeses()||0)/12):0;
   const imgPortage=graficoPortage(portage,idadeAnos);
   if(metodoIncluido("portage")&&(imgPortage||valor("textoPortage").trim())){
-    partes.push(QUEBRA);
-    if(idadeForaDaFaixaPortage(idadeMeses())){
-      partes.push('<div class="caixa-cinza clara"><p><strong>Observação sobre a faixa etária do Portage:</strong> o paciente encontra-se fora da faixa etária de referência do Inventário Portage Operacionalizado (0 a 6 anos). Os resultados apresentados foram utilizados exclusivamente como referência de repertório e levantamento de habilidades observadas, e não como parâmetro de comparação normativa para a idade cronológica atual.</p></div>');
-    }
     if(imgPortage){
       partes.push('<p class="recuo">Com base no resultado dos protocolos aplicados durante o período da avaliação e respeitando as particularidades, tempo e limitações '+g.do+" paciente/aprendente segue abaixo percentual descritivo de repertório observado em áreas específicas: Comportamentos: <strong>Socialização, Linguagem, Autocuidados, Cognição e Desenvolvimento Motor.</strong></p>");
       partes.push('<div class="grafico"><img src="'+imgPortage+'" data-mm="165" style="width:165mm"></div>');
@@ -2623,33 +2777,51 @@ async function gerarDocumentoLaudoHTML(){
     partes.push(texto("textoPortage"));
   }
 
-  /* Análise por área (faixas cinza) */
+  /* Análise por área do TDAH (hiperatividade, impulsividade, desatenção…):
+     vem depois dos gráficos do SNAP-IV, antes do parágrafo de fechamento
+     ("Essas características…"). */
   const topicos=temHipoteseTDAH()?TOPICOS_LAUDO.filter(t=>valor(t[0]).trim()):[];
-  if(topicos.length){
-    partes.push(QUEBRA);
-    topicos.forEach(t=>partes.push('<div class="faixa-topico">'+esc(t[1])+"</div>"+texto(t[0])));
-    if(fotosFinais.length)partes.push('<div class="fotos">'+fotosFinais.map(src=>'<img src="'+src+'" data-mm="55" style="width:55mm">').join("")+"</div>");
-  }else if(fotos.length>4&&fotosFinais.length){
-    partes.push(QUEBRA+'<div class="fotos">'+fotosFinais.map(src=>'<img src="'+src+'" data-mm="55" style="width:55mm">').join("")+"</div>");
-  }
+  const blocoTopicos=topicos.map(t=>'<div class="faixa-topico">'+esc(t[1])+"</div>"+texto(t[0])).join("");
 
-  /* SNAP-IV */
+  /* SNAP-IV (a partir dos 31 meses) — ou M-CHAT, dos 16 aos 30 meses */
   const snap=analisarSNAP();
   const imgsSNAP=graficosSNAP();
-  if(metodoIncluido("snap")&&imgsSNAP){
+  if(metodoNoRelatorio("snap")&&imgsSNAP){
     const LIMIAR=6;
     const des=snap.des, hip=snap.hip;
     const fraseDes=des>=LIMIAR?"considera-se que <strong>EXISTEM</strong> sintomas de <strong>DESATENÇÃO</strong>":"considera-se que <strong>NÃO EXISTEM</strong> sintomas suficientes de <strong>DESATENÇÃO</strong>";
     const fraseHip=hip>=LIMIAR?(des>=LIMIAR?"considerando que <strong>TAMBÉM EXISTEM</strong> sintomas de <strong>HIPERATIVIDADE.</strong>":"considerando que <strong>EXISTEM</strong> sintomas de <strong>HIPERATIVIDADE.</strong>"):"considerando que <strong>NÃO EXISTEM</strong> sintomas suficientes de <strong>HIPERATIVIDADE.</strong>";
-    partes.push(QUEBRA+'<p class="recuo">De acordo com a análise dos dados para os comportamentos do <strong>TDAH - Transtorno do Déficit de Atenção e Hiperatividade,</strong> a partir das observações da Família, segue abaixo gráfico do resultado para apreciação médica, pois foram pontuados <strong>'+doisDigitos(des)+" itens “bastante” e “demais” nas características de 1 a 9</strong>, "+fraseDes+" e <strong>foram "+doisDigitos(hip)+" itens pontuados “bastante” e “demais” nas características 10 a 18</strong> "+fraseHip+' <mark class="cinza"><strong>Este gráfico é apenas um ponto de partida para levantamento de alguns possíveis sintomas primários do TDAH</strong></mark></p>');
+    partes.push('<p class="recuo">De acordo com a análise dos dados para os comportamentos do <strong>TDAH - Transtorno do Déficit de Atenção e Hiperatividade,</strong> a partir das observações da Família, segue abaixo gráfico do resultado para apreciação médica, pois foram pontuados <strong>'+doisDigitos(des)+" itens “bastante” e “demais” nas características de 1 a 9</strong>, "+fraseDes+" e <strong>foram "+doisDigitos(hip)+" itens pontuados “bastante” e “demais” nas características 10 a 18</strong> "+fraseHip+' <mark class="cinza"><strong>Este gráfico é apenas um ponto de partida para levantamento de alguns possíveis sintomas primários do TDAH</strong></mark></p>');
     partes.push('<div class="graficos-lado">'+[imgsSNAP.pontos,imgsSNAP.perc].filter(Boolean).map(src=>'<img src="'+src+'" data-mm="80" style="width:80mm">').join("")+"</div>");
-    partes.push(texto("textoSNAP"));
+    const paragrafosSNAP=valor("textoSNAP").split(/\r?\n/);
+    const fechamento=paragrafosSNAP.findIndex(par=>/^\s*Essas características/i.test(par));
+    if(blocoTopicos&&fechamento>0){
+      partes.push(blocoDeTexto(paragrafosSNAP.slice(0,fechamento).join("\n"),opcoesTexto));
+      partes.push(blocoTopicos);
+      partes.push(blocoDeTexto(paragrafosSNAP.slice(fechamento).join("\n"),opcoesTexto));
+    }else{
+      partes.push(texto("textoSNAP"));
+      partes.push(blocoTopicos);
+    }
+  }else{
+    partes.push(blocoTopicos);
+  }
+
+  /* M-CHAT — tabela descritiva dos itens respondidos, sem escore clínico
+     automático (o instrumento não tem algoritmo de pontuação implementado
+     neste sistema; a interpretação cabe à profissional). Só dos 16 aos 30
+     meses, no lugar do SNAP-IV. */
+  const itensMCHAT=mchatItens.map((t,i)=>({item:t,resp:valor("mchat_"+i)})).filter(x=>x.resp!=="");
+  if(metodoNoRelatorio("mchat")&&itensMCHAT.length){
+    const linhasMCHAT=itensMCHAT.map(x=>"<tr><td>"+esc(x.item)+"</td><td>"+(x.resp==="sim"?"Sim":"Não")+"</td></tr>").join("");
+    partes.push('<h3><mark class="cinza">M-CHAT — Modified Checklist For Autism In Toddlers</mark></h3>');
+    partes.push('<table class="tabela dupla compacta" data-larguras="130,40" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:130mm"><col style="width:40mm"></colgroup><tr><th>Item</th><th>Resposta</th></tr>'+linhasMCHAT+"</table>");
   }
 
   /* Protocolo TOD — só entra no relatório se algum item foi respondido */
   const tod=analisarTOD();
   if(metodoIncluido("tod")&&tod.pre>0){
-    partes.push(QUEBRA+'<h3><mark class="cinza">Protocolo TOD — Transtorno Opositor Desafiador</mark></h3>');
+    partes.push('<h3><mark class="cinza">Protocolo TOD — Transtorno Opositor Desafiador</mark></h3>');
     if(tod.completo){
       partes.push('<p class="recuo">Foram identificados <strong>'+tod.pos+" de "+todItens.length+"</strong> comportamentos compatíveis com o "+"Transtorno Opositor Desafiador (TOD), o que corresponde a <strong>"+tod.perc+'%</strong> dos itens do protocolo.</p>');
     }else{
@@ -2657,23 +2829,13 @@ async function gerarDocumentoLaudoHTML(){
     }
   }
 
-  /* M-CHAT — tabela descritiva dos itens respondidos, sem escore clínico
-     automático (o instrumento não tem algoritmo de pontuação implementado
-     neste sistema; a interpretação cabe à profissional). */
-  const itensMCHAT=mchatItens.map((t,i)=>({item:t,resp:valor("mchat_"+i)})).filter(x=>x.resp!=="");
-  if(metodoIncluido("mchat")&&itensMCHAT.length){
-    const linhasMCHAT=itensMCHAT.map(x=>"<tr><td>"+esc(x.item)+"</td><td>"+(x.resp==="sim"?"Sim":"Não")+"</td></tr>").join("");
-    partes.push(QUEBRA+'<h3><mark class="cinza">M-CHAT — Modified Checklist For Autism In Toddlers</mark></h3>');
-    partes.push('<table class="tabela dupla compacta" data-larguras="130,40" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:130mm"><col style="width:40mm"></colgroup><tr><th>Item</th><th>Resposta</th></tr>'+linhasMCHAT+"</table>");
-  }
-
   /* Síntese clínica */
-  if(valor("textoSintese").trim())partes.push(QUEBRA+texto("textoSintese"));
+  if(valor("textoSintese").trim())partes.push(texto("textoSintese"));
 
   /* Corroboração + gráfico de déficits nas funções executivas */
   const imgFE=graficoFuncoesExecutivas();
   if(valor("textoCorroboracao").trim()||imgFE){
-    partes.push(QUEBRA+texto("textoCorroboracao"));
+    partes.push(texto("textoCorroboracao"));
     if(imgFE){
       partes.push('<div class="grafico"><img src="'+imgFE+'" data-mm="160" style="width:160mm"></div>');
       partes.push('<p class="compacto"><span style="color:#c8443f">✚</span> Legenda:</p><p class="compacto" style="padding-left:6mm"><span style="color:#c9548b"><strong>Indicadores de dificuldade observados</strong></span></p><p style="padding-left:6mm"><span style="color:#5c4b92"><strong>Indicadores de desempenho funcional observado</strong></span></p>');
@@ -2683,48 +2845,33 @@ async function gerarDocumentoLaudoHTML(){
   /* Distribuição por domínio + conclusão sobre TEA */
   const imgDominios=graficoDominios();
   if(imgDominios||valor("textoConclusaoTEA").trim()){
-    partes.push(QUEBRA);
     if(imgDominios)partes.push('<div class="grafico"><img src="'+imgDominios+'" data-mm="118" style="width:118mm"></div>');
     partes.push(texto("textoConclusaoTEA"));
   }
 
-  /* Página final: encaminhamento, estudo de caso, hipótese, considerações
-     finais, sugestões de intervenção e assinatura (ordem do ponto 10 da
-     revisão: ... protocolos/resultados/gráficos -> estudo de caso ->
-     hipótese selecionada -> considerações finais -> sugestões de
-     intervenção -> assinatura). */
-  partes.push(QUEBRA);
-  if(valor("textoEncaminhamentoExames").trim())partes.push('<div class="caixa-cinza clara">'+blocoDeTexto(valor("textoEncaminhamentoExames"),opcoesTexto)+"</div>");
-
+  /* Final do relatório (modelo João Neto): encaminhamentos em tópicos,
+     hipóteses com CID, considerações finais, sobre a profissional, nota
+     sobre os resultados perto da assinatura e, por último, a galeria. O
+     estudo de caso não entra: já está resumido nas seções acima. */
   const encaminhamentosSelecionados=Array.from(document.querySelectorAll(".encaminhamento:checked")).map(el=>el.value);
   if(encaminhamentosSelecionados.length)partes.push('<h3><mark class="cinza">Encaminhamentos</mark></h3><ul class="bullets">'+encaminhamentosSelecionados.map(e=>"<li>"+esc(e)+"</li>").join("")+"</ul>");
-  const estudoDeCaso=valor("estudoCaso").trim(), observacoesClinicas=valor("observacoesClinicas").trim();
-  if(estudoDeCaso||observacoesClinicas){
-    partes.push('<h3><mark class="cinza">Estudo De Caso E Observações Clínicas</mark></h3>');
-    if(estudoDeCaso)partes.push(blocoDeTexto(estudoDeCaso,opcoesTexto));
-    if(observacoesClinicas)partes.push(blocoDeTexto(observacoesClinicas,opcoesTexto));
-  }
 
-  // O relatório mostra só a hipótese selecionada em #hipoteseSelecionada,
-  // nunca a lista completa de hipóteses investigadas (ver
-  // atualizarOpcoesHipoteseSelecionada()). Se por algum motivo não houver
-  // seleção salva (ex.: laudo criado antes deste campo existir), cai para
-  // a primeira hipótese investigada, sem listar as demais.
-  const hipoteseSelecionada=valor("hipoteseSelecionada").trim()||listaHipotesesInvestigadas()[0]||"";
-  if(hipoteseSelecionada){
+  const hipoteses=hipotesesParaRelatorio();
+  if(hipoteses.length){
     const formatarHipotese=h=>{const m=h.match(/^(.*?)\s*(\((?:CID)[^)]*\))\s*$/i);return m?"<li><strong>"+esc(m[1])+'</strong> <mark class="cinza"><strong>'+esc(m[2])+"</strong></mark></li>":"<li><strong>"+esc(h)+"</strong></li>";};
-    partes.push('<h3><mark class="cinza">Hipótese Diagnóstica:</mark></h3><ul class="bullets">'+formatarHipotese(hipoteseSelecionada)+"</ul>");
+    partes.push('<h3><mark class="cinza">Hipóteses e/ou Confirmações Diagnósticas:</mark></h3><ul class="bullets">'+hipoteses.map(formatarHipotese).join("")+"</ul>");
   }
 
   // Considerações Finais: texto-padrão fixo do modelo (a seção do
   // formulário foi removida a pedido da cliente; Sugestões De Intervenção
   // também saiu do laudo).
   partes.push('<h3><mark class="cinza">Considerações Finais</mark></h3>');
-  partes.push(blocoDeTexto(consideracoesFinaisTEAMeninas(valor("sexo"),hipoteseSelecionada),opcoesTexto));
+  partes.push(blocoDeTexto(consideracoesFinaisTEAMeninas(valor("sexo"),hipoteses[0]||""),opcoesTexto));
   partes.push(blocoDeTexto(avisoLegalFechamento(g),opcoesTexto));
 
   const perfil=await perfilProfissional();
-  partes.push(QUEBRA+'<div class="caixa-cinza clara"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>'+esc(perfil.bio)+"</p></div>");
+  partes.push('<div class="caixa-cinza clara"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>'+esc(perfil.bio)+"</p></div>");
+  partes.push(notaSobreOsResultados);
   const dataRel=dataRelatorioObj();
   const cidade=(valor("cidade")||"").replace(/\s*–\s*/g," - ");
   partes.push('<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>');
@@ -2732,6 +2879,12 @@ async function gerarDocumentoLaudoHTML(){
   partes.push('<div class="linha-assinatura"></div>');
   partes.push('<p class="centro compacto assinatura-nome">'+esc(perfil.nome)+"</p>");
   perfil.credenciais.forEach(t=>partes.push('<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">'+esc(t)+"</span></strong></mark></p>"));
+
+  /* Galeria: todas as fotos numa página própria, depois da assinatura */
+  if(fotosGaleria.length){
+    partes.push(QUEBRA+"<h2>REGISTROS DOS ATENDIMENTOS</h2>");
+    partes.push('<div class="galeria">'+fotosGaleria.map(src=>'<img src="'+src+'" data-mm="78" style="width:78mm;height:58.5mm">').join("")+"</div>");
+  }
 
   const titulo="Relatório - "+(valor("nomePaciente")||"Paciente");
   return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>'+esc(titulo)+"</title><style>"+CSS_LAUDO+"</style></head><body>"+
@@ -3010,7 +3163,7 @@ function mostrarPreviaDoLaudo(html){
     const arquivos = Array.from((input && input.files) || []);
     if (!arquivos.length) { notificar('Escolha os PDFs das escalas primeiro.', 'aviso'); return; }
     const paciente = pacienteAtual || pacienteCarregado;
-    if (!paciente) { notificar('Salve o laudo pelo menos uma vez (botão "Salvar laudo") antes de importar escalas com IA.', 'aviso'); return; }
+    if (!paciente) { notificar('Salve o laudo pelo menos uma vez (botão "Atualizar Relatório") antes de importar escalas com IA.', 'aviso'); return; }
     const catalogo = catalogoParaIA();
     catalogo.campos = catalogo.campos.filter((c) => ESCALAS_PARA_IA.test(c.id));
     catalogo.contexto = 'Portage: os itens listados são os da faixa etária do paciente.';
@@ -3150,7 +3303,7 @@ function mostrarPreviaDoLaudo(html){
       notificar(primeiraVez
         ? 'Laudo salvo no histórico do paciente. A partir de agora, cada alteração é salva sozinha.'
         : 'Laudo e relatório atualizados no sistema.', 'sucesso');
-      botao.textContent = 'Salvar laudo';
+      botao.textContent = 'Atualizar Relatório';
       mostrarBotaoConcluir();
     } catch (e) {
       definirStatus('Não foi possível salvar: ' + e.message, 'erro');
@@ -3216,7 +3369,7 @@ function mostrarPreviaDoLaudo(html){
     btn.type = 'button';
     btn.id = 'btnSalvarNoSistema';
     btn.className = 'botao-principal';
-    btn.textContent = 'Salvar laudo';
+    btn.textContent = 'Atualizar Relatório';
     btn.title = 'Salva o protocolo no histórico do paciente (Ctrl+S)';
     btn.onclick = salvarNoSistema;
     acoes.insertBefore(btn, acoes.firstChild);
@@ -3225,7 +3378,7 @@ function mostrarPreviaDoLaudo(html){
     status.id = 'statusBanco';
     status.className = 'status-salvamento no-print';
     status.textContent = token
-      ? 'Laudo ainda não salvo no sistema. Preencha o nome e a data de nascimento e clique em "Salvar laudo".'
+      ? 'Laudo ainda não salvo no sistema. Preencha o nome e a data de nascimento e clique em "Atualizar Relatório".'
       : 'Formulário aberto fora do sistema: os dados ficam só neste navegador. Para salvar no histórico, use o menu "Novo Atendimento" do sistema.';
     if (!token) status.classList.add('erro');
     acoes.parentNode.insertBefore(status, acoes.nextSibling);
@@ -3974,9 +4127,9 @@ function mostrarPreviaDoLaudo(html){
   // tablet, botão "Concluir" que aparece depois): o espaço reservado no fim
   // da página acompanha, para ela nunca cobrir o formulário.
   // Barra de ações: à esquerda "← Fase anterior" e "Mais opções"; à direita
-  // Pré-visualizar, PDF, Word e o primário "Salvar laudo". A ordem no DOM é a
+  // Pré-visualizar, PDF, Word e o primário "Atualizar Relatório". A ordem no DOM é a
   // mesma da tela (ordem do Tab); "Concluir", que aparece depois do primeiro
-  // salvamento, fica logo antes de "Salvar laudo".
+  // salvamento, fica logo antes de "Atualizar Relatório".
   function organizarBarraDeAcoes() {
     const acoes = document.querySelector(".acoes");
     if (!acoes) return;

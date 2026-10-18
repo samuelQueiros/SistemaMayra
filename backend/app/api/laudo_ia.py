@@ -30,9 +30,15 @@ from app.services.ai import AIConfigurationError, resolve_ai_credentials
 from app.services import laudo_ia_jobs
 from app.services.ai.agentes.extracao import ErroNaEtapaDaIA, motivo_do_erro
 from app.services.ai.erros import cota_diaria_esgotada
-from app.services.laudo_ia import CatalogoDoProtocolo, preencher_protocolo, respostas_para_answers
+from app.services.ata import pontuar_ata
+from app.services.laudo_ia import (
+    CatalogoDoProtocolo,
+    escolhas_da_profissional,
+    preencher_protocolo,
+    respostas_para_answers,
+)
 from app.services.laudo_ia_jobs import Andamento
-from app.services.pendencias import aplicar_dados_confirmados
+from app.services.pendencias import aplicar_dados_confirmados, metodos_nao_aplicados
 
 router = APIRouter(tags=["laudo-ia"])
 
@@ -48,6 +54,25 @@ def _ler_catalogo(catalogo: str) -> CatalogoDoProtocolo:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Catálogo do protocolo inválido. Recarregue a página e tente de novo.",
         ) from exc
+
+
+def _ler_lista_de_ids(valor: str | None, nome: str) -> list[str]:
+    if not valor:
+        return []
+    try:
+        ids = json.loads(valor)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Lista de {nome} inválida.") from exc
+    if not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Lista de {nome} inválida.")
+    return ids
+
+
+def _respostas_calculadas(documentos, catalogo: CatalogoDoProtocolo) -> dict:
+    """Campos que o sistema calcula a partir dos PDFs (pontuação da ATA) —
+    prevalecem sobre o que a IA preencheu."""
+    ids = {c.id for c in catalogo.campos}
+    return {chave: valor for chave, valor in pontuar_ata(documentos).items() if chave in ids}
 
 
 def _descricao_do_paciente(patient: Patient) -> str:
@@ -115,6 +140,7 @@ def _gerar_laudo(
     credenciais: dict,
     data_relatorio: date,
     cidade: str | None,
+    escolhas: dict[str, bool],
 ) -> None:
     """Roda fora da requisição (laudo_ia_jobs.executar), com sessão própria."""
     try:
@@ -133,6 +159,11 @@ def _gerar_laudo(
 
     andamento.mensagem("Salvando o laudo…")
     answers, descartados = respostas_para_answers(resultado.protocolo, catalogo)
+    answers.update(_respostas_calculadas(resultado.documentos, catalogo))
+    # Hipóteses e encaminhamentos: escolhidos pela psicóloga, nunca pela IA.
+    answers.update(escolhas)
+    # "Métodos do relatório": só as escalas que vieram nos PDFs.
+    answers["__metodosExcluidos"] = metodos_nao_aplicados(answers, {d.tipo for d in resultado.documentos})
     with Session(bind=bind) as db:
         # Dados já confirmados pela psicóloga em laudos anteriores preenchem o
         # que a IA deixou vazio (nunca sobrescrevem o que veio dos PDFs).
@@ -173,6 +204,8 @@ def criar_laudo_por_ia(
     data_relatorio: date = Form(...),
     cidade: Literal["Cidade Ocidental – GO", "Gama – DF", ""] | None = Form(default=None),
     observacoes: str | None = Form(default=None),
+    hipoteses: str | None = Form(default=None),
+    encaminhamentos: str | None = Form(default=None),
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> GeracaoIniciada:
@@ -181,6 +214,11 @@ def criar_laudo_por_ia(
     minutos e um proxy com tempo-limite curto a cortava)."""
     patient = get_patient_or_404(patient_id, db, current)
     catalogo_do_protocolo = _ler_catalogo(catalogo)
+    escolhas = escolhas_da_profissional(
+        catalogo_do_protocolo,
+        _ler_lista_de_ids(hipoteses, "hipóteses"),
+        _ler_lista_de_ids(encaminhamentos, "encaminhamentos"),
+    )
     pdfs = ler_pdfs_enviados(arquivos, MAXIMO_DE_ARQUIVOS)
     credenciais = _credenciais(db, current)
 
@@ -199,6 +237,7 @@ def criar_laudo_por_ia(
             credenciais=credenciais,
             data_relatorio=data_relatorio,
             cidade=cidade,
+            escolhas=escolhas,
         ),
     )
     return GeracaoIniciada(job_id=job["id"])
@@ -238,5 +277,6 @@ def extrair_escalas_de_pdf(
         codigo, mensagem = _erro_da_ia(exc, credenciais["provider"], credenciais["model"])
         raise HTTPException(status_code=codigo, detail=mensagem) from exc
     answers, descartados = respostas_para_answers(resultado.protocolo, catalogo_do_protocolo)
+    answers.update(_respostas_calculadas(resultado.documentos, catalogo_do_protocolo))
     answers.pop("estudoCaso", None)  # importar escalas nunca mexe no estudo de caso
     return {"respostas": answers, "lacunas": resultado.protocolo.lacunas, "descartados": descartados}

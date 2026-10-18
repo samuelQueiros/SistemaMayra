@@ -113,10 +113,7 @@ function htmlDaSecao(secao: Secao, modelo: ModeloProtocolo, r: RespostasProtocol
   const texto = textoDaSecao(secao, modelo, r)
   if (texto.trim()) partes.push(blocoDeTexto(texto))
 
-  const fotos = imagens.fotos[secao.id] ?? []
-  if (secao.tipo === 'fotos' && fotos.length) {
-    partes.push('<div class="fotos">' + fotos.map((src) => `<img src="${src}" data-mm="50" style="width:50mm">`).join('') + '</div>')
-  }
+  // As fotos não entram no meio do texto: vão todas para a galeria final.
 
   // Só o título, sem nada embaixo: a seção não entra.
   return partes.length > 1 ? partes.join('') : ''
@@ -132,12 +129,23 @@ export function htmlCabecalhoPaciente(id: Identificacao, fotoCabecalho: string |
     ['Idade cronológica', idadeCronologica(id.data_nascimento, id.data_relatorio)],
     ['Responsável', id.responsavel],
   ].filter(([, v]) => v)
+  const caixa = '<div class="cab-box">' + linhas.map(([k, v]) => `<p>${esc(k)}: ${esc(v)}</p>`).join('') + '</div>'
+  // Sem foto, o quadro fica centralizado na página.
+  return fotoCabecalho
+    ? '<table class="cab-paciente"><tr><td class="cab-foto">' +
+        `<img src="${fotoCabecalho}" data-mm="42" style="width:42mm;height:52mm">` +
+        `</td><td class="cab-espaco"></td><td class="cab-info">${caixa}</td></tr></table>`
+    : `<table class="cab-paciente"><tr><td class="cab-info">${caixa}</td></tr></table>`
+}
+
+// Galeria "Registros dos atendimentos": todas as fotos numa página própria,
+// depois da assinatura (modelo do relatório).
+export function htmlGaleria(fotos: string[]): string {
+  if (!fotos.length) return ''
   return (
-    '<table class="cab-paciente"><tr><td class="cab-foto">' +
-    (fotoCabecalho ? `<img src="${fotoCabecalho}" data-mm="42" style="width:42mm;height:52mm">` : '') +
-    '</td><td class="cab-espaco"></td><td class="cab-info"><div class="cab-box">' +
-    linhas.map(([k, v]) => `<p>${esc(k)}: ${esc(v)}</p>`).join('') +
-    '</div></td></tr></table>'
+    '<div class="quebra"></div><h2>REGISTROS DOS ATENDIMENTOS</h2><div class="galeria">' +
+    fotos.map((src) => `<img src="${src}" data-mm="78" style="width:78mm;height:58.5mm">`).join('') +
+    '</div>'
   )
 }
 
@@ -145,9 +153,10 @@ export function htmlFaixaTitulo(titulo: string): string {
   return `<div class="faixa centro">${esc(titulo).replace(/\r?\n/g, '<br>')}</div>`
 }
 
-// "Sobre a profissional", local/data e assinatura — sempre em página nova.
+// "Sobre a profissional", local/data e assinatura, na sequência do texto
+// (sem página em branco antes).
 export function htmlFechamento(id: Identificacao, perfil: Perfil): string {
-  const partes = ['<div class="quebra"></div>']
+  const partes: string[] = []
   if (perfil.bio) {
     partes.push(
       `<div class="caixa-cinza clara"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>${esc(perfil.bio)}</p></div>`,
@@ -197,6 +206,7 @@ export function montarDocumento(
     partes.push(htmlDaSecao(secao, modelo, r, imagens))
   }
   partes.push(htmlFechamento(id, perfil))
+  partes.push(htmlGaleria(modelo.secoes.flatMap((secao) => imagens.fotos[secao.id] ?? [])))
   return htmlDocumento(id.nome, imagens, partes.join(''))
 }
 
@@ -221,7 +231,7 @@ export async function gerarDocumento(modelo: ModeloProtocolo, r: RespostasProtoc
     if (secao.tipo === 'fotos') {
       const originais = (r.fotos[secao.id] ?? []).map((f) => f.src)
       primeiraFoto ??= originais[0] ?? null
-      fotos[secao.id] = (await Promise.all(originais.map((src) => prepararFoto(src)))).filter((s): s is string => !!s)
+      fotos[secao.id] = (await Promise.all(originais.map((src) => prepararFoto(src, 4 / 3)))).filter((s): s is string => !!s)
     }
     if (secao.tipo === 'escala' && secao.escala && secao.escala.grafico === 'barras' && secao.relatorio.mostrar) {
       graficos[secao.id] = graficoDaEscala(secao.titulo, secao.escala, r.escalas[secao.id])

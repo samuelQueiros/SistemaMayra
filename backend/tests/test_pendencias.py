@@ -373,3 +373,33 @@ def test_remove_metodos_preservando_respostas_e_permite_reincluir(client, laudo)
     resultado = client.put(url, json={'escalas': []}, headers=headers).json()
     assert _grupo(resultado, 'escala_cars') is not None
     assert _grupo(resultado, 'escala_ata') is not None
+
+
+def test_idade_do_desfralde_e_essencial_quando_houve_desfralde():
+    assert "desfraldeAno" in IDS
+
+    def item(answers):
+        grupo = _grupo(_montar(answers), "desenvolvimento")
+        return next((i for i in grupo["itens"] if i["chave"] == "desfraldeAno"), None) if grupo else None
+
+    desfraldou = item({"desfralde": "Controle Total"})
+    assert desfraldou is not None and desfraldou["essencial"]
+    assert [c["id"] for c in desfraldou["campos"]] == ["desfraldeAno", "desfraldeMes"]  # ano e mês juntos
+    assert item({"desfralde": "Em Processo"}) is None  # ainda não desfraldou: não pergunta
+
+
+def test_metodos_nao_aplicados_seguem_os_pdfs_e_as_respostas():
+    from app.services.pendencias import metodos_nao_aplicados
+
+    assert metodos_nao_aplicados({}, {"ata"}) == ["cars", "snap", "tod", "portage", "mchat"]
+    assert metodos_nao_aplicados({"tod_0": "1", "snap_3": ""}, {"formulario"}) == ["ata", "cars", "snap", "portage", "mchat"]
+
+
+def test_irmaos_quando_nao_e_filho_unico():
+    def item(answers):
+        grupo = _grupo(_montar(answers), "desenvolvimento")
+        return next((i for i in grupo["itens"] if i["chave"] == "filhoUnicoDescricao"), None) if grupo else None
+
+    irmaos = item({"filhoUnico": "Não"})
+    assert irmaos is not None and irmaos["essencial"] and irmaos["rotulo"] == "Irmãos — idade e se tem laudo"
+    assert item({"filhoUnico": "Sim"}) is None

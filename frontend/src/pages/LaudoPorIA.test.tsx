@@ -60,7 +60,7 @@ describe('Relatório por IA', () => {
     mensagemDoFormulario({ tipo: 'laudo-ia:catalogo', catalogo })
 
     expect(await screen.findByTitle('Gerando o laudo')).toHaveAttribute('src', '/formulario-novo-paciente.html?laudo=l1&modo=gerar')
-    expect(laudoIA.gerarLaudoPorIA).toHaveBeenCalledWith('p1', [pdf], '', catalogo, expect.any(Function), '2026-10-15', 'Gama – DF')
+    expect(laudoIA.gerarLaudoPorIA).toHaveBeenCalledWith('p1', [pdf], '', catalogo, expect.any(Function), '2026-10-15', 'Gama – DF', { hipoteses: [], encaminhamentos: [] })
     mensagemDoFormulario({ tipo: 'laudo-ia:gerado', laudoId: 'l1' })
 
     expect(await screen.findByText('Laudo gerado')).toBeInTheDocument()

@@ -47,6 +47,13 @@ const FALHAS_PASSAGEIRAS_TOLERADAS = 5
 const esperar = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // Começa a geração e acompanha até o fim; devolve o id do laudo criado.
+// Hipóteses diagnósticas e encaminhamentos marcados pela psicóloga (ids das
+// caixas do formulário padrão — ver src/laudo/hipotesesCid.ts).
+export interface EscolhasDaProfissional {
+  hipoteses: string[]
+  encaminhamentos: string[]
+}
+
 export async function gerarLaudoPorIA(
   patientId: string,
   arquivos: File[],
@@ -55,6 +62,7 @@ export async function gerarLaudoPorIA(
   aoProgredir: ((andamento: AndamentoDoLaudoIA) => void) | undefined,
   dataRelatorio: string,
   cidade: string,
+  escolhas: EscolhasDaProfissional = { hipoteses: [], encaminhamentos: [] },
 ): Promise<{ id: string }> {
   const dados = new FormData()
   dados.append('data_relatorio', dataRelatorio)
@@ -62,6 +70,8 @@ export async function gerarLaudoPorIA(
   arquivos.forEach((a) => dados.append('arquivos', a))
   dados.append('catalogo', JSON.stringify(catalogo))
   if (observacoes.trim()) dados.append('observacoes', observacoes.trim())
+  dados.append('hipoteses', JSON.stringify(escolhas.hipoteses))
+  dados.append('encaminhamentos', JSON.stringify(escolhas.encaminhamentos))
   const { job_id } = await enviarFormulario<{ job_id: string }>(`/patients/${patientId}/laudo-ia`, dados)
   return acompanharGeracao(job_id, aoProgredir)
 }

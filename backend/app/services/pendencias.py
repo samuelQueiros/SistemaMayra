@@ -44,7 +44,12 @@ SECOES = (
              "usoMedicamentosGestacao", "sofrimentoFetal"}
         ),
     ),
-    Secao("3", "desenvolvimento", "Desenvolvimento", frozenset({"filhoUnico", "convivenciaSocial", "andouAno", "falouAno", "desfralde"})),
+    Secao(
+        "3",
+        "desenvolvimento",
+        "Desenvolvimento",
+        frozenset({"filhoUnico", "filhoUnicoDescricao", "convivenciaSocial", "andouAno", "falouAno", "desfralde", "desfraldeAno"}),
+    ),
     Secao(
         "4",
         "historico",
@@ -78,6 +83,19 @@ ESCALAS = (
     Escala("portage", "Portage", re.compile(r"^portage_"), frozenset({"portage"})),
     Escala("mchat", "M-CHAT", re.compile(r"^mchat_\d+$"), frozenset({"m_chat"})),
 )
+
+
+def metodos_nao_aplicados(answers: dict, tipos_de_documento: set[str]) -> list[str]:
+    """Escalas sem PDF próprio e sem nenhuma resposta: saem dos "Métodos do
+    relatório" (a psicóloga pode marcá-las de volta nas pendências)."""
+    return [
+        e.chave
+        for e in ESCALAS
+        if not tipos_de_documento & e.tipos_de_documento
+        and not any(e.padrao.match(chave) and not _vazio(valor) for chave, valor in answers.items())
+    ]
+
+
 # Percentuais da tabela da ATA: complementam a escala, opcionais.
 _ATA_PERCENTUAIS = re.compile(r"^ata_perc_\d+$")
 # Preenchidos pelo próprio formulário a partir dos itens.
@@ -87,6 +105,10 @@ _CALCULADOS = frozenset({"ataPercentual", "carsPercentualFalhas"})
 _CONDICOES = {
     "idadeLaudoAno": ("laudoAnterior", {"Sim"}),
     "idadeLaudoMes": ("laudoAnterior", {"Sim"}),
+    # Irmãos (idade e laudo): pergunta-se quando NÃO é filho único.
+    "filhoUnicoDescricao": ("filhoUnico", {"Não"}),
+    "desfraldeAno": ("desfralde", {"Controle Total", "Controle Diurno", "Escapes"}),
+    "desfraldeMes": ("desfralde", {"Controle Total", "Controle Diurno", "Escapes"}),
 }
 _SUFIXO_DESCRICAO = "Descricao"
 
@@ -170,11 +192,11 @@ class Pendencias:
     def _relevante(self, campo: CampoDoCatalogo) -> bool:
         if campo.tipo == "marcar" or campo.id in _CALCULADOS:
             return False
-        if campo.id.endswith(_SUFIXO_DESCRICAO):
-            return self.valor(campo.id[: -len(_SUFIXO_DESCRICAO)]) == "Sim"
         condicao = _CONDICOES.get(campo.id)
         if condicao:
             return self.valor(condicao[0]) in condicao[1]
+        if campo.id.endswith(_SUFIXO_DESCRICAO):
+            return self.valor(campo.id[: -len(_SUFIXO_DESCRICAO)]) == "Sim"
         return True
 
     # -- montagem -------------------------------------------------------------
@@ -202,7 +224,9 @@ class Pendencias:
                     dono["campos"].append(_subcampo(campo))
                     continue
             rotulo = f"{campo.grupo} — {campo.rotulo}" if campo.grupo else campo.rotulo
-            if campo.id.endswith(_SUFIXO_DESCRICAO):
+            if campo.id == "filhoUnicoDescricao":
+                rotulo = "Irmãos — idade e se tem laudo"
+            elif campo.id.endswith(_SUFIXO_DESCRICAO):
                 rotulo = rotulo.replace("— descrição (se Sim)", "— descreva").strip()
             elif campo.tipo == "texto" and any(i["rotulo"] == rotulo for i in itens):
                 rotulo += " — observações"
