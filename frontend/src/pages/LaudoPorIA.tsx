@@ -10,6 +10,7 @@ import type { AndamentoDoLaudoIA, CatalogoDoProtocolo, LaudoPorIA as Laudo } fro
 import { downloadReportDocx, downloadReportPdf, getReport, getReportResumo } from '../api/reports'
 import { Alert, Button, buttonClass, Card, Input, Select, PageHeader, Textarea } from '../components/ds'
 import { EscolhaDePaciente } from '../components/pacientes/EscolhaDePaciente'
+import { EscolhasDoLaudo } from '../components/EscolhasDoLaudo'
 import { SeletorDePdfs } from '../components/SeletorDePdfs'
 import { CamposQueFaltam } from '../components/pendencias/CamposQueFaltam'
 
@@ -51,6 +52,8 @@ export default function LaudoPorIA() {
   const [dataRelatorio, setDataRelatorio] = useState('')
   const [cidade, setCidade] = useState('')
   const [observacoes, setObservacoes] = useState('')
+  const [hipoteses, setHipoteses] = useState<string[]>([])
+  const [encaminhamentos, setEncaminhamentos] = useState<string[]>([])
   const [etapa, setEtapa] = useState<Etapa>('preencher')
   const [erro, setErro] = useState<string | null>(null)
   const [andamento, setAndamento] = useState<AndamentoDoLaudoIA | null>(null)
@@ -180,7 +183,7 @@ export default function LaudoPorIA() {
       const { catalogo } = await esperarFormulario(`/formulario-novo-paciente.html?paciente=${pacienteId}&modo=catalogo`, 'laudo-ia:catalogo', 30000)
       if (!catalogo) throw new Error('Não foi possível ler os campos do protocolo.')
       setEtapa('ia')
-      const novo = await gerarLaudoPorIA(pacienteId, arquivos, observacoes, catalogo, setAndamento, dataRelatorio, cidade)
+      const novo = await gerarLaudoPorIA(pacienteId, arquivos, observacoes, catalogo, setAndamento, dataRelatorio, cidade, { hipoteses, encaminhamentos })
       criado = novo.id
       setEtapa('documento')
       await esperarFormulario(`/formulario-novo-paciente.html?laudo=${novo.id}&modo=gerar`, 'laudo-ia:gerado', 120000)
@@ -250,6 +253,18 @@ export default function LaudoPorIA() {
         />
 
         {pacienteId && !cadastrando && etapa !== 'pronto' && (
+          <Card title="Hipóteses e encaminhamentos" subtitle="Marque antes de enviar os documentos. Elas saem no final do relatório exatamente como marcadas — a IA não escolhe hipóteses nem encaminhamentos.">
+            <EscolhasDoLaudo
+              hipoteses={hipoteses}
+              encaminhamentos={encaminhamentos}
+              onHipoteses={setHipoteses}
+              onEncaminhamentos={setEncaminhamentos}
+              desabilitado={ocupado}
+            />
+          </Card>
+        )}
+
+        {pacienteId && !cadastrando && etapa !== 'pronto' && (
           <Card title="PDFs do paciente" subtitle={`De 1 a ${MAXIMO_DE_PDFS_LAUDO} PDFs: respostas do Google Forms (responsáveis, escola) e escalas pontuadas. Cada escala enviada gera o seu gráfico no laudo.`}>
             <div style={{ display: 'grid', gap: 'var(--s-4)' }}>
               <div className="form-grid">
@@ -284,7 +299,7 @@ export default function LaudoPorIA() {
                   {erro}
                   {laudoSemDocumento && (
                     <>
-                      {' '}O laudo foi criado com as respostas da IA: <Link to={`/atendimento/novo?laudo=${laudoSemDocumento}`}>abra no formulário</Link> e clique em "Salvar laudo" para gerar o documento.
+                      {' '}O laudo foi criado com as respostas da IA: <Link to={`/atendimento/novo?laudo=${laudoSemDocumento}`}>abra no formulário</Link> e clique em "Atualizar Relatório" para gerar o documento.
                     </>
                   )}
                 </Alert>
