@@ -19,15 +19,15 @@ const escolhas = () => JSON.parse(screen.getByTestId('escolhas').textContent || 
 describe('EscolhasDoLaudo', () => {
   it('abre os subtipos ao marcar a hipótese e os desmarca junto com ela', () => {
     render(<Tela />)
-    expect(screen.queryByRole('group', { name: /Subtipos de TEA/ })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByLabelText(/^TEA – Transtorno do Espectro Autista/))
+    expect(screen.queryByRole('group', { name: /Subtipos de Transtorno do Espectro Autista/ })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText(/^Transtorno do Espectro Autista – TEA/))
     fireEvent.click(screen.getByLabelText(/6A02\.0/))
-    fireEvent.click(screen.getByLabelText(/^TOD/))
+    fireEvent.click(screen.getByLabelText(/^Transtorno Opositor Desafiador – TOD/))
     fireEvent.click(screen.getByLabelText('Fonoaudiologia'))
     expect(escolhas()).toEqual({ hipoteses: ['hip_tea', 'hip_tea_6a02_0', 'hip_tod'], encaminhamentos: ['enc_fonoaudiologia'] })
 
-    fireEvent.click(screen.getByLabelText(/^TEA – Transtorno do Espectro Autista/))
+    fireEvent.click(screen.getByLabelText(/^Transtorno do Espectro Autista – TEA/))
     expect(escolhas().hipoteses).toEqual(['hip_tod'])
-    expect(screen.queryByRole('group', { name: /Subtipos de TEA/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: /Subtipos de Transtorno do Espectro Autista/ })).not.toBeInTheDocument()
   })
 })

@@ -57,9 +57,9 @@ it('cabeçalho, metodologia, destaques e final no modelo do relatório', async (
 
   // Hipóteses: todas as marcadas, pelo subtipo quando houver
   expect(doc).toContain('Hipóteses e/ou Confirmações Diagnósticas:')
-  expect(doc).toContain('TEA sem deficiência intelectual e com linguagem funcional preservada')
-  expect(doc).toContain('TOD – Transtorno Opositivo Desafiador')
-  expect(doc).not.toContain('TEA – Transtorno do Espectro Autista</strong>')
+  expect(doc).toContain('TEA sem deficiência intelectual e linguagem funcional preservada')
+  expect(doc).toContain('Transtorno Opositor Desafiador – TOD')
+  expect(doc).not.toContain('Transtorno do Espectro Autista – TEA</strong>')
   expect(doc).toContain('<li>Fonoaudiologia</li>')
 
   // Fora do documento
@@ -81,6 +81,13 @@ it('cabeçalho, metodologia, destaques e final no modelo do relatório', async (
   expect(fotosNaGaleria).toContain('FOTO2')
   // Sem fotos no meio do texto: só a do cabeçalho antes da galeria
   expect(doc.slice(0, galeria).split('FOTO2').length).toBe(1)
+})
+
+it('laudos antigos com DI ou aprendizagem sem grau usam a opção não especificada', async () => {
+  w.aplicarDados({ nomePaciente: 'Paciente Antigo', hip_di: true, hip_ta: true })
+  const doc = await w.gerarDocumentoLaudoHTML()
+  expect(doc).toContain('Deficiência intelectual não especificada')
+  expect(doc).toContain('Transtorno da aprendizagem não especificado')
 })
 
 it('M-CHAT entra no lugar do SNAP-IV dos 16 aos 30 meses', async () => {

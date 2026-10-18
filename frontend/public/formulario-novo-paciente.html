@@ -425,53 +425,44 @@ input[type=file]:focus-visible::file-selector-button{box-shadow:var(--focus-ring
 
 
 <h2>9. Hipóteses Diagnósticas Investigadas</h2>
-<div class="aviso">Marque uma ou mais hipóteses (tabela CID-10 × CID-11). Ao marcar TEA, TDAH, DI, linguagem ou aprendizagem, abrem os subtipos: marque os que se aplicam. O relatório lista todas as marcadas — o subtipo, quando houver.</div>
+<div class="aviso">Marque uma ou mais hipóteses (tabela CID-10 × CID-11 – Consulta Rápida NeuroPP). Ao marcar TEA ou TDAH, abrem os subtipos: marque os que se aplicam. O relatório lista todas as marcadas — o subtipo, quando houver.</div>
 <div class="bloco">
-<h3>TEA – Transtorno do Espectro Autista</h3>
-<label><input type="checkbox" class="hipotese" id="hip_tea" value="TEA – Transtorno do Espectro Autista (CID-11 6A02 / CID-10 F84.0 / F84.1 / F84.5 / F84.9)"> TEA – Transtorno do Espectro Autista (CID-11 6A02 / CID-10 F84.0 / F84.1 / F84.5 / F84.9)</label>
+<h3>1. TEA – Transtorno do Espectro Autista</h3>
+<label><input type="checkbox" class="hipotese" id="hip_tea" value="Transtorno do Espectro Autista – TEA (CID-11 6A02 / CID-10 F84.0 / F84.1 / F84.5 / F84.9)"> Transtorno do Espectro Autista – TEA (CID-11 6A02 / CID-10 F84.0 / F84.1 / F84.5 / F84.9)</label>
 <div class="hipotese-subtipos" data-pai="hip_tea">
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_0" value="TEA sem deficiência intelectual e com linguagem funcional preservada (CID-11 6A02.0 / CID-10 F84.x)"> TEA sem deficiência intelectual e com linguagem funcional preservada (CID-11 6A02.0 / CID-10 F84.x)</label>
+<label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_0" value="TEA sem deficiência intelectual e linguagem funcional preservada (CID-11 6A02.0 / CID-10 F84.x)"> TEA sem deficiência intelectual e linguagem funcional preservada (CID-11 6A02.0 / CID-10 F84.x)</label>
 <label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_1" value="TEA com deficiência intelectual e linguagem funcional preservada (CID-11 6A02.1 / CID-10 F84.x + F70–F79)"> TEA com deficiência intelectual e linguagem funcional preservada (CID-11 6A02.1 / CID-10 F84.x + F70–F79)</label>
 <label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_2" value="TEA sem deficiência intelectual e com prejuízo da linguagem funcional (CID-11 6A02.2 / CID-10 F84.x)"> TEA sem deficiência intelectual e com prejuízo da linguagem funcional (CID-11 6A02.2 / CID-10 F84.x)</label>
 <label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_3" value="TEA com deficiência intelectual e prejuízo da linguagem funcional (CID-11 6A02.3 / CID-10 F84.x + F70–F79)"> TEA com deficiência intelectual e prejuízo da linguagem funcional (CID-11 6A02.3 / CID-10 F84.x + F70–F79)</label>
 <label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_5" value="TEA com deficiência intelectual e ausência/quase ausência de linguagem funcional (CID-11 6A02.5 / CID-10 F84.x + F70–F79)"> TEA com deficiência intelectual e ausência/quase ausência de linguagem funcional (CID-11 6A02.5 / CID-10 F84.x + F70–F79)</label>
 <label><input type="checkbox" class="hipotese-sub" data-pai="hip_tea" id="hip_tea_6a02_z" value="TEA não especificado (CID-11 6A02.Z / CID-10 F84.9)"> TEA não especificado (CID-11 6A02.Z / CID-10 F84.9)</label>
 </div>
-<h3>TDAH e Deficiência Intelectual</h3>
-<label><input type="checkbox" class="hipotese" id="hip_tdah" value="TDAH – Transtorno do Déficit de Atenção e Hiperatividade (CID-11 6A05 / CID-10 F90.0)"> TDAH – Transtorno do Déficit de Atenção e Hiperatividade (CID-11 6A05 / CID-10 F90.0)</label>
+<h3>2. TDAH e Deficiência Intelectual</h3>
+<label><input type="checkbox" class="hipotese" id="hip_tdah" value="TDAH (CID-11 6A05 / CID-10 F90.0)"> TDAH (CID-11 6A05 / CID-10 F90.0)</label>
 <div class="hipotese-subtipos" data-pai="hip_tdah">
 <label><input type="checkbox" class="hipotese-sub" data-pai="hip_tdah" id="hip_tdah_6a05_0" value="TDAH predominantemente desatento (CID-11 6A05.0 / CID-10 F90.0)"> TDAH predominantemente desatento (CID-11 6A05.0 / CID-10 F90.0)</label>
 <label><input type="checkbox" class="hipotese-sub" data-pai="hip_tdah" id="hip_tdah_6a05_1" value="TDAH predominantemente hiperativo/impulsivo (CID-11 6A05.1 / CID-10 F90.0)"> TDAH predominantemente hiperativo/impulsivo (CID-11 6A05.1 / CID-10 F90.0)</label>
 <label><input type="checkbox" class="hipotese-sub" data-pai="hip_tdah" id="hip_tdah_6a05_2" value="TDAH combinado (CID-11 6A05.2 / CID-10 F90.0)"> TDAH combinado (CID-11 6A05.2 / CID-10 F90.0)</label>
 </div>
-<label><input type="checkbox" class="hipotese" id="hip_di" value="DI – Deficiência Intelectual (Transtorno do Desenvolvimento Intelectual) (CID-11 6A00 / CID-10 F70–F79)"> DI – Deficiência Intelectual (Transtorno do Desenvolvimento Intelectual) (CID-11 6A00 / CID-10 F70–F79)</label>
-<div class="hipotese-subtipos" data-pai="hip_di">
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_di" id="hip_di_6a00_0" value="Deficiência intelectual leve (CID-11 6A00.0 / CID-10 F70)"> Deficiência intelectual leve (CID-11 6A00.0 / CID-10 F70)</label>
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_di" id="hip_di_6a00_1" value="Deficiência intelectual moderada (CID-11 6A00.1 / CID-10 F71)"> Deficiência intelectual moderada (CID-11 6A00.1 / CID-10 F71)</label>
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_di" id="hip_di_6a00_2" value="Deficiência intelectual grave (CID-11 6A00.2 / CID-10 F72)"> Deficiência intelectual grave (CID-11 6A00.2 / CID-10 F72)</label>
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_di" id="hip_di_6a00_3" value="Deficiência intelectual profunda (CID-11 6A00.3 / CID-10 F73)"> Deficiência intelectual profunda (CID-11 6A00.3 / CID-10 F73)</label>
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_di" id="hip_di_6a00_z" value="Deficiência intelectual não especificada (CID-11 6A00.Z / CID-10 F79)"> Deficiência intelectual não especificada (CID-11 6A00.Z / CID-10 F79)</label>
-</div>
-<h3>Linguagem e Aprendizagem</h3>
-<label><input type="checkbox" class="hipotese" id="hip_linguagem" value="Transtorno do Desenvolvimento da Fala ou da Linguagem (CID-11 6A01 / CID-10 F80)"> Transtorno do Desenvolvimento da Fala ou da Linguagem (CID-11 6A01 / CID-10 F80)</label>
-<div class="hipotese-subtipos" data-pai="hip_linguagem">
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_linguagem" id="hip_linguagem_6a01_0" value="Transtorno dos sons da fala / fonológico (CID-11 6A01.0 / CID-10 F80.0)"> Transtorno dos sons da fala / fonológico (CID-11 6A01.0 / CID-10 F80.0)</label>
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_linguagem" id="hip_linguagem_6a01_21" value="Transtorno de linguagem expressiva (CID-11 6A01.21 / CID-10 F80.1)"> Transtorno de linguagem expressiva (CID-11 6A01.21 / CID-10 F80.1)</label>
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_linguagem" id="hip_linguagem_6a01_20" value="Transtorno de linguagem receptiva e expressiva (CID-11 6A01.20 / CID-10 F80.2)"> Transtorno de linguagem receptiva e expressiva (CID-11 6A01.20 / CID-10 F80.2)</label>
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_linguagem" id="hip_linguagem_6a01_22" value="Alteração predominantemente pragmática da linguagem (CID-11 6A01.22)"> Alteração predominantemente pragmática da linguagem (CID-11 6A01.22)</label>
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_linguagem" id="hip_linguagem_6a01_z" value="Transtorno de linguagem não especificado (CID-11 6A01.Z / CID-10 F80.9)"> Transtorno de linguagem não especificado (CID-11 6A01.Z / CID-10 F80.9)</label>
-</div>
-<label><input type="checkbox" class="hipotese" id="hip_ta" value="Transtorno do Desenvolvimento da Aprendizagem (CID-11 6A03 / CID-10 F81)"> Transtorno do Desenvolvimento da Aprendizagem (CID-11 6A03 / CID-10 F81)</label>
-<div class="hipotese-subtipos" data-pai="hip_ta">
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_ta" id="hip_ta_6a03_0" value="Transtorno específico da leitura / dislexia (CID-11 6A03.0 / CID-10 F81.0)"> Transtorno específico da leitura / dislexia (CID-11 6A03.0 / CID-10 F81.0)</label>
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_ta" id="hip_ta_6a03_1" value="Transtorno da expressão escrita (CID-11 6A03.1 / CID-10 F81.1 / F81.8)"> Transtorno da expressão escrita (CID-11 6A03.1 / CID-10 F81.1 / F81.8)</label>
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_ta" id="hip_ta_6a03_2" value="Transtorno da matemática / discalculia (CID-11 6A03.2 / CID-10 F81.2)"> Transtorno da matemática / discalculia (CID-11 6A03.2 / CID-10 F81.2)</label>
-<label><input type="checkbox" class="hipotese-sub" data-pai="hip_ta" id="hip_ta_6a03_z" value="Transtorno da aprendizagem não especificado (CID-11 6A03.Z / CID-10 F81.9)"> Transtorno da aprendizagem não especificado (CID-11 6A03.Z / CID-10 F81.9)</label>
-</div>
-<h3>Outros</h3>
-<label><input type="checkbox" class="hipotese" id="hip_coordenacao" value="Transtorno do Desenvolvimento da Coordenação Motora (CID-11 6A04 / CID-10 F82)"> Transtorno do Desenvolvimento da Coordenação Motora (CID-11 6A04 / CID-10 F82)</label>
-<label><input type="checkbox" class="hipotese" id="hip_tod" value="TOD – Transtorno Opositivo Desafiador (CID-11 6C90 / CID-10 F91.3)"> TOD – Transtorno Opositivo Desafiador (CID-11 6C90 / CID-10 F91.3)</label>
-<label><input type="checkbox" class="hipotese" id="hip_conduta" value="Transtorno de Conduta (CID-11 6C91 / CID-10 F91.x)"> Transtorno de Conduta (CID-11 6C91 / CID-10 F91.x)</label>
+<label><input type="checkbox" class="hipotese" id="hip_di_6a00_0" value="Deficiência intelectual leve (CID-11 6A00.0 / CID-10 F70)"> Deficiência intelectual leve (CID-11 6A00.0 / CID-10 F70)</label>
+<label><input type="checkbox" class="hipotese" id="hip_di_6a00_1" value="Deficiência intelectual moderada (CID-11 6A00.1 / CID-10 F71)"> Deficiência intelectual moderada (CID-11 6A00.1 / CID-10 F71)</label>
+<label><input type="checkbox" class="hipotese" id="hip_di_6a00_2" value="Deficiência intelectual grave (CID-11 6A00.2 / CID-10 F72)"> Deficiência intelectual grave (CID-11 6A00.2 / CID-10 F72)</label>
+<label><input type="checkbox" class="hipotese" id="hip_di_6a00_3" value="Deficiência intelectual profunda (CID-11 6A00.3 / CID-10 F73)"> Deficiência intelectual profunda (CID-11 6A00.3 / CID-10 F73)</label>
+<label><input type="checkbox" class="hipotese" id="hip_di_6a00_z" value="Deficiência intelectual não especificada (CID-11 6A00.Z / CID-10 F79)"> Deficiência intelectual não especificada (CID-11 6A00.Z / CID-10 F79)</label>
+<h3>3. Linguagem e Aprendizagem</h3>
+<label><input type="checkbox" class="hipotese" id="hip_linguagem_6a01_0" value="Transtorno dos sons da fala / fonológico (CID-11 6A01.0 / CID-10 F80.0)"> Transtorno dos sons da fala / fonológico (CID-11 6A01.0 / CID-10 F80.0)</label>
+<label><input type="checkbox" class="hipotese" id="hip_linguagem_6a01_21" value="Transtorno de linguagem expressiva (CID-11 6A01.21 / CID-10 F80.1)"> Transtorno de linguagem expressiva (CID-11 6A01.21 / CID-10 F80.1)</label>
+<label><input type="checkbox" class="hipotese" id="hip_linguagem_6a01_20" value="Transtorno de linguagem receptiva e expressiva (CID-11 6A01.20 / CID-10 F80.2)"> Transtorno de linguagem receptiva e expressiva (CID-11 6A01.20 / CID-10 F80.2)</label>
+<label><input type="checkbox" class="hipotese" id="hip_linguagem_6a01_22" value="Alteração predominantemente pragmática da linguagem (CID-11 6A01.22)"> Alteração predominantemente pragmática da linguagem (CID-11 6A01.22)</label>
+<label><input type="checkbox" class="hipotese" id="hip_linguagem_6a01_z" value="Transtorno de linguagem não especificado (CID-11 6A01.Z / CID-10 F80.9)"> Transtorno de linguagem não especificado (CID-11 6A01.Z / CID-10 F80.9)</label>
+<label><input type="checkbox" class="hipotese" id="hip_ta_6a03_0" value="Transtorno específico da leitura / dislexia (CID-11 6A03.0 / CID-10 F81.0)"> Transtorno específico da leitura / dislexia (CID-11 6A03.0 / CID-10 F81.0)</label>
+<label><input type="checkbox" class="hipotese" id="hip_ta_6a03_1" value="Transtorno da expressão escrita (CID-11 6A03.1 / CID-10 F81.1 / F81.8)"> Transtorno da expressão escrita (CID-11 6A03.1 / CID-10 F81.1 / F81.8)</label>
+<label><input type="checkbox" class="hipotese" id="hip_ta_6a03_2" value="Transtorno da matemática / discalculia (CID-11 6A03.2 / CID-10 F81.2)"> Transtorno da matemática / discalculia (CID-11 6A03.2 / CID-10 F81.2)</label>
+<label><input type="checkbox" class="hipotese" id="hip_ta_6a03_z" value="Transtorno da aprendizagem não especificado (CID-11 6A03.Z / CID-10 F81.9)"> Transtorno da aprendizagem não especificado (CID-11 6A03.Z / CID-10 F81.9)</label>
+<h3>4. Outros</h3>
+<label><input type="checkbox" class="hipotese" id="hip_coordenacao" value="Transtorno do desenvolvimento da coordenação motora (CID-11 6A04 / CID-10 F82)"> Transtorno do desenvolvimento da coordenação motora (CID-11 6A04 / CID-10 F82)</label>
+<label><input type="checkbox" class="hipotese" id="hip_tod" value="Transtorno Opositor Desafiador – TOD (CID-11 6C90 / CID-10 F91.3)"> Transtorno Opositor Desafiador – TOD (CID-11 6C90 / CID-10 F91.3)</label>
+<label><input type="checkbox" class="hipotese" id="hip_conduta" value="Transtorno de conduta (CID-11 6C91 / CID-10 F91.x)"> Transtorno de conduta (CID-11 6C91 / CID-10 F91.x)</label>
 <label><input type="checkbox" class="hipotese" id="hip_tpac" value="TPAC – Transtorno do Processamento Auditivo Central"> TPAC – Transtorno do Processamento Auditivo Central</label>
 </div>
 <label>Hipóteses Como Devem Sair No Relatório (Opcional — Uma Por Linha; Substitui As Marcadas Acima)</label><textarea id="hipotesesTexto" placeholder="Ex.:&#10;TDAH - Transtorno de Déficit de Atenção Hiperatividade, combinada (CID 11 6A05.2)&#10;TPAC - Transtorno do Processamento Auditivo Central (CID 10 H93)"></textarea>
@@ -796,7 +787,8 @@ const HIPOTESES_QUADRO = [
   {chave:"TDAH", rotulo:"TDAH", padrao:/TDAH|d[ée]ficit de aten/i},
   {chave:"TEA",  rotulo:"TEA", padrao:/\bTEA\b|autis/i},
   {chave:"DI",   rotulo:"DI", padrao:/\bDI\b|intelectual/i},
-  {chave:"TA",   rotulo:"Transtorno Da Aprendizagem", padrao:/aprendizagem/i},
+  {chave:"TA",   rotulo:"Transtorno Da Aprendizagem", padrao:/aprendizagem|leitura|dislexia|express[ãa]o escrita|matem[áa]tica|discalculia/i},
+  {chave:"LING", rotulo:"Transtorno Da Linguagem", padrao:/linguagem|sons da fala|fonol[óo]gico/i},
   {chave:"TOD",  rotulo:"TOD", padrao:/\bTOD\b|opositi?or/i},
   {chave:"TPAC", rotulo:"TPAC", padrao:/TPAC|processamento auditivo/i}
 ];
@@ -806,6 +798,7 @@ const NOMES_DAS_HIPOTESES = {
   TDAH:"Transtorno do Déficit de Atenção e Hiperatividade – TDAH",
   DI:"Deficiência Intelectual – DI",
   TA:"Transtorno da Aprendizagem",
+  LING:"Transtorno da Linguagem",
   TOD:"Transtorno Opositor Desafiador – TOD",
   TPAC:"Transtorno do Processamento Auditivo Central – TPAC"
 };
@@ -1442,7 +1435,14 @@ function migrarQuadroAntigo(dados){
   renderizarQuadroHipotese(primeira.chave,primeira.rotulo,linhas);
   sincronizarQuadros();
 }
+// Caixas antigas de DI e aprendizagem (sem grau): viram a opção "não
+// especificada" da tabela CID-10 × CID-11.
+const HIPOTESES_ANTIGAS={hip_di:"hip_di_6a00_z",hip_ta:"hip_ta_6a03_z"};
 function aplicarDados(dados){
+  Object.entries(HIPOTESES_ANTIGAS).forEach(([antiga,nova])=>{
+    const prefixo=nova.slice(0,nova.lastIndexOf("_")+1);
+    if(dados[antiga]&&!Object.keys(dados).some(k=>k.startsWith(prefixo)&&dados[k]))dados[nova]=true;
+  });
   dados=dados||{};
   if(Array.isArray(dados.__metodosExcluidos))metodosExcluidos=dados.__metodosExcluidos;
   if(Array.isArray(dados.__fotosPacienteDados)){fotosPacienteDados=dados.__fotosPacienteDados;renderizarFotosPaciente();}

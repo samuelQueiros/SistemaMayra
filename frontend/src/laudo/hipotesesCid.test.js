@@ -14,9 +14,15 @@ describe('hipóteses e encaminhamentos do Laudo Por IA', () => {
     }
   })
 
+  it('trazem as 28 condições da tabela NeuroPP (mais o TPAC)', () => {
+    const condicoes = todasAsHipoteses().filter((h) => h.id !== 'hip_tpac')
+    expect(condicoes).toHaveLength(28)
+    expect(new Set(condicoes.map((h) => h.cid11)).size).toBe(28)
+  })
+
   it('formatam o CID como no relatório', () => {
     const [tea] = todasAsHipoteses()
-    expect(textoDaHipotese(tea.subtipos[0])).toBe('TEA sem deficiência intelectual e com linguagem funcional preservada (CID-11 6A02.0 / CID-10 F84.x)')
+    expect(textoDaHipotese(tea.subtipos[0])).toBe('TEA sem deficiência intelectual e linguagem funcional preservada (CID-11 6A02.0 / CID-10 F84.x)')
     expect(textoDaHipotese({ id: 'x', rotulo: 'TPAC' })).toBe('TPAC')
   })
 })
