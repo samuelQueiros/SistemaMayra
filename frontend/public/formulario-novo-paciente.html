@@ -554,6 +554,7 @@ input[type=file]:focus-visible::file-selector-button{box-shadow:var(--focus-ring
 <label>Desempenho Escolar</label><textarea id="topico_desempenhoEscolar" style="min-height:320px"></textarea>
 </div>
 <h3>Parte Final</h3>
+<label>Intervenções Sugeridas (Opcional — Sai Antes Das Hipóteses)</label><textarea id="textoIntervencoes" style="min-height:120px" placeholder="Ex.: • Estímulo às funções executivas: propor atividades que trabalhem memória de trabalho, planejamento e autorregulação…"></textarea>
 <label>Após Os Gráficos Do SNAP-IV</label><textarea id="textoSNAP" style="min-height:180px"></textarea>
 <label>Síntese Clínica</label><textarea id="textoSintese" style="min-height:360px"></textarea>
 <label>Corroboração SNAP-IV (Antes Do Gráfico De Funções Executivas)</label><textarea id="textoCorroboracao" style="min-height:130px"></textarea>
@@ -582,6 +583,11 @@ input[type=file]:focus-visible::file-selector-button{box-shadow:var(--focus-ring
 <div><label>Cidade</label><select id="cidade"><option>Cidade Ocidental – GO</option><option>Gama – DF</option></select></div>
 <div><label>Data Do Relatório</label><input type="date" id="dataRelatorio"></div>
 </div>
+
+
+<h2>21. Habilidades Cognitivas, Socioemocionais E Motoras</h2>
+<div class="aviso">Vai para o relatório como no modelo: as três tabelas com a descrição de cada habilidade e os gráficos <strong>Sim / Às Vezes / Não</strong>. Só os grupos com alguma resposta entram.</div>
+<div id="habilidadesGerais"></div>
 
 
 <input type="hidden" id="fasesRevisadas">
@@ -842,6 +848,16 @@ function areaSugerida(chave,linha){
   if(/\bb[123]\b|estereotip|repetitiv|rigidez|rotina|mudança|interesse/.test(t))return "Comportamentos Restritivos e Repetitivos";
   return "Comunicação, Interação Social e Adaptação Escolar";
 }
+// Títulos das áreas nas hipóteses secundárias, como no modelo (TOD).
+const TITULOS_DE_AREA = {
+  "Comportamento Desafiador e Opositor":"ÁREA DE COMPORTAMENTO DESAFIADOR E OPOSITOR",
+  "Autoridade":"ÁREA DA AUTORIDADE",
+  "Regulação Emocional e Frustração":"ÁREA DA REGULAÇÃO EMOCIONAL E FRUSTRAÇÃO",
+  "Controle Comportamental e Negociação":"ÁREA DO CONTROLE COMPORTAMENTAL E NEGOCIAÇÃO",
+  "Social e Relacionamento":"ÁREA SOCIAL E RELACIONAMENTO",
+  "Acadêmica e Escolar":"ÁREA ACADÊMICA E ESCOLAR"
+};
+function tituloDeAreaSecundaria(area){return TITULOS_DE_AREA[area]||"ÁREA DO DESENVOLVIMENTO: "+area;}
 // Linhas do quadro agrupadas por área, na ordem em que as áreas aparecem.
 function agruparPorArea(chave,linhas){
   const grupos=new Map();
@@ -1950,6 +1966,8 @@ function inicializarEscalasMetodologia(){
 /* ---------------------------------------------------------------- seções novas do formulário */
 
 function montarSecoesDoModelo(){
+  const habGerais=document.getElementById("habilidadesGerais");
+  if(habGerais)habGerais.innerHTML=HABILIDADES_GERAIS.map(grupo=>'<h3>'+grupo.titulo.charAt(0)+grupo.titulo.slice(1).toLowerCase()+'</h3><div class="grid">'+grupo.itens.map((it,i)=>'<div><label>'+it[0]+'</label><select id="'+grupo.chave+"_"+i+'"><option value="">Selecione</option>'+STATUS_HABILIDADE_GERAL.map(v=>"<option>"+v+"</option>").join("")+"</select></div>").join("")+"</div>").join("");
   const ata=document.getElementById("ataItensContainer");
   if(ata)ata.innerHTML=ATA_ITENS.map((it,i)=>'<div class="ata-item"><span>'+it[0]+'</span><select id="ata_item_'+i+'" onchange="calcularATA()"><option value="">Pontos</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select><input type="number" min="0" max="100" id="ata_perc_'+i+'" placeholder="% na tabela"></div>').join("");
   const fe=document.getElementById("funcoes");
@@ -2022,7 +2040,7 @@ function atualizarIdadeCognitivaDoCabecalho(){
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function marcacao(s,extras){
   let h=esc(s);
-  if(extras&&extras.probabilidadeTEA!==undefined)h=h.replace(/\{PROBABILIDADE_TEA\}/g,String(extras.probabilidadeTEA));
+  if(extras&&extras.probabilidadeTEA!==undefined)h=h.replace(/\{PROBABILIDADE_TEA\}%/g,"!!"+extras.probabilidadeTEA+"%!!").replace(/\{PROBABILIDADE_TEA\}/g,String(extras.probabilidadeTEA));
   return h
     .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
     .replace(/==(.+?)==/g,'<mark class="cinza"><strong>$1</strong></mark>')
@@ -2167,6 +2185,63 @@ function graficoATA(){
 }
 
 // Habilidades acadêmicas da seção 8 (ano escolar): só as avaliadas.
+// Habilidades cognitivas, socioemocionais e motoras (relatório-modelo):
+// tabela com a descrição de cada habilidade e gráfico Sim / Às Vezes / Não.
+const STATUS_HABILIDADE_GERAL=["Sim","Às Vezes","Não"];
+const HABILIDADES_GERAIS=[
+  {chave:"hcog",titulo:"HABILIDADES COGNITIVAS E METACOGNITIVAS",itens:[
+    ["Atenção e concentração","Mantém atenção e foco nas atividades propostas e no ambiente escolar."],
+    ["Interesse e participação","Demonstra interesse pelas atividades, objetos e propostas pedagógicas."],
+    ["Memória e sequência lógica","Memória auditiva, visual e capacidade de organizar sequências de fatos."],
+    ["Raciocínio lógico","Associação, comparação, classificação e raciocínio lógico-matemático."],
+    ["Abstração e simbolização","Utiliza pensamento simbólico e compreensão abstrata."],
+    ["Discriminação sensorial","Diferencia estímulos visuais, auditivos e táteis."],
+    ["Organização e autonomia","Demonstra organização e noções de autopreservação."],
+    ["Metacognição","Reconhece erros, avalia estratégias e realiza correções."],
+    ["Estratégias de aprendizagem","Utiliza estratégias para aquisição, organização e aplicação do conhecimento."],
+    ["Julgamento e resolução","Analisa e busca soluções adequadas para desafios cotidianos e acadêmicos."]]},
+  {chave:"hsoc",titulo:"HABILIDADES SOCIOEMOCIONAIS E COMUNICATIVAS",grafico:"HABILIDADES SOCIOEMOCIONAIS",itens:[
+    ["Interação social","Relaciona-se socialmente e demonstra iniciativa nas interações."],
+    ["Regulação emocional","Tolerância à frustração, autoestima e controle emocional."],
+    ["Comportamento social","Respeita regras, rotina, comportamento adequado em diferentes ambientes."],
+    ["Participação e permanência","Consegue permanecer em sala e participar das atividades propostas."],
+    ["Atenção e resposta","Mantém foco e atende quando solicitado."],
+    ["Compreensão da linguagem","Compreende comandos, informações e situações comunicativas."],
+    ["Comunicação verbal e não verbal","Utiliza fala, gestos, expressões faciais e outros recursos de comunicação."],
+    ["Comunicação funcional","Expressa-se de maneira inteligível e adequada ao contexto."],
+    ["Transmissão de informações","Relata experiências pessoais e transmite recados adequadamente."],
+    ["Recursos assistivos","Comunicação assistiva e/ou tecnologia assistiva quando necessário."]]},
+  {chave:"hmot",titulo:"HABILIDADES MOTORAS E SOCIOMOTORAS",itens:[
+    ["Controle postural","Apresenta adequação postural compatível com o desenvolvimento motor."],
+    ["Desenvolvimento motor global","Realiza movimentos como rolar, engatinhar, arrastar-se, andar, correr e pular."],
+    ["Equilíbrio e coordenação","Apresenta equilíbrio estático/dinâmico e coordenação motora global."],
+    ["Coordenação motora fina","Habilidades de manipulação e coordenação fina para atividades funcionais."],
+    ["Coord gráfica e visomotora","Atividades gráficas e percepção visual aos movimentos."],
+    ["Esquema corporal e lateralidade","Demonstra reconhecimento corporal e discriminação entre direita e esquerda."],
+    ["Conceitos espaciais","Conceitos relacionados a cores, posições e organização espacial."],
+    ["Manipulação de objetos","Manipula objetos pequenos e realiza atividades manuais funcionais."],
+    ["Preensão e motricidade manual","Utiliza lápis, borracha e tesoura de forma funcional e adequada."],
+    ["Controle psicomotor","Agitação psicomotora e organização motora durante as atividades."],
+    ["Estereotipias motoras","Movimentos repetitivos e padrões motores estereotipados."]]}
+];
+function habilidadesGeraisAvaliadas(grupo){
+  return grupo.itens.map((it,i)=>({nome:it[0],obs:it[1],status:valor(grupo.chave+"_"+i)}));
+}
+function graficoHabilidadesGerais(grupo,itens){
+  const avaliadas=itens.filter(h=>h.status);
+  if(!avaliadas.length)return null;
+  const serie=(status,v)=>avaliadas.map(h=>h.status===status?v:null);
+  return graficoPNG({type:"bar",data:{labels:avaliadas.map(h=>encurtar(h.nome,16)),datasets:[
+      {label:"SIM",data:serie("Sim",1),backgroundColor:"#4472c4"},
+      {label:"AS VEZES",data:serie("Às Vezes",0.5),backgroundColor:"#ffff00"},
+      {label:"NÃO",data:serie("Não",0.2),backgroundColor:"#ff0000"}]},
+    options:{datasets:{bar:{skipNull:true,maxBarThickness:10}},layout:{padding:{top:8,right:22,left:14,bottom:8}},
+      plugins:{tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.grade,espessura:1},
+        legend:{position:"bottom",labels:{boxWidth:12,boxHeight:12,color:PALETA_LAUDO.texto,font:{size:15,family:FONTE_GRAFICO}}},
+        title:{display:true,text:grupo.grafico||grupo.titulo,color:PALETA_LAUDO.texto,font:{size:24,weight:"bold",family:FONTE_GRAFICO},padding:{bottom:14}}},
+      scales:{y:{min:0,max:1,ticks:{stepSize:0.5,color:PALETA_LAUDO.texto,font:{size:15},callback:v=>numeroBR(Number(v).toFixed(1))},grid:{color:PALETA_LAUDO.grade},border:{display:false}},
+        x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:45,minRotation:45,autoSkip:false,font:{size:14,family:FONTE_GRAFICO}}}}}},1000,400);
+}
 function habilidadesAcademicasAvaliadas(){
   const lista=habilidadesPorAno[valor("anoEscolar")]||[];
   return lista.map((it,i)=>({nome:it[0],status:valor("hab_status_"+i),obs:valor("hab_obs_"+i).trim()})).filter(h=>h.status);
@@ -2471,7 +2546,7 @@ p.compacto{margin:0;line-height:1.25}
 mark{color:#000;padding:0 1pt}
 mark.cinza{background:#dbe5f1}
 mark.amarelo{background:#ffff00}
-.faixa{background:#c6d9f1;font-weight:bold;padding:1mm 2mm;margin:5mm 0 3mm;line-height:1.45}
+.faixa{background:#c6d9f1;font-weight:bold;padding:1mm 2mm;margin:5mm 0 3mm;line-height:1.45;break-after:avoid;page-break-after:avoid}
 .faixa.centro{text-align:center}
 .faixa-topico{background:#b8cce4;font-weight:bold;font-size:9.5pt;padding:1mm 2mm;margin:4mm 0 3mm;break-after:avoid;page-break-after:avoid}
 h2{font-size:12.5pt;text-align:center;margin:3mm 0 5mm;break-after:avoid;page-break-after:avoid}
@@ -2515,6 +2590,10 @@ td.cab-espaco{width:4mm}
 .assinatura-nome{font-family:"Arial Narrow","Liberation Sans Narrow",Arial,sans-serif;font-style:italic;font-size:15pt}
 .quebra{break-before:page;page-break-before:always;height:0;margin:0}
 h3.area{text-align:center;font-size:10.5pt;margin:6mm 0 3mm}
+h3>mark.cinza{text-decoration:underline}
+p.titulo-tabela{margin:5mm 0 1mm;font-size:10.5pt}
+.bloco-assinatura{break-inside:avoid;page-break-inside:avoid}
+thead{display:table-header-group}
 td.sem-quebra{white-space:nowrap}
 .galeria{text-align:center;margin:4mm 0 0}
 .galeria img{display:inline-block;margin:3mm 2.5mm;border:.75pt solid #000}
@@ -2607,7 +2686,7 @@ async function perfilProfissional(){
   const padrao={
     nome:"Mayra Vanessa Andrade da Cunha",
     bio:"Este relatório foi elaborado por Mayra Vanessa Andrade da Cunha, Neuropsicopedagoga Clínica (CBO 2394-40) e Institucional (CBO 2394-45), com formação especializada em Análise do Comportamento Aplicada (ABA) e atuação profissional voltada ao desenvolvimento, aprendizagem e acompanhamento de crianças neurodivergentes. Possui mais de 25 anos de experiência profissional na área educacional e mais de 15 anos de atuação com crianças com Transtorno do Espectro Autista (TEA), integrando experiência educacional, conhecimento técnico e prática clínica neuropsicopedagógica na análise individualizada de cada caso.",
-    credenciais:["Neuropsicopedagoga Clínica","com formação especializada em Análise do Comportamento Aplicada (ABA)","Especialista em Educação Inclusiva"],
+    credenciais:["Neuropsicopedagoga Clínica","Especialista em Análise do Comportamento Aplicada - ABA","Especialista em Educação Inclusiva"],
     capaUrl:null,
     capaConfig:null
   };
@@ -2653,7 +2732,7 @@ async function gerarDocumentoLaudoHTML(){
   const linhasCabecalho=[
     ["Paciente",valor("nomePaciente")],
     ["D/N",nascimento?doisDigitos(nascimento.getDate())+" / "+doisDigitos(nascimento.getMonth()+1)+" / "+nascimento.getFullYear():valor("dataNascimento")],
-    ["Idade cronológica",idadeCronologicaCabecalho()],
+    ["Idade Cronológica",idadeCronologicaCabecalho()],
     ["Idade Cognitiva",valor("idadeCognitivaRelatorio")],
     ["Marco de Desenvolvimento",valor("marcoRelatorio")]
   ].filter(l=>l[1]);
@@ -2671,14 +2750,20 @@ async function gerarDocumentoLaudoHTML(){
   const simNao=(id,detalheQuando)=>{const v=valor(id);if(!v)return"";const d=valor(id+"Descricao").trim();return v+(v===detalheQuando&&d?", "+d:"");};
   const ponto=s=>s&&!/[.!?…]$/.test(s)?s+".":s;
   const idadeMarcoTexto=(a,m)=>{const ano=valor(a),mes=valor(m);if(!ano||ano==="Não informado")return"";const partesIdade=[ano.replace(/^(\d)\b/,"0$1")];if(mes&&mes!=="0 meses"&&mes!=="Não informado")partesIdade.push(mes.replace(/^(\d)\b/,"0$1"));return partesIdade.join(" e ");};
+  // "Parto: Cesáreo com complicação (…)" — a complicação vai junto, como no modelo.
+  const juntarComplicacao=(parto,complicacao,descricao)=>{
+    if(!parto)return complicacao==="Sim"?"Com complicação"+(descricao?" ("+descricao+")":""):"";
+    if(complicacao==="Sim")return parto+" com complicação"+(descricao?" ("+descricao+")":"")+".";
+    if(complicacao==="Não")return parto+" sem complicação.";
+    return parto;
+  };
   const itemLista=(rotulo,conteudo)=>conteudo?"<li><strong>"+esc(rotulo)+":</strong> "+esc(conteudo)+"</li>":"";
   const idadeMae=valor("idadeMaeGestacao").trim();
   const anamnese=[
     itemLista("Idade da mãe durante a gestação",ponto(/^\d+$/.test(idadeMae)?idadeMae+" anos":idadeMae)),
-    itemLista("Idade Gestacional",ponto(valor("idadeGestacional").trim())),
+    itemLista("Gestação",ponto(valor("idadeGestacional").trim())),
     itemLista("Intercorrências Gestacionais",ausentePresente("intercorrenciasGestacionais")),
-    itemLista("Parto",valor("parto")),
-    itemLista("Complicação no parto",ausentePresente("complicacaoParto")),
+    itemLista("Parto",juntarComplicacao(valor("parto"),valor("complicacaoParto"),valor("complicacaoPartoDescricao").trim())),
     itemLista("Uso de medicamentos",simNao("usoMedicamentosGestacao","Sim")),
     itemLista("História de sofrimento fetal",ausentePresente("sofrimentoFetal"))
   ].join("");
@@ -2692,7 +2777,7 @@ async function gerarDocumentoLaudoHTML(){
   const historico=[
     itemLista(g.o==="a"?"Filha única":"Filho único",valor("filhoUnico")),
     itemLista("Irmãos",valor("filhoUnico")==="Não"?ponto(valor("filhoUnicoDescricao").trim()):""),
-    itemLista("Convivência social",simNao("convivenciaSocial","Sim")),
+    itemLista("Convivência Social",simNao("convivenciaSocial","Sim")),
     itemLista("Desenvolvimento motor",juntar(valor("desenvolvimentoMotor"),andou?g.O+" paciente começou a andar com "+andou:"")),
     itemLista("Desenvolvimento da fala",juntar(valor("desenvolvimentoFala"),falou?g.O+" paciente começou a falar com "+falou:"")),
     itemLista("Desfralde",desfralde),
@@ -2707,20 +2792,65 @@ async function gerarDocumentoLaudoHTML(){
   const quadros=hipotesesDoQuadro().map(h=>({h,linhas:linhasDoQuadro(h.chave).filter(l=>l.slice(0,4).some(x=>x.trim()))})).filter(q=>q.linhas.length);
   quadros.forEach((q,indice)=>{
     if(indice>0)partes.push('<div class="faixa centro">HIPÓTESE DE '+esc(nomeDaHipoteseNoRelatorio(q.h).toUpperCase())+"</div>");
+    const principal=indice===0;
     agruparPorArea(q.h.chave,q.linhas).forEach((linhas,area)=>{
-      partes.push('<h3 class="area">ÁREA DO DESENVOLVIMENTO: '+esc(area)+"</h3>");
-      partes.push('<table class="tabela dupla centro quadro" data-larguras="34,58,40,38" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:34mm"><col style="width:58mm"><col style="width:40mm"><col style="width:38mm"></colgroup><tr><th>Comportamento Observado</th><th>Descrição Detalhada</th><th>Possíveis Características Associadas ao '+esc(q.h.rotulo)+"</th><th>Associação aos Critérios DSM-5-TR</th></tr>"+linhas.map(l=>"<tr>"+l.slice(0,4).map(x=>"<td>"+esc(x)+"</td>").join("")+"</tr>").join("")+"</table>");
+      partes.push('<h3 class="area">'+esc(principal?"ÁREA DO DESENVOLVIMENTO: "+area:tituloDeAreaSecundaria(area))+"</h3>");
+      const celulas=l=>l.slice(0,4).map((x,c)=>"<td>"+(!principal&&c===0?"<strong>"+esc(x)+"</strong>":esc(x))+"</td>").join("");
+      partes.push('<table class="tabela '+(principal?"dupla":"simples")+' centro quadro" data-larguras="34,58,40,38" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:34mm"><col style="width:58mm"><col style="width:40mm"><col style="width:38mm"></colgroup><thead><tr><th>Comportamento Observado</th><th>Descrição Detalhada</th><th>Possíveis Características Associadas ao '+esc(q.h.rotulo)+"</th><th>Associação aos Critérios DSM-5-TR</th></tr></thead>"+linhas.map(l=>"<tr>"+celulas(l)+"</tr>").join("")+"</table>");
     });
   });
 
-  /* Atendimentos + CARS */
+  /* A partir daqui, a sequência do relatório-modelo (João Neto):
+     habilidades → funções executivas → Portage → CARS → ATA → SNAP-IV →
+     hipóteses → conclusão → encaminhamentos → fechamento. */
+
+  /* Habilidades acadêmicas do ano escolar: tabela + gráfico por status */
+  const habAcademicas=habilidadesAcademicasAvaliadas();
+  if(habAcademicas.length){
+    partes.push('<h2 class="marcado"><mark class="cinza">HABILIDADES ACADÊMICAS – '+esc(valor("anoEscolar").toUpperCase())+"</mark></h2>");
+    partes.push('<table class="tabela dupla compacta" data-larguras="46,38,86" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:46mm"><col style="width:38mm"><col style="width:86mm"></colgroup><thead><tr><th>Habilidade</th><th>Desempenho</th><th>Observação</th></tr></thead>'+habAcademicas.map(h=>"<tr><td>"+esc(h.nome)+'</td><td class="sem-quebra">'+esc(h.status)+"</td><td>"+esc(h.obs)+"</td></tr>").join("")+"</table>");
+    const imgHab=graficoHabilidadesAcademicas(habAcademicas);
+    if(imgHab)partes.push('<div class="grafico"><img src="'+imgHab+'" data-mm="150" style="width:150mm"></div>');
+  }
+
+  /* Habilidades cognitivas, socioemocionais e motoras: as três tabelas
+     (habilidade · observação) e depois os três gráficos Sim/Às Vezes/Não */
+  const gruposHabilidades=HABILIDADES_GERAIS.map(grupo=>({grupo,itens:habilidadesGeraisAvaliadas(grupo)})).filter(x=>x.itens.some(h=>h.status));
+  gruposHabilidades.forEach(({grupo,itens})=>{
+    partes.push('<p class="centro titulo-tabela"><mark class="cinza"><strong><em><u>'+esc(grupo.titulo)+"</u></em></strong></mark></p>");
+    partes.push('<table class="tabela dupla compacta" data-larguras="55,115" data-fonte="9.5" style="font-size:9.5pt"><colgroup><col style="width:55mm"><col style="width:115mm"></colgroup><thead><tr><th>Habilidade</th><th>Observação</th></tr></thead>'+itens.map(h=>"<tr><td>"+esc(h.nome)+"</td><td>"+esc(h.obs)+"</td></tr>").join("")+"</table>");
+  });
+  gruposHabilidades.forEach(({grupo,itens})=>{
+    const img=graficoHabilidadesGerais(grupo,itens);
+    if(img)partes.push('<div class="grafico"><img src="'+img+'" data-mm="160" style="width:160mm"></div>');
+  });
+  if(habAcademicas.length||gruposHabilidades.length)partes.push(texto("textoHabilidades"));
+
+  /* Quadro – Aplicação das Funções Executivas */
+  const linhasFE=FE_LAUDO.map((f,i)=>valor("fe_manif_"+i).trim()?"<tr><td><strong>"+esc(f.nome)+"</strong></td><td>"+esc(f.esperado)+"</td><td>"+esc(valor("fe_manif_"+i))+"</td></tr>":"").join("");
+  if(linhasFE){
+    partes.push('<h3 class="area">Quadro – Aplicação das Funções Executivas '+g.do+" paciente</h3>");
+    partes.push('<table class="tabela dupla centro" data-larguras="34,64,72" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:34mm"><col style="width:64mm"><col style="width:72mm"></colgroup><thead><tr><th>Função Executiva</th><th>Desenvolvimento Esperado para idade</th><th>Habilidades identificadas '+(g.o==="a"?"na":"no")+" paciente</th></tr></thead>"+linhasFE+"</table>");
+  }
+
+  /* Portage: texto, interpretação e o gráfico de idade de desenvolvimento */
+  const portage=portagePorArea();
+  const idadeAnos=nascimento?Math.floor((idadeMeses()||0)/12):0;
+  const imgPortage=graficoPortage(portage,idadeAnos);
+  if(metodoIncluido("portage")&&(imgPortage||valor("textoPortage").trim())){
+    if(imgPortage)partes.push('<p class="recuo">Com base no resultado do protocolo <strong>PORTAGE</strong> aplicado durante o período da avaliação e respeitando as particularidades, tempo e limitações '+g.do+" paciente/aprendente segue abaixo percentual descritivo de repertório observado em áreas específicas: Comportamentos: <strong>Socialização, Linguagem, Autocuidados, Cognição e Desenvolvimento Motor.</strong></p>");
+    partes.push(texto("textoPortage"));
+    if(imgPortage)partes.push('<div class="grafico"><img src="'+imgPortage+'" data-mm="165" style="width:165mm"></div>');
+  }
+
+  /* CARS */
   const cars=metodoIncluido("cars")&&valor("cars")!==""?Number(valor("cars")):null;
   const imgCARS=metodoIncluido("cars")?graficoCARS():null;
   if(valor("textoAtendimentos").trim()||imgCARS){
     partes.push(texto("textoAtendimentos"));
     if(cars!==null){
       const faixa=cars<30?"não apresentou":"apresentou";
-      partes.push('<p class="recuo">Segue abaixo rastreamento dos comportamentos utilizando a Escala CARS, que caracterizam o TEA-Transtorno do Espectro Autista. A escala '+faixa+" atraso importante de desenvolvimento dos comportamentos com um resultado de "+destaqueAmarelo(numeroBR(cars)+" PONTOS")+(valor("carsPercentualFalhas")!==""?", e de "+destaqueAmarelo(valor("carsPercentualFalhas")+"% de falhas")+" do que se espera para sua idade de acordo com o marco de desenvolvimento infantil":"")+".</p>");
+      partes.push('<p class="recuo">Segue abaixo rastreamento dos comportamentos utilizando a <strong>Escala CARS,</strong> que caracterizam o <strong>TEA-Transtorno do Espectro Autista.</strong> A escala '+faixa+" atraso importante de desenvolvimento dos comportamentos com um resultado de "+destaqueAmarelo(numeroBR(cars)+" PONTOS")+(valor("carsPercentualFalhas")!==""?", e de "+destaqueAmarelo(valor("carsPercentualFalhas")+"% de falhas")+" do que se espera para sua idade de acordo com o marco de desenvolvimento infantil":"")+".</p>");
     }
     if(imgCARS){
       partes.push('<div class="grafico"><img src="'+imgCARS+'" data-mm="170" style="width:170mm"></div>');
@@ -2733,7 +2863,7 @@ async function gerarDocumentoLaudoHTML(){
   if(metodoIncluido("ata")&&valor("ata")!==""){
     const imgATA=graficoATA();
     const pontosATA=Number(valor("ata"));
-    partes.push('<p class="recuo">Os comportamentos observados direta e indiretamente e de acordo com as observações, foram totalizados '+destaqueAmarelo(valor("ata")+" pontos na análise da escala ATA")+", o que significa que "+g.o+" paciente apresenta "+destaqueAmarelo((valor("ataPercentual")||"0")+"% de características")+" (rastreada por essa escala) que correspondem ao <strong>TEA- Transtorno do Espectro Autista.</strong></p>");
+    partes.push('<p class="recuo">Os comportamentos observados direta e indiretamente e de acordo com as observações, foram totalizados '+destaqueAmarelo(valor("ata")+" pontos na análise da escala ATA")+" o que significa que "+g.o+" paciente apresenta "+destaqueAmarelo((valor("ataPercentual")||"0")+"% de características")+" (rastreada por essa escala) que correspondem ao <strong>TEA- Transtorno do Espectro Autista.</strong></p>");
     const faixaATA=(texto,atingida)=>'<mark class="'+(atingida?"amarelo":"cinza")+'">'+texto+"</mark>";
     partes.push('<p class="centro"><strong><span style="font-size:8pt">'+faixaATA("Pontuação acima de 16 pontos&nbsp; - &nbsp;Atraso no desenvolvimento",pontosATA>16&&pontosATA<=20)+"&nbsp; / &nbsp;"+faixaATA("Pontuação acima 20 pontos&nbsp; - &nbsp;Traços Autísticos",pontosATA>20)+"</span></strong></p>");
     if(imgATA)partes.push('<div class="grafico"><img src="'+imgATA+'" data-mm="165" style="width:165mm"></div>');
@@ -2747,35 +2877,6 @@ async function gerarDocumentoLaudoHTML(){
 
   /* Conclusão das escalas */
   if(valor("textoPosEscalas").trim())partes.push(texto("textoPosEscalas"));
-
-  /* Habilidades acadêmicas (seção 8): tabela + gráfico por status */
-  const habAcademicas=habilidadesAcademicasAvaliadas();
-  if(habAcademicas.length){
-    partes.push('<h2 class="marcado"><mark class="cinza">HABILIDADES ACADÊMICAS – '+esc(valor("anoEscolar").toUpperCase())+"</mark></h2>");
-    partes.push('<table class="tabela dupla compacta" data-larguras="46,38,86" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:46mm"><col style="width:38mm"><col style="width:86mm"></colgroup><tr><th>Habilidade</th><th>Desempenho</th><th>Observação</th></tr>'+habAcademicas.map(h=>"<tr><td>"+esc(h.nome)+'</td><td class="sem-quebra">'+esc(h.status)+"</td><td>"+esc(h.obs)+"</td></tr>").join("")+"</table>");
-    const imgHab=graficoHabilidadesAcademicas(habAcademicas);
-    if(imgHab)partes.push('<div class="grafico"><img src="'+imgHab+'" data-mm="150" style="width:150mm"></div>');
-    partes.push(texto("textoHabilidades"));
-  }
-
-  /* Perfil das funções executivas */
-  const linhasFE=FE_LAUDO.map((f,i)=>valor("fe_manif_"+i).trim()?'<tr><td style="color:#5c4b92"><strong>'+esc(f.nome)+"</strong></td><td>"+esc(f.esperado)+"</td><td>"+esc(valor("fe_manif_"+i))+"</td></tr>":"").join("");
-  if(linhasFE){
-    partes.push('<h2 class="roxo">PERFIL CLÍNICO-OBSERVACIONAL DAS FUNÇÕES EXECUTIVAS</h2>');
-    partes.push('<table class="tabela roxa centro" data-larguras="26,52,92" data-fonte="8.5" style="font-size:8.5pt"><colgroup><col style="width:26mm"><col style="width:52mm"><col style="width:92mm"></colgroup><tr><th style="background:#5c4b92;color:#ffffff">Função Executiva</th><th style="background:#5c4b92;color:#ffffff">Desenvolvimento funcional esperado</th><th style="background:#5c4b92;color:#ffffff">Manifestação observada durante o processo avaliativo</th></tr>'+linhasFE+"</table>");
-  }
-
-  /* Portage */
-  const portage=portagePorArea();
-  const idadeAnos=nascimento?Math.floor((idadeMeses()||0)/12):0;
-  const imgPortage=graficoPortage(portage,idadeAnos);
-  if(metodoIncluido("portage")&&(imgPortage||valor("textoPortage").trim())){
-    if(imgPortage){
-      partes.push('<p class="recuo">Com base no resultado dos protocolos aplicados durante o período da avaliação e respeitando as particularidades, tempo e limitações '+g.do+" paciente/aprendente segue abaixo percentual descritivo de repertório observado em áreas específicas: Comportamentos: <strong>Socialização, Linguagem, Autocuidados, Cognição e Desenvolvimento Motor.</strong></p>");
-      partes.push('<div class="grafico"><img src="'+imgPortage+'" data-mm="165" style="width:165mm"></div>');
-    }
-    partes.push(texto("textoPortage"));
-  }
 
   /* Análise por área do TDAH (hiperatividade, impulsividade, desatenção…):
      vem depois dos gráficos do SNAP-IV, antes do parágrafo de fechamento
@@ -2791,7 +2892,7 @@ async function gerarDocumentoLaudoHTML(){
     const des=snap.des, hip=snap.hip;
     const fraseDes=des>=LIMIAR?"considera-se que <strong>EXISTEM</strong> sintomas de <strong>DESATENÇÃO</strong>":"considera-se que <strong>NÃO EXISTEM</strong> sintomas suficientes de <strong>DESATENÇÃO</strong>";
     const fraseHip=hip>=LIMIAR?(des>=LIMIAR?"considerando que <strong>TAMBÉM EXISTEM</strong> sintomas de <strong>HIPERATIVIDADE.</strong>":"considerando que <strong>EXISTEM</strong> sintomas de <strong>HIPERATIVIDADE.</strong>"):"considerando que <strong>NÃO EXISTEM</strong> sintomas suficientes de <strong>HIPERATIVIDADE.</strong>";
-    partes.push('<p class="recuo">De acordo com a análise dos dados para os comportamentos do <strong>TDAH - Transtorno do Déficit de Atenção e Hiperatividade,</strong> a partir das observações da Família, segue abaixo gráfico do resultado para apreciação médica, pois foram pontuados <strong>'+doisDigitos(des)+" itens “bastante” e “demais” nas características de 1 a 9</strong>, "+fraseDes+" e <strong>foram "+doisDigitos(hip)+" itens pontuados “bastante” e “demais” nas características 10 a 18</strong> "+fraseHip+' <mark class="cinza"><strong>Este gráfico é apenas um ponto de partida para levantamento de alguns possíveis sintomas primários do TDAH</strong></mark></p>');
+    partes.push('<p class="recuo">De acordo com a análise dos dados para os comportamentos do <strong>TDAH - Transtorno do Déficit de Atenção e Hiperatividade,</strong> a partir das observações da Família, segue abaixo gráfico do resultado para apreciação médica, pois <strong>foram pontuados '+doisDigitos(des)+" itens “bastante” e “demais” nas características de 1 a 9</strong>, "+fraseDes+" e <strong>foram "+doisDigitos(hip)+" itens pontuados “bastante” e “demais” nas características 10 a 18</strong> "+fraseHip+' <mark class="cinza"><strong>Este gráfico é apenas um ponto de partida para levantamento de alguns possíveis sintomas primários do TDAH.</strong></mark></p>');
     partes.push('<div class="graficos-lado">'+[imgsSNAP.pontos,imgsSNAP.perc].filter(Boolean).map(src=>'<img src="'+src+'" data-mm="80" style="width:80mm">').join("")+"</div>");
     const paragrafosSNAP=valor("textoSNAP").split(/\r?\n/);
     const fechamento=paragrafosSNAP.findIndex(par=>/^\s*Essas características/i.test(par));
@@ -2808,14 +2909,13 @@ async function gerarDocumentoLaudoHTML(){
   }
 
   /* M-CHAT — tabela descritiva dos itens respondidos, sem escore clínico
-     automático (o instrumento não tem algoritmo de pontuação implementado
-     neste sistema; a interpretação cabe à profissional). Só dos 16 aos 30
+     automático (a interpretação cabe à profissional). Só dos 16 aos 30
      meses, no lugar do SNAP-IV. */
   const itensMCHAT=mchatItens.map((t,i)=>({item:t,resp:valor("mchat_"+i)})).filter(x=>x.resp!=="");
   if(metodoNoRelatorio("mchat")&&itensMCHAT.length){
     const linhasMCHAT=itensMCHAT.map(x=>"<tr><td>"+esc(x.item)+"</td><td>"+(x.resp==="sim"?"Sim":"Não")+"</td></tr>").join("");
     partes.push('<h3><mark class="cinza">M-CHAT — Modified Checklist For Autism In Toddlers</mark></h3>');
-    partes.push('<table class="tabela dupla compacta" data-larguras="130,40" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:130mm"><col style="width:40mm"></colgroup><tr><th>Item</th><th>Resposta</th></tr>'+linhasMCHAT+"</table>");
+    partes.push('<table class="tabela dupla compacta" data-larguras="130,40" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:130mm"><col style="width:40mm"></colgroup><thead><tr><th>Item</th><th>Resposta</th></tr></thead>'+linhasMCHAT+"</table>");
   }
 
   /* Protocolo TOD — só entra no relatório se algum item foi respondido */
@@ -2829,10 +2929,7 @@ async function gerarDocumentoLaudoHTML(){
     }
   }
 
-  /* Síntese clínica */
-  if(valor("textoSintese").trim())partes.push(texto("textoSintese"));
-
-  /* Corroboração + gráfico de déficits nas funções executivas */
+  /* Corroboração (SNAP-IV e atendimentos) + gráfico das funções executivas */
   const imgFE=graficoFuncoesExecutivas();
   if(valor("textoCorroboracao").trim()||imgFE){
     partes.push(texto("textoCorroboracao"));
@@ -2842,43 +2939,55 @@ async function gerarDocumentoLaudoHTML(){
     }
   }
 
-  /* Distribuição por domínio + conclusão sobre TEA */
+  /* Síntese clínica */
+  if(valor("textoSintese").trim())partes.push(texto("textoSintese"));
+
+  /* Intervenções sugeridas (só quando a psicóloga escreve) */
+  if(valor("textoIntervencoes").trim()){
+    partes.push('<p style="margin-top:4mm"><span style="color:#2e5597">Intervenções Sugeridas:</span></p>');
+    partes.push(texto("textoIntervencoes"));
+  }
+
+  /* Hipóteses e/ou confirmações diagnósticas: todas as marcadas, com CID */
+  const hipoteses=hipotesesParaRelatorio();
+  if(hipoteses.length){
+    const formatarHipotese=h=>{const m=h.match(/^(.*?)\s*(\((?:CID)[^)]*\))\s*$/i);return m?"<li><strong>"+esc(m[1])+'</strong> <mark class="cinza"><strong>'+esc(m[2])+"</strong></mark></li>":"<li><strong>"+esc(h)+"</strong></li>";};
+    partes.push('<p class="recuo" style="margin-top:5mm"><strong><u>Hipóteses e/ou Confirmações Diagnósticas:</u></strong></p><ul class="bullets">'+hipoteses.map(formatarHipotese).join("")+"</ul>");
+  }
+
+  /* Distribuição por domínio + conclusão (probabilidade em amarelo) */
   const imgDominios=graficoDominios();
   if(imgDominios||valor("textoConclusaoTEA").trim()){
     if(imgDominios)partes.push('<div class="grafico"><img src="'+imgDominios+'" data-mm="118" style="width:118mm"></div>');
     partes.push(texto("textoConclusaoTEA"));
   }
 
-  /* Final do relatório (modelo João Neto): encaminhamentos em tópicos,
-     hipóteses com CID, considerações finais, sobre a profissional, nota
-     sobre os resultados perto da assinatura e, por último, a galeria. O
-     estudo de caso não entra: já está resumido nas seções acima. */
+  /* Encaminhamentos em tópicos (o estudo de caso não entra: já está
+     resumido nas seções acima) */
   const encaminhamentosSelecionados=Array.from(document.querySelectorAll(".encaminhamento:checked")).map(el=>el.value);
   if(encaminhamentosSelecionados.length)partes.push('<h3><mark class="cinza">Encaminhamentos</mark></h3><ul class="bullets">'+encaminhamentosSelecionados.map(e=>"<li>"+esc(e)+"</li>").join("")+"</ul>");
 
-  const hipoteses=hipotesesParaRelatorio();
-  if(hipoteses.length){
-    const formatarHipotese=h=>{const m=h.match(/^(.*?)\s*(\((?:CID)[^)]*\))\s*$/i);return m?"<li><strong>"+esc(m[1])+'</strong> <mark class="cinza"><strong>'+esc(m[2])+"</strong></mark></li>":"<li><strong>"+esc(h)+"</strong></li>";};
-    partes.push('<h3><mark class="cinza">Hipóteses e/ou Confirmações Diagnósticas:</mark></h3><ul class="bullets">'+hipoteses.map(formatarHipotese).join("")+"</ul>");
-  }
-
-  // Considerações Finais: texto-padrão fixo do modelo (a seção do
-  // formulário foi removida a pedido da cliente; Sugestões De Intervenção
-  // também saiu do laudo).
+  // Considerações Finais: texto-padrão fixo do modelo (inclui a OBSERVAÇÃO
+  // de que o documento não é laudo médico).
   partes.push('<h3><mark class="cinza">Considerações Finais</mark></h3>');
   partes.push(blocoDeTexto(consideracoesFinaisTEAMeninas(valor("sexo"),hipoteses[0]||""),opcoesTexto));
   partes.push(blocoDeTexto(avisoLegalFechamento(g),opcoesTexto));
 
+  /* Fechamento: sobre a profissional, nota sobre os resultados perto da
+     assinatura, local/data e assinatura */
   const perfil=await perfilProfissional();
   partes.push('<div class="caixa-cinza clara"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>'+esc(perfil.bio)+"</p></div>");
   partes.push(notaSobreOsResultados);
   const dataRel=dataRelatorioObj();
   const cidade=(valor("cidade")||"").replace(/\s*–\s*/g," - ");
-  partes.push('<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>');
-  partes.push('<p class="direita" style="margin-top:4mm"><strong>'+(cidade?esc(cidade)+", ":"")+dataRel.getDate()+" de "+MESES_EXTENSO[dataRel.getMonth()]+" de "+dataRel.getFullYear()+".</strong></p>");
-  partes.push('<div class="linha-assinatura"></div>');
-  partes.push('<p class="centro compacto assinatura-nome">'+esc(perfil.nome)+"</p>");
-  perfil.credenciais.forEach(t=>partes.push('<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">'+esc(t)+"</span></strong></mark></p>"));
+  // Atenciosamente, local/data e assinatura numa página só.
+  partes.push('<div class="bloco-assinatura">'+
+    '<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>'+
+    '<p class="direita" style="margin-top:4mm"><strong>'+(cidade?esc(cidade)+", ":"")+dataRel.getDate()+" de "+MESES_EXTENSO[dataRel.getMonth()]+" de "+dataRel.getFullYear()+".</strong></p>"+
+    '<div class="linha-assinatura"></div>'+
+    '<p class="centro compacto assinatura-nome">'+esc(perfil.nome)+"</p>"+
+    perfil.credenciais.map(t=>'<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">'+esc(t)+"</span></strong></mark></p>").join("")+
+    "</div>");
 
   /* Galeria: todas as fotos numa página própria, depois da assinatura */
   if(fotosGaleria.length){
@@ -3512,6 +3621,7 @@ function mostrarPreviaDoLaudo(html){
     "Textos Do Parecer (Modelo Oficial Do Relatório)": { especial: "textos", revisar: true },
     "Encaminhamentos": { especial: "encaminhamentos" },
     "Cidade E Data": { campos: ["cidade", "dataRelatorio"] },
+    "Habilidades Cognitivas, Socioemocionais E Motoras": { grupos: [["select[id^='hcog_'],select[id^='hsoc_'],select[id^='hmot_']", "habilidades sem resposta"]] },
   };
 
   let etapaAtual = 0;

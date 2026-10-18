@@ -35,7 +35,7 @@ HTML_LAUDO = f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
 <tr><td>1</td><td>2</td><td>3</td><td>4</td></tr></table>
 <div class="grafico"><img src="{PNG_1X1}" data-mm="170"></div>
 <div class="faixa-topico">Hiperatividade</div>
-<div class="caixa-cinza clara"><p class="recuo">Encaminhei também o paciente.</p></div>
+<div class="caixa-cinza clara"><p class="recuo">Texto em caixa destacada.</p></div>
 <p class="centro"><mark class="amarelo"><strong>destaque amarelo</strong></mark></p>
 <div class="linha-assinatura"></div>
 <p class="centro compacto assinatura-nome">Mayra Vanessa Andrade da Cunha</p>
@@ -214,21 +214,44 @@ def test_imagem_invalida_e_ignorada_sem_quebrar():
         pytest.fail(f"imagem inválida quebrou a conversão: {exc}")
 
 
-def test_laudo_antigo_sai_sem_a_observacao_da_faixa_etaria_do_portage():
-    """Laudos gerados antes de 2026-10-18 guardam o bloco no HTML: a
-    exportação o retira (PDF e Word), sem mexer no resto do documento."""
-    from app.services.laudo_documento import sem_blocos_removidos
+def test_laudo_antigo_sai_no_modelo_atual():
+    """Laudos gerados antes de 2026-10-18 guardam o HTML do modelo antigo: a
+    exportação (PDF e Word) aplica os ajustes de texto e estilo."""
+    from app.services.laudo_documento import no_modelo_atual
 
-    observacao = (
-        '<div class="caixa-cinza clara"><p><strong>Observação sobre a faixa etária do Portage:</strong> '
-        "o paciente encontra-se fora da faixa etária de referência do Inventário Portage Operacionalizado "
-        "(0 a 6 anos).</p></div>"
+    nota = '<div class="caixa-cinza clara"><p><strong>NOTA SOBRE OS RESULTADOS:</strong> Os percentuais…</p></div>'
+    antigo = (
+        "<style>mark.cinza{background:#d9d9d9}.caixa-cinza.clara{background:#bfbfbf}</style><main class=\"documento\">"
+        "<div class=\"cab-box\"><p>Idade Cognitiva: Repertório de referência pelo Portage: 00 meses à 03 anos "
+        "(fora da faixa etária do instrumento — não é comparação normativa)</p></div>"
+        '<div class="faixa centro">PARECER NEUROPSICOPEDAGÓGICO<br>ANÁLISE COMPORTAMENTAL</div>'
+        + nota
+        + '<p><strong>PROTOCOLO UTILIZADO</strong>: Realizada análise.</p>'
+        '<div class="caixa-cinza clara"><p><strong>Observação sobre a faixa etária do Portage:</strong> fora da faixa.</p></div>'
+        '<div class="caixa-cinza clara"><p class="recuo">Encaminhei também o paciente para exames.</p></div>'
+        '<h3><mark class="cinza">Encaminhamentos</mark></h3><ul class="bullets"><li>Neuropediatra</li></ul>'
+        '<h3><mark class="cinza">Estudo De Caso E Observações Clínicas</mark></h3><p class="recuo">Estudo longo.</p>'
+        '<h3><mark class="cinza">Hipótese Diagnóstica:</mark></h3>'
+        '<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>'
+        '<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">'
+        "com formação especializada em Análise do Comportamento Aplicada (ABA)</span></strong></mark></p></main>"
     )
-    html = HTML_LAUDO.replace('<main class="documento">', '<main class="documento">' + observacao, 1)
-    assert observacao in html
-    limpo = sem_blocos_removidos(html)
-    assert "Observação sobre a faixa etária do Portage" not in limpo
-    assert limpo == HTML_LAUDO
+    atual = no_modelo_atual(antigo)
 
-    textos = [p.text for p in Document(io.BytesIO(html_para_docx(html))).paragraphs]
-    assert not any("faixa etária do Portage" in t for t in textos)
+    for removido in ("faixa etária do Portage", "Encaminhei também", "Estudo De Caso", "Estudo longo", "Repertório de referência", "<br>ANÁLISE"):
+        assert removido not in atual
+    assert "Idade Cognitiva: 00 meses à 03 anos</p>" in atual
+    assert "PARECER NEUROPSICOPEDAGÓGICO ANÁLISE COMPORTAMENTAL" in atual
+    assert "<strong>METODOLOGIA E PROTOCOLOS UTILIZADOS</strong>" in atual
+    assert ">Especialista em Análise do Comportamento Aplicada - ABA</span>" in atual
+    assert "#d9d9d9" not in atual and "#bfbfbf" not in atual
+    assert "<li>Neuropediatra</li>" in atual and "Hipótese Diagnóstica:" in atual
+    # Nota logo antes de "Atenciosamente" (e só uma vez)
+    assert atual.count("NOTA SOBRE OS RESULTADOS") == 1
+    assert atual.index("NOTA SOBRE OS RESULTADOS") > atual.index("Hipótese Diagnóstica:")
+    assert atual.index("NOTA SOBRE OS RESULTADOS") < atual.index("Atenciosamente")
+    # Documento já no modelo atual não muda
+    assert no_modelo_atual(atual) == atual
+
+    textos = [p.text for p in Document(io.BytesIO(html_para_docx(antigo))).paragraphs]
+    assert not any("Encaminhei também" in t or "faixa etária do Portage" in t for t in textos)

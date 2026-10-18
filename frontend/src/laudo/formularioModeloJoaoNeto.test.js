@@ -31,7 +31,9 @@ it('cabeçalho, metodologia, destaques e final no modelo do relatório', async (
     metodologia: '**PROTOCOLO UTILIZADO**: Realizada análise dos comportamentos.',
     estudoCaso: 'Texto do estudo de caso que não vai para o documento.',
     filhoUnico: 'Não', filhoUnicoDescricao: '9 anos, com laudo de TEA; 4 anos, sem laudo',
-    ...ata23,
+    ...ata23, cars_0: '2',
+    parto: 'Cesáreo', complicacaoParto: 'Sim', complicacaoPartoDescricao: 'pressão alta',
+    hcog_0: 'Sim', hcog_1: 'Às Vezes', fe_manif_0: 'Percebe quando algo dá errado.',
     hip_tea: true, hip_tea_6a02_0: true, hip_tod: true,
     enc_fonoaudiologia: true,
     __fotosPacienteDados: [{ src: 'data:image/png;base64,FOTO1' }, { src: 'data:image/png;base64,FOTO2' }],
@@ -61,6 +63,21 @@ it('cabeçalho, metodologia, destaques e final no modelo do relatório', async (
   expect(doc).toContain('Transtorno Opositor Desafiador – TOD')
   expect(doc).not.toContain('Transtorno do Espectro Autista – TEA</strong>')
   expect(doc).toContain('<li>Fonoaudiologia</li>')
+
+  // Habilidades gerais (tabelas do modelo) e quadro das funções executivas
+  expect(doc).toContain('<u>HABILIDADES COGNITIVAS E METACOGNITIVAS</u>')
+  expect(doc).toContain('<td>Atenção e concentração</td><td>Mantém atenção e foco nas atividades propostas e no ambiente escolar.</td>')
+  expect(doc).toContain('Quadro – Aplicação das Funções Executivas do paciente')
+  expect(doc).toContain('<th>Habilidades identificadas no paciente</th>')
+  expect(doc).toContain('<li><strong>Parto:</strong> Cesáreo com complicação (pressão alta).</li>')
+  expect(doc).toContain('Idade Cronológica:')
+  expect(doc).toContain('<strong><u>Hipóteses e/ou Confirmações Diagnósticas:</u></strong>')
+
+  // Sequência do modelo: funções executivas → Portage → CARS → ATA → hipóteses → encaminhamentos
+  const ordem = ['Quadro – Aplicação das Funções Executivas', 'base64,graficoCARS', 'pontos na análise da escala ATA', 'Hipóteses e/ou Confirmações', '<li>Fonoaudiologia</li>', 'Considerações Finais']
+  const posicoes = ordem.map((t) => doc.indexOf(t))
+  expect(posicoes.every((p) => p > 0)).toBe(true)
+  expect([...posicoes].sort((a, b) => a - b)).toEqual(posicoes)
 
   // Fora do documento
   expect(doc).not.toContain('Estudo De Caso E Observações Clínicas')

@@ -162,13 +162,18 @@ export function htmlFechamento(id: Identificacao, perfil: Perfil): string {
       `<div class="caixa-cinza clara"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>${esc(perfil.bio)}</p></div>`,
     )
   }
-  partes.push('<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>')
+  // Atenciosamente, local/data e assinatura numa página só.
   const local = id.cidade.trim() ? `${id.cidade.trim()}, ` : ''
-  partes.push(`<p class="direita" style="margin-top:4mm"><strong>${esc(local + dataPorExtenso(id.data_relatorio))}.</strong></p>`)
-  partes.push('<div class="linha-assinatura"></div>')
-  partes.push(`<p class="centro compacto assinatura-nome">${esc(perfil.nome)}</p>`)
-  perfil.credenciais.forEach((t) =>
-    partes.push(`<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">${esc(t)}</span></strong></mark></p>`),
+  partes.push(
+    '<div class="bloco-assinatura">' +
+      '<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>' +
+      `<p class="direita" style="margin-top:4mm"><strong>${esc(local + dataPorExtenso(id.data_relatorio))}.</strong></p>` +
+      '<div class="linha-assinatura"></div>' +
+      `<p class="centro compacto assinatura-nome">${esc(perfil.nome)}</p>` +
+      perfil.credenciais
+        .map((t) => `<p class="centro compacto"><mark class="cinza"><strong><span style="font-size:8.5pt">${esc(t)}</span></strong></mark></p>`)
+        .join('') +
+      '</div>',
   )
   return partes.join('')
 }

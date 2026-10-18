@@ -25,7 +25,7 @@ p.compacto{margin:0;line-height:1.25}
 mark{color:#000;padding:0 1pt}
 mark.cinza{background:#dbe5f1}
 mark.amarelo{background:#ffff00}
-.faixa{background:#c6d9f1;font-weight:bold;padding:1mm 2mm;margin:5mm 0 3mm;line-height:1.45}
+.faixa{background:#c6d9f1;font-weight:bold;padding:1mm 2mm;margin:5mm 0 3mm;line-height:1.45;break-after:avoid;page-break-after:avoid}
 .faixa.centro{text-align:center}
 .faixa-topico{background:#b8cce4;font-weight:bold;font-size:9.5pt;padding:1mm 2mm;margin:4mm 0 3mm;break-after:avoid;page-break-after:avoid}
 h2{font-size:12.5pt;text-align:center;margin:3mm 0 5mm;break-after:avoid;page-break-after:avoid}
@@ -69,6 +69,10 @@ td.cab-espaco{width:4mm}
 .assinatura-nome{font-family:"Arial Narrow","Liberation Sans Narrow",Arial,sans-serif;font-style:italic;font-size:15pt}
 .quebra{break-before:page;page-break-before:always;height:0;margin:0}
 h3.area{text-align:center;font-size:10.5pt;margin:6mm 0 3mm}
+h3>mark.cinza{text-decoration:underline}
+p.titulo-tabela{margin:5mm 0 1mm;font-size:10.5pt}
+.bloco-assinatura{break-inside:avoid;page-break-inside:avoid}
+thead{display:table-header-group}
 td.sem-quebra{white-space:nowrap}
 .galeria{text-align:center;margin:4mm 0 0}
 .galeria img{display:inline-block;margin:3mm 2.5mm;border:.75pt solid #000}

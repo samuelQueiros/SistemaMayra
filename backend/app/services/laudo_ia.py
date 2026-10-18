@@ -154,7 +154,7 @@ def escolhas_da_profissional(
 # o resto fica com a anamnese).
 SECOES_POR_ESPECIALISTA: dict[str, tuple[str, ...]] = {
     ESCALAS.nome: ("ATA E CARS", "Protocolo TOD", "SNAP-IV", "M-CHAT"),
-    DESENVOLVIMENTO.nome: ("Portage", "Habilidades Acadêmicas", "Funções Executivas", "Por Domínio"),
+    DESENVOLVIMENTO.nome: ("Portage", "Habilidades Acadêmicas", "Habilidades Cognitivas", "Funções Executivas", "Por Domínio"),
 }
 ESPECIALISTAS: tuple[Especialista, ...] = (ANAMNESE, ESCALAS, DESENVOLVIMENTO)
 ROTULOS_DAS_ETAPAS = {

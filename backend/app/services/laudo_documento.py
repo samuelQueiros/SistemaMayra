@@ -68,25 +68,61 @@ def _buscador_somente_data_uri() -> URLFetcher:
     return URLFetcher(allowed_protocols={"data"})
 
 
-# Blocos que saíram do modelo do relatório, mas continuam no HTML de laudos
-# gerados antes: são retirados na exportação, sem precisar regerar o laudo.
+# Laudos gerados antes dos ajustes de 2026-10-18 guardam o HTML do modelo
+# antigo. Na exportação (PDF e Word) eles saem no modelo atual naquilo que é
+# só texto ou estilo; o resto (fotos na galeria, quadros por área, destaques
+# da ATA) exige gerar o documento de novo ("Atualizar Relatório").
 _BLOCOS_REMOVIDOS = (
-    # "Observação sobre a faixa etária do Portage" (retirada em 2026-10-18).
+    # "Observação sobre a faixa etária do Portage"
     re.compile(
         r'<div class="caixa-cinza clara"><p><strong>Observação sobre a faixa etária do Portage:</strong>.*?</p></div>',
         re.S,
     ),
+    # "Encaminhei também o paciente para avaliação complementar…"
+    re.compile(r'<div class="caixa-cinza clara"><p[^>]*>Encaminhei também .*?</div>', re.S),
+    # "Estudo De Caso E Observações Clínicas" (já resumido nas seções acima),
+    # até o próximo título.
+    re.compile(r'<h3><mark class="cinza">Estudo De Caso E Observações Clínicas</mark></h3>.*?(?=<h3)', re.S),
+)
+_NOTA_SOBRE_OS_RESULTADOS = re.compile(
+    r'<div class="caixa-cinza clara"><p><strong>NOTA SOBRE OS RESULTADOS:</strong>.*?</p></div>', re.S
+)
+_ATENCIOSAMENTE = '<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>'
+_IDADE_COGNITIVA_ANTIGA = re.compile(
+    r"Repertório de referência pelo Portage: (.*?) \(fora da faixa etária do instrumento — não é comparação normativa\)"
+)
+_TROCAS = (
+    ("PARECER NEUROPSICOPEDAGÓGICO<br>ANÁLISE COMPORTAMENTAL", "PARECER NEUROPSICOPEDAGÓGICO ANÁLISE COMPORTAMENTAL"),
+    ("<strong>PROTOCOLO UTILIZADO</strong>", "<strong>METODOLOGIA E PROTOCOLOS UTILIZADOS</strong>"),
+    # Credencial da assinatura
+    (">com formação especializada em Análise do Comportamento Aplicada (ABA)</span>", ">Especialista em Análise do Comportamento Aplicada - ABA</span>"),
+    (">Analista Comportamental - ABA</span>", ">Especialista em Análise do Comportamento Aplicada - ABA</span>"),
+    # Fundos cinza -> azul-claro (CSS do documento)
+    ("mark.cinza{background:#d9d9d9}", "mark.cinza{background:#dbe5f1}"),
+    (".faixa{background:#bfbfbf;", ".faixa{background:#c6d9f1;"),
+    (".faixa-topico{background:#a6a6a6;", ".faixa-topico{background:#b8cce4;"),
+    (".caixa-cinza{background:#a6a6a6;", ".caixa-cinza{background:#c6d9f1;"),
+    (".caixa-cinza.clara{background:#bfbfbf}", ".caixa-cinza.clara{background:#dbe5f1}"),
+    ("background:#ede9fa", "background:#dbe5f1"),
 )
 
 
-def sem_blocos_removidos(html: str) -> str:
+def no_modelo_atual(html: str) -> str:
     for bloco in _BLOCOS_REMOVIDOS:
         html = bloco.sub("", html)
+    html = _IDADE_COGNITIVA_ANTIGA.sub(r"\1", html)
+    for antigo, novo in _TROCAS:
+        html = html.replace(antigo, novo)
+    # "Nota sobre os resultados": no fim, perto da assinatura.
+    nota = _NOTA_SOBRE_OS_RESULTADOS.search(html)
+    if nota and _ATENCIOSAMENTE in html:
+        html = html[: nota.start()] + html[nota.end() :]
+        html = html.replace(_ATENCIOSAMENTE, nota.group(0) + _ATENCIOSAMENTE, 1)
     return html
 
 
 def html_para_pdf(html: str) -> bytes:
-    return HTML(string=sem_blocos_removidos(html), url_fetcher=_buscador_somente_data_uri()).write_pdf()
+    return HTML(string=no_modelo_atual(html), url_fetcher=_buscador_somente_data_uri()).write_pdf()
 
 
 # ---------------------------------------------------------------- DOCX
@@ -449,7 +485,7 @@ class _ConversorDocx:
         p = self._novo_paragrafo(alinhamento=WD_ALIGN_PARAGRAPH.LEFT)
         p.paragraph_format.keep_with_next = True
         p.paragraph_format.space_before = Pt(6)
-        self._inline(p, el, {"negrito": True, "destaque": "cinza"})
+        self._inline(p, el, {"negrito": True, "destaque": "cinza", "sublinhado": True})
 
     def _titulo_de_area(self, el) -> None:
         """"ÁREA DO DESENVOLVIMENTO: …" acima de cada quadro, centralizado e sem fundo."""
@@ -714,4 +750,4 @@ class _ConversorDocx:
 
 
 def html_para_docx(html: str) -> bytes:
-    return _ConversorDocx().converter(sem_blocos_removidos(html))
+    return _ConversorDocx().converter(no_modelo_atual(html))
