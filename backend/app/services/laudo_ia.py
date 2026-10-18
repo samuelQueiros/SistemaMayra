@@ -7,6 +7,7 @@ fonte da verdade (itens da CARS, ATA, SNAP-IV, Portage da faixa etária...).
 Aqui o catálogo vira texto para o prompt e serve de régua para descartar
 qualquer campo ou valor que a IA invente."""
 
+import re
 import time
 from dataclasses import dataclass, field
 from functools import partial
@@ -134,6 +135,21 @@ def respostas_para_answers(protocolo: ProtocoloPorIA, catalogo: CatalogoDoProtoc
     return answers, descartados
 
 
+# Hipóteses diagnósticas (hip_*) e encaminhamentos (enc_*): a psicóloga
+# marca na tela do Laudo Por IA, antes de enviar os PDFs. Habilidades
+# acadêmicas (hab_*): ela avalia à mão, nas pendências. A IA não preenche.
+CAMPOS_DA_PROFISSIONAL = re.compile(r"^(hip|enc|hab)_")
+
+
+def escolhas_da_profissional(
+    catalogo: CatalogoDoProtocolo, hipoteses: list[str], encaminhamentos: list[str]
+) -> dict[str, bool]:
+    """Caixas marcadas pela psicóloga, só as que existem no catálogo."""
+    marcar = {c.id for c in catalogo.campos if c.tipo == "marcar"}
+    escolhidas = [i for i in hipoteses if i.startswith("hip_")] + [i for i in encaminhamentos if i.startswith("enc_")]
+    return {i: True for i in escolhidas if i in marcar}
+
+
 # Qual especialista cuida de cada seção do formulário (pelo título da seção;
 # o resto fica com a anamnese).
 SECOES_POR_ESPECIALISTA: dict[str, tuple[str, ...]] = {
@@ -153,6 +169,8 @@ def dividir_catalogo(catalogo: CatalogoDoProtocolo) -> dict[str, CatalogoDoProto
     """Parte do catálogo de cada especialista (só os que têm campos)."""
     partes: dict[str, list[CampoDoCatalogo]] = {e.nome: [] for e in ESPECIALISTAS}
     for campo in catalogo.campos:
+        if CAMPOS_DA_PROFISSIONAL.match(campo.id):
+            continue
         dono = next(
             (nome for nome, secoes in SECOES_POR_ESPECIALISTA.items() if any(s.lower() in campo.secao.lower() for s in secoes)),
             ANAMNESE.nome,

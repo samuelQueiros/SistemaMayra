@@ -28,12 +28,16 @@ ANAMNESE = Especialista(
 ESCALAS = Especialista(
     "escalas",
     "Você transcreve as escalas pontuadas (CARS, ATA, SNAP-IV, TOD, M-CHAT) item a item para "
-    "os campos do catálogo, usando a pontuação/opção registrada no documento da escala.",
+    "os campos do catálogo, usando a pontuação/opção registrada no documento da escala. "
+    "ATA: cada item (I a XXII) vale pela quantidade de caixas marcadas — nenhuma = 0, "
+    "uma = 1, duas ou mais = 2 (nunca 3); o percentual do item é marcadas ÷ caixas do item.",
 )
 DESENVOLVIMENTO = Especialista(
     "desenvolvimento",
-    "Você cuida do Portage (itens da faixa etária do paciente), das habilidades acadêmicas do "
-    "ano escolar, do perfil das funções executivas e da distribuição das dificuldades por domínio.",
+    "Você cuida do Portage, do perfil das funções "
+    "executivas e da distribuição das dificuldades por domínio. Quando houver um documento do "
+    "Portage, preencha TODOS os itens do catálogo que ele responde (inclusive os que não "
+    "foram atingidos), sem deixar para a profissional o que o documento já traz.",
 )
 
 
@@ -57,14 +61,8 @@ def _system_especialista(especialista: Especialista) -> str:
         "campos da sua parte do protocolo. Preencha usando somente o id exato de "
         "cada campo e, em campos com opções, somente os valores de opção listados. "
         "Preencha apenas o que os documentos sustentam; o que faltar vai para "
-        "'lacunas'. Hipóteses diagnósticas só podem ser marcadas quando os "
-        "documentos as mencionarem — nunca conclua um diagnóstico. "
-        "Para os encaminhamentos (campos enc_*), analise as necessidades sustentadas "
-        "pelos documentos e selecione um ou mais encaminhamentos pertinentes dentre "
-        "as opções do catálogo, marcando 'sim'. Eles são sugestões para revisão da "
-        "profissional, não diagnósticos nem encaminhamentos já realizados. Não invente "
-        "opções e não marque todos indiscriminadamente; se não houver evidência "
-        "suficiente, informe a lacuna em vez de selecionar sem fundamento. "
+        "'lacunas'. Nunca conclua um diagnóstico: hipóteses diagnósticas e "
+        "encaminhamentos são escolhidos pela profissional. "
         f"{LIMITES_DA_IA}"
     )
 

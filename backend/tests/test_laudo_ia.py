@@ -249,3 +249,63 @@ def test_exige_data_valida_e_cidade_do_sistema(client, metadados):
         files=[('arquivos', ('teste.pdf', b'%PDF-1.4', 'application/pdf'))],
         data={'catalogo': json.dumps(CATALOGO), **metadados})
     assert resposta.status_code == 422
+
+
+def test_escolhas_da_profissional_ata_calculada_e_metodos(client, monkeypatch):
+    """Hipóteses e encaminhamentos vêm da tela (a IA nem recebe esses campos),
+    a ATA é pontuada pelo sistema e os métodos seguem os PDFs enviados."""
+    from tests.test_ata import _documento
+
+    chamadas = []
+
+    def fake(**kwargs):
+        chamadas.append(kwargs)
+        return ResultadoDaIA(protocolo=PROTOCOLO, documentos=[_documento()], tempos={})
+
+    monkeypatch.setattr(modulo, "preencher_protocolo", fake)
+    catalogo = json.loads(json.dumps(CATALOGO))
+    catalogo["campos"] += [
+        {"id": "hip_tea", "secao": "9. Hipóteses", "rotulo": "TEA", "tipo": "marcar"},
+        {"id": "hip_tea_6a02_0", "secao": "9. Hipóteses", "rotulo": "TEA 6A02.0", "tipo": "marcar"},
+        {"id": "enc_fonoaudiologia", "secao": "19. Encaminhamentos", "rotulo": "Fonoaudiologia", "tipo": "marcar"},
+        *({"id": f"ata_item_{i}", "secao": "11. Pontuações ATA E CARS", "rotulo": f"Item {i}", "tipo": "opcao",
+           "opcoes": [{"valor": v, "rotulo": v} for v in "012"]} for i in range(22)),
+        *({"id": f"ata_perc_{i}", "secao": "11. Pontuações ATA E CARS", "rotulo": f"% {i}", "tipo": "numero"} for i in range(22)),
+        {"id": "snap_0", "secao": "14. SNAP-IV", "rotulo": "Item 1", "tipo": "opcao", "opcoes": [{"valor": "0", "rotulo": "0"}]},
+    ]
+    headers, pid = _preparar(client)
+    resposta = client.post(
+        f"/api/patients/{pid}/laudo-ia",
+        headers=headers,
+        files=[("arquivos", ("ata.pdf", _pdf("ATA"), "application/pdf"))],
+        data={
+            "data_relatorio": "2026-10-15",
+            "catalogo": json.dumps(catalogo),
+            "hipoteses": json.dumps(["hip_tea", "hip_tea_6a02_0", "hip_inexistente"]),
+            "encaminhamentos": json.dumps(["enc_fonoaudiologia", "parto"]),
+        },
+    )
+    andamento = _concluir(client, headers, resposta)
+    assert andamento["status"] == "concluido", andamento
+    answers = client.get(f"/api/reports/{andamento['report_id']}", headers=headers).json()["answers_json"]
+
+    assert answers["hip_tea"] is True and answers["hip_tea_6a02_0"] is True
+    assert answers["enc_fonoaudiologia"] is True
+    assert "hip_inexistente" not in answers and answers.get("parto") == "Cesáreo"  # "parto" não vira caixa marcada
+    assert answers["ata_item_17"] == "2" and answers["ata_perc_0"] == "14"
+    assert "ata" not in answers  # o total fica com o formulário (campo fora do catálogo)
+    assert set(answers["__metodosExcluidos"]) == {"snap", "tod", "portage", "mchat"}  # ATA (PDF) e CARS (respondida) ficam
+
+
+def test_ia_nao_recebe_hipoteses_encaminhamentos_nem_habilidades():
+    from app.services.laudo_ia import dividir_catalogo
+
+    catalogo = CatalogoDoProtocolo.model_validate(
+        {"campos": CATALOGO["campos"] + [
+            {"id": "enc_neuropediatra", "secao": "19. Encaminhamentos", "rotulo": "Neuropediatra", "tipo": "marcar"},
+            {"id": "hab_status_0", "secao": "8. Habilidades Acadêmicas", "rotulo": "Hab 0", "tipo": "texto"},
+        ]}
+    )
+    ids = {c.id for parte in dividir_catalogo(catalogo).values() for c in parte.campos}
+    assert "parto" in ids and "cars_0" in ids
+    assert not {"hip_tdah", "enc_neuropediatra", "hab_status_0"} & ids

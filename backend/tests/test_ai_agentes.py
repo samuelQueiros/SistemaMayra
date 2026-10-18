@@ -144,14 +144,17 @@ def _catalogo_real() -> CatalogoDoProtocolo:
 def test_catalogo_dividido_entre_os_especialistas():
     partes = dividir_catalogo(_catalogo_real())
     ids = {nome: {c.id for c in parte.campos} for nome, parte in partes.items()}
-    assert {"parto", "complicacaoParto", "hip_tdah", "queixaFamiliar"} <= ids["anamnese"]
+    assert {"parto", "complicacaoParto", "queixaFamiliar", "anoEscolar"} <= ids["anamnese"]
     assert {"cars_0", "ata_item_0", "snap_0"} <= ids["escalas"]
-    assert {"hab_status_0", "anoEscolar"} & ids["desenvolvimento"] == {"hab_status_0"}
     assert any(i.startswith("portage_") for i in ids["desenvolvimento"])
     assert any(i.startswith("dom_") for i in ids["desenvolvimento"])
+    # Hipóteses, encaminhamentos e habilidades acadêmicas ficam com a profissional.
+    da_profissional = {c.id for c in _catalogo_real().campos if c.id.startswith(("hip_", "enc_", "hab_"))}
+    assert "hip_tdah" in da_profissional and "hab_status_0" in da_profissional
     # Cada campo com um único dono.
     todos = [i for parte in ids.values() for i in parte]
-    assert len(todos) == len(set(todos)) == len(_catalogo_real().campos)
+    assert not da_profissional & set(todos)
+    assert len(todos) == len(set(todos)) == len(_catalogo_real().campos) - len(da_profissional)
 
 
 def test_orquestracao_extrai_e_roda_especialistas_e_redator_em_paralelo(monkeypatch):

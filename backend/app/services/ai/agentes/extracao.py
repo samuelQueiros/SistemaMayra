@@ -23,7 +23,7 @@ from app.services.ai.provider import get_structured_model
 from app.services.storage import get_form_pdfs_storage
 
 # Mudou o prompt ou o formato? Suba a versão para não reaproveitar cache antigo.
-VERSAO_DA_EXTRACAO = 1
+VERSAO_DA_EXTRACAO = 2
 
 # PDFs lidos ao mesmo tempo. Cada um passa de 10 mil tokens: com todos de uma
 # vez, 3 ou mais PDFs estouravam o limite de tokens por minuto da conta do
@@ -83,6 +83,14 @@ class RespostaExtraida(BaseModel):
             "Vazio quando a pergunta ficou sem resposta."
         )
     )
+    # Perguntas de caixas de seleção ("marque todas que se aplicam", como os
+    # itens da ATA): a pontuação é calculada pelo sistema a partir da contagem.
+    marcadas: int | None = Field(
+        default=None, ge=0, le=60, description="Caixas de seleção: quantas caixas estão marcadas. Vazio nas demais perguntas."
+    )
+    opcoes: int | None = Field(
+        default=None, ge=0, le=60, description="Caixas de seleção: quantas caixas existem na pergunta. Vazio nas demais perguntas."
+    )
 
 
 class DocumentoExtraido(BaseModel):
@@ -106,6 +114,11 @@ EXTRACAO_SYSTEM_PROMPT = (
     "ou destacada; as demais opções NÃO foram escolhidas e não entram na "
     "resposta. Transcreva todas as perguntas/itens, na ordem, com o que foi "
     "marcado ou escrito; pergunta sem resposta fica com resposta vazia. "
+    "Em perguntas de caixas de seleção (várias opções podem ser marcadas, como "
+    "os itens I a XXII da ATA), cada item é UMA pergunta: na pergunta, o título "
+    "do item com o número romano (ex.: 'I. DIFICULDADE NA INTERAÇÃO SOCIAL'); na "
+    "resposta, as opções marcadas separadas por ';'; em 'marcadas', quantas caixas "
+    "estão marcadas (0 se nenhuma); em 'opcoes', quantas caixas existem. "
     "Nunca invente respostas."
 )
 
