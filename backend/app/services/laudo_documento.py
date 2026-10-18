@@ -68,8 +68,25 @@ def _buscador_somente_data_uri() -> URLFetcher:
     return URLFetcher(allowed_protocols={"data"})
 
 
+# Blocos que saíram do modelo do relatório, mas continuam no HTML de laudos
+# gerados antes: são retirados na exportação, sem precisar regerar o laudo.
+_BLOCOS_REMOVIDOS = (
+    # "Observação sobre a faixa etária do Portage" (retirada em 2026-10-18).
+    re.compile(
+        r'<div class="caixa-cinza clara"><p><strong>Observação sobre a faixa etária do Portage:</strong>.*?</p></div>',
+        re.S,
+    ),
+)
+
+
+def sem_blocos_removidos(html: str) -> str:
+    for bloco in _BLOCOS_REMOVIDOS:
+        html = bloco.sub("", html)
+    return html
+
+
 def html_para_pdf(html: str) -> bytes:
-    return HTML(string=html, url_fetcher=_buscador_somente_data_uri()).write_pdf()
+    return HTML(string=sem_blocos_removidos(html), url_fetcher=_buscador_somente_data_uri()).write_pdf()
 
 
 # ---------------------------------------------------------------- DOCX
@@ -697,4 +714,4 @@ class _ConversorDocx:
 
 
 def html_para_docx(html: str) -> bytes:
-    return _ConversorDocx().converter(html)
+    return _ConversorDocx().converter(sem_blocos_removidos(html))

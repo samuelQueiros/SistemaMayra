@@ -212,3 +212,23 @@ def test_imagem_invalida_e_ignorada_sem_quebrar():
         html_para_docx(html)
     except Exception as exc:  # pragma: no cover - diagnóstico
         pytest.fail(f"imagem inválida quebrou a conversão: {exc}")
+
+
+def test_laudo_antigo_sai_sem_a_observacao_da_faixa_etaria_do_portage():
+    """Laudos gerados antes de 2026-10-18 guardam o bloco no HTML: a
+    exportação o retira (PDF e Word), sem mexer no resto do documento."""
+    from app.services.laudo_documento import sem_blocos_removidos
+
+    observacao = (
+        '<div class="caixa-cinza clara"><p><strong>Observação sobre a faixa etária do Portage:</strong> '
+        "o paciente encontra-se fora da faixa etária de referência do Inventário Portage Operacionalizado "
+        "(0 a 6 anos).</p></div>"
+    )
+    html = HTML_LAUDO.replace('<main class="documento">', '<main class="documento">' + observacao, 1)
+    assert observacao in html
+    limpo = sem_blocos_removidos(html)
+    assert "Observação sobre a faixa etária do Portage" not in limpo
+    assert limpo == HTML_LAUDO
+
+    textos = [p.text for p in Document(io.BytesIO(html_para_docx(html))).paragraphs]
+    assert not any("faixa etária do Portage" in t for t in textos)
