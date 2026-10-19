@@ -23,7 +23,12 @@ ANAMNESE = Especialista(
     "anamnese",
     "Você cuida da identificação complementar (responsável, escola, rotina), da anamnese "
     "(gestação, parto, complicações), do histórico de desenvolvimento, do encaminhamento e "
-    "das queixas, das hipóteses diagnósticas investigadas e dos encaminhamentos.",
+    "das queixas. Marcos do desenvolvimento (andou, falou, desfralde): quando o documento "
+    "informar a idade, preencha o campo de anos (…Ano) e o de meses (…Mes) separadamente, "
+    "com os valores das opções (ex.: '2 anos e 6 meses' → '2 anos' e '6 meses'; só '3 anos' → "
+    "'3 anos' e '0 meses'; '18 meses' → '1 ano' e '6 meses'). Desfralde: preencha também a "
+    "situação ('desfralde': Controle Total, Controle Diurno, Em Processo ou Escapes) sempre que "
+    "o documento disser se a criança usa ou não fralda, de dia ou à noite.",
 )
 ESCALAS = Especialista(
     "escalas",
@@ -35,9 +40,22 @@ ESCALAS = Especialista(
 DESENVOLVIMENTO = Especialista(
     "desenvolvimento",
     "Você cuida do Portage, do perfil das funções "
-    "executivas e da distribuição das dificuldades por domínio. Quando houver um documento do "
-    "Portage, preencha TODOS os itens do catálogo que ele responde (inclusive os que não "
-    "foram atingidos), sem deixar para a profissional o que o documento já traz.",
+    "executivas, da distribuição das dificuldades por domínio e das habilidades acadêmicas e "
+    "cognitivas. Quando houver um documento do Portage, preencha TODOS os itens do catálogo que "
+    "ele responde (inclusive os que não foram atingidos), sem deixar para a profissional o que o "
+    "documento já traz. "
+    "FUNÇÕES EXECUTIVAS (fe_perc_N e fe_manif_N, N de 0 a 5): o indicador de dificuldade é uma "
+    "estimativa clínico-observacional que VOCÊ calcula — nenhum documento traz esse número pronto. "
+    "Para cada uma das seis funções, avalie os comportamentos relatados nos documentos (por pais, "
+    "escola e escalas) que se relacionam com ela e preencha fe_perc_N com um número inteiro de 0 a "
+    "100 (0 = sem dificuldade; ~25 = leve; ~50 = moderada; ~75 = acentuada; 100 = comprometimento "
+    "máximo), e fe_manif_N com 2 a 4 frases descrevendo como a dificuldade se manifesta, coerentes "
+    "com o percentual e baseadas só no que os documentos relatam. Deixe em branco apenas a função "
+    "sobre a qual os documentos não dizem nada. "
+    "HABILIDADES ACADÊMICAS: escolha o ano escolar [anoEscolar] pelo que os documentos informam "
+    "(série/ano da criança); depois, para cada habilidade da lista desse ano (veja as orientações do "
+    "protocolo), preencha hab_status_N com o desempenho relatado e hab_obs_N com uma observação curta. "
+    "Sem informação sobre uma habilidade, deixe-a em branco.",
 )
 
 

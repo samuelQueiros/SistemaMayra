@@ -297,7 +297,7 @@ def test_escolhas_da_profissional_ata_calculada_e_metodos(client, monkeypatch):
     assert set(answers["__metodosExcluidos"]) == {"snap", "tod", "portage", "mchat"}  # ATA (PDF) e CARS (respondida) ficam
 
 
-def test_ia_nao_recebe_hipoteses_encaminhamentos_nem_habilidades():
+def test_ia_nao_recebe_hipoteses_nem_encaminhamentos_mas_recebe_habilidades():
     from app.services.laudo_ia import dividir_catalogo
 
     catalogo = CatalogoDoProtocolo.model_validate(
@@ -307,5 +307,46 @@ def test_ia_nao_recebe_hipoteses_encaminhamentos_nem_habilidades():
         ]}
     )
     ids = {c.id for parte in dividir_catalogo(catalogo).values() for c in parte.campos}
-    assert "parto" in ids and "cars_0" in ids
-    assert not {"hip_tdah", "enc_neuropediatra", "hab_status_0"} & ids
+    assert "parto" in ids and "cars_0" in ids and "hab_status_0" in ids
+    assert not {"hip_tdah", "enc_neuropediatra"} & ids
+
+
+def _catalogo_de_idades() -> CatalogoDoProtocolo:
+    anos = ["Antes de 1 ano", "1 ano", "2 anos", "3 anos", "4 anos", "5 anos", "6 anos ou mais", "Não informado"]
+    meses = ["0 meses", "1 mês"] + [f"{n} meses" for n in range(2, 12)] + ["Não informado"]
+    opcoes = lambda lista: [{"valor": v, "rotulo": v} for v in lista]  # noqa: E731
+    return CatalogoDoProtocolo.model_validate({"campos": [
+        {"id": "desfralde", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(["Controle Total", "Em Processo"])},
+        {"id": "desfraldeAno", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(anos)},
+        {"id": "desfraldeMes", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(meses)},
+        {"id": "andouAno", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(anos)},
+        {"id": "andouMes", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(meses)},
+        {"id": "falouAno", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(anos)},
+        {"id": "falouMes", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(meses)},
+    ]})
+
+
+def test_idade_inteira_no_campo_de_anos_e_dividida_em_ano_e_mes():
+    from app.services.ai.schemas import ProtocoloPorIA
+
+    protocolo = ProtocoloPorIA(estudo_de_caso="", lacunas=[], campos=[
+        {"id": "desfralde", "valor": "Controle Total"},
+        {"id": "desfraldeAno", "valor": "2 anos e 6 meses"},
+        {"id": "andouAno", "valor": "18 meses"},
+        {"id": "falouAno", "valor": "com 3 anos e meio"},
+        {"id": "falouMes", "valor": "4 meses"},  # o mês preenchido pela IA prevalece
+    ])
+    answers, descartados = respostas_para_answers(protocolo, _catalogo_de_idades())
+    assert answers["desfralde"] == "Controle Total"
+    assert (answers["desfraldeAno"], answers["desfraldeMes"]) == ("2 anos", "6 meses")
+    assert (answers["andouAno"], answers["andouMes"]) == ("1 ano", "6 meses")
+    assert (answers["falouAno"], answers["falouMes"]) == ("3 anos", "4 meses")
+    assert descartados == []
+
+
+def test_idade_acima_da_ultima_opcao_vai_para_ou_mais():
+    from app.services.ai.schemas import ProtocoloPorIA
+
+    protocolo = ProtocoloPorIA(estudo_de_caso="", lacunas=[], campos=[{"id": "desfraldeAno", "valor": "7 anos"}])
+    answers, _ = respostas_para_answers(protocolo, _catalogo_de_idades())
+    assert answers["desfraldeAno"] == "6 anos ou mais" and answers["desfraldeMes"] == "0 meses"

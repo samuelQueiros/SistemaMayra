@@ -5,7 +5,7 @@
 export const CSS_LAUDO = `
 @page{size:A4;margin:30mm 20mm 27mm 20mm;
   @top-center{content:element(cabecalhoPagina);vertical-align:bottom;padding-bottom:4mm}
-  @bottom-center{content:element(rodapePagina);vertical-align:top;padding-top:1mm}}
+  @bottom-center{content:element(rodapePagina);vertical-align:top;padding-top:2mm}}
 @page capa{margin:0;@top-center{content:none}@bottom-center{content:none}}
 .capa{page:capa;width:210mm;height:297mm;margin:0;padding:0;overflow:hidden;break-after:page;page-break-after:always}
 .capa img{display:block;width:210mm;height:297mm}
@@ -16,7 +16,7 @@ body{font-family:Arial,"Liberation Sans",Helvetica,FreeSans,"DejaVu Sans",sans-s
 .cabecalho-pagina{position:running(cabecalhoPagina);text-align:center}
 .cabecalho-pagina img{width:19mm}
 .rodape-pagina{position:running(rodapePagina);text-align:center}
-.rodape-pagina img{width:78mm}
+.rodape-pagina img{width:99mm}
 p{margin:0 0 6pt;text-align:justify;orphans:2;widows:2}
 p.recuo{text-indent:12.5mm}
 p.centro{text-align:center}

@@ -97,6 +97,59 @@ def _normalizar(texto: str) -> str:
     return " ".join(texto.lower().split())
 
 
+_ANOS = re.compile(r"(\d+)\s*anos?\b")
+_MESES = re.compile(r"(\d+)\s*m[eê]s(?:es)?\b")
+
+
+def _idade_em_anos_e_meses(valor: str) -> tuple[int, int] | None:
+    """'2 anos e 6 meses', '1 ano e meio', '18 meses', 'com 3 anos' → (anos, meses)."""
+    texto = _normalizar(valor)
+    anos, meses = _ANOS.search(texto), _MESES.search(texto)
+    if not anos and not meses:
+        return None
+    total = (int(anos.group(1)) if anos else 0) * 12 + (int(meses.group(1)) if meses else 0)
+    if "e meio" in texto and not meses:
+        total += 6
+    return total // 12, total % 12
+
+
+def _opcao_de_anos(campo: CampoDoCatalogo, anos: int) -> str | None:
+    """Opção do select de anos ("Antes de 1 ano", "2 anos", "6 anos ou mais")."""
+    for opcao in campo.opcoes:
+        rotulo = _normalizar(opcao.valor)
+        numero = re.match(r"(\d+)", rotulo)
+        if anos == 0 and rotulo.startswith("antes de 1"):
+            return opcao.valor
+        if numero and (int(numero.group(1)) == anos or ("ou mais" in rotulo and anos >= int(numero.group(1)))):
+            return opcao.valor
+    return None
+
+
+def _opcao_de_meses(campo: CampoDoCatalogo, meses: int) -> str | None:
+    return next((o.valor for o in campo.opcoes if re.match(rf"{meses}\s*m", _normalizar(o.valor))), None)
+
+
+def _idades_em_partes(protocolo: ProtocoloPorIA, por_id: dict[str, CampoDoCatalogo]) -> dict[str, str]:
+    """A IA às vezes devolve a idade inteira num campo de anos ("2 anos e 6
+    meses" em desfraldeAno). Divide nos selects de ano e mês do formulário."""
+    partes: dict[str, str] = {}
+    for item in protocolo.campos:
+        campo = por_id.get(item.id)
+        if campo is None or campo.tipo != "opcao" or not item.id.endswith("Ano") or any(o.valor == item.valor for o in campo.opcoes):
+            continue
+        idade = _idade_em_anos_e_meses(item.valor or "")
+        if idade is None:
+            continue
+        anos = _opcao_de_anos(campo, idade[0])
+        if anos:
+            partes[item.id] = anos
+        campo_mes = por_id.get(item.id[: -len("Ano")] + "Mes")
+        meses = campo_mes and _opcao_de_meses(campo_mes, idade[1])
+        if meses:
+            partes[campo_mes.id] = meses
+    return partes
+
+
 def respostas_para_answers(protocolo: ProtocoloPorIA, catalogo: CatalogoDoProtocolo) -> tuple[dict, list[str]]:
     """Converte a resposta da IA no `answers_json` do formulário (chaves =
     ids dos campos, mesmo formato de `coletarDados()`). Campos fora do
@@ -104,6 +157,7 @@ def respostas_para_answers(protocolo: ProtocoloPorIA, catalogo: CatalogoDoProtoc
     por_id = {c.id: c for c in catalogo.campos}
     answers: dict = {}
     descartados: list[str] = []
+    idades = _idades_em_partes(protocolo, por_id)
 
     for item in protocolo.campos:
         campo = por_id.get(item.id)
@@ -112,6 +166,8 @@ def respostas_para_answers(protocolo: ProtocoloPorIA, catalogo: CatalogoDoProtoc
             descartados.append(item.id)
             continue
         if campo.tipo == "opcao":
+            if campo.id in idades and campo.id.endswith("Ano"):  # já dividida em ano + mês acima
+                continue
             escolhida = next((o.valor for o in campo.opcoes if o.valor == valor), None)
             if escolhida is None:  # a IA às vezes devolve o rótulo da opção
                 escolhida = next((o.valor for o in campo.opcoes if _normalizar(o.rotulo) == _normalizar(valor)), None)
@@ -130,15 +186,22 @@ def respostas_para_answers(protocolo: ProtocoloPorIA, catalogo: CatalogoDoProtoc
         else:
             answers[campo.id] = valor[:TAMANHO_MAXIMO_TEXTO]
 
+    # Mês tirado de "2 anos e 6 meses" só entra se a IA não preencheu o mês.
+    for campo_id, valor in idades.items():
+        if campo_id.endswith("Mes"):
+            answers.setdefault(campo_id, valor)
+        else:
+            answers[campo_id] = valor
     if protocolo.estudo_de_caso.strip():
         answers["estudoCaso"] = protocolo.estudo_de_caso.strip()[: TAMANHO_MAXIMO_TEXTO * 2]
     return answers, descartados
 
 
 # Hipóteses diagnósticas (hip_*) e encaminhamentos (enc_*): a psicóloga
-# marca na tela do Laudo Por IA, antes de enviar os PDFs. Habilidades
-# acadêmicas (hab_*): ela avalia à mão, nas pendências. A IA não preenche.
-CAMPOS_DA_PROFISSIONAL = re.compile(r"^(hip|enc|hab)_")
+# marca na tela do Laudo Por IA, antes de enviar os PDFs. A IA não preenche.
+# (As habilidades acadêmicas por ano escolar voltaram para a IA em 2026-10-19,
+# a pedido da psicóloga.)
+CAMPOS_DA_PROFISSIONAL = re.compile(r"^(hip|enc)_")
 
 
 def escolhas_da_profissional(
@@ -156,6 +219,10 @@ SECOES_POR_ESPECIALISTA: dict[str, tuple[str, ...]] = {
     ESCALAS.nome: ("ATA E CARS", "Protocolo TOD", "SNAP-IV", "M-CHAT"),
     DESENVOLVIMENTO.nome: ("Portage", "Habilidades Acadêmicas", "Habilidades Cognitivas", "Funções Executivas", "Por Domínio"),
 }
+# Campos que ficam com um especialista mesmo estando em outra seção: o ano
+# escolar decide quais são as habilidades acadêmicas (hab_status_N), então
+# quem preenche as habilidades escolhe também o ano.
+CAMPOS_POR_ESPECIALISTA: dict[str, str] = {"anoEscolar": DESENVOLVIMENTO.nome}
 ESPECIALISTAS: tuple[Especialista, ...] = (ANAMNESE, ESCALAS, DESENVOLVIMENTO)
 ROTULOS_DAS_ETAPAS = {
     ANAMNESE.nome: "anamnese e histórico",
@@ -171,7 +238,7 @@ def dividir_catalogo(catalogo: CatalogoDoProtocolo) -> dict[str, CatalogoDoProto
     for campo in catalogo.campos:
         if CAMPOS_DA_PROFISSIONAL.match(campo.id):
             continue
-        dono = next(
+        dono = CAMPOS_POR_ESPECIALISTA.get(campo.id) or next(
             (nome for nome, secoes in SECOES_POR_ESPECIALISTA.items() if any(s.lower() in campo.secao.lower() for s in secoes)),
             ANAMNESE.nome,
         )

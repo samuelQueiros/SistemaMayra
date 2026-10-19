@@ -104,6 +104,9 @@ _TROCAS = (
     (".caixa-cinza{background:#a6a6a6;", ".caixa-cinza{background:#c6d9f1;"),
     (".caixa-cinza.clara{background:#bfbfbf}", ".caixa-cinza.clara{background:#dbe5f1}"),
     ("background:#ede9fa", "background:#dbe5f1"),
+    # Rodapé do tamanho e na altura do modelo João Neto (~87 mm de conteúdo, ~7 mm da borda)
+    (".rodape-pagina img{width:78mm}", ".rodape-pagina img{width:99mm}"),
+    ("@bottom-center{content:element(rodapePagina);vertical-align:top;padding-top:1mm}", "@bottom-center{content:element(rodapePagina);vertical-align:top;padding-top:2mm}"),
 )
 
 
@@ -355,7 +358,7 @@ class _ConversorDocx:
             secao.footer.is_linked_to_previous = False
         for classe, destino, largura in (
             ("cabecalho-pagina", secao.header, 19),
-            ("rodape-pagina", secao.footer, 78),
+            ("rodape-pagina", secao.footer, 99),
         ):
             achados = raiz.xpath(f'//*[contains(concat(" ", normalize-space(@class), " "), " {classe} ")]//img')
             paragrafo = destino.paragraphs[0]

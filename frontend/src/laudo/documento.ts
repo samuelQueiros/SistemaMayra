@@ -191,7 +191,7 @@ export function htmlDocumento(
     '<div class="moldura"></div>' +
     (imagens.capa ? `<div class="capa"><img src="${imagens.capa}" data-mm="210" alt="Capa do relatório"></div>` : '') +
     (imagens.cabecalho ? `<div class="cabecalho-pagina"><img src="${imagens.cabecalho}" data-mm="19" alt=""></div>` : '') +
-    (imagens.rodape ? `<div class="rodape-pagina"><img src="${imagens.rodape}" data-mm="78" alt=""></div>` : '') +
+    (imagens.rodape ? `<div class="rodape-pagina"><img src="${imagens.rodape}" data-mm="99" alt=""></div>` : '') +
     `<main class="documento">${corpo}</main></body></html>`
   )
 }
