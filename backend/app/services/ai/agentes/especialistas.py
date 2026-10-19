@@ -23,12 +23,10 @@ ANAMNESE = Especialista(
     "anamnese",
     "Você cuida da identificação complementar (responsável, escola, rotina), da anamnese "
     "(gestação, parto, complicações), do histórico de desenvolvimento, do encaminhamento e "
-    "das queixas. Marcos do desenvolvimento (andou, falou, desfralde): quando o documento "
-    "informar a idade, preencha o campo de anos (…Ano) e o de meses (…Mes) separadamente, "
-    "com os valores das opções (ex.: '2 anos e 6 meses' → '2 anos' e '6 meses'; só '3 anos' → "
-    "'3 anos' e '0 meses'; '18 meses' → '1 ano' e '6 meses'). Desfralde: preencha também a "
-    "situação ('desfralde': Controle Total, Controle Diurno, Em Processo ou Escapes) sempre que "
-    "o documento disser se a criança usa ou não fralda, de dia ou à noite.",
+    "das queixas. Marcos do desenvolvimento (andou, falou): quando o documento informar a "
+    "idade, preencha o campo de anos (…Ano) e o de meses (…Mes) separadamente, com os valores "
+    "das opções (ex.: '2 anos e 6 meses' → '2 anos' e '6 meses'; só '3 anos' → '3 anos' e "
+    "'0 meses'; '18 meses' → '1 ano' e '6 meses').",
 )
 ESCALAS = Especialista(
     "escalas",
@@ -52,10 +50,10 @@ DESENVOLVIMENTO = Especialista(
     "máximo), e fe_manif_N com 2 a 4 frases descrevendo como a dificuldade se manifesta, coerentes "
     "com o percentual e baseadas só no que os documentos relatam. Deixe em branco apenas a função "
     "sobre a qual os documentos não dizem nada. "
-    "HABILIDADES ACADÊMICAS: escolha o ano escolar [anoEscolar] pelo que os documentos informam "
-    "(série/ano da criança); depois, para cada habilidade da lista desse ano (veja as orientações do "
-    "protocolo), preencha hab_status_N com o desempenho relatado e hab_obs_N com uma observação curta. "
-    "Sem informação sobre uma habilidade, deixe-a em branco.",
+    "HABILIDADES ACADÊMICAS: o ano escolar e o desempenho em cada habilidade do ano são "
+    "escolhidos pela profissional e vêm nos dados confirmados por ela. Para cada habilidade com "
+    "desempenho informado, preencha hab_obs_N com uma observação curta, coerente com esse "
+    "desempenho e com o que os documentos relatam.",
 )
 
 

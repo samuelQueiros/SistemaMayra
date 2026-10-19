@@ -11,6 +11,7 @@ import { downloadReportDocx, downloadReportPdf, getReport, getReportResumo } fro
 import { Alert, Button, buttonClass, Card, Input, Select, PageHeader, Textarea } from '../components/ds'
 import { EscolhaDePaciente } from '../components/pacientes/EscolhaDePaciente'
 import { EscolhasDoLaudo } from '../components/EscolhasDoLaudo'
+import { DadosDaProfissional } from '../components/DadosDaProfissional'
 import { SeletorDePdfs } from '../components/SeletorDePdfs'
 import { CamposQueFaltam } from '../components/pendencias/CamposQueFaltam'
 import { ProgressoDaGeracao } from '../components/ProgressoDaGeracao'
@@ -79,6 +80,9 @@ export default function LaudoPorIA() {
   const [observacoes, setObservacoes] = useState('')
   const [hipoteses, setHipoteses] = useState<string[]>([])
   const [encaminhamentos, setEncaminhamentos] = useState<string[]>([])
+  // Desfralde, ano escolar e habilidades: escolhidos por ela, com as opções do catálogo.
+  const [dadosDaProfissional, setDadosDaProfissional] = useState<Record<string, string>>({})
+  const [catalogoDaTela, setCatalogoDaTela] = useState<CatalogoDoProtocolo | null>(null)
   const [etapa, setEtapa] = useState<Etapa>('preencher')
   const [erro, setErro] = useState<string | null>(null)
   const [andamento, setAndamento] = useState<AndamentoDoLaudoIA | null>(null)
@@ -185,7 +189,7 @@ export default function LaudoPorIA() {
 
   // Já lê o catálogo enquanto a psicóloga escolhe os PDFs.
   useEffect(() => {
-    if (pacienteId && !laudoDoHistorico && !cadastrando && etapa === 'preencher') obterCatalogo().catch(() => undefined)
+    if (pacienteId && !laudoDoHistorico && !cadastrando && etapa === 'preencher') obterCatalogo().then(setCatalogoDaTela).catch(() => undefined)
   }, [pacienteId, laudoDoHistorico, cadastrando, etapa, obterCatalogo])
 
   // Resumo (sem fotos nem HTML) e pendências em paralelo. Se as pendências
@@ -258,7 +262,7 @@ export default function LaudoPorIA() {
       setEtapa('catalogo')
       const catalogo = await obterCatalogo()
       setEtapa('ia')
-      const novo = await gerarLaudoPorIA(pacienteId, arquivos, observacoes, catalogo, setAndamento, dataRelatorio, cidade, { hipoteses, encaminhamentos })
+      const novo = await gerarLaudoPorIA(pacienteId, arquivos, observacoes, catalogo, setAndamento, dataRelatorio, cidade, { hipoteses, encaminhamentos, campos: dadosDaProfissional })
       criado = novo.id
       await concluirDocumento(novo.id)
     } catch (e) {
@@ -350,6 +354,7 @@ export default function LaudoPorIA() {
           onEscolher={(id) => {
             setLaudo(null)
             setEtapa('preencher')
+            setDadosDaProfissional({})
             setParams(id ? { paciente: id } : {}, { replace: true }) // sem ?laudo=
           }}
           onCadastrandoChange={setCadastrando}
@@ -364,6 +369,12 @@ export default function LaudoPorIA() {
               onEncaminhamentos={setEncaminhamentos}
               desabilitado={ocupado}
             />
+          </Card>
+        )}
+
+        {pacienteId && !cadastrando && etapa !== 'pronto' && (
+          <Card title="Desfralde, ano escolar e habilidades" subtitle="Preencha você: estes dados entram no relatório como escolhidos aqui, e a IA usa as suas respostas para escrever o restante.">
+            <DadosDaProfissional catalogo={catalogoDaTela} valores={dadosDaProfissional} onChange={setDadosDaProfissional} desabilitado={ocupado} />
           </Card>
         )}
 

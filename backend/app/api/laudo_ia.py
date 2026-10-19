@@ -33,9 +33,11 @@ from app.services.ai.erros import cota_diaria_esgotada
 from app.services.ata import pontuar_ata
 from app.services.laudo_ia import (
     CatalogoDoProtocolo,
+    dados_da_profissional_em_texto,
     escolhas_da_profissional,
     preencher_protocolo,
     respostas_para_answers,
+    valores_da_profissional,
 )
 from app.services.laudo_ia_jobs import Andamento
 from app.services.pendencias import aplicar_dados_confirmados, metodos_nao_aplicados
@@ -66,6 +68,23 @@ def _ler_lista_de_ids(valor: str | None, nome: str) -> list[str]:
     if not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Lista de {nome} inválida.")
     return ids
+
+
+def _ler_dados_da_profissional(valor: str | None) -> dict:
+    if not valor:
+        return {}
+    try:
+        dados = json.loads(valor)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Dados da profissional inválidos.") from exc
+    if not isinstance(dados, dict):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Dados da profissional inválidos.")
+    return dados
+
+
+def _observacoes_para_a_ia(observacoes: str | None, dados_texto: str) -> str | None:
+    partes = [p for p in ((observacoes or "").strip(), dados_texto) if p]
+    return "\n\n".join(partes) or None
 
 
 def _respostas_calculadas(documentos, catalogo: CatalogoDoProtocolo) -> dict:
@@ -143,6 +162,7 @@ def _gerar_laudo(
     data_relatorio: date,
     cidade: str | None,
     escolhas: dict[str, bool],
+    valores: dict[str, str],
 ) -> None:
     """Roda fora da requisição (laudo_ia_jobs.executar), com sessão própria."""
     try:
@@ -150,7 +170,7 @@ def _gerar_laudo(
             paciente=paciente,
             pdfs=pdfs,
             catalogo=catalogo,
-            observacoes=observacoes,
+            observacoes=_observacoes_para_a_ia(observacoes, dados_da_profissional_em_texto(catalogo, valores)),
             com_estudo_de_caso=True,
             ao_progredir=andamento,
             **credenciais,
@@ -162,8 +182,10 @@ def _gerar_laudo(
     andamento.mensagem("Salvando o laudo…", progresso=95, teto=99)
     answers, descartados = respostas_para_answers(resultado.protocolo, catalogo)
     answers.update(_respostas_calculadas(resultado.documentos, catalogo))
-    # Hipóteses e encaminhamentos: escolhidos pela psicóloga, nunca pela IA.
+    # Hipóteses, encaminhamentos, desfralde, ano escolar e habilidades:
+    # escolhidos pela psicóloga, nunca pela IA.
     answers.update(escolhas)
+    answers.update(valores)
     # "Métodos do relatório": só as escalas que vieram nos PDFs.
     answers["__metodosExcluidos"] = metodos_nao_aplicados(answers, {d.tipo for d in resultado.documentos})
     with Session(bind=bind) as db:
@@ -208,6 +230,7 @@ def criar_laudo_por_ia(
     observacoes: str | None = Form(default=None),
     hipoteses: str | None = Form(default=None),
     encaminhamentos: str | None = Form(default=None),
+    dados_profissional: str | None = Form(default=None),
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> GeracaoIniciada:
@@ -221,6 +244,7 @@ def criar_laudo_por_ia(
         _ler_lista_de_ids(hipoteses, "hipóteses"),
         _ler_lista_de_ids(encaminhamentos, "encaminhamentos"),
     )
+    valores = valores_da_profissional(catalogo_do_protocolo, _ler_dados_da_profissional(dados_profissional))
     pdfs = ler_pdfs_enviados(arquivos, MAXIMO_DE_ARQUIVOS)
     credenciais = _credenciais(db, current)
 
@@ -240,6 +264,7 @@ def criar_laudo_por_ia(
             data_relatorio=data_relatorio,
             cidade=cidade,
             escolhas=escolhas,
+            valores=valores,
         ),
     )
     return GeracaoIniciada(job_id=job["id"])

@@ -6,9 +6,18 @@ import type { Report } from './types'
 export const MAXIMO_DE_PDFS_LAUDO = 10
 const TAMANHO_MAXIMO = 15 * 1024 * 1024
 
+export interface CampoDoCatalogo {
+  id: string
+  tipo: string
+  rotulo?: string
+  opcoes?: { valor: string; rotulo: string }[]
+}
+
 export interface CatalogoDoProtocolo {
   campos: unknown[]
   contexto: string
+  /** Nomes das habilidades acadêmicas de cada ano escolar (na ordem de hab_status_N). */
+  habilidadesPorAno?: Record<string, string[]>
 }
 
 export type LaudoPorIA = Omit<Report, 'computed_json'> & {
@@ -55,6 +64,8 @@ const esperar = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)
 export interface EscolhasDaProfissional {
   hipoteses: string[]
   encaminhamentos: string[]
+  /** Desfralde, ano escolar e desempenho nas habilidades (id do campo → valor). */
+  campos?: Record<string, string>
 }
 
 export async function gerarLaudoPorIA(
@@ -75,6 +86,7 @@ export async function gerarLaudoPorIA(
   if (observacoes.trim()) dados.append('observacoes', observacoes.trim())
   dados.append('hipoteses', JSON.stringify(escolhas.hipoteses))
   dados.append('encaminhamentos', JSON.stringify(escolhas.encaminhamentos))
+  if (escolhas.campos && Object.keys(escolhas.campos).length) dados.append('dados_profissional', JSON.stringify(escolhas.campos))
   const { job_id } = await enviarFormulario<{ job_id: string }>(`/patients/${patientId}/laudo-ia`, dados)
   return acompanharGeracao(job_id, aoProgredir)
 }

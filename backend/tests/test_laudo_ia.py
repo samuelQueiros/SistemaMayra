@@ -297,18 +297,94 @@ def test_escolhas_da_profissional_ata_calculada_e_metodos(client, monkeypatch):
     assert set(answers["__metodosExcluidos"]) == {"snap", "tod", "portage", "mchat"}  # ATA (PDF) e CARS (respondida) ficam
 
 
-def test_ia_nao_recebe_hipoteses_nem_encaminhamentos_mas_recebe_habilidades():
+def test_ia_nao_recebe_o_que_a_profissional_escolhe():
     from app.services.laudo_ia import dividir_catalogo
 
     catalogo = CatalogoDoProtocolo.model_validate(
         {"campos": CATALOGO["campos"] + [
             {"id": "enc_neuropediatra", "secao": "19. Encaminhamentos", "rotulo": "Neuropediatra", "tipo": "marcar"},
             {"id": "hab_status_0", "secao": "8. Habilidades Acadêmicas", "rotulo": "Hab 0", "tipo": "texto"},
+            {"id": "hab_obs_0", "secao": "8. Habilidades Acadêmicas", "rotulo": "Obs 0", "tipo": "texto"},
+            {"id": "anoEscolar", "secao": "1. Identificação", "rotulo": "Ano Escolar", "tipo": "texto"},
+            {"id": "desfralde", "secao": "3. Histórico", "rotulo": "Desfralde", "tipo": "texto"},
+            {"id": "desfraldeAno", "secao": "3. Histórico", "rotulo": "Idade", "tipo": "texto"},
+            {"id": "desfraldeMes", "secao": "3. Histórico", "rotulo": "Idade", "tipo": "texto"},
+            {"id": "andouAno", "secao": "3. Histórico", "rotulo": "Andou", "tipo": "texto"},
         ]}
     )
     ids = {c.id for parte in dividir_catalogo(catalogo).values() for c in parte.campos}
-    assert "parto" in ids and "cars_0" in ids and "hab_status_0" in ids
-    assert not {"hip_tdah", "enc_neuropediatra"} & ids
+    # A IA escreve a observação de cada habilidade e os demais marcos.
+    assert {"parto", "cars_0", "hab_obs_0", "andouAno"} <= ids
+    assert not {"hip_tdah", "enc_neuropediatra", "hab_status_0", "anoEscolar", "desfralde", "desfraldeAno", "desfraldeMes"} & ids
+
+
+def test_desfralde_ano_escolar_e_habilidades_escolhidos_pela_profissional(client, monkeypatch):
+    chamadas = []
+
+    def fake(**kwargs):
+        chamadas.append(kwargs)
+        protocolo = ProtocoloPorIA(estudo_de_caso="Estudo.", lacunas=[], campos=[
+            {"id": "parto", "valor": "Cesáreo"},
+            {"id": "desfralde", "valor": "Em Processo"},  # a IA não decide: prevalece a escolha
+        ])
+        return ResultadoDaIA(protocolo=protocolo, documentos=[], tempos={})
+
+    monkeypatch.setattr(modulo, "preencher_protocolo", fake)
+    opcoes = lambda lista: [{"valor": v, "rotulo": v} for v in lista]  # noqa: E731
+    catalogo = json.loads(json.dumps(CATALOGO))
+    catalogo["campos"] += [
+        {"id": "desfralde", "secao": "3. Histórico", "rotulo": "Desfralde", "tipo": "opcao", "opcoes": opcoes(["Controle Total", "Em Processo"])},
+        {"id": "desfraldeAno", "secao": "3. Histórico", "rotulo": "Idade", "tipo": "opcao", "opcoes": opcoes(["2 anos", "3 anos"])},
+        {"id": "desfraldeMes", "secao": "3. Histórico", "rotulo": "Idade", "tipo": "opcao", "opcoes": opcoes(["0 meses", "6 meses"])},
+        {"id": "anoEscolar", "secao": "1. Identificação", "rotulo": "Ano Escolar", "tipo": "opcao", "opcoes": opcoes(["1º Ano", "2º Ano"])},
+        {"id": "hab_status_0", "secao": "8. Habilidades Acadêmicas", "rotulo": "Hab 0", "tipo": "opcao", "opcoes": opcoes(["Satisfatório", "Em Desenvolvimento"])},
+        {"id": "hab_status_1", "secao": "8. Habilidades Acadêmicas", "rotulo": "Hab 1", "tipo": "opcao", "opcoes": opcoes(["Satisfatório", "Em Desenvolvimento"])},
+    ]
+    catalogo["contexto"] = "Habilidades acadêmicas:\n- 2º Ano: 0=Leitura De Textos Curtos; 1=Escrita De Frases"
+    headers, pid = _preparar(client)
+    resposta = client.post(
+        f"/api/patients/{pid}/laudo-ia",
+        headers=headers,
+        files=[("arquivos", ("anamnese.pdf", _pdf("Anamnese"), "application/pdf"))],
+        data={
+            "data_relatorio": "2026-10-15",
+            "catalogo": json.dumps(catalogo),
+            "observacoes": "Foco em atenção",
+            "dados_profissional": json.dumps({
+                "desfralde": "Controle Total", "desfraldeAno": "3 anos", "desfraldeMes": "6 meses",
+                "anoEscolar": "2º Ano", "hab_status_0": "Em Desenvolvimento", "hab_status_1": "Satisfatório",
+                "hab_status_9": "Satisfatório",  # fora do catálogo
+                "desfraldeMes_x": "6 meses", "parto": "Normal",  # não é escolha da profissional
+                "anoEscolar_invalido": 3,
+            }),
+        },
+    )
+    andamento = _concluir(client, headers, resposta)
+    assert andamento["status"] == "concluido", andamento
+    answers = client.get(f"/api/reports/{andamento['report_id']}", headers=headers).json()["answers_json"]
+    assert (answers["desfralde"], answers["desfraldeAno"], answers["desfraldeMes"]) == ("Controle Total", "3 anos", "6 meses")
+    assert (answers["anoEscolar"], answers["hab_status_0"], answers["hab_status_1"]) == ("2º Ano", "Em Desenvolvimento", "Satisfatório")
+    assert answers["parto"] == "Cesáreo" and "hab_status_9" not in answers
+    # A IA recebe as escolhas como dados confirmados, junto das observações.
+    observacoes = chamadas[0]["observacoes"]
+    assert observacoes.startswith("Foco em atenção")
+    assert "Desfralde: Controle Total, com 3 anos e 6 meses" in observacoes
+    assert "Habilidade nº 0 (Leitura De Textos Curtos): Em Desenvolvimento" in observacoes
+    assert "Habilidade nº 1 (Escrita De Frases): Satisfatório" in observacoes
+    # As observações guardadas no laudo continuam só as da psicóloga.
+    laudo = client.get(f"/api/reports/{andamento['report_id']}", headers=headers).json()
+    assert laudo["computed_json"]["observacoes"] == "Foco em atenção"
+
+
+def test_dados_da_profissional_invalidos_dao_400(client):
+    headers, pid = _preparar(client)
+    resposta = client.post(
+        f"/api/patients/{pid}/laudo-ia",
+        headers=headers,
+        files=[("arquivos", ("anamnese.pdf", _pdf("Anamnese"), "application/pdf"))],
+        data={"data_relatorio": "2026-10-15", "catalogo": json.dumps(CATALOGO), "dados_profissional": "[1, 2]"},
+    )
+    assert resposta.status_code == 400
 
 
 def _catalogo_de_idades() -> CatalogoDoProtocolo:

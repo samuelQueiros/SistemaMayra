@@ -197,11 +197,14 @@ def respostas_para_answers(protocolo: ProtocoloPorIA, catalogo: CatalogoDoProtoc
     return answers, descartados
 
 
-# Hipóteses diagnósticas (hip_*) e encaminhamentos (enc_*): a psicóloga
-# marca na tela do Laudo Por IA, antes de enviar os PDFs. A IA não preenche.
-# (As habilidades acadêmicas por ano escolar voltaram para a IA em 2026-10-19,
-# a pedido da psicóloga.)
-CAMPOS_DA_PROFISSIONAL = re.compile(r"^(hip|enc)_")
+# Escolhidos pela psicóloga na tela do Laudo Por IA, antes de enviar os PDFs
+# — a IA não preenche: hipóteses diagnósticas (hip_*), encaminhamentos
+# (enc_*), situação e idade do desfralde, ano escolar e o desempenho em cada
+# habilidade do ano (hab_status_N). A IA recebe essas respostas como dados
+# confirmados e faz o resto com base nelas (inclusive hab_obs_N).
+CAMPOS_DA_PROFISSIONAL = re.compile(r"^(hip_|enc_|hab_status_\d+$|anoEscolar$|desfralde(Ano|Mes)?$)")
+# Os que a tela envia como valor escolhido (hipóteses e encaminhamentos vão marcados à parte).
+CAMPOS_ESCOLHIDOS = re.compile(r"^(hab_status_\d+|anoEscolar|desfralde(Ano|Mes)?)$")
 
 
 def escolhas_da_profissional(
@@ -213,16 +216,52 @@ def escolhas_da_profissional(
     return {i: True for i in escolhidas if i in marcar}
 
 
+def valores_da_profissional(catalogo: CatalogoDoProtocolo, valores: dict) -> dict[str, str]:
+    """Desfralde, ano escolar e habilidades escolhidos pela psicóloga: só
+    campos que existem no catálogo e só valores que são opções deles."""
+    por_id = {c.id: c for c in catalogo.campos}
+    aceitos: dict[str, str] = {}
+    for campo_id, valor in valores.items():
+        campo = por_id.get(campo_id)
+        if campo is None or not CAMPOS_ESCOLHIDOS.match(campo_id) or not isinstance(valor, str):
+            continue
+        if any(o.valor == valor for o in campo.opcoes):
+            aceitos[campo_id] = valor
+    return aceitos
+
+
+def _habilidades_do_ano(catalogo: CatalogoDoProtocolo, ano: str) -> list[str]:
+    """Nomes das habilidades do ano escolar, da linha "- {ano}: 0=…; 1=…" do contexto."""
+    for linha in catalogo.contexto.splitlines():
+        if linha.startswith(f"- {ano}: "):
+            return [item.split("=", 1)[1] for item in linha.removeprefix(f"- {ano}: ").split("; ") if "=" in item]
+    return []
+
+
+def dados_da_profissional_em_texto(catalogo: CatalogoDoProtocolo, valores: dict[str, str]) -> str:
+    """As escolhas da psicóloga como dados confirmados para o prompt da IA."""
+    linhas: list[str] = []
+    if valores.get("desfralde"):
+        idade = " e ".join(v for v in (valores.get("desfraldeAno"), valores.get("desfraldeMes")) if v)
+        linhas.append(f"Desfralde: {valores['desfralde']}" + (f", com {idade}" if idade else ""))
+    ano = valores.get("anoEscolar")
+    if ano:
+        linhas.append(f"Ano escolar: {ano}")
+        nomes = _habilidades_do_ano(catalogo, ano)
+        for i, nome in enumerate(nomes):
+            if valores.get(f"hab_status_{i}"):
+                linhas.append(f"Habilidade nº {i} ({nome}): {valores[f'hab_status_{i}']}")
+    if not linhas:
+        return ""
+    return "Dados confirmados pela profissional (use como verdade; não os altere):\n" + "\n".join(f"- {l}" for l in linhas)
+
+
 # Qual especialista cuida de cada seção do formulário (pelo título da seção;
 # o resto fica com a anamnese).
 SECOES_POR_ESPECIALISTA: dict[str, tuple[str, ...]] = {
     ESCALAS.nome: ("ATA E CARS", "Protocolo TOD", "SNAP-IV", "M-CHAT"),
     DESENVOLVIMENTO.nome: ("Portage", "Habilidades Acadêmicas", "Habilidades Cognitivas", "Funções Executivas", "Por Domínio"),
 }
-# Campos que ficam com um especialista mesmo estando em outra seção: o ano
-# escolar decide quais são as habilidades acadêmicas (hab_status_N), então
-# quem preenche as habilidades escolhe também o ano.
-CAMPOS_POR_ESPECIALISTA: dict[str, str] = {"anoEscolar": DESENVOLVIMENTO.nome}
 ESPECIALISTAS: tuple[Especialista, ...] = (ANAMNESE, ESCALAS, DESENVOLVIMENTO)
 ROTULOS_DAS_ETAPAS = {
     ANAMNESE.nome: "anamnese e histórico",
@@ -238,7 +277,7 @@ def dividir_catalogo(catalogo: CatalogoDoProtocolo) -> dict[str, CatalogoDoProto
     for campo in catalogo.campos:
         if CAMPOS_DA_PROFISSIONAL.match(campo.id):
             continue
-        dono = CAMPOS_POR_ESPECIALISTA.get(campo.id) or next(
+        dono = next(
             (nome for nome, secoes in SECOES_POR_ESPECIALISTA.items() if any(s.lower() in campo.secao.lower() for s in secoes)),
             ANAMNESE.nome,
         )

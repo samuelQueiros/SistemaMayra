@@ -2548,3 +2548,12 @@ Correções pedidas na gravação de 2026-10-16. O relatório do João Neto pass
 - **Teste com a IA real** (formulário e relatório escolar fictícios): desfralde "3 anos e meio" → Controle Total, 3 anos, 6 meses; 2º Ano com 5 habilidades avaliadas; as 6 funções executivas com percentual (60–80%) e manifestação; 7 s e 17 s por agente.
 - **Arquivos:** `backend/app/services/{laudo_ia.py,laudo_documento.py}`, `backend/app/services/ai/agentes/especialistas.py`, `frontend/public/formulario-novo-paciente.html`, `frontend/src/laudo/{css.ts,documento.ts}` + testes.
 - **Validação:** 361 testes do backend e 86 do frontend; build aprovado; rodapé medido contra o PDF do modelo.
+
+### Complemento (2026-10-19): desfralde, ano escolar e habilidades escolhidos pela psicóloga
+
+- **Quem escolhe:** a pedido do usuário, a situação e a idade do desfralde, o ano escolar e o desempenho em cada habilidade do ano passam a ser escolhidos **pela psicóloga**, no novo quadro "Desfralde, ano escolar e habilidades" da tela do Relatório por IA, antes de enviar os PDFs. É o mesmo tratamento das hipóteses e dos encaminhamentos. As opções vêm do próprio formulário: a lista de habilidades muda conforme o ano escolhido, e a idade do desfralde só aparece nas situações que têm idade.
+- **A IA faz o resto com base nessas respostas:** ela não preenche mais esses campos. Recebe as escolhas como "dados confirmados pela profissional" e escreve a observação de cada habilidade avaliada, coerente com o desempenho escolhido. Também usa esses dados no estudo de caso e nos demais campos. As funções executivas continuam com percentual estimado pela IA. Andou/falou continuam com a IA, com a divisão automática de ano e mês.
+- **Validação no servidor:** só entram campos do catálogo e valores que são opções deles. As escolhas prevalecem sobre qualquer valor da IA. As observações guardadas no laudo continuam só as escritas pela psicóloga.
+- **Teste com a IA real** (dados fictícios): observações escritas só para as habilidades avaliadas e coerentes com o desempenho; o estudo de caso cita "desfralde com controle total alcançado aos 3 anos e 6 meses".
+- **Arquivos:** `frontend/src/components/DadosDaProfissional.tsx` (+ teste), `frontend/src/pages/LaudoPorIA.tsx`, `frontend/src/api/laudoIA.ts`, `frontend/public/formulario-novo-paciente.html` (catálogo com `habilidadesPorAno`), `backend/app/services/laudo_ia.py`, `backend/app/api/laudo_ia.py`, `backend/app/services/ai/agentes/especialistas.py` + testes.
+- **Validação:** 363 testes do backend e 87 do frontend; build aprovado.

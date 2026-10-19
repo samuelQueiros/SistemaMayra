@@ -1419,7 +1419,10 @@ function catalogoParaIA(){
     "Portage: preencha todos os itens listados que o documento do Portage responde.",
     "Campos de descrição (\"se Sim\") só quando o campo correspondente for Sim."
   ].join("\n");
-  return {campos,contexto};
+  // Para a tela do Relatório por IA, onde a psicóloga escolhe o ano escolar e
+  // o desempenho em cada habilidade antes de enviar os PDFs.
+  const habilidades=Object.fromEntries(Object.entries(habilidadesPorAno).map(([ano,lista])=>[ano,lista.map(h=>h[0])]));
+  return {campos,contexto,habilidadesPorAno:habilidades};
 }
 window.catalogoParaIA=catalogoParaIA;
 

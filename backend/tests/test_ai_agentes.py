@@ -15,7 +15,7 @@ import app.services.laudo_ia as laudo_ia
 import app.services.storage as storage_module
 from app.services.ai.agentes import CamposDoEspecialista, DocumentoExtraido
 from app.services.ai.schemas import RelatorioPorPdfs
-from app.services.laudo_ia import CatalogoDoProtocolo, dividir_catalogo, preencher_protocolo
+from app.services.laudo_ia import CAMPOS_DA_PROFISSIONAL, CatalogoDoProtocolo, dividir_catalogo, preencher_protocolo
 
 
 @pytest.fixture(autouse=True)
@@ -144,16 +144,17 @@ def _catalogo_real() -> CatalogoDoProtocolo:
 def test_catalogo_dividido_entre_os_especialistas():
     partes = dividir_catalogo(_catalogo_real())
     ids = {nome: {c.id for c in parte.campos} for nome, parte in partes.items()}
-    assert {"parto", "complicacaoParto", "queixaFamiliar", "desfraldeAno", "desfraldeMes"} <= ids["anamnese"]
+    assert {"parto", "complicacaoParto", "queixaFamiliar", "andouAno", "falouMes"} <= ids["anamnese"]
     assert {"cars_0", "ata_item_0", "snap_0"} <= ids["escalas"]
     assert any(i.startswith("portage_") for i in ids["desenvolvimento"])
     assert any(i.startswith("dom_") for i in ids["desenvolvimento"])
-    # Habilidades acadêmicas e o ano escolar que as define ficam com o mesmo agente,
-    # junto das funções executivas (a IA estima os percentuais).
-    assert {"anoEscolar", "hab_status_0", "hab_obs_0", "fe_perc_0", "fe_manif_0"} <= ids["desenvolvimento"]
-    # Hipóteses e encaminhamentos ficam com a profissional.
-    da_profissional = {c.id for c in _catalogo_real().campos if c.id.startswith(("hip_", "enc_"))}
-    assert "hip_tdah" in da_profissional
+    # A IA escreve a observação de cada habilidade e estima as funções executivas.
+    assert {"hab_obs_0", "fe_perc_0", "fe_manif_0"} <= ids["desenvolvimento"]
+    # Hipóteses, encaminhamentos, desfralde, ano escolar e desempenho nas
+    # habilidades ficam com a profissional.
+    da_profissional = {c.id for c in _catalogo_real().campos if CAMPOS_DA_PROFISSIONAL.match(c.id)}
+    assert {"hip_tdah", "enc_fonoaudiologia", "anoEscolar", "desfralde", "desfraldeAno", "desfraldeMes", "hab_status_0"} <= da_profissional
+    assert "hab_obs_0" not in da_profissional
     # Cada campo com um único dono.
     todos = [i for parte in ids.values() for i in parte]
     assert not da_profissional & set(todos)
