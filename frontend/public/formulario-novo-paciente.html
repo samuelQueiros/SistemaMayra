@@ -1672,13 +1672,15 @@ const ATA_ITENS = [
 // Paleta única dos gráficos do laudo — tokens da marca
 // (frontend/src/styles/tokens/colors.css). Categorias validadas para
 // daltonismo (skill dataviz); a ordem é fixa, nunca reciclada.
+// Paleta no padrão do relatório-modelo (azul/laranja do Office, títulos
+// em preto/cinza-escuro) — não a paleta roxa/pastel da identidade visual.
 const PALETA_LAUDO = {
-  categorias:["#7561ae","#d4840a","#3f7fc0","#d9709f","#3f9a57"],
-  serie:"#7561ae", serieEscura:"#43356b",
-  status:{bom:"#5c4b92",atencao:"#d4840a",critico:"#c8443f"},
-  dificuldade:"#c9548b", desempenho:"#5c4b92", referencia:"#8a85a0",
-  tinta:"#2b2740", texto:"#5a5570", textoSuave:"#8a85a0",
-  grade:"#e6e3f0", gradeForte:"#cbc6dc", fundoSuave:"#f5f4fa"
+  categorias:["#4472c4","#ed7d31","#a5a5a5","#ffc000","#5b9bd5"],
+  serie:"#4472c4", serieEscura:"#2e5597",
+  status:{bom:"#4472c4",atencao:"#ed7d31",critico:"#c00000"},
+  dificuldade:"#ed7d31", desempenho:"#4472c4", referencia:"#ed7d31",
+  tinta:"#1a1a1a", texto:"#333333", textoSuave:"#1a1a1a",
+  grade:"#e6e6e6", gradeForte:"#bfbfbf", fundoSuave:"#f7f7f7"
 };
 const DOMINIOS_LAUDO = [
   ["dom_atencao","Atenção",PALETA_LAUDO.categorias[0]],
@@ -2280,13 +2282,13 @@ function graficoPortage(portage,idadeAnos){
   if(!portage)return null;
   const limite=portage.limiteAnos;
   return graficoPNG({type:"bar",data:{labels:portage.areas.map(a=>a.rotulo),datasets:[
-      {data:portage.areas.map(a=>Math.min(a.anos,limite)),backgroundColor:portage.areas.map(a=>a.cor),borderColor:PALETA_LAUDO.tinta,borderWidth:1,
+      {label:"Idade de Desenvolvimento",data:portage.areas.map(a=>Math.min(a.anos,limite)),backgroundColor:PALETA_LAUDO.serie,borderColor:PALETA_LAUDO.tinta,borderWidth:1,
         rotulos:{fonte:"15px Arial",cor:PALETA_LAUDO.tinta,formato:(v,i)=>numeroBR(portage.areas[i].anos.toFixed(1)),posicao:v=>v>=limite*0.93?"abaixo":"acima",distancia:6}},
-      {data:portage.areas.map(()=>Math.min(idadeAnos,limite)),backgroundColor:PALETA_LAUDO.referencia,borderColor:PALETA_LAUDO.tinta,borderWidth:1,
+      {label:"Idade Cronológica",data:portage.areas.map(()=>Math.min(idadeAnos,limite)),backgroundColor:PALETA_LAUDO.referencia,borderColor:PALETA_LAUDO.tinta,borderWidth:1,
         rotulos:{fonte:"15px Arial",cor:PALETA_LAUDO.tinta,posicao:"topoEixo",formato:()=>doisDigitos(idadeAnos)}}]},
     options:{barPercentage:0.92,categoryPercentage:0.62,layout:{padding:{top:40,right:26,left:20,bottom:14}},
-      plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.textoSuave,raio:22,espessura:1.5},
-        title:{display:true,text:"Idade de desenvolvimento",color:PALETA_LAUDO.texto,font:{size:26,family:FONTE_GRAFICO},padding:{top:0,bottom:40}}},
+      plugins:{legend:{display:true,position:"top",align:"start",labels:{boxWidth:12,boxHeight:12,color:PALETA_LAUDO.texto,font:{size:13,family:FONTE_GRAFICO}}},tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.textoSuave,raio:22,espessura:1.5},
+        title:{display:true,text:"Idade de Desenvolvimento - Inventário Portage",color:PALETA_LAUDO.texto,font:{size:26,family:FONTE_GRAFICO},padding:{top:0,bottom:40}}},
       scales:{y:{min:0,max:limite,ticks:{stepSize:limite>3?1:0.5,color:PALETA_LAUDO.tinta,font:{size:15},callback:v=>numeroBR(Number(v).toFixed(1))},grid:{color:PALETA_LAUDO.gradeForte},border:{display:false}},
         x:{grid:{display:false},ticks:{color:PALETA_LAUDO.tinta,font:{size:15,family:FONTE_GRAFICO}}}}}},1000,480);
 }
@@ -2560,7 +2562,7 @@ p.compacto{margin:0;line-height:1.25}
 mark{color:#000;padding:0 1pt}
 mark.cinza{background:#dbe5f1}
 mark.amarelo{background:#ffff00}
-.faixa{background:#c6d9f1;font-weight:bold;padding:1mm 2mm;margin:5mm 0 3mm;line-height:1.45;break-after:avoid;page-break-after:avoid}
+.faixa{background:#eef1f6;font-weight:bold;padding:1mm 2mm;margin:5mm 0 3mm;line-height:1.45;break-after:avoid;page-break-after:avoid}
 .faixa.centro{text-align:center}
 .faixa-topico{background:#b8cce4;font-weight:bold;font-size:9.5pt;padding:1mm 2mm;margin:4mm 0 3mm;break-after:avoid;page-break-after:avoid}
 h2{font-size:12.5pt;text-align:center;margin:3mm 0 5mm;break-after:avoid;page-break-after:avoid}
@@ -2604,7 +2606,9 @@ td.cab-espaco{width:4mm}
 .assinatura-nome{font-family:"Arial Narrow","Liberation Sans Narrow",Arial,sans-serif;font-style:italic;font-size:15pt}
 .quebra{break-before:page;page-break-before:always;height:0;margin:0}
 h3.area{text-align:center;font-size:10.5pt;margin:6mm 0 3mm}
-h3>mark.cinza{text-decoration:underline}
+/* Títulos de seção (ANAMNESE INICIAL, HISTÓRICO…) no modelo são só negrito
+   preto, sem destaque nem sublinhado — mark.cinza nesse lugar vira texto liso. */
+h3>mark.cinza{background:none}
 p.titulo-tabela{margin:5mm 0 1mm;font-size:10.5pt}
 .bloco-assinatura{break-inside:avoid;page-break-inside:avoid}
 thead{display:table-header-group}
@@ -2731,6 +2735,9 @@ async function gerarDocumentoLaudoHTML(){
   atualizarIdadeCognitivaDoCabecalho();
   const opcoesTexto={probabilidadeTEA:prob.tea};
   const texto=(id,opcoes)=>blocoDeTexto(valor(id),Object.assign({},opcoesTexto,opcoes||{}));
+  // Considerações Finais (aviso de que o documento não é laudo médico):
+  // repete no final de cada protocolo finalizado, não só uma vez no fechamento.
+  const considerFinaisBloco='<h3><mark class="cinza">Considerações Finais</mark></h3>'+blocoDeTexto(avisoLegalFechamento(g),opcoesTexto);
   const QUEBRA='<div class="quebra"></div>';
   const partes=[];
   const capa=await gerarCapaRelatorio(valor("nomePaciente"));
@@ -2814,6 +2821,11 @@ async function gerarDocumentoLaudoHTML(){
     });
   });
 
+  /* Distribuição das dificuldades por domínio: resume as áreas acima, por
+     isso fica logo depois delas (e não solta perto das hipóteses). */
+  const imgDominios=graficoDominios();
+  if(imgDominios)partes.push('<div class="grafico"><img src="'+imgDominios+'" data-mm="118" style="width:118mm"></div>');
+
   /* A partir daqui, a sequência do relatório-modelo (João Neto):
      habilidades → funções executivas → Portage → CARS → ATA → SNAP-IV →
      hipóteses → conclusão → encaminhamentos → fechamento. */
@@ -2840,12 +2852,19 @@ async function gerarDocumentoLaudoHTML(){
   });
   if(habAcademicas.length||gruposHabilidades.length)partes.push(texto("textoHabilidades"));
 
-  /* Quadro – Aplicação das Funções Executivas */
+  /* Quadro – Aplicação das Funções Executivas (texto/tabela e gráfico
+     juntos, como no modelo — nada de outro protocolo entra no meio) */
   const linhasFE=FE_LAUDO.map((f,i)=>valor("fe_manif_"+i).trim()?"<tr><td><strong>"+esc(f.nome)+"</strong></td><td>"+esc(f.esperado)+"</td><td>"+esc(valor("fe_manif_"+i))+"</td></tr>":"").join("");
+  const imgFE=graficoFuncoesExecutivas();
   if(linhasFE){
     partes.push('<h3 class="area">Quadro – Aplicação das Funções Executivas '+g.do+" paciente</h3>");
     partes.push('<table class="tabela dupla centro" data-larguras="34,64,72" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:34mm"><col style="width:64mm"><col style="width:72mm"></colgroup><thead><tr><th>Função Executiva</th><th>Desenvolvimento Esperado para idade</th><th>Habilidades identificadas '+(g.o==="a"?"na":"no")+" paciente</th></tr></thead>"+linhasFE+"</table>");
   }
+  if(imgFE){
+    partes.push('<div class="grafico"><img src="'+imgFE+'" data-mm="160" style="width:160mm"></div>');
+    partes.push('<p class="compacto"><span style="color:#c8443f">✚</span> Legenda:</p><p class="compacto" style="padding-left:6mm"><span style="color:#c9548b"><strong>Indicadores de dificuldade observados</strong></span></p><p style="padding-left:6mm"><span style="color:#5c4b92"><strong>Indicadores de desempenho funcional observado</strong></span></p>');
+  }
+  if(linhasFE||imgFE)partes.push(considerFinaisBloco);
 
   /* Portage: texto, interpretação e o gráfico de idade de desenvolvimento */
   const portage=portagePorArea();
@@ -2855,6 +2874,7 @@ async function gerarDocumentoLaudoHTML(){
     if(imgPortage)partes.push('<p class="recuo">Com base no resultado do protocolo <strong>PORTAGE</strong> aplicado durante o período da avaliação e respeitando as particularidades, tempo e limitações '+g.do+" paciente/aprendente segue abaixo percentual descritivo de repertório observado em áreas específicas: Comportamentos: <strong>Socialização, Linguagem, Autocuidados, Cognição e Desenvolvimento Motor.</strong></p>");
     partes.push(texto("textoPortage"));
     if(imgPortage)partes.push('<div class="grafico"><img src="'+imgPortage+'" data-mm="165" style="width:165mm"></div>');
+    partes.push(considerFinaisBloco);
   }
 
   /* CARS */
@@ -2871,6 +2891,7 @@ async function gerarDocumentoLaudoHTML(){
       const faixasCARS=[["Normal - &nbsp;15 à 29,5 pontos",c=>c<30],["Autismo leve-moderado &nbsp;- 30 à 36,5 pontos",c=>c>=30&&c<37],["Autismo grave – acima de 37 pontos",c=>c>=37]];
       partes.push('<p class="centro"><strong><span style="font-size:7.5pt"><mark class="cinza">Classificação:&nbsp;</mark> '+faixasCARS.map(([t,naFaixa])=>'<mark class="'+(cars!==null&&naFaixa(cars)?"amarelo":"cinza")+'">'+t+"</mark>").join(" / ")+"</span></strong></p>");
     }
+    partes.push(considerFinaisBloco);
   }
 
   /* ATA */
@@ -2887,6 +2908,7 @@ async function gerarDocumentoLaudoHTML(){
       for(let i=0;i<11;i++)linhas+="<tr>"+celula(i)+celula(i+11)+"</tr>";
       partes.push('<table class="tabela simples" data-larguras="62,21,62,21" data-fonte="7" style="width:166mm;margin:6mm auto 0"><colgroup><col style="width:62mm"><col style="width:21mm"><col style="width:62mm"><col style="width:21mm"></colgroup>'+linhas+"</table>");
     }
+    partes.push(considerFinaisBloco);
   }
 
   /* Conclusão das escalas */
@@ -2918,6 +2940,7 @@ async function gerarDocumentoLaudoHTML(){
       partes.push(texto("textoSNAP"));
       partes.push(blocoTopicos);
     }
+    partes.push(considerFinaisBloco);
   }else{
     partes.push(blocoTopicos);
   }
@@ -2930,6 +2953,7 @@ async function gerarDocumentoLaudoHTML(){
     const linhasMCHAT=itensMCHAT.map(x=>"<tr><td>"+esc(x.item)+"</td><td>"+(x.resp==="sim"?"Sim":"Não")+"</td></tr>").join("");
     partes.push('<h3><mark class="cinza">M-CHAT — Modified Checklist For Autism In Toddlers</mark></h3>');
     partes.push('<table class="tabela dupla compacta" data-larguras="130,40" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:130mm"><col style="width:40mm"></colgroup><thead><tr><th>Item</th><th>Resposta</th></tr></thead>'+linhasMCHAT+"</table>");
+    partes.push(considerFinaisBloco);
   }
 
   /* Protocolo TOD — só entra no relatório se algum item foi respondido */
@@ -2941,22 +2965,14 @@ async function gerarDocumentoLaudoHTML(){
     }else{
       partes.push('<p class="recuo">Protocolo TOD respondido parcialmente ('+tod.pre+" de "+todItens.length+' itens) — resultado percentual não calculado por falta de preenchimento completo.</p>');
     }
+    partes.push(considerFinaisBloco);
   }
 
-  /* Corroboração (SNAP-IV e atendimentos) + gráfico das funções executivas */
-  const imgFE=graficoFuncoesExecutivas();
-  if(valor("textoCorroboracao").trim()||imgFE){
-    partes.push(texto("textoCorroboracao"));
-    if(imgFE){
-      partes.push('<div class="grafico"><img src="'+imgFE+'" data-mm="160" style="width:160mm"></div>');
-      partes.push('<p class="compacto"><span style="color:#c8443f">✚</span> Legenda:</p><p class="compacto" style="padding-left:6mm"><span style="color:#c9548b"><strong>Indicadores de dificuldade observados</strong></span></p><p style="padding-left:6mm"><span style="color:#5c4b92"><strong>Indicadores de desempenho funcional observado</strong></span></p>');
-    }
-  }
+  /* Corroboração (SNAP-IV e atendimentos) */
+  if(valor("textoCorroboracao").trim())partes.push(texto("textoCorroboracao"));
 
-  /* Síntese clínica */
-  if(valor("textoSintese").trim())partes.push(texto("textoSintese"));
-
-  /* Intervenções sugeridas (só quando a psicóloga escreve) */
+  /* Intervenções sugeridas (só quando a psicóloga escreve) — no modelo,
+     vêm antes da síntese/conclusão final, não depois. */
   if(valor("textoIntervencoes").trim()){
     partes.push('<p style="margin-top:4mm"><span style="color:#2e5597">Intervenções Sugeridas:</span></p>');
     partes.push(texto("textoIntervencoes"));
@@ -2969,12 +2985,9 @@ async function gerarDocumentoLaudoHTML(){
     partes.push('<p class="recuo" style="margin-top:5mm"><strong><u>Hipóteses e/ou Confirmações Diagnósticas:</u></strong></p><ul class="bullets">'+hipoteses.map(formatarHipotese).join("")+"</ul>");
   }
 
-  /* Distribuição por domínio + conclusão (probabilidade em amarelo) */
-  const imgDominios=graficoDominios();
-  if(imgDominios||valor("textoConclusaoTEA").trim()){
-    if(imgDominios)partes.push('<div class="grafico"><img src="'+imgDominios+'" data-mm="118" style="width:118mm"></div>');
-    partes.push(texto("textoConclusaoTEA"));
-  }
+  /* Síntese clínica e conclusão (probabilidade em amarelo) */
+  if(valor("textoSintese").trim())partes.push(texto("textoSintese"));
+  if(valor("textoConclusaoTEA").trim())partes.push(texto("textoConclusaoTEA"));
 
   /* Encaminhamentos em tópicos (o estudo de caso não entra: já está
      resumido nas seções acima) */

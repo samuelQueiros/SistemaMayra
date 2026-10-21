@@ -73,11 +73,18 @@ it('cabeçalho, metodologia, destaques e final no modelo do relatório', async (
   expect(doc).toContain('Idade Cronológica:')
   expect(doc).toContain('<strong><u>Hipóteses e/ou Confirmações Diagnósticas:</u></strong>')
 
-  // Sequência do modelo: funções executivas → Portage → CARS → ATA → hipóteses → encaminhamentos
-  const ordem = ['Quadro – Aplicação das Funções Executivas', 'base64,graficoCARS', 'pontos na análise da escala ATA', 'Hipóteses e/ou Confirmações', '<li>Fonoaudiologia</li>', 'Considerações Finais']
+  // Sequência do modelo: domínios (resume as áreas) → funções executivas
+  // (quadro e gráfico juntos) → Portage → CARS → ATA → hipóteses → encaminhamentos
+  const ordem = ['base64,graficoDominios', 'Quadro – Aplicação das Funções Executivas', 'base64,graficoFuncoesExecutivas', 'base64,graficoCARS', 'pontos na análise da escala ATA', 'Hipóteses e/ou Confirmações', '<li>Fonoaudiologia</li>']
   const posicoes = ordem.map((t) => doc.indexOf(t))
   expect(posicoes.every((p) => p > 0)).toBe(true)
   expect([...posicoes].sort((a, b) => a - b)).toEqual(posicoes)
+
+  // "Considerações Finais" (aviso de que o documento não é laudo médico)
+  // repete no final de cada protocolo finalizado, não só uma vez no fechamento.
+  const ocorrenciasConsideracoes = doc.split('Considerações Finais').length - 1
+  expect(ocorrenciasConsideracoes).toBeGreaterThan(1)
+  expect(doc.lastIndexOf('Considerações Finais')).toBeGreaterThan(doc.indexOf('<li>Fonoaudiologia</li>'))
 
   // Fora do documento
   expect(doc).not.toContain('Estudo De Caso E Observações Clínicas')
