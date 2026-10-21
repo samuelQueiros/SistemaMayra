@@ -32,7 +32,7 @@ export interface Perfil {
 // saírem iguais.
 const BIO_PADRAO =
   "Este relatório foi elaborado por Mayra Vanessa Andrade da Cunha, Neuropsicopedagoga Clínica (CBO 2394-40) e Institucional (CBO 2394-45), com formação especializada em Análise do Comportamento Aplicada (ABA) e atuação profissional voltada ao desenvolvimento, aprendizagem e acompanhamento de crianças neurodivergentes. Possui mais de 25 anos de experiência profissional na área educacional e mais de 15 anos de atuação com crianças com Transtorno do Espectro Autista (TEA), integrando experiência educacional, conhecimento técnico e prática clínica neuropsicopedagógica na análise individualizada de cada caso."
-const CREDENCIAIS_PADRAO = ['Neuropsicopedagoga Clínica', 'com formação especializada em Análise do Comportamento Aplicada (ABA)', 'Especialista em Educação Inclusiva']
+const CREDENCIAIS_PADRAO = ['Neuropsicopedagoga Clínica – 2394-40', 'Especialista em Análise do Comportamento Aplicada - ABA', 'Especialista em Educação Inclusiva']
 
 export function perfilDoProfissional(p: Psychologist): Perfil {
   const credenciais = (p.credenciais_assinatura ?? '')

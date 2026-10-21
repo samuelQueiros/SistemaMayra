@@ -464,7 +464,10 @@ class _ConversorDocx:
             paragrafo.paragraph_format.line_spacing = 1.15
         formato = dict(formato or {})
         if "assinatura-nome" in classes:
-            formato.update(italico=True, tamanho=15, fonte="Arial Narrow")
+            # PDF usa "Dancing Script" (embutida em base64 no CSS_LAUDO); o Word
+            # não embute fontes aqui, então usa "Segoe Script" (nativa do Windows)
+            # para manter o nome em caligrafia também no .docx.
+            formato.update(tamanho=18, fonte="Segoe Script")
         self._inline(paragrafo, el, formato)
         return paragrafo
 

@@ -4,6 +4,7 @@ import io
 import pytest
 from docx import Document
 from docx.oxml.ns import qn
+from docx.shared import Pt
 
 import app.services.storage as storage_module
 from app.services.laudo_documento import _buscador_somente_data_uri, html_para_docx
@@ -144,7 +145,7 @@ def test_docx_preserva_destaques():
     amarelo = next(r for r in runs if r.text == "destaque amarelo")
     assert amarelo.font.highlight_color is not None
     assinatura = next(r for r in runs if r.text == "Mayra Vanessa Andrade da Cunha")
-    assert assinatura.italic
+    assert assinatura.font.name == "Segoe Script" and assinatura.font.size == Pt(18)
 
 
 def test_docx_rejeita_html_sem_documento(client):
