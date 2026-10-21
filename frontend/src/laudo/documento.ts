@@ -27,6 +27,11 @@ export interface Perfil {
   credenciais: string[]
 }
 
+// Nome usado na assinatura do relatório — sempre o nome completo, mesmo que
+// a conta (p.name) esteja cadastrada de forma abreviada — igual ao protocolo
+// fixo (perfilProfissional() em formulario-novo-paciente.html).
+const NOME_ASSINATURA = 'Mayra Vanessa Andrade da Cunha'
+
 // Textos usados quando o perfil não tem bio/credenciais configuradas — os
 // mesmos de perfilProfissional() no protocolo fixo, para os dois relatórios
 // saírem iguais.
@@ -40,7 +45,7 @@ export function perfilDoProfissional(p: Psychologist): Perfil {
     .map((s) => s.trim())
     .filter(Boolean)
   return {
-    nome: p.name,
+    nome: NOME_ASSINATURA,
     bio: (p.bio_profissional ?? '').trim() || BIO_PADRAO,
     credenciais: credenciais.length ? credenciais : CREDENCIAIS_PADRAO,
   }

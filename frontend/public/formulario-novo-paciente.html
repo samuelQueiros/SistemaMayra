@@ -2714,7 +2714,7 @@ async function perfilProfissional(){
     if(typeof window.apiFetch!=="function")return _perfilProfissionalCache=padrao;
     const dados=await window.apiFetch("/auth/me");
     _perfilProfissionalCache={
-      nome:(dados&&dados.name)||padrao.nome,
+      nome:padrao.nome, // sempre o nome completo na assinatura, mesmo que a conta esteja cadastrada de forma abreviada
       bio:(dados&&dados.bio_profissional&&dados.bio_profissional.trim())||padrao.bio,
       credenciais:(dados&&dados.credenciais_assinatura&&dados.credenciais_assinatura.trim())
         ?dados.credenciais_assinatura.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)
