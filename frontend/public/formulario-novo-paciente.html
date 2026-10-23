@@ -1613,6 +1613,9 @@ document.addEventListener("DOMContentLoaded",()=>{
   if(dn){dn.addEventListener("input",e=>{e.target.value=formatarDataBR(e.target.value);atualizarCamposBasePaciente();});dn.addEventListener("change",atualizarCamposBasePaciente);}
   const ano=document.getElementById("anoEscolar"); if(ano){ano.addEventListener("change",atualizarCamposBasePaciente);}
   const sexo=document.getElementById("sexo"); if(sexo){sexo.addEventListener("change",()=>aplicarTextosPadrao(false));}
+  const hipSel=document.getElementById("hipoteseSelecionada"); if(hipSel){hipSel.addEventListener("change",()=>aplicarTextosPadrao(false));}
+  document.querySelectorAll(".hipotese").forEach(cb=>cb.addEventListener("change",()=>aplicarTextosPadrao(false)));
+  const hipTexto=document.getElementById("hipotesesTexto"); if(hipTexto){hipTexto.addEventListener("change",()=>aplicarTextosPadrao(false));}
   atualizarBotoesSimNao(); mostrarDescricaoSim();
   const tag=document.getElementById("DADOS_PACIENTE");
   if(tag){try{aplicarDados(JSON.parse(tag.textContent));atualizarCamposBasePaciente();atualizarStatusSalvamento("Cópia do paciente aberta com dados preenchidos.");}catch(e){}}
@@ -1734,8 +1737,9 @@ function formasGenero(sexo){
 // **negrito**, ==destaque cinza== e !!destaque amarelo!!; linhas iniciadas
 // por ✔ ou • viram lista. {PROBABILIDADE_TEA} é trocado pelo percentual
 // calculado a partir das escalas ATA/CARS.
-function textosPadraoLaudo(g){
+function textosPadraoLaudo(g,chaveHipotese){
   const t = {};
+  const ehTEA=chaveHipotese==="TEA";
   const paragrafosMetodologia = {
     intro: "**METODOLOGIA E PROTOCOLOS UTILIZADOS**: Realizada análise dos comportamentos quanto ao desenvolvimento sócio comunicativo e cognitivo, baseado no **DSM - V**, registrado a partir de observações clínicas e escalas de avaliação **(ATA, CARS, SNAP IV, TOD e PORTAGE),** a depender da necessidade do processo da avaliação e da suspeita apresentada.",
     CARS: "**Escala CARS** - **(Childhood Autism Rating Scale)**, em português escala de pontuação para Autismo na infância, é um questionário frequentemente utilizado por profissionais da área da saúde para averiguar a possibilidade da presença de Autismo em crianças e adolescentes **(2 anos de idade e adolescentes até 17 anos e 11 meses)** e é considerada uma ferramenta pré-diagnóstica bastante confiável. Dentre todas as escalas de avaliação do Autismo, a **CARS** é a de maior validação e preferência.",
@@ -1772,8 +1776,13 @@ function textosPadraoLaudo(g){
     paragrafosMetodologia.MCHAT,
     paragrafosMetodologia.fechamento
   ].join("\n");
-  t.parecerContexto = "As dificuldades "+g.do+" paciente podem estar relacionadas ao fato de ser laudad"+g.e+" com **TDAH e TOD** e por estar em fase de adaptação a novas rotinas, regras escolares e sociais constantemente, "+g.o+" paciente está em processo de estímulo e desenvolvimento de habilidades necessárias para o ambiente escolar, como atenção, disciplina e interação social desde sempre.";
-  t.aspectosComportamentais = [
+  t.parecerContexto = ehTEA
+    ? "As dificuldades "+g.do+" paciente podem estar relacionadas ao fato de ser laudad"+g.e+" com **TEA** e por estar em fase de adaptação a novas rotinas, regras escolares e sociais constantemente, "+g.o+" paciente está em processo de estímulo e desenvolvimento de habilidades necessárias para o ambiente escolar, como comunicação, flexibilidade e interação social desde sempre."
+    : "As dificuldades "+g.do+" paciente podem estar relacionadas ao fato de ser laudad"+g.e+" com **TDAH e TOD** e por estar em fase de adaptação a novas rotinas, regras escolares e sociais constantemente, "+g.o+" paciente está em processo de estímulo e desenvolvimento de habilidades necessárias para o ambiente escolar, como atenção, disciplina e interação social desde sempre.";
+  t.aspectosComportamentais = ehTEA ? [
+    "As informações a seguir foram obtidas a partir de um estudo de caso detalhado "+g.do+" paciente, reunindo dados provenientes de observações diretas e indiretas, relatos familiares, e interações em diferentes contextos sociais e escolares, com o intuito de oferecer uma análise abrangente de seu comportamento, desenvolvimento e desafios específicos. "+g.O+" paciente descrit"+g.e+" apresenta um conjunto de características que são consistentes com o **TEA - Transtorno do Espectro Autista.** A seguir, destaco alguns aspectos importantes que indicam a necessidade de observações mais específicas para a elaboração de um plano de intervenção apropriado.",
+    "As características interferem significativamente na comunicação social, nas interações sociais e nas atividades diárias "+g.do+" paciente. O manejo desses comportamentos precisa urgente de uma combinação de intervenções comportamentais, terapêuticas e, em alguns casos, de suporte multiprofissional."
+  ].join("\n") : [
     "As informações a seguir foram obtidas a partir de um estudo de caso detalhado "+g.do+" paciente, reunindo dados provenientes de observações diretas e indiretas, relatos familiares, e interações em diferentes contextos sociais e escolares, com o intuito de oferecer uma análise abrangente de seu comportamento, desenvolvimento e desafios específicos. "+g.O+" paciente descrit"+g.e+" apresenta um conjunto de características que são consistentes com o **TDAH - Transtorno de Déficit de Atenção Hiperatividade.** A seguir, destaco alguns aspectos importantes que indicam a necessidade de observações mais específicas para a elaboração de um plano de intervenção apropriado.",
     "As características interferem significativamente no desempenho social, nas interações sociais e nas atividades diárias "+g.do+" paciente. O manejo desses comportamentos precisa urgente de uma combinação de intervenções comportamentais, cognitivas e em alguns casos, medicamentosas."
   ].join("\n");
@@ -1790,7 +1799,11 @@ function textosPadraoLaudo(g){
     "Dada a complexidade da situação é fundamental uma intervenção terapêutica urgente que possa abordar não apenas os comportamentos "+g.do+" paciente, mas também oferecer orientação para a mãe em relação ao manejo das situações cotidianas. A participação de um terapeuta com experiência em **Análise do Comportamento Aplicada (ABA)** pode ser crucial para desenvolver estratégias de intervenção que envolvam tanto "+g.o+" paciente quanto sua família, buscando um equilíbrio entre a compreensão das necessidades emocionais e o desenvolvimento de habilidades sociais e acadêmicas futuramente."
   ].join("\n");
   t.textoHabilidades = "O mais aconselhável é que "+g.o+" paciente inicie o quanto antes uma atividade extraclasse, pois a vivência em ambientes sociais poderá contribuir significativamente para o seu desenvolvimento global. A interação com outras crianças e a rotina estruturada são fundamentais para estimular suas habilidades cognitivas, sociais e comunicativas. Além disso, é importante que "+g.ele+" receba acompanhamento terapêutico contínuo, com seus comportamentos sendo observados e monitorados por um período (determinado pelo terapeuta). Após ou durante o acompanhamento, uma reavaliação deverá ser realizada, sem descartar a possibilidade de transtorno.";
-  t.textoPortage = [
+  t.textoPortage = ehTEA ? [
+    "A idade cognitiva "+g.do+" paciente não está de acordo para sua idade cronológica. Entretanto, algumas características comprometem vários aspectos da vida acadêmica "+g.do+" paciente. É importante que seus professores saibam disso para que possam ajustar o que "+g.o+" paciente está aprendendo e/ou precisa aprender, tornando a escola um lugar mais confortável e estimulante.",
+    "Durante o processo de observação e atendimento, foram identificadas manifestações consistentes com um perfil de dificuldades na comunicação social e na flexibilidade comportamental, contudo, ressalta-se que tais aspectos se vinculam a um perfil de funcionamento característico do espectro autista, caracterizado por padrões restritos e repetitivos de interesse e por particularidades na interação social.",
+    "O mais indicado, neste momento, é que "+g.o+" paciente inicie, o quanto antes, um acompanhamento voltado para o desenvolvimento das habilidades sociais e de comunicação em ambiente terapêutico. A vivência em um contexto estruturado e direcionado favorecerá o desenvolvimento dessas habilidades, contribuindo de forma significativa para seu desempenho funcional e adaptativo."
+  ].join("\n") : [
     "A idade cognitiva "+g.do+" paciente não está de acordo para sua idade cronológica. Entretanto, algumas características comprometem vários aspectos da vida acadêmica "+g.do+" paciente. É importante que seus professores saibam disso para que possam ajustar o que "+g.o+" paciente está aprendendo e/ou precisa aprender, tornando a escola um lugar mais confortável e estimulante.",
     "Durante o processo de observação e atendimento, foram identificadas manifestações consistentes com um quadro de desatenção, impulsividade e hiperatividade, contudo, ressalta-se que tais aspectos NÃO se vinculam diretamente apenas à hiperatividade motora, mas sim a uma hiperatividade cerebral, caracterizada por intensa atividade mental, aceleração do pensamento e dificuldade de autorregulação cognitiva.",
     "O mais indicado, neste momento, é que "+g.o+" paciente inicie, o quanto antes, um acompanhamento voltado para o treino de concentração e atenção sustentada em ambiente terapêutico. A vivência em um contexto estruturado e direcionado favorecerá o desenvolvimento dessas habilidades, contribuindo de forma significativa para seu desempenho cognitivo e funcional."
@@ -1816,7 +1829,21 @@ function textosPadraoLaudo(g){
     "Sua dificuldade "+g.o+" impede de concluir as atividades propostas com prazer e interesse. Não acolhe bem as explicações e orientações recebidas demonstrando falta de compreensão do que lhe é solicitado, porém, são realizadas com muita rapidez depois de ter os comandos repetidos por mais de uma vez (duas ou três vezes) e ainda não é capaz de realizar com coerência o que lhe é proposto em alguns momentos.",
     "Essas características podem interferir significativamente no desempenho acadêmico, nas interações sociais e nas atividades diárias "+g.do+" paciente. O manejo desses comportamentos geralmente envolve uma combinação de intervenções comportamentais, educacionais e, em alguns casos, medicamentosas."
   ].join("\n");
-  t.textoSintese = [
+  t.textoSintese = ehTEA ? [
+    "Com base nas observações realizadas ao longo dos atendimentos clínicos, identifica-se que "+g.o+" paciente apresenta um padrão de funcionamento compatível com o **Transtorno do Espectro Autista (TEA)**, caracterizado por particularidades na comunicação social e por padrões restritos e repetitivos de comportamento, interesses ou atividades, com impacto direto no desempenho escolar, funcional e na autonomia diária.",
+    "Observa-se **dificuldade na reciprocidade socioemocional**, com limitações na iniciativa de interações sociais e no compartilhamento espontâneo de interesses e emoções com outras pessoas. "+g.O+" paciente demonstra padrões particulares na comunicação não verbal, como contato visual, expressões faciais e gestos, o que impacta a construção e manutenção de vínculos sociais.",
+    "Nota-se também a presença de **interesses restritos e/ou comportamentos repetitivos**, com forte apego a rotinas e rituais específicos, podendo apresentar reações intensas diante de mudanças inesperadas no ambiente ou na rotina. Observam-se ainda particularidades sensoriais, com hiper ou hiporreatividade a estímulos do ambiente (sons, texturas, luzes, entre outros).",
+    "Destaca-se **rigidez cognitiva e comportamental**, evidenciada por dificuldade em considerar alternativas e em se adaptar a situações não previstas, o que compromete a flexibilidade necessária diante de demandas sociais e acadêmicas variadas.",
+    g.O+" paciente apresenta, em alguns momentos, **dificuldades na comunicação funcional**, podendo necessitar de apoio visual, repetição e fragmentação de comandos para garantir a compreensão adequada das instruções recebidas.",
+    "No que se refere à **organização e à autonomia**, observa-se tendência à dependência de rotinas pré-estabelecidas, com dificuldade em generalizar aprendizagens para contextos novos e em antecipar consequências de mudanças no ambiente.",
+    "No contexto escolar, o desempenho apresenta-se **variável**, com potencial cognitivo preservado em diversas áreas, mas com prejuízos mais evidentes em situações que exigem flexibilidade social, comunicação recíproca e adaptação a imprevistos. As dificuldades observadas não decorrem de falta de capacidade intelectual, mas de particularidades próprias do neurodesenvolvimento no espectro autista.",
+    "De forma geral, o conjunto das observações clínicas indica um perfil compatível com o **Transtorno do Espectro Autista (TEA)**, com predomínio de particularidades na comunicação social e padrões restritos/repetitivos de comportamento, gerando impacto funcional significativo no cotidiano "+g.do+" paciente. As manifestações observadas devem ser apreciadas e confirmadas em conjunto com avaliação médica especializada e demais dados multiprofissionais.",
+    "Além disso, o reforço contínuo de comportamentos positivos, como a participação nas atividades e a perseverança nas tarefas, é essencial para promover sua autonomia e confiança nesse novo contexto.",
+    "Portanto, as dificuldades iniciais são esperadas e devem ser encaradas como parte do desenvolvimento gradual, mas precisam continuar sendo observadas.",
+    "Essa abordagem deve ser colaborativa e sensível às necessidades de ambos, mas também firme na importância da escolarização e da introdução gradual de novos desafios para "+g.o+" paciente. É importante que a família seja apoiada nesse processo para que possa atuar de forma mais assertiva e confiante na promoção do desenvolvimento da criança.",
+    "O **Transtorno do Espectro Autista (TEA)** pode vir acompanhado de **comorbidades**, que precisam ser continuamente observadas, pois influenciam diretamente no desenvolvimento da criança. O acompanhamento terapêutico é essencial para que os profissionais possam trabalhar não apenas as habilidades de comunicação e socialização, mas também a **conduta da criança diante de diferentes situações**, preparando-a para lidar melhor com os desafios que surgirão na adolescência e na vida adulta.",
+    "Durante a observação pedagógica realizada em atendimento, "+g.o+" paciente demonstrou comportamentos que confirmam características compatíveis com o **Transtorno do Espectro Autista (TEA)**. "+g.O+" paciente apresenta particularidades na comunicação social, se distrai facilmente com estímulos do ambiente e, por vezes, demonstra não compreender comandos verbais simples, necessitando que as instruções sejam repetidas ou reforçadas com apoio visual."
+  ].join("\n") : [
     "Com base nas observações realizadas ao longo dos atendimentos clínicos, identifica-se que "+g.o+" paciente apresenta um padrão de funcionamento cognitivo caracterizado por **instabilidade atencional significativa, aceleração do pensamento e prejuízos nas funções executivas**, com impacto direto no desempenho escolar, funcional e na autonomia diária.",
     "Observa-se **dificuldade persistente em sustentar a atenção**, sobretudo em atividades que exigem esforço mental contínuo, organização sequencial e planejamento. A atenção mostra-se mais preservada apenas diante de tarefas de alto interesse pessoal, evidenciando um perfil atencional flutuante e altamente dependente de estímulos motivadores. "+g.O+" paciente demonstra facilidade para distrair-se tanto por estímulos externos quanto por pensamentos irrelevantes, comprometendo a continuidade e a finalização das atividades.",
     "A **agitação manifesta-se predominantemente em nível motor,** caracterizada por aceleração mental contínua, dificuldade em desacelerar o ritmo do pensamento e necessidade constante de responder a estímulos internos. Observa-se hiperatividade motora expressiva, o que reforça a presença de **hiperatividade cerebral**, com repercussões diretas sobre o controle inibitório, a impulsividade cognitiva e a autorregulação emocional.",
@@ -1875,16 +1902,17 @@ function avisoLegalFechamento(g){
 
 // Preenche os campos de texto com o texto-padrão do modelo. `preencherVazios`
 // só na montagem inicial (campo vazio depois disso = a psicóloga apagou de
-// propósito para tirar o bloco do relatório). Ao trocar o sexo, troca o
-// texto-padrão masculino pelo feminino (e vice-versa) somente em campos que
-// ainda não foram editados.
+// propósito para tirar o bloco do relatório). Ao trocar o sexo ou a hipótese
+// diagnóstica, troca o texto-padrão (masculino/feminino, TEA/TDAH) somente
+// em campos que ainda não foram editados.
 function aplicarTextosPadrao(preencherVazios){
-  const atual=textosPadraoLaudo(formasGenero(valor("sexo")));
-  const masc=textosPadraoLaudo(formasGenero("Masculino")), fem=textosPadraoLaudo(formasGenero("Feminino"));
+  const chaveHipotese=chaveDaHipotese(hipotesesParaRelatorio()[0]||"");
+  const atual=textosPadraoLaudo(formasGenero(valor("sexo")),chaveHipotese);
+  const variantes=["Masculino","Feminino"].flatMap(sx=>["TDAH","TEA"].map(ch=>textosPadraoLaudo(formasGenero(sx),ch)));
   Object.keys(atual).forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
     const v=el.value;
-    if((preencherVazios&&!v.trim())||v===masc[id]||v===fem[id])el.value=atual[id];
+    if((preencherVazios&&!v.trim())||variantes.some(variante=>v===variante[id]))el.value=atual[id];
   });
   atualizarBotoesEscalasMetodologia();
 }
@@ -2587,7 +2615,8 @@ h2.marcado{margin:3mm 0 2mm}
 table.simples td,table.simples th{border:.75pt solid #000}
 table.roxa td,table.roxa th{border:.75pt solid #b3a5e2}
 table.centro td{text-align:center}
-.grafico{text-align:center;margin:3mm 0 4mm;break-inside:avoid;page-break-inside:avoid}
+.grafico{text-align:center;margin:3mm 0 4mm;break-inside:avoid;page-break-inside:avoid;break-before:avoid;page-break-before:avoid}
+.grafico+p{break-before:avoid;page-break-before:avoid}
 .grafico img,.graficos-lado img,.fotos img,.cab-foto img{display:inline-block;vertical-align:middle}
 .graficos-lado{text-align:center;margin:3mm 0 5mm;break-inside:avoid}
 .graficos-lado img{margin:0 2mm}
@@ -2737,9 +2766,6 @@ async function gerarDocumentoLaudoHTML(){
   atualizarIdadeCognitivaDoCabecalho();
   const opcoesTexto={probabilidadeTEA:prob.tea};
   const texto=(id,opcoes)=>blocoDeTexto(valor(id),Object.assign({},opcoesTexto,opcoes||{}));
-  // Considerações Finais (aviso de que o documento não é laudo médico):
-  // repete no final de cada protocolo finalizado, não só uma vez no fechamento.
-  const considerFinaisBloco='<h3><mark class="cinza">Considerações Finais</mark></h3>'+blocoDeTexto(avisoLegalFechamento(g),opcoesTexto);
   const QUEBRA='<div class="quebra"></div>';
   const partes=[];
   const capa=await gerarCapaRelatorio(valor("nomePaciente"));
@@ -2866,7 +2892,6 @@ async function gerarDocumentoLaudoHTML(){
     partes.push('<div class="grafico"><img src="'+imgFE+'" data-mm="160" style="width:160mm"></div>');
     partes.push('<p class="compacto"><span style="color:#c8443f">✚</span> Legenda:</p><p class="compacto" style="padding-left:6mm"><span style="color:#c9548b"><strong>Indicadores de dificuldade observados</strong></span></p><p style="padding-left:6mm"><span style="color:#5c4b92"><strong>Indicadores de desempenho funcional observado</strong></span></p>');
   }
-  if(linhasFE||imgFE)partes.push(considerFinaisBloco);
 
   /* Portage: texto, interpretação e o gráfico de idade de desenvolvimento */
   const portage=portagePorArea();
@@ -2876,7 +2901,6 @@ async function gerarDocumentoLaudoHTML(){
     if(imgPortage)partes.push('<p class="recuo">Com base no resultado do protocolo <strong>PORTAGE</strong> aplicado durante o período da avaliação e respeitando as particularidades, tempo e limitações '+g.do+" paciente/aprendente segue abaixo percentual descritivo de repertório observado em áreas específicas: Comportamentos: <strong>Socialização, Linguagem, Autocuidados, Cognição e Desenvolvimento Motor.</strong></p>");
     partes.push(texto("textoPortage"));
     if(imgPortage)partes.push('<div class="grafico"><img src="'+imgPortage+'" data-mm="165" style="width:165mm"></div>');
-    partes.push(considerFinaisBloco);
   }
 
   /* CARS */
@@ -2893,7 +2917,6 @@ async function gerarDocumentoLaudoHTML(){
       const faixasCARS=[["Normal - &nbsp;15 à 29,5 pontos",c=>c<30],["Autismo leve-moderado &nbsp;- 30 à 36,5 pontos",c=>c>=30&&c<37],["Autismo grave – acima de 37 pontos",c=>c>=37]];
       partes.push('<p class="centro"><strong><span style="font-size:7.5pt"><mark class="cinza">Classificação:&nbsp;</mark> '+faixasCARS.map(([t,naFaixa])=>'<mark class="'+(cars!==null&&naFaixa(cars)?"amarelo":"cinza")+'">'+t+"</mark>").join(" / ")+"</span></strong></p>");
     }
-    partes.push(considerFinaisBloco);
   }
 
   /* ATA */
@@ -2910,7 +2933,6 @@ async function gerarDocumentoLaudoHTML(){
       for(let i=0;i<11;i++)linhas+="<tr>"+celula(i)+celula(i+11)+"</tr>";
       partes.push('<table class="tabela simples" data-larguras="62,21,62,21" data-fonte="7" style="width:166mm;margin:6mm auto 0"><colgroup><col style="width:62mm"><col style="width:21mm"><col style="width:62mm"><col style="width:21mm"></colgroup>'+linhas+"</table>");
     }
-    partes.push(considerFinaisBloco);
   }
 
   /* Conclusão das escalas */
@@ -2942,7 +2964,6 @@ async function gerarDocumentoLaudoHTML(){
       partes.push(texto("textoSNAP"));
       partes.push(blocoTopicos);
     }
-    partes.push(considerFinaisBloco);
   }else{
     partes.push(blocoTopicos);
   }
@@ -2955,7 +2976,6 @@ async function gerarDocumentoLaudoHTML(){
     const linhasMCHAT=itensMCHAT.map(x=>"<tr><td>"+esc(x.item)+"</td><td>"+(x.resp==="sim"?"Sim":"Não")+"</td></tr>").join("");
     partes.push('<h3><mark class="cinza">M-CHAT — Modified Checklist For Autism In Toddlers</mark></h3>');
     partes.push('<table class="tabela dupla compacta" data-larguras="130,40" data-fonte="9" style="font-size:9pt"><colgroup><col style="width:130mm"><col style="width:40mm"></colgroup><thead><tr><th>Item</th><th>Resposta</th></tr></thead>'+linhasMCHAT+"</table>");
-    partes.push(considerFinaisBloco);
   }
 
   /* Protocolo TOD — só entra no relatório se algum item foi respondido */
@@ -2967,7 +2987,6 @@ async function gerarDocumentoLaudoHTML(){
     }else{
       partes.push('<p class="recuo">Protocolo TOD respondido parcialmente ('+tod.pre+" de "+todItens.length+' itens) — resultado percentual não calculado por falta de preenchimento completo.</p>');
     }
-    partes.push(considerFinaisBloco);
   }
 
   /* Corroboração (SNAP-IV e atendimentos) */

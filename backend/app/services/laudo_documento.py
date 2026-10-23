@@ -542,12 +542,14 @@ class _ConversorDocx:
             celula.add_paragraph()
         self.doc.add_paragraph().paragraph_format.space_after = Pt(0)
 
-    def _imagem_centralizada(self, el) -> None:
+    def _imagem_centralizada(self, el, manter_com_proximo: bool = False) -> None:
         img = el if el.tag == "img" else next(iter(el.iter("img")), None)
         if img is None or _imagem_bytes(img.get("src")) is None:
             return
         p = self._novo_paragrafo(alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
         p.paragraph_format.keep_together = True
+        if manter_com_proximo:
+            p.paragraph_format.keep_with_next = True
         p.paragraph_format.line_spacing = 1.0
         _adicionar_imagem(p.add_run(), img.get("src"), _mm_do_elemento(img, 160))
 
@@ -624,11 +626,53 @@ class _ConversorDocx:
             c_caixa.add_paragraph()
         self.doc.add_paragraph().paragraph_format.space_after = Pt(2)
 
-    def _tabela(self, el) -> None:
+    def _linha_mesclada(self, linha, antes_el) -> None:
+        """Primeira linha de uma tabela, mesclada e sem bordas: o título ou
+        gráfico que precede a tabela no HTML vira parte da própria tabela em
+        vez de um parágrafo solto antes dela — python-docx/Word não garante
+        manter um parágrafo "preso" a uma tabela seguinte (keep_with_next
+        entre parágrafo e tabela é frequentemente ignorado), mas uma linha
+        marcada como cabeçalho (tblHeader) com cantSplit nunca se separa da
+        tabela."""
+        _nao_quebrar_linha(linha)
+        celula = linha.cells[0]
+        for outra in linha.cells[1:]:
+            celula = celula.merge(outra)
+        _bordas_celula(celula, tipo="nil")
+        p = celula.paragraphs[0]
+        p.paragraph_format.space_before = Pt(4)
+        p.paragraph_format.space_after = Pt(4)
+        classes_el = _classes(antes_el)
+        if "grafico" in classes_el:
+            # Gráfico antes da tabela (ex.: ATA): não repete em cada página,
+            # só precisa ficar preso à primeira linha de dados.
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.paragraph_format.line_spacing = 1.0
+            img = antes_el if antes_el.tag == "img" else next(iter(antes_el.iter("img")), None)
+            if img is not None:
+                _adicionar_imagem(p.add_run(), img.get("src"), _mm_do_elemento(img, 160))
+            return
+        _repetir_cabecalho(linha)
+        if antes_el.tag in ("h1", "h2"):
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            formato = {"negrito": True, "tamanho": 12.5}
+            if "roxo" in classes_el:
+                formato["cor"] = "#5C4B92"
+            if "marcado" in classes_el:
+                formato.update(destaque="cinza", tamanho=10)
+            self._inline(p, antes_el, formato)
+        elif "area" in classes_el:
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            self._inline(p, antes_el, {"negrito": True, "tamanho": 10.5})
+        else:
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            self._inline(p, antes_el, {"negrito": True, "destaque": "cinza", "sublinhado": True})
+
+    def _tabela(self, el, antes_el=None):
         classes = _classes(el)
         linhas_html = el.xpath("./tr|./thead/tr|./tbody/tr")
         if not linhas_html:
-            return
+            return None
         num_colunas = max(
             sum(int(c.get("colspan") or 1) for c in tr.xpath("./td|./th")) for tr in linhas_html
         )
@@ -638,7 +682,8 @@ class _ConversorDocx:
         tamanho_fonte = float(el.get("data-fonte") or 9)
 
         self._antes_de_tabela()
-        tabela = self.doc.add_table(rows=len(linhas_html), cols=num_colunas)
+        offset = 1 if antes_el is not None else 0
+        tabela = self.doc.add_table(rows=len(linhas_html) + offset, cols=num_colunas)
         tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
         if "dupla" in classes:
             _bordas_tabela(tabela, "000000", "double", 4)
@@ -648,8 +693,11 @@ class _ConversorDocx:
             _bordas_tabela(tabela, "000000", "single", 4)
         _fixar_colunas(tabela, larguras)
 
+        if antes_el is not None:
+            self._linha_mesclada(tabela.rows[0], antes_el)
+
         for i, tr in enumerate(linhas_html):
-            linha = tabela.rows[i]
+            linha = tabela.rows[i + offset]
             _nao_quebrar_linha(linha)
             celulas_html = tr.xpath("./td|./th")
             eh_cabecalho = bool(celulas_html) and all(c.tag == "th" for c in celulas_html)
@@ -684,6 +732,17 @@ class _ConversorDocx:
                 coluna += span
         espaco = self.doc.add_paragraph()
         espaco.paragraph_format.space_after = Pt(4)
+        return tabela
+
+    def _prender_ao_proximo(self, tabela) -> None:
+        """Marca o último parágrafo da última célula da tabela para ficar
+        preso ao próximo bloco (ex.: tabela seguida do gráfico do mesmo
+        protocolo) — ao contrário de parágrafo→tabela, o vínculo
+        tabela→parágrafo seguinte via keep_with_next no fim da última célula
+        é respeitado pelo Word."""
+        ultima_linha = tabela.rows[-1]
+        ultima_celula = ultima_linha.cells[-1]
+        ultima_celula.paragraphs[-1].paragraph_format.keep_with_next = True
 
     def bloco(self, el) -> None:
         if not isinstance(el.tag, str):
@@ -738,8 +797,55 @@ class _ConversorDocx:
         elif tag == "img":
             self._imagem_centralizada(el)
         elif tag in ("div", "section", "main", "article"):
-            for filho in el:
-                self.bloco(filho)
+            self._blocos(el)
+
+    def _blocos(self, container) -> None:
+        """Percorre os filhos olhando um à frente, para prender ao mesmo
+        elemento tudo que o HTML sempre gera em sequência e que não pode se
+        separar entre páginas no .docx: título (h1/h2/h3) logo antes de uma
+        tabela, ou gráfico logo antes de uma tabela, viram a primeira linha
+        dessa tabela; tabela logo antes de um gráfico/legenda, ou gráfico
+        logo antes de uma legenda, ficam presos ao próximo parágrafo."""
+        filhos = [f for f in container if isinstance(f.tag, str)]
+        i = 0
+        total = len(filhos)
+
+        def prender_tabela_ao_que_vem_depois(tabela, depois) -> None:
+            if tabela is not None and depois is not None and (
+                "grafico" in _classes(depois) or depois.tag == "p"
+            ):
+                self._prender_ao_proximo(tabela)
+
+        while i < total:
+            el = filhos[i]
+            proximo = filhos[i + 1] if i + 1 < total else None
+            classes = _classes(el)
+            eh_titulo = el.tag in ("h1", "h2", "h3")
+            eh_grafico = "grafico" in classes
+
+            if (eh_titulo or eh_grafico) and proximo is not None and proximo.tag == "table":
+                tabela = self._tabela(proximo, antes_el=el)
+                if tabela is None:
+                    # Tabela sem linhas (não deveria acontecer): não há onde
+                    # mesclar o título/gráfico — renderiza-o normalmente.
+                    self.bloco(el)
+                    i += 1
+                    continue
+                depois = filhos[i + 2] if i + 2 < total else None
+                prender_tabela_ao_que_vem_depois(tabela, depois)
+                i += 2
+                continue
+            if el.tag == "table":
+                tabela = self._tabela(el)
+                prender_tabela_ao_que_vem_depois(tabela, proximo)
+                i += 1
+                continue
+            if eh_grafico and proximo is not None and proximo.tag == "p":
+                self._imagem_centralizada(el, manter_com_proximo=True)
+                i += 1
+                continue
+            self.bloco(el)
+            i += 1
 
     def converter(self, html: str) -> bytes:
         raiz = lxml_html.fromstring(html)
@@ -748,8 +854,7 @@ class _ConversorDocx:
             raise DocumentoInvalidoError("HTML do laudo não contém o bloco .documento.")
         self._capa(raiz)
         self._cabecalho_e_rodape(raiz)
-        for filho in corpo[0]:
-            self.bloco(filho)
+        self._blocos(corpo[0])
         saida = io.BytesIO()
         self.doc.save(saida)
         return saida.getvalue()

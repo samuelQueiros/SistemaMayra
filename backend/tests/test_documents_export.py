@@ -5,6 +5,7 @@ import pytest
 from docx import Document
 from docx.oxml.ns import qn
 from docx.shared import Pt
+from docx.text.paragraph import Paragraph
 
 import app.services.storage as storage_module
 from app.services.laudo_documento import _buscador_somente_data_uri, html_para_docx
@@ -85,9 +86,15 @@ def test_exporta_docx_com_estrutura_do_modelo(client):
     assert secao._sectPr.find(qn("w:pgBorders")) is not None
     assert secao.header._element.xpath(".//pic:pic")
     assert secao.footer._element.xpath(".//pic:pic")
-    # Quebra de página antes do quadro comparativo, como no modelo.
-    titulo = next(p for p in doc.paragraphs if p.text.startswith("Quadro Comparativo"))
-    assert titulo.paragraph_format.page_break_before
+    # "Quadro Comparativo" vira a 1ª linha (mesclada, sem bordas) da própria
+    # tabela — título e tabela nunca podem se separar entre páginas.
+    tabela_quadro = next(t for t in doc.tables if t.cell(0, 0).text.startswith("Quadro Comparativo"))
+    assert tabela_quadro.cell(0, 0).text == "Quadro Comparativo – Análise dos Comportamentos"
+    # Quebra de página antes do quadro comparativo, como no modelo: o
+    # parágrafo mínimo que carrega a quebra fica logo antes da tabela.
+    anterior = tabela_quadro._tbl.getprevious()
+    assert anterior is not None and anterior.tag == qn("w:p")
+    assert Paragraph(anterior, doc).paragraph_format.page_break_before
 
 
 HTML_COM_CAPA = HTML_LAUDO.replace(

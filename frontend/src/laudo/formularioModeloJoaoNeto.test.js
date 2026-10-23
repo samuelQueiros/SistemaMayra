@@ -81,9 +81,9 @@ it('cabeçalho, metodologia, destaques e final no modelo do relatório', async (
   expect([...posicoes].sort((a, b) => a - b)).toEqual(posicoes)
 
   // "Considerações Finais" (aviso de que o documento não é laudo médico)
-  // repete no final de cada protocolo finalizado, não só uma vez no fechamento.
+  // aparece só uma vez, no fechamento — nunca intercalada entre protocolos.
   const ocorrenciasConsideracoes = doc.split('Considerações Finais').length - 1
-  expect(ocorrenciasConsideracoes).toBeGreaterThan(1)
+  expect(ocorrenciasConsideracoes).toBe(1)
   expect(doc.lastIndexOf('Considerações Finais')).toBeGreaterThan(doc.indexOf('<li>Fonoaudiologia</li>'))
 
   // Fora do documento
@@ -125,6 +125,14 @@ it('M-CHAT entra no lugar do SNAP-IV dos 16 aos 30 meses', async () => {
   const maior = await w.gerarDocumentoLaudoHTML()
   expect(maior).not.toContain('M-CHAT — Modified Checklist For Autism In Toddlers')
   expect(maior).toContain('snapPontos')
+})
+
+it('texto de síntese usa a variante da hipótese selecionada (TEA, não TDAH)', async () => {
+  w.aplicarDados({ nomePaciente: 'Paciente TEA', sexo: 'Feminino', hip_tea: true })
+  w.aplicarTextosPadrao(false)
+  const doc = await w.gerarDocumentoLaudoHTML()
+  expect(doc).toContain('perfil compatível com o <strong>Transtorno do Espectro Autista (TEA)</strong>, com predomínio de particularidades na comunicação social')
+  expect(doc).not.toContain('perfil neurocognitivo de Transtorno do Déficit de Atenção/Hiperatividade (TDAH)')
 })
 
 it('gráfico da ATA vai só até 2 e a idade cognitiva sai só como faixa', () => {
