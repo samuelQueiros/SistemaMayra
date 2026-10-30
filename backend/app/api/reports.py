@@ -35,7 +35,7 @@ from app.services.ai import (
 )
 from app.api.documents import MIME_DOCX, nome_de_arquivo_seguro, resposta_de_arquivo
 from app.services.laudo_documento import DocumentoInvalidoError, html_para_docx
-from app.services.pdf import RULE_TYPES_COM_HTML_PRONTO, render_report_pdf
+from app.services.pdf_do_laudo import RULE_TYPES_COM_HTML_PRONTO, render_report_pdf
 
 router = APIRouter(tags=["reports"])
 

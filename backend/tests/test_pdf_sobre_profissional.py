@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from app.services.pdf import _BIO_PROFISSIONAL_PADRAO, _sobre_a_profissional_html
+from app.services.pdf_do_laudo import _BIO_PROFISSIONAL_PADRAO, _sobre_a_profissional_html
 
 
 def _psicologa(bio_profissional=None):

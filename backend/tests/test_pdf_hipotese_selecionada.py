@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from app.services.pdf import _secoes_clinicas_html
+from app.services.pdf_do_laudo import _secoes_clinicas_html
 
 
 def _relatorio_com_secoes(secoes: dict):

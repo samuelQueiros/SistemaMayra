@@ -107,7 +107,7 @@ seção 7).
   standalone), não texto gerado por IA.
 - `GET  /api/reports/{id}/pdf` — baixa o PDF gerado. Para
   `rule_type="custom_form"`, pega `generated_text` (HTML completo, com
-  `<style>` embutido) e manda direto pro WeasyPrint (`services/pdf.py`),
+  `<style>` embutido) e manda direto pro WeasyPrint (`services/pdf_do_laudo.py`),
   sem passar pelas tabelas de pontuação/gráfico Matplotlib do motor legado.
 
 ---

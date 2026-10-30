@@ -1,4 +1,4 @@
-from app.services.pdf import _cabecalho_tabela_pontuacao, _gerar_grafico, _linhas_pontuacao
+from app.services.pdf_do_laudo import _cabecalho_tabela_pontuacao, _gerar_grafico, _linhas_pontuacao
 
 SCHEMA = {
     "name": "Portage De Teste",

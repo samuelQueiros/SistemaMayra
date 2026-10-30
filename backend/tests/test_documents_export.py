@@ -200,7 +200,7 @@ def test_historico_baixa_word_e_pdf_do_laudo_do_formulario(client):
 
 
 def test_pdf_do_mesmo_html_vem_do_cache_e_o_editado_e_refeito(client, monkeypatch):
-    import app.services.pdf as pdf_module
+    import app.services.pdf_do_laudo as pdf_module
 
     headers = registrar_e_logar(client)
     report_id = _criar_laudo_do_formulario(client, headers, HTML_LAUDO)

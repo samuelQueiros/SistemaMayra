@@ -128,5 +128,5 @@ def test_pdf_nao_busca_arquivos_locais_do_servidor(tmp_path):
 
 
 def test_pdf_legado_tambem_usa_buscador_seguro():
-    fonte = Path("app/services/pdf.py").read_text()
+    fonte = Path("app/services/pdf_do_laudo.py").read_text()
     assert "HTML(string=html).write_pdf()" not in fonte

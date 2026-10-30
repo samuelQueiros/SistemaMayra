@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import RelatorioIA from './RelatorioIA'
+import RedirecionarRelatorioIA from './RedirecionarRelatorioIA'
 
 function Destino() {
   const location = useLocation()
@@ -13,7 +13,7 @@ describe('Endereço antigo de Relatório Por IA', () => {
     render(
       <MemoryRouter initialEntries={[`/relatorio-ia${search}`]}>
         <Routes>
-          <Route path="/relatorio-ia" element={<RelatorioIA />} />
+          <Route path="/relatorio-ia" element={<RedirecionarRelatorioIA />} />
           <Route path="/laudo-ia" element={<Destino />} />
         </Routes>
       </MemoryRouter>,

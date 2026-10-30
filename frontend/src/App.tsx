@@ -14,7 +14,7 @@ const ConfiguracoesProtocolos = lazy(() => import('./pages/ConfiguracoesProtocol
 const ConfiguracoesIA = lazy(() => import('./pages/ConfiguracoesIA'))
 const FormulariosResponsaveisPaciente = lazy(() => import('./pages/FormulariosResponsaveisPaciente'))
 const Logs = lazy(() => import('./pages/Logs'))
-const RelatorioIA = lazy(() => import('./pages/RelatorioIA'))
+const RedirecionarRelatorioIA = lazy(() => import('./pages/RedirecionarRelatorioIA'))
 const LaudoPorIA = lazy(() => import('./pages/LaudoPorIA'))
 const SecoesClinicasPaciente = lazy(() => import('./pages/SecoesClinicasPaciente'))
 const HistoricoPaciente = lazy(() => import('./pages/HistoricoPaciente'))
@@ -35,7 +35,7 @@ function App() {
               <Route path="/dashboard" element={<Navigate to="/pacientes" replace />} />
               <Route path="/pacientes/:id/formularios-responsaveis" element={<FormulariosResponsaveisPaciente />} />
               <Route path="/pacientes/:id/secoes-clinicas" element={<SecoesClinicasPaciente />} />
-              <Route path="/relatorio-ia" element={<RelatorioIA />} />
+              <Route path="/relatorio-ia" element={<RedirecionarRelatorioIA />} />
               <Route path="/laudo-ia" element={<LaudoPorIA />} />
               <Route path="/logs" element={<Logs />} />
               <Route path="/atendimento/novo" element={<NovoAtendimento />} />
