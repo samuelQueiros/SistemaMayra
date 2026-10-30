@@ -1,3 +1,7 @@
+/**
+ * Revisão do relatório por IA a partir de PDFs (fluxo anterior ao Laudo por IA): edita áreas, gráficos e
+ * fontes, com autosave, e monta o documento por `src/laudo/relatorioIA.ts`.
+ */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'

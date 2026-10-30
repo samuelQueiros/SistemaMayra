@@ -1,3 +1,4 @@
+/** Configurações > Protocolos: página que hospeda a lista de modelos de protocolo próprios. */
 import { PageHeader } from '../components/ds'
 import { ModelosDeProtocolo } from '../components/ModelosDeProtocolo'
 

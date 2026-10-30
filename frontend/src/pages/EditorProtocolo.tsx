@@ -1,3 +1,4 @@
+/** Editor dos modelos de protocolo próprios (`/configuracoes/protocolos/:id`). */
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'

@@ -1,3 +1,4 @@
+/** Design system: menu suspenso de ações. */
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'

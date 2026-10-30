@@ -1,3 +1,7 @@
+/**
+ * Cliente HTTP da API: guarda o token de login, manda o `Authorization: Bearer` e traduz erros em `ApiError`
+ * com a mensagem em português que o backend devolve.
+ */
 const TOKEN_KEY = 'formpsico_token'
 
 export function getToken(): string | null {

@@ -1,3 +1,4 @@
+/** Página dos formulários dos responsáveis de um paciente. */
 import { useParams } from 'react-router-dom'
 import { FormulariosDeResponsaveis } from '../components/pacientes/FormulariosDeResponsaveis'
 import { PaginaDoPaciente } from '../components/pacientes/CabecalhoDoPaciente'

@@ -1,3 +1,4 @@
+/** Design system: caixa de aviso. */
 import type { CSSProperties, ReactNode } from 'react'
 import { AlertTriangle, CheckCircle2, Info, XCircle } from 'lucide-react'
 

@@ -1,3 +1,7 @@
+/**
+ * Formulário em React dos modelos de protocolo próprios (`/atendimento/protocolo/:modeloId`). O relatório é
+ * montado no navegador por `src/laudo/`, que copia o visual do protocolo fixo.
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'

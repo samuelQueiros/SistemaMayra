@@ -1,3 +1,4 @@
+/** Design system: caixa de marcação com rótulo. */
 import type { CSSProperties, ChangeEventHandler, ReactNode } from 'react'
 import { Check } from 'lucide-react'
 

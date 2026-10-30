@@ -1,3 +1,7 @@
+/**
+ * Hipóteses diagnósticas (CID-11, com subtipos) e encaminhamentos que a psicóloga escolhe antes de gerar o
+ * relatório por IA. A IA não escolhe nada disso.
+ */
 import { Checkbox } from './ds'
 import { ENCAMINHAMENTOS, GRUPOS_CID, textoDaHipotese } from '../laudo/hipotesesCid'
 

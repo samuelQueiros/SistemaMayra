@@ -1,3 +1,4 @@
+/** Tela de login. */
 import { ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { useState } from 'react'
 import type { FormEvent } from 'react'

@@ -1,3 +1,9 @@
+/**
+ * Laudo por IA (`/laudo-ia`): a psicóloga envia os PDFs, o sistema lê em segundo plano, preenche o protocolo
+ * padrão e gera o documento oficial. O formulário fica num iframe oculto: ele fornece o catálogo de campos e
+ * monta o HTML final. A tela consulta o andamento a cada 2 s e, se o formulário ficar 90 s sem dar notícia,
+ * tenta de novo e oferece "Gerar o documento de novo".
+ */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Download, FileText, PencilLine, Plus, Sparkles } from 'lucide-react'

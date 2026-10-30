@@ -1,3 +1,4 @@
+/** Configurações > Registro profissional: o registro (ex.: CRP) usado na assinatura dos relatórios. */
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { me as getMe, updateProfile } from '../api/auth'

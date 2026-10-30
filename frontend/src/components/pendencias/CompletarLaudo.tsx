@@ -1,3 +1,4 @@
+/** Tela de pendências de um laudo: carrega o que falta, salva as respostas e dispara "Atualizar relatório". */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode, Ref } from 'react'
 import { Camera, FileImage, LoaderCircle, Paperclip, Trash2 } from 'lucide-react'

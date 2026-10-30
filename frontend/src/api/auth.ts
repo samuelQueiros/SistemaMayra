@@ -1,3 +1,4 @@
+/** Chamadas de login, perfil da psicóloga e capa padrão dos relatórios (`/api/auth`). */
 import { apiDelete, apiGet, apiPost, apiPostFile, apiPut, fetchObjectUrl } from './client'
 import type { CapaConfig, Psychologist } from './types'
 

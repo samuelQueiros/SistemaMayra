@@ -1,3 +1,7 @@
+/**
+ * Pendências do laudo por seção: campos essenciais, escalas não aplicadas, métodos incluídos no relatório e
+ * sugestões dos anexos. As pendências são calculadas pelo backend (`services/pendencias.py`), não pela IA.
+ */
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { ReactNode, Ref } from 'react'
 import { ChevronDown, ChevronRight, Ellipsis, Plus, Undo2 } from 'lucide-react'

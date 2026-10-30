@@ -1,3 +1,7 @@
+/**
+ * Chamadas dos modelos do motor de regras (`/api/templates`). O fluxo principal só usa `listTemplates`; os
+ * demais vieram do motor antigo.
+ */
 import { apiGet, apiPost, apiPostFile } from './client'
 import type { ReportTemplate, TemplateSchemaJSON } from './types'
 

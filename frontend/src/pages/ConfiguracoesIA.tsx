@@ -1,3 +1,4 @@
+/** Configurações > IA: provedor, modelo e chave de acesso da IA. */
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError } from '../api/client'

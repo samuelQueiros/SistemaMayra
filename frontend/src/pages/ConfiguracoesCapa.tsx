@@ -1,3 +1,4 @@
+/** Configurações > Capa: página que hospeda o `EditorCapa`. */
 import { PageHeader } from '../components/ds'
 import { EditorCapa } from '../components/EditorCapa'
 

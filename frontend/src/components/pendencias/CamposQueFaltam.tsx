@@ -1,3 +1,4 @@
+/** Quadro "Há alguns campos que podem ser preenchidos" e o modal onde a psicóloga completa os dados do laudo. */
 import { useEffect, useRef, useState } from 'react'
 import { ChevronRight, ClipboardList, RefreshCw, Save, X } from 'lucide-react'
 import type { CatalogoDoProtocolo } from '../../api/laudoIA'

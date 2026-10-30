@@ -1,3 +1,4 @@
+/** Estrutura das telas logadas: menu lateral e área de conteúdo. */
 import { ClipboardList, LogOut, Menu, Settings, Users, X } from 'lucide-react'
 import { Suspense, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'

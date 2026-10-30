@@ -1,3 +1,4 @@
+/** Design system: cartão com título opcional. */
 import type { CSSProperties, ReactNode } from 'react'
 
 type Tone = 'plain' | 'brand' | 'sunken'

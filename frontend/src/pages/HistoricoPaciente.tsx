@@ -1,3 +1,4 @@
+/** Histórico do paciente: laudos, fotos, edição com registro, download de PDF e Word e "Campos que faltam". */
 import { Camera, ClipboardCheck, Download, Ellipsis, FileText, Pencil, Plus, Sparkles, Stethoscope, Trash2 } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'

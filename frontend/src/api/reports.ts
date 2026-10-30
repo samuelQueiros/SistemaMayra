@@ -1,3 +1,7 @@
+/**
+ * Chamadas de laudos: leitura, texto final, edição com registro, PDF e Word. Listas usam o resumo leve
+ * (`ReportResumo`); o laudo completo só vem em `getReport`.
+ */
 import { apiGet, apiPatch, apiPost, apiPut, downloadGet } from './client'
 import type { Answers, CidCode, ClinicalSections, Report, ReportChangeLog, ReportResumo } from './types'
 

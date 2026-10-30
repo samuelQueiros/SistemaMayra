@@ -1,3 +1,4 @@
+/** Editor visual do `schema_json` dos modelos do motor de regras (áreas, campos e faixas de classificação). */
 import { Plus, Trash2 } from 'lucide-react'
 import type {
   AgeBracket,

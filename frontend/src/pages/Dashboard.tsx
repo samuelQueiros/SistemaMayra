@@ -1,3 +1,4 @@
+/** Todos os pacientes (`/pacientes`): números de uso, lista, cadastro e exclusão definitiva com confirmação. */
 import { CalendarClock, ClipboardList, ClipboardPlus, Download, Ellipsis, FileText, History, Plus, Search, Stethoscope, Trash2, Users } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'

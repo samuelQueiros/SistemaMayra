@@ -1,3 +1,7 @@
+/**
+ * Novo Atendimento (`/atendimento/novo`): embute o protocolo padrão (`public/formulario-novo-paciente.html`)
+ * num iframe. O próprio HTML cuida do autosave e da ponte com a API.
+ */
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { CircleCheck, CircleDashed, ClipboardList } from 'lucide-react'

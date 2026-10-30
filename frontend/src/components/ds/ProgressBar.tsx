@@ -1,3 +1,4 @@
+/** Design system: barra de progresso. */
 import type { CSSProperties, ReactNode } from 'react'
 
 interface ProgressBarProps {

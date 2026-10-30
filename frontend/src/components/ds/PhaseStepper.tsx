@@ -1,3 +1,4 @@
+/** Design system: indicador das fases do formulário. */
 import { Check } from 'lucide-react'
 
 export type PhaseState = 'done' | 'pending' | 'todo'

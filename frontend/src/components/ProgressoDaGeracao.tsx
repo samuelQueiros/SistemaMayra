@@ -1,3 +1,7 @@
+/**
+ * Barra e mensagens de andamento do Laudo por IA, a partir do andamento consultado a cada 2 s. Anda
+ * devagar até o teto da etapa para nunca parecer travada.
+ */
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { ProgressBar } from './ds'

@@ -1,3 +1,4 @@
+/** Design system: abas. */
 import type { CSSProperties, ReactNode } from 'react'
 
 interface TabItem {

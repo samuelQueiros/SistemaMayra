@@ -1,3 +1,4 @@
+/** Diálogo para escolher qual relatório do paciente baixar, em PDF ou Word. */
 import { useEffect, useState } from 'react'
 import { Download, FileText, X } from 'lucide-react'
 import { ApiError } from '../../api/client'

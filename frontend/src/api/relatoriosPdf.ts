@@ -1,3 +1,7 @@
+/**
+ * Relatório por IA a partir de PDFs (fluxo anterior ao Laudo por IA, ainda acessível pelo Histórico): envio dos
+ * PDFs, revisão e download dos originais. A validação de quantidade e tipo de arquivo repete a do backend.
+ */
 import { apiGet, apiPut, downloadGet, enviarFormulario } from './client'
 import type { ExtrasRelatorioIA, RelatorioPorPdfs } from '../laudo/relatorioIA'
 

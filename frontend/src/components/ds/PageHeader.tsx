@@ -1,3 +1,4 @@
+/** Design system: título da página com descrição e ações. */
 import type { CSSProperties, ReactNode } from 'react'
 
 interface PageHeaderProps {

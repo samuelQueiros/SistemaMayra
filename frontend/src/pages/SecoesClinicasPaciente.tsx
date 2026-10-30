@@ -1,3 +1,4 @@
+/** Página das seções clínicas opcionais do paciente. */
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { listReports } from '../api/reports'

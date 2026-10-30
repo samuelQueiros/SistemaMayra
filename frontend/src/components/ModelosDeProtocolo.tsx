@@ -1,3 +1,4 @@
+/** Lista de modelos de protocolo próprios, em Configurações. */
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Copy, Pencil, Plus } from 'lucide-react'

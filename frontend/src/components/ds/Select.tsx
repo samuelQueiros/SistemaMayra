@@ -1,3 +1,4 @@
+/** Design system: lista de seleção com rótulo. */
 import type { CSSProperties, ChangeEventHandler, ReactNode } from 'react'
 import { useId } from 'react'
 import { ChevronDown } from 'lucide-react'

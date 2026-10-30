@@ -1,3 +1,4 @@
+/** Design system: campo de texto com várias linhas. */
 import type { CSSProperties, ChangeEventHandler, ReactNode } from 'react'
 import { useId } from 'react'
 

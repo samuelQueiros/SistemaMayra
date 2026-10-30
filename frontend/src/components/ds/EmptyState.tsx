@@ -1,3 +1,4 @@
+/** Design system: mensagem para listas vazias. */
 import type { CSSProperties, ReactNode } from 'react'
 
 interface EmptyStateProps {

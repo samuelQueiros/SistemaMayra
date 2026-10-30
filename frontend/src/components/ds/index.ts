@@ -1,3 +1,4 @@
+/** Ponto único de importação do design system (`import { Button } from '../components/ds'`). */
 export { Button } from './Button'
 export { buttonClass } from './buttonClass'
 export type { ButtonSize, ButtonVariant } from './buttonClass'

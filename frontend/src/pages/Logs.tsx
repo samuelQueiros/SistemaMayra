@@ -1,3 +1,4 @@
+/** Registro de atividades (`/logs`): quem editou o quê, em qual laudo e quando. */
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { listPatients } from '../api/patients'

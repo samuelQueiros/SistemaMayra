@@ -1,3 +1,7 @@
+/**
+ * Lista, cadastro, validação e rejeição dos formulários preenchidos pelos responsáveis. Nada daqui preenche
+ * o laudo sozinho: a validação é sempre uma ação manual da psicóloga.
+ */
 import { Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { ApiError } from '../../api/client'

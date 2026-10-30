@@ -1,3 +1,4 @@
+/** Chamadas dos modelos de protocolo próprios (`/api/protocolos`). */
 import { apiDelete, apiGet, apiPost, apiPut } from './client'
 import type { ModeloProtocolo, Protocolo, RespostasProtocolo } from '../laudo/tipos'
 

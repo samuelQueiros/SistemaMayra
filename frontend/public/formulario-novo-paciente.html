@@ -1172,6 +1172,9 @@ function montarFormulario(){
   aplicarTextosPadrao(true);
 }
 
+// CARS: soma dos itens. Só calcula quando todos estão respondidos (nota maior que zero); a faixa de
+// interpretação sai de atualizarInterpretacoes(). O "percentual de falhas" vai de 0% (15 pontos, o mínimo)
+// a 100% (60 pontos, o máximo): ver atualizarPercentualCARS().
 function calcularCARS(){
   const valores = carsItens.map((_,i)=>Number(valor("cars_"+i))).filter(v=>!isNaN(v)&&v>0);
   if(valores.length!==carsItens.length){setValor("cars","");return;}
@@ -1290,6 +1293,10 @@ function carregarPortage(){
   Object.keys(dados).forEach((a,ia)=>{h+="<h3>"+a+"</h3>";dados[a].forEach((item,ii)=>{h+='<label>'+item+'</label><select class="portageItem" id="portage_'+fx+'_'+ia+'_'+ii+'" data-area="'+a+'"><option value="">Selecione</option><option value="1">Realiza</option><option value="0.5">Em Desenvolvimento</option><option value="0">Não Realiza</option></select>';});});
   area.innerHTML=h;
 }
+// Portage (IPO): percentual = pontos ÷ itens da faixa etária. A idade cognitiva estimada é a idade
+// cronológica em meses × esse percentual; a leitura (compatível, abaixo ou acima) tem tolerância de 2 meses.
+// Acima de 72 meses o resultado é só referência de repertório, não comparação normativa
+// (idadeForaDaFaixaPortage()).
 function calcularPortage(){
   const itens=Array.from(document.querySelectorAll(".portageItem"));
   if(!itens.length){document.getElementById("resultadoPortage").innerHTML="Carregue e preencha o Portage.";atualizarIdadeEstimadaPortage();return null;}
@@ -1304,6 +1311,8 @@ function calcularPortage(){
   document.getElementById("resultadoPortage").innerHTML="<strong>Resultado Portage:</strong> "+pre+"/"+total+" itens preenchidos. Desempenho global estimado: "+perc+"%. Idade cognitiva pelo Portage: "+textoCompleto+".";
   setValor("idadeCognitiva",textoCompleto); atualizarIdadeCognitivaDoCabecalho(); return {perc,texto:textoCompleto};
 }
+// M-CHAT: lista de itens só aparece para crianças de até 30 meses. No relatório ele só entra dos 16 aos 30
+// meses (idadeDoMCHAT()), no lugar do SNAP-IV.
 function carregarMCHAT(){
   const m=idadeMeses(), area=document.getElementById("mchat");
   if(m===null){area.innerHTML="<p>Informe a data de nascimento.</p>";return;}
@@ -1311,7 +1320,11 @@ function carregarMCHAT(){
   area.innerHTML="<p><strong>M-CHAT indicado:</strong> idade estimada de "+m+" meses.</p>"+mchatItens.map((t,i)=>'<label>'+(i+1)+'. '+t+'</label><select class="mchatItem" id="mchat_'+i+'"><option value="">Selecione</option><option value="sim">Sim</option><option value="nao">Não</option></select>').join("");
 }
 function statusPercentual(s){if(s==="Satisfatório")return 100;if(s==="Em desenvolvimento")return 60;if(s==="Insatisfatório")return 30;return 0;}
+// TOD: cada item respondido "1" (sim) conta um sintoma; percentual = sintomas ÷ itens, só com todos respondidos.
 function analisarTOD(){let pre=0,pos=0;todItens.forEach((_,i)=>{const v=valor("tod_"+i);if(v!=="")pre++;if(v==="1")pos++;});const completo=pre===todItens.length,perc=completo?Math.round((pos/todItens.length)*100):0;return {pre,pos,completo,perc};}
+// SNAP-IV: itens 0 a 8 são desatenção e 9 a 17 hiperatividade/impulsividade. Nota 2 ou mais ("2 - Bastante" ou
+// "3 - Demais") conta como sintoma. O percentual só existe com os 18 itens respondidos. O relatório usa o
+// limiar de 6 sintomas por bloco (LIMIAR, em gerarDocumentoLaudoHTML).
 function analisarSNAP(){let pre=0,des=0,hip=0;snapItens.forEach((_,i)=>{const v=valor("snap_"+i);if(v!=="")pre++;const n=Number(v);if(v!==""&&n>=2&&i<9)des++;if(v!==""&&n>=2&&i>=9)hip++;});const completo=pre===snapItens.length,perc=completo?Math.round(((des+hip)/18)*100):0;return {pre,des,hip,completo,perc};}
 function indicadorCarsPercentual(cars){
   if(isNaN(cars)||valor("cars")==="")return 0;
@@ -1319,6 +1332,9 @@ function indicadorCarsPercentual(cars){
   if(cars<=36.5)return 60;
   return 85;
 }
+// Probabilidade por hipótese (estimativa descritiva, nunca percentil normativo). TEA = média de ATA e CARS.
+// Atenção: aqui o ATA usa 50 como máximo, enquanto o percentual do relatório (atualizarPercentualATA) usa 44.
+// A diferença existe desde a versão original do protótipo e não foi alterada.
 function probabilidades(){
   const tod=analisarTOD(), snap=analisarSNAP(), ata=Number(valor("ata")), cars=Number(valor("cars"));
   const ataPerc=isNaN(ata)||valor("ata")===""?0:Math.min(100,Math.round((ata/50)*100));
@@ -2024,6 +2040,8 @@ function preencherAutomatico(id,valorAuto){
   el.dataset.auto=valorAuto;
 }
 
+// ATA: 22 itens com nota 0, 1 ou 2 (total de 0 a 44). Só soma quando todos estão preenchidos. O backend tem a
+// mesma regra para o Laudo por IA (services/ata.py): mudou aqui, confira lá.
 function calcularATA(){
   const pontos=ATA_ITENS.map((_,i)=>valor("ata_item_"+i));
   if(pontos.every(v=>v!=="")){
@@ -2803,6 +2821,8 @@ async function gerarDocumentoLaudoHTML(){
     ?'<table class="cab-paciente"><tr><td class="cab-foto"><img src="'+fotoCabecalho+'" data-mm="42" style="width:42mm;height:52mm"></td><td class="cab-espaco"></td><td class="cab-info">'+caixaCabecalho+"</td></tr></table>"
     :'<table class="cab-paciente"><tr><td class="cab-info">'+caixaCabecalho+"</td></tr></table>");
   partes.push('<div class="faixa centro">PARECER NEUROPSICOPEDAGÓGICO ANÁLISE COMPORTAMENTAL</div>');
+  // Texto obrigatório: deixa claro que os percentuais são descritivos e não são percentis normativos. Por isso a
+  // palavra "percentil" não deve aparecer em nenhum outro ponto do relatório (nem nos prompts da IA).
   const notaSobreOsResultados='<div class="fechamento-texto"><p><strong>NOTA SOBRE OS RESULTADOS:</strong> Os percentuais apresentados neste relatório possuem caráter descritivo e clínico-observacional, sendo construídos a partir do desempenho apresentado nas atividades propostas, dos registros realizados durante os atendimentos e da análise qualitativa dos dados obtidos. Esses valores não correspondem a percentis normativos, índices psicométricos ou escores provenientes de testes padronizados restritos a outras categorias profissionais. Constituem recurso de organização e representação visual dos achados e devem ser interpretados conjuntamente com as demais informações apresentadas neste relatório.</p></div>';
   partes.push(blocoDeTexto(metodologiaDoRelatorio(),Object.assign({primeiroSemRecuo:/^\s*\*\*(METODOLOGIA|PROTOCOLO UTILIZADO)/i.test(metodologiaDoRelatorio())},opcoesTexto)));
   partes.push(texto("parecerContexto"));

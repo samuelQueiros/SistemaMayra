@@ -1,3 +1,4 @@
+/** Design system: botão só com ícone. */
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { buttonClass } from './buttonClass'
 import type { ButtonSize } from './buttonClass'

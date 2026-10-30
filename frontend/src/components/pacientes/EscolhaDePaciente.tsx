@@ -1,3 +1,4 @@
+/** Seletor de paciente com busca, usado ao iniciar um Laudo por IA. */
 import { useEffect, useState } from 'react'
 import { UserPlus } from 'lucide-react'
 import { listPatients } from '../../api/patients'

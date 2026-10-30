@@ -1,3 +1,4 @@
+/** Design system: campo de texto com rótulo e mensagem de erro. */
 import type { CSSProperties, ChangeEventHandler, ReactNode } from 'react'
 import { useId } from 'react'
 import { CircleAlert } from 'lucide-react'

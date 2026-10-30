@@ -1,3 +1,4 @@
+/** Chamadas de pacientes e da galeria de fotos (`/api/patients`). */
 import { apiDelete, apiGet, apiPost, apiPostFile, getToken } from './client'
 import type { Patient, PatientPhoto } from './types'
 

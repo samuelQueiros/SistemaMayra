@@ -1,3 +1,4 @@
+/** Design system: botão e a função `buttonClass`, que dá a aparência de botão a links. */
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { buttonClass } from './buttonClass'
 import type { ButtonSize, ButtonVariant } from './buttonClass'

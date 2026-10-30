@@ -1,3 +1,4 @@
+/** Chamadas dos formulários preenchidos pelos responsáveis (`/api/patients/{id}/guardian-forms`). */
 import { apiDelete, apiGet, apiPost, apiPostFile } from './client'
 import type { GuardianFormSubmission } from './types'
 

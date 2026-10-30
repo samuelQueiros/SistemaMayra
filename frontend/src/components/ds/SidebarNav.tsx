@@ -1,3 +1,4 @@
+/** Design system: menu lateral. */
 import type { CSSProperties, ReactNode } from 'react'
 import { Fragment, useId, useState } from 'react'
 import { ChevronDown } from 'lucide-react'

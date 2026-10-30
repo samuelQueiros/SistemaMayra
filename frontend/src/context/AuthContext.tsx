@@ -1,3 +1,4 @@
+/** Estado de login da aplicação: psicóloga atual, entrar e sair. */
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import * as authApi from '../api/auth'

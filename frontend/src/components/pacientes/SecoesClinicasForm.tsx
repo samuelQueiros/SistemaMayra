@@ -1,3 +1,7 @@
+/**
+ * Seções clínicas opcionais do paciente (anamnese, hipóteses com CID, plano de intervenção). Só alimentam o
+ * PDF dos laudos antigos do motor de regras, não o HTML dos fluxos atuais.
+ */
 import { useEffect, useState } from 'react'
 import { listCidCodes, updateClinicalSections } from '../../api/reports'
 import type { CidCode, ClinicalSections, ReportResumo } from '../../api/types'

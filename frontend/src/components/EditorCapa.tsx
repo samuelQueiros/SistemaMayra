@@ -1,3 +1,4 @@
+/** Edição da capa padrão dos relatórios: envio da arte e posição/cor do nome do paciente (`capa_config`). */
 import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { ApiError } from '../api/client'
