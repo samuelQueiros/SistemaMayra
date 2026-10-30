@@ -1,3 +1,6 @@
+"""Cálculo "idade equivalente": compara o que o paciente já faz com a idade em que cada item aparece e
+estima a idade de desenvolvimento por área (Portage/IPO)."""
+
 from datetime import date
 
 from app.rules_engine.exceptions import RulesEngineError

@@ -1,3 +1,6 @@
+"""Camada de IA: chamadas ao provedor configurado (via LangChain), agentes do Laudo por IA e escolha da
+chave. Nenhuma chamada de IA parte do navegador; a chave nunca sai do servidor."""
+
 from app.services.ai.chains import (
     extract_template_from_document,
     generate_conclusion_and_interventions,

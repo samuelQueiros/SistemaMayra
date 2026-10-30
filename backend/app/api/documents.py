@@ -1,3 +1,6 @@
+"""Exportação do laudo em PDF e Word a partir do HTML que o formulário monta no navegador.
+A conversão em si está em `services/laudo_documento.py`."""
+
 import re
 import unicodedata
 
@@ -18,11 +21,14 @@ _TAMANHO_MAXIMO_HTML = 40_000_000
 
 
 class DocumentExportRequest(BaseModel):
+    """HTML completo do laudo (com imagens em base64) e nome sugerido para o arquivo."""
+
     html: str = Field(min_length=1, max_length=_TAMANHO_MAXIMO_HTML)
     file_name: str | None = Field(default=None, max_length=200)
 
 
 def nome_de_arquivo_seguro(nome: str | None, extensao: str) -> str:
+    """Nome de arquivo só com letras, números, `_` e `-`: sem acento, sem barra e sem extensão repetida."""
     base = unicodedata.normalize("NFKD", nome or "laudo").encode("ascii", "ignore").decode("ascii")
     base = re.sub(r"[^A-Za-z0-9_-]+", "_", base).strip("_") or "laudo"
     base = re.sub(r"\.(pdf|docx)$", "", base, flags=re.IGNORECASE)
@@ -30,6 +36,7 @@ def nome_de_arquivo_seguro(nome: str | None, extensao: str) -> str:
 
 
 def resposta_de_arquivo(conteudo: bytes, media_type: str, nome_arquivo: str) -> Response:
+    """Resposta de download (`Content-Disposition: attachment`) para PDF ou Word."""
     return Response(
         content=conteudo,
         media_type=media_type,

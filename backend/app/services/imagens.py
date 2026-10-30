@@ -25,6 +25,8 @@ TIPOS_ACEITOS = {
 
 
 class ArquivoInvalido(ValueError):
+    """O arquivo enviado não é uma imagem que o sistema consiga abrir."""
+
     pass
 
 

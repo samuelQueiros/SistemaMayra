@@ -1,3 +1,7 @@
+"""Laudos: criação, leitura, autosave das respostas, texto final, edição com registro de auditoria,
+PDF e Word. Listas e salvamentos devolvem `ReportResumoOut` (sem HTML e sem respostas, que passam de
+1 MB por laudo); o laudo inteiro só vem em `GET /api/reports/{id}`."""
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -85,6 +89,8 @@ def create_report(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Report:
+    """Cria um laudo para o paciente a partir de um modelo e calcula a pontuação. No protocolo fixo
+    (`custom_form`) o motor devolve `{}`: a pontuação é feita no navegador."""
     patient = get_patient_or_404(patient_id, db, current)
     template = _get_template_or_404(data.template_id, db, current)
 
@@ -139,6 +145,7 @@ def get_report(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Report:
+    """Laudo completo (respostas, pontuação e HTML final)."""
     return _get_report_do_psicologo(report_id, db, current)
 
 
@@ -158,6 +165,8 @@ def generate_text(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Report:
+    """Legado: texto do parecer por IA para modelos do motor de regras. O protocolo fixo gera o texto
+    no próprio formulário."""
     report = _get_report_do_psicologo(report_id, db, current)
     if report.computed_json is None:
         raise HTTPException(
@@ -259,6 +268,7 @@ def update_text(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Report:
+    """Salva o HTML/texto final do laudo (botão "Atualizar no sistema")."""
     # A psicóloga revisa/edita o texto gerado pela IA antes da exportação
     # final (SPEC.md seção 5: nunca exportar sem revisão humana).
     report = _get_report_do_psicologo(report_id, db, current, *SEM_COLUNAS_PESADAS)
@@ -401,6 +411,7 @@ def list_report_logs(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> list[ReportChangeLogOut]:
+    """Registro de edições manuais de um laudo."""
     report = _get_report_do_psicologo(report_id, db, current, *SEM_COLUNAS_PESADAS)
     return [
         ReportChangeLogOut(
@@ -421,6 +432,8 @@ def download_pdf(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Response:
+    """PDF do laudo. Para o HTML pronto vai direto ao WeasyPrint, com cache pelo conteúdo
+    (`services/pdf_do_laudo.py`)."""
     report = _get_report_do_psicologo(report_id, db, current)
     if report.computed_json is None:
         raise HTTPException(

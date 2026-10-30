@@ -1,3 +1,5 @@
+"""Formatos da API de formulários dos responsáveis."""
+
 from datetime import date, datetime
 from uuid import UUID
 

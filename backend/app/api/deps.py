@@ -1,3 +1,6 @@
+"""Dependências compartilhadas das rotas. `get_current_psychologist` é o que exige login: toda rota
+com dados de paciente depende dela e filtra por `owner_id` (CLAUDE.md, seção 5)."""
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
@@ -13,6 +16,8 @@ def get_current_psychologist(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ) -> Psychologist:
+    """Psicóloga dona do token `Authorization: Bearer`. Token ausente, inválido, vencido ou de conta
+    apagada responde 401 com a mesma mensagem, sem dizer qual foi o motivo."""
     unauthorized = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Sua sessão expirou. Entre novamente para continuar.",

@@ -1,3 +1,5 @@
+"""Decide qual provedor, modelo e chave usar numa chamada: a configuração da psicóloga, ou a do servidor."""
+
 from app.core.config import settings
 from app.core.security import decrypt_secret
 from app.models.ai_settings import AISettings

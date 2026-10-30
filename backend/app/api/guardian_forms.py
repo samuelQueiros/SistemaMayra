@@ -1,3 +1,6 @@
+"""Formulários preenchidos pelos responsáveis (fluxo manual): a psicóloga lança o registro, guarda o
+arquivo original e depois valida ou rejeita. Nada daqui alimenta o laudo sozinho."""
+
 import mimetypes
 import uuid
 from datetime import datetime, timezone
@@ -31,6 +34,7 @@ def list_guardian_forms(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> list[GuardianFormSubmission]:
+    """Registros do paciente, do mais novo para o mais antigo."""
     patient = get_patient_or_404(patient_id, db, current)
     return (
         db.query(GuardianFormSubmission)
@@ -105,6 +109,7 @@ def download_guardian_form_file(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Response:
+    """Devolve o arquivo original anexado ao registro (404 se não há arquivo)."""
     submission = _get_submission_or_404(patient_id, submission_id, db, current)
     if not submission.file_path:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Este registro não tem anexo.")
@@ -142,6 +147,7 @@ def reject_guardian_form(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> GuardianFormSubmission:
+    """Marca o registro como `rejeitado`, guardando quem decidiu e quando."""
     submission = _get_submission_or_404(patient_id, submission_id, db, current)
     submission.status = "rejeitado"
     submission.validated_by_id = current.id
@@ -158,6 +164,7 @@ def delete_guardian_form(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> None:
+    """Apaga o registro e o arquivo original do storage."""
     submission = _get_submission_or_404(patient_id, submission_id, db, current)
     if submission.file_path:
         get_guardian_forms_storage().delete(submission.file_path)

@@ -75,6 +75,8 @@ def indice_do_item(pergunta: str) -> int | None:
 
 
 def caixas_marcadas(resposta: RespostaExtraida) -> int:
+    """Quantas caixas do item estão marcadas, pela contagem que a IA transcreveu (`marcadas`). Em extrações
+    antigas, sem a contagem, conta as opções separadas por `;`, quebra de linha ou `|`."""
     if resposta.marcadas is not None:
         return resposta.marcadas
     # Extrações antigas (sem a contagem): uma opção por trecho separado.
@@ -82,14 +84,17 @@ def caixas_marcadas(resposta: RespostaExtraida) -> int:
 
 
 def nota_do_item(marcadas: int) -> int:
+    """Nota do item da ATA: 0 sem caixa marcada, 1 com uma e 2 com duas ou mais (nunca passa de 2)."""
     return min(max(marcadas, 0), NOTA_MAXIMA_DO_ITEM)
 
 
 def percentual_do_item(marcadas: int, opcoes: int) -> int:
+    """Percentual do item na tabela do relatório: caixas marcadas dividido pelas caixas do item."""
     return min(100, round(100 * max(marcadas, 0) / opcoes)) if opcoes else 0
 
 
 def percentual_total(pontos: int) -> int:
+    """Percentual de características autísticas: pontos dividido por 44 (22 itens x 2 pontos)."""
     return min(100, round(100 * pontos / PONTOS_MAXIMOS))
 
 

@@ -1,3 +1,5 @@
+"""Tabela `patients`: o paciente e os dados complementares confirmados pela psicóloga."""
+
 import uuid
 from datetime import date
 
@@ -9,6 +11,9 @@ from app.models.base import CreatedAtMixin, UUIDPrimaryKeyMixin
 
 
 class Patient(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+    """Paciente de uma psicóloga (`owner_id`). Apagá-lo exige apagar antes os dependentes (laudos, fotos,
+    anexos): ver `delete_patient` em `api/patients.py`."""
+
     __tablename__ = "patients"
 
     owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("psychologists.id"), index=True)

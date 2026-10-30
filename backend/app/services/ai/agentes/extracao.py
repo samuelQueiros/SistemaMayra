@@ -41,6 +41,7 @@ AoProgredir = Callable[..., None]
 
 
 def sem_aviso(*_args, **_kwargs) -> None:
+    """Aviso de andamento que não faz nada (usado quando ninguém acompanha a geração)."""
     pass
 
 
@@ -69,6 +70,8 @@ def motivo_do_erro(exc: Exception) -> str:
 
 
 class ErroNaLeituraDosDocumentos(ErroNaEtapaDaIA):
+    """Um ou mais PDFs não puderam ser lidos; guarda cada falha com o nome do arquivo."""
+
     def __init__(self, falhas: list[tuple[str, Exception]], lidos: int):
         self.falhas = falhas
         self.lidos = lidos
@@ -81,6 +84,7 @@ class ErroNaLeituraDosDocumentos(ErroNaEtapaDaIA):
         super().__init__(mensagem)
 
 
+# Uma pergunta do PDF com a resposta marcada ou escrita (vazia se não respondida).
 class RespostaExtraida(BaseModel):
     pergunta: str = Field(description="Pergunta ou item, como está no PDF (sem o número, se houver).")
     resposta: str = Field(
@@ -105,6 +109,7 @@ class RespostaExtraida(BaseModel):
     )
 
 
+# PDF transcrito: tipo (formulário ou escala), quem respondeu e todas as perguntas com respostas.
 class DocumentoExtraido(BaseModel):
     arquivo: str = Field(default="", description="Deixe vazio (preenchido pelo sistema).")
     tipo: Literal["formulario", "cars", "ata", "snap_iv", "tod", "portage", "m_chat", "relatorio_escolar", "outro"] = (
@@ -162,6 +167,8 @@ def _mensagens(pdf: dict, modo: str) -> list:
 
 
 def extrair_documento(*, provider: str, model: str, api_key: str, pdf: dict) -> DocumentoExtraido:
+    """Transcreve um PDF para `DocumentoExtraido`, sem interpretar. Usa o resultado em cache quando o mesmo
+    arquivo já foi lido (`VERSAO_DA_EXTRACAO` invalida o cache)."""
     info = provedor(provider)
     leitura = info.leitura_pdf if info else "nativa"
     storage = get_form_pdfs_storage()

@@ -97,6 +97,7 @@ def ler_pdfs_enviados(arquivos: list[UploadFile], maximo: int) -> list[dict]:
 
 
 def guardar_pdfs(patient_id, pdfs: list[dict]) -> list[dict]:
+    """Guarda os PDFs originais no storage `form_pdfs` e devolve nome e chave de cada um."""
     storage = get_form_pdfs_storage()
     guardados = []
     for pdf in pdfs:
@@ -114,6 +115,8 @@ def criar_relatorio_por_pdfs(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Report:
+    """Relatório por IA a partir de 1 a 6 PDFs de formulários: a IA devolve um `RelatorioPorPdfs` (por
+    área, com fontes e gráficos) que vira um laudo do template interno `relatorio_ia_pdf`."""
     patient = get_patient_or_404(patient_id, db, current)
     pdfs = ler_pdfs_enviados(arquivos, MAXIMO_DE_ARQUIVOS)
 
@@ -169,6 +172,8 @@ def _laudo_ia_do_psicologo(report_id: UUID, db: Session, current: Psychologist) 
 
 
 class RelatorioIAUpdate(BaseModel):
+    """Edições da psicóloga na tela de revisão do relatório (áreas, identificação e capa)."""
+
     relatorio: RelatorioPorPdfs
     # Identificação/capa editáveis na tela de revisão (cidade, data, capa).
     extras: dict | None = None
@@ -198,6 +203,7 @@ def baixar_pdf_original(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Response:
+    """Devolve um dos PDFs que originaram o relatório (índice a partir de 1)."""
     report = _laudo_ia_do_psicologo(report_id, db, current)
     arquivos = (report.answers_json or {}).get("arquivos", [])
     if not 0 <= indice < len(arquivos):

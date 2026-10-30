@@ -1,3 +1,6 @@
+"""Pacientes: cadastro, fotos da galeria e exclusão definitiva. Toda rota confere que o paciente é da
+psicóloga logada (`get_patient_or_404`); paciente de outra conta responde 404."""
+
 import mimetypes
 import uuid
 from pathlib import Path
@@ -30,6 +33,8 @@ _EXTENSOES_PERMITIDAS = {".jpg", ".jpeg", ".png", ".webp"}
 
 
 def get_patient_or_404(patient_id: UUID, db: Session, current: Psychologist) -> Patient:
+    """Paciente da psicóloga logada. Se não existe ou é de outra conta, responde 404 igual nos dois
+    casos, para não revelar que o registro existe."""
     patient = db.get(Patient, patient_id)
     if patient is None or patient.owner_id != current.id:
         # Não revela se o paciente existe e é de outra pessoa (SPEC.md
@@ -43,6 +48,7 @@ def list_patients(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> list[Patient]:
+    """Pacientes da psicóloga logada, em ordem alfabética."""
     return db.query(Patient).filter(Patient.owner_id == current.id).order_by(Patient.name).all()
 
 
@@ -52,6 +58,7 @@ def create_patient(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Patient:
+    """Cadastra um paciente para a psicóloga logada."""
     patient = Patient(owner_id=current.id, **data.model_dump())
     db.add(patient)
     db.commit()
@@ -65,6 +72,7 @@ def get_patient(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Patient:
+    """Dados de um paciente."""
     return get_patient_or_404(patient_id, db, current)
 
 
@@ -75,6 +83,7 @@ def update_patient(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Patient:
+    """Atualiza os dados do paciente."""
     patient = get_patient_or_404(patient_id, db, current)
     for field, value in data.model_dump().items():
         setattr(patient, field, value)
@@ -90,6 +99,8 @@ def delete_patient(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> None:
+    """Exclusão definitiva: apaga o paciente, os laudos, anexos, formulários dos responsáveis, fotos e
+    os arquivos guardados. Com laudos, exige `confirmar_historico=true` (senão 409)."""
     patient = get_patient_or_404(patient_id, db, current)
     reports = list(patient.reports)
     if reports and not confirmar_historico:
@@ -163,6 +174,7 @@ def list_patient_photos(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> list[PatientPhoto]:
+    """Fotos da galeria do paciente."""
     patient = get_patient_or_404(patient_id, db, current)
     return patient.photos
 
@@ -174,6 +186,7 @@ def download_patient_photo(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Response:
+    """Devolve o arquivo de uma foto da galeria."""
     photo = _get_patient_photo_or_404(patient_id, photo_id, db, current)
     conteudo = get_photos_storage().read(photo.file_path)
     tipo_mime = mimetypes.guess_type(photo.file_path)[0] or "application/octet-stream"
@@ -187,6 +200,7 @@ def delete_patient_photo(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> None:
+    """Remove uma foto da galeria e o arquivo guardado."""
     photo = _get_patient_photo_or_404(patient_id, photo_id, db, current)
     get_photos_storage().delete(photo.file_path)
     db.delete(photo)

@@ -1,3 +1,5 @@
+"""Tabela `report_change_logs`: o registro de atividades (quem editou o quê num laudo)."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, Index, String, Text

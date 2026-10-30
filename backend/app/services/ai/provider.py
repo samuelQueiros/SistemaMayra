@@ -1,3 +1,5 @@
+"""Cria o modelo de chat do provedor escolhido, com saída estruturada (JSON validado por um schema Pydantic)."""
+
 import re
 from dataclasses import dataclass
 

@@ -1,3 +1,7 @@
+"""Configuração de IA de cada psicóloga (provedor, modelo e chave), editável em Configurações > IA.
+A chave é guardada criptografada (`core/security.py`) e nunca volta inteira para o navegador: a API
+devolve só uma prévia mascarada."""
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -41,6 +45,8 @@ def get_ai_settings(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> AISettingsOut:
+    """Configuração de IA da psicóloga logada. Sem configuração própria, mostra o padrão do servidor
+    (`AI_PROVIDER`/`AI_MODEL`) só como referência."""
     row = db.query(AISettings).filter(AISettings.owner_id == current.id).first()
     if row is None:
         # Sem configuração própria ainda: mostra o padrão do servidor (se
@@ -68,6 +74,7 @@ def update_ai_settings(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> AISettingsOut:
+    """Salva provedor, modelo e chave (criptografada). A chave é obrigatória a cada gravação."""
     api_key_criptografada = encrypt_secret(data.api_key)
     row = db.query(AISettings).filter(AISettings.owner_id == current.id).first()
     if row is None:

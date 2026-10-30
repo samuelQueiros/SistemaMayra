@@ -1,3 +1,5 @@
+"""Senhas (bcrypt), token de login (JWT) e criptografia dos segredos guardados no banco (chave de IA)."""
+
 import base64
 import hashlib
 from datetime import datetime, timedelta, timezone
@@ -12,20 +14,24 @@ from app.core.config import settings
 
 
 def hash_password(password: str) -> str:
+    """Hash bcrypt da senha; a senha em texto nunca é guardada."""
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(password: str, password_hash: str) -> bool:
+    """Confere a senha digitada com o hash guardado."""
     return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
 
 
 def create_access_token(psychologist_id: UUID) -> str:
+    """Token JWT da psicóloga, com validade de `JWT_EXPIRES_MINUTES`."""
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expires_minutes)
     payload = {"sub": str(psychologist_id), "exp": expires_at}
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
 def decode_access_token(token: str) -> UUID | None:
+    """Id da psicóloga do token, ou None se o token for inválido, vencido ou malformado."""
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
     except jwt.PyJWTError:
@@ -51,6 +57,7 @@ def _fernet() -> Fernet:
 
 
 def encrypt_secret(valor: str) -> str:
+    """Criptografa um segredo (Fernet) para guardar no banco."""
     return _fernet().encrypt(valor.encode("utf-8")).decode("utf-8")
 
 

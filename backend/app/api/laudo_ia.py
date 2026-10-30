@@ -133,10 +133,14 @@ def _erro_da_ia(exc: Exception, provider: str, model: str) -> tuple[int, str]:
 
 
 class GeracaoIniciada(BaseModel):
+    """Resposta imediata da geração: o `job_id` para a tela consultar o andamento."""
+
     job_id: str
 
 
 class AndamentoOut(BaseModel):
+    """Andamento de uma geração: etapa atual, barra de progresso, erro e, ao terminar, o id do laudo."""
+
     id: str
     patient_id: str
     status: str
@@ -274,6 +278,8 @@ def criar_laudo_por_ia(
 
 @router.get("/api/laudo-ia/jobs/{job_id}", response_model=AndamentoOut)
 def andamento_do_laudo_por_ia(job_id: str, current: Psychologist = Depends(get_current_psychologist)) -> dict:
+    """Estado de uma geração em segundo plano. Só a psicóloga que a iniciou consegue ler; para as
+    outras o id "não existe" (404)."""
     job = laudo_ia_jobs.ler(job_id)
     if job is None or job["owner_id"] != str(current.id):
         # Não revela se a geração existe e é de outra pessoa.
@@ -294,6 +300,8 @@ def extrair_escalas_de_pdf(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> dict:
+    """Lê PDFs de escalas já pontuadas (CARS, ATA, SNAP-IV, TOD, Portage) e devolve os valores dos
+    campos do catálogo para o formulário preencher ("Importar escalas com IA"). Não cria laudo."""
     patient = get_patient_or_404(patient_id, db, current)
     catalogo_do_protocolo = _ler_catalogo(catalogo)
     pdfs = ler_pdfs_enviados(arquivos, MAXIMO_DE_ARQUIVOS)

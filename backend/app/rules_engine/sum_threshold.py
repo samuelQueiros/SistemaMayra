@@ -1,3 +1,5 @@
+"""Cálculo "soma com faixas": pontos por área, total e classificação pela faixa em que o total cai (CARS, ATA)."""
+
 from app.rules_engine.exceptions import RulesEngineError
 
 # `answers` é organizado por área para evitar colisão de chaves: templates
@@ -9,6 +11,8 @@ from app.rules_engine.exceptions import RulesEngineError
 
 
 def calculate(schema: dict, answers: dict) -> dict:
+    """Soma o peso de cada campo respondido, por área, e classifica o total pelas faixas do modelo.
+    Falta de resposta numa área gera `RulesEngineError`."""
     scores: dict[str, float] = {}
 
     for area in schema["areas"]:

@@ -1,3 +1,7 @@
+"""Tabelas do banco (SQLAlchemy). Importar este pacote registra todos os modelos no ORM, o que o
+Alembic e `Base.metadata.create_all` (testes) precisam. Os nomes das tabelas e colunas estão em
+migrations já aplicadas na VPS: não renomeie."""
+
 from app.models.ai_settings import AISettings
 from app.models.consolidated_report import ConsolidatedReport
 from app.models.guardian_form_submission import GuardianFormSubmission

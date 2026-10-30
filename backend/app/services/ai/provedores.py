@@ -22,6 +22,9 @@ LeituraPdf = Literal["nativa", "imagens", "texto"]
 
 @dataclass(frozen=True)
 class Provedor:
+    """Provedor de IA aceito: id, nome, como lê PDF (`leitura_pdf`: inteiro, páginas como imagem ou só texto),
+    modelos sugeridos, link para obter a chave e, nos compatíveis com a OpenAI, o endereço base."""
+
     id: str
     nome: str
     leitura_pdf: LeituraPdf
@@ -137,4 +140,5 @@ PROVEDORES: dict[str, Provedor] = {
 
 
 def provedor(id_: str) -> Provedor | None:
+    """Dados do provedor pelo id, ou None se não existir."""
     return PROVEDORES.get(id_)

@@ -58,6 +58,8 @@ _ALINHAMENTOS = {
 
 
 class DocumentoInvalidoError(ValueError):
+    """O HTML recebido não é um laudo do formulário (falta o bloco `.documento`)."""
+
     pass
 
 
@@ -119,6 +121,8 @@ _TROCAS = (
 
 
 def no_modelo_atual(html: str) -> str:
+    """Adapta o HTML de laudos gerados antes das últimas mudanças ao modelo atual (blocos removidos, textos
+    e cores trocados, nota perto da assinatura), para PDF e Word saírem iguais aos laudos novos."""
     for bloco in _BLOCOS_REMOVIDOS:
         html = bloco.sub("", html)
     html = _IDADE_COGNITIVA_ANTIGA.sub(r"\1", html)
@@ -135,6 +139,7 @@ def no_modelo_atual(html: str) -> str:
 
 
 def html_para_pdf(html: str) -> bytes:
+    """PDF do laudo, gerado pelo WeasyPrint. Só aceita imagens `data:` (nenhuma URL externa é buscada)."""
     return HTML(string=no_modelo_atual(html), url_fetcher=_buscador_somente_data_uri()).write_pdf()
 
 
@@ -874,4 +879,6 @@ class _ConversorDocx:
 
 
 def html_para_docx(html: str) -> bytes:
+    """Word editável do laudo. Só entende o vocabulário de classes CSS que o formulário gera: se o
+    gerador mudar, confira o conversor (`_ConversorDocx`)."""
     return _ConversorDocx().converter(no_modelo_atual(html))

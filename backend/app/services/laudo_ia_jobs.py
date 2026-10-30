@@ -65,6 +65,8 @@ def _salvar(job: dict) -> None:
 
 
 def ler(job_id: str) -> dict | None:
+    """Andamento de uma geração (None se o id é inválido ou não existe). Se a geração diz estar viva mas
+    não dá sinal há mais de 5 minutos, é devolvida como interrompida (o servidor reiniciou no meio)."""
     try:
         uuid.UUID(job_id)
     except ValueError:
@@ -81,6 +83,7 @@ def ler(job_id: str) -> dict | None:
 
 
 def criar(*, owner_id, patient_id, nomes_dos_arquivos: list[str]) -> dict:
+    """Registra uma nova geração (status `na_fila`) e devolve seus dados, incluindo o `id` para a tela consultar."""
     job = {
         "id": str(uuid.uuid4()),
         "owner_id": str(owner_id),

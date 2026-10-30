@@ -1,3 +1,5 @@
+"""Tabela `patient_attachments`: fotos e documentos anexados para completar as pendências de um laudo."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, JSON, String, Text

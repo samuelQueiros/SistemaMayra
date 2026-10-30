@@ -24,6 +24,7 @@ def _normalizar(identificador: str) -> str:
 
 
 def esta_bloqueado(identificador: str, maximo: int = MAX_TENTATIVAS) -> bool:
+    """Verdadeiro se o identificador (e-mail ou IP) já falhou `maximo` vezes nos últimos 15 minutos."""
     chave = _normalizar(identificador)
     agora = datetime.now(timezone.utc)
     tentativas = [t for t in _tentativas_falhas.get(chave, []) if agora - t < JANELA]
@@ -35,6 +36,7 @@ def esta_bloqueado(identificador: str, maximo: int = MAX_TENTATIVAS) -> bool:
 
 
 def registrar_falha(identificador: str) -> None:
+    """Conta uma tentativa de login que falhou."""
     chave = _normalizar(identificador)
     agora = datetime.now(timezone.utc)
     tentativas = [t for t in _tentativas_falhas.get(chave, []) if agora - t < JANELA]
@@ -45,4 +47,5 @@ def registrar_falha(identificador: str) -> None:
 
 
 def limpar_falhas(identificador: str) -> None:
+    """Zera as falhas do identificador depois de um login correto."""
     _tentativas_falhas.pop(_normalizar(identificador), None)

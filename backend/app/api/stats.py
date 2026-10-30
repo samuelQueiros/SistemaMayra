@@ -1,3 +1,6 @@
+"""Números de uso do painel (pacientes, laudos, laudos nos últimos 30 dias e por modelo), sempre da
+psicóloga logada."""
+
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends

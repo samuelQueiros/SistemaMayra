@@ -35,11 +35,13 @@ MAXIMO_DE_CAMPOS = 3000
 TAMANHO_MAXIMO_TEXTO = 8000
 
 
+# Uma opção de resposta de um campo do catálogo (valor gravado e rótulo mostrado).
 class OpcaoDoCatalogo(BaseModel):
     valor: str = Field(max_length=200)
     rotulo: str = Field(default="", max_length=1500)  # opções da CARS trazem a descrição clínica do grau
 
 
+# Campo do formulário que a IA pode preencher: id, seção, grupo, rótulo, tipo (texto, número, opção ou marcar) e opções.
 class CampoDoCatalogo(BaseModel):
     id: str = Field(max_length=120, pattern=r"^[A-Za-z0-9_\-]+$")
     secao: str = Field(default="", max_length=200)
@@ -51,6 +53,8 @@ class CampoDoCatalogo(BaseModel):
     max: float | None = None
 
 
+# Lista de campos que o próprio formulário informa (`catalogoParaIA()`). O formulário é a fonte da
+# verdade: a IA só preenche campos que estão aqui e só com opções que existem.
 class CatalogoDoProtocolo(BaseModel):
     campos: list[CampoDoCatalogo] = Field(max_length=MAXIMO_DE_CAMPOS)
     # Orientações extras do formulário (ex.: lista de habilidades por ano escolar).
@@ -312,6 +316,8 @@ def dividir_catalogo(catalogo: CatalogoDoProtocolo) -> dict[str, CatalogoDoProto
 
 @dataclass
 class ResultadoDaIA:
+    """Protocolo preenchido pela IA e os documentos lidos, antes de virar laudo."""
+
     protocolo: ProtocoloPorIA
     documentos: list[DocumentoExtraido]
     tempos: dict[str, float] = field(default_factory=dict)

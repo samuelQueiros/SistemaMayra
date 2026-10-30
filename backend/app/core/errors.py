@@ -43,6 +43,7 @@ def _nome_do_campo(loc: tuple | list) -> str:
 
 
 def mensagem_de_validacao(erro: dict) -> str:
+    """Frase em português para um erro de validação do Pydantic."""
     campo = _nome_do_campo(erro.get("loc", ()))
     tipo = erro.get("type", "")
     contexto = erro.get("ctx") or {}
@@ -71,6 +72,9 @@ def mensagem_de_validacao(erro: dict) -> str:
 
 
 def registrar_tratadores_de_erro(app: FastAPI) -> None:
+    """Liga as respostas de erro amigáveis: o 422 de validação vira uma frase em português e o erro
+    inesperado vira 500 com mensagem genérica (o detalhe fica só no log, sem dados de paciente)."""
+
     @app.exception_handler(RequestValidationError)
     async def _validacao(request: Request, exc: RequestValidationError) -> JSONResponse:
         mensagens = list(dict.fromkeys(mensagem_de_validacao(e) for e in exc.errors()))

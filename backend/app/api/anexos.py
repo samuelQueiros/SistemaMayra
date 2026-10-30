@@ -37,6 +37,8 @@ _LEITURA_PARADA_APOS = timedelta(minutes=5)
 
 
 class AnexoOut(BaseModel):
+    """Anexo como a tela de pendências o vê, com as sugestões que a IA tirou do arquivo."""
+
     id: UUID
     nome: str
     mime: str
@@ -137,6 +139,9 @@ def enviar_anexo(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> AnexoOut:
+    """Recebe foto ou documento para completar dados que faltaram num laudo (`report_id` obrigatório). O
+    arquivo vai para o storage `anexos` e a leitura pela IA roda em segundo plano: responde 202 com o anexo em
+    status `analisando`, que depois vira `pronto` ou `erro`."""
     patient = get_patient_or_404(patient_id, db, current)
     report = _get_report_do_psicologo(report_id, db, current)
     if report.patient_id != patient.id:
@@ -187,6 +192,8 @@ def listar_anexos(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> list[AnexoOut]:
+    """Anexos do paciente (opcionalmente só os de um laudo). Anexo que ficou "analisando" por tempo demais
+    (servidor reiniciado no meio da leitura) é marcado como erro."""
     patient = get_patient_or_404(patient_id, db, current)
     consulta = db.query(PatientAttachment).filter(PatientAttachment.patient_id == patient.id)
     if report_id is not None:
@@ -212,6 +219,7 @@ def baixar_anexo(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Response:
+    """Devolve o arquivo original do anexo (só a dona do paciente enxerga)."""
     anexo = _anexo_or_404(patient_id, anexo_id, db, current)
     return Response(content=get_attachments_storage().read(anexo.file_path), media_type=anexo.mime)
 
@@ -223,6 +231,7 @@ def apagar_anexo(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> None:
+    """Apaga o anexo e o arquivo guardado."""
     anexo = _anexo_or_404(patient_id, anexo_id, db, current)
     get_attachments_storage().delete(anexo.file_path)
     db.delete(anexo)

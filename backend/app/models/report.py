@@ -1,3 +1,5 @@
+"""Tabela `reports`: o laudo (respostas, pontuação e HTML final)."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, Index, JSON, String, Text

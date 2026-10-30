@@ -1,3 +1,6 @@
+"""Escolhe o cálculo pelo `rule_type` do modelo: soma com faixas, contagem por área ou idade equivalente. Os tipos
+`custom_form` e `protocolo` devolvem `{}`."""
+
 from datetime import date
 
 from app.rules_engine import age_equivalent_percentage, count_threshold, sum_threshold

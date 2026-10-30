@@ -15,12 +15,14 @@ from app.services.ai.provedores import provedor
 from app.services.ai.provider import get_structured_model
 
 
+# Valor que a IA leu num anexo para um campo do catálogo, com o trecho que o justifica.
 class CampoSugerido(BaseModel):
     id: str = Field(description="Id exato do campo no catálogo.")
     valor: str = Field(description="Valor lido no documento (em campos com opções, um dos valores listados).")
     trecho: str = Field(default="", description="O que está escrito no documento que sustenta o valor (curto).")
 
 
+# Saída do agente que lê um anexo (foto ou documento) e sugere valores para campos pendentes.
 class LeituraDoAnexo(BaseModel):
     campos: list[CampoSugerido] = Field(
         description="Só os campos do catálogo que o documento responde com clareza. Omita o resto."
@@ -41,6 +43,8 @@ ANEXO_SYSTEM_PROMPT = (
 def ler_anexo(
     *, provider: str, model: str, api_key: str, imagens: list[bytes], nome: str, catalogo_texto: str
 ) -> LeituraDoAnexo:
+    """Lê um anexo e sugere valores só para os campos pendentes informados. Nada vai para o laudo sem a
+    psicóloga confirmar."""
     info = provedor(provider)
     if info is not None and info.leitura_pdf == "texto":
         raise ErroNaEtapaDaIA(

@@ -1,3 +1,7 @@
+"""Conta da psicóloga: cadastro, login (JWT), perfil profissional e capa padrão dos relatórios.
+O login tem limite de tentativas por e-mail e por IP (`core/rate_limit.py`) e gasta o mesmo tempo com
+e-mail inexistente, para não revelar quais e-mails têm conta."""
+
 import mimetypes
 import uuid
 from pathlib import Path
@@ -30,6 +34,8 @@ _TAMANHO_MAXIMO_CAPA = 10 * 1024 * 1024
 
 @router.post("/register", response_model=PsychologistOut, status_code=status.HTTP_201_CREATED)
 def register(data: PsychologistRegister, db: Session = Depends(get_db)) -> Psychologist:
+    """Cria uma conta. Em produção o cadastro público fica desligado (`ALLOW_REGISTRATION`): a conta
+    vem de `ADMIN_*` (`seed_admin.py`)."""
     if not settings.cadastro_publico:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -52,6 +58,8 @@ def register(data: PsychologistRegister, db: Session = Depends(get_db)) -> Psych
 
 @router.post("/login", response_model=Token)
 def login(data: PsychologistLogin, request: Request, db: Session = Depends(get_db)) -> Token:
+    """Confere e-mail e senha e devolve o token JWT. Depois de 5 falhas por e-mail (ou 20 por IP) em
+    15 minutos responde 429."""
     invalid_credentials = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="E-mail ou senha inválidos")
     # IP real do cliente (o uvicorn roda com --proxy-headers atrás do Caddy).
     chave_ip = f"ip:{request.client.host if request.client else 'desconhecido'}"
@@ -83,6 +91,7 @@ def login(data: PsychologistLogin, request: Request, db: Session = Depends(get_d
 
 @router.get("/me", response_model=PsychologistOut)
 def me(current: Psychologist = Depends(get_current_psychologist)) -> Psychologist:
+    """Dados da psicóloga logada."""
     return current
 
 
@@ -139,6 +148,7 @@ def upload_capa(
 
 @router.get("/me/capa/arquivo")
 def download_capa(current: Psychologist = Depends(get_current_psychologist)) -> Response:
+    """Devolve a imagem da capa personalizada (404 se a psicóloga não enviou nenhuma)."""
     if not current.capa_arquivo:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nenhuma capa personalizada enviada")
     conteudo = get_covers_storage().read(current.capa_arquivo)
@@ -168,6 +178,7 @@ def update_capa_config(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> Psychologist:
+    """Salva se o nome do paciente é escrito na capa, onde (frações da arte) e em que cor."""
     current.capa_config = data.model_dump()
     db.commit()
     db.refresh(current)

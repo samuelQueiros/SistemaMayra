@@ -1,3 +1,6 @@
+"""Cálculo "contagem por área": conta, em cada área, os itens que batem com `target_values` (ex.: SNAP-IV) e
+classifica cada área pelas faixas do modelo."""
+
 from app.rules_engine.exceptions import RulesEngineError
 
 _COMPARADORES = {

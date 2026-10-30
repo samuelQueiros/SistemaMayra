@@ -25,6 +25,8 @@ from app.services.laudo_ia import CatalogoDoProtocolo, CampoDoCatalogo
 
 @dataclass(frozen=True)
 class Secao:
+    """Seção do formulário que aparece na tela de pendências (número do `<h2>` e nome amigável)."""
+
     numero: str  # número do <h2> no formulário
     chave: str
     titulo: str
@@ -93,6 +95,9 @@ SECOES_DO_ESTUDO_DE_CASO = frozenset({"identificacao", "gestacao", "desenvolvime
 
 @dataclass(frozen=True)
 class Escala:
+    """Escala que pode ser aplicada ou removida do relatório (CARS, ATA, SNAP-IV, TOD, Portage, M-CHAT), com o
+    padrão que a reconhece nos campos e os tipos de documento que a trazem."""
+
     chave: str
     titulo: str
     padrao: re.Pattern
@@ -172,6 +177,9 @@ def _nomes_das_habilidades(contexto: str, ano: str | None) -> list[str]:
 
 
 class Pendencias:
+    """Calcula o que ficou sem resposta num laudo: campos essenciais, escalas não aplicadas e sugestões
+    dos anexos."""
+
     def __init__(
         self,
         catalogo: CatalogoDoProtocolo,

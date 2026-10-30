@@ -1,3 +1,6 @@
+"""Extração de texto de PDF, DOCX e TXT, e das páginas de um PDF como imagem. Usado pela importação de
+modelos por IA e na leitura dos PDFs de formulários."""
+
 import io
 
 from fastapi import UploadFile
@@ -30,6 +33,8 @@ def extract_text(upload: UploadFile) -> str:
 
 
 def extrair_texto_pdf(conteudo: bytes) -> str:
+    """Texto de um PDF digital. PDF escaneado (só imagem) traz pouco ou nenhum texto. Falha de leitura vira
+    `DocumentTextError`."""
     from pypdf import PdfReader
     from pypdf.errors import PdfReadError
 

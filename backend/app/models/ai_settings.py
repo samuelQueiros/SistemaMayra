@@ -1,3 +1,5 @@
+"""Tabela `ai_settings`: provedor, modelo e chave de IA (criptografada) de cada psicóloga."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, String, Text

@@ -1,3 +1,6 @@
+"""Ponto de entrada do FastAPI: registra as rotas da API, os cabeçalhos de segurança, a compressão gzip
+e, quando existe `frontend/dist`, serve o frontend na mesma porta (um único serviço em produção)."""
+
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -67,6 +70,7 @@ app.include_router(guardian_forms.router)
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
+    """Verificação de saúde usada pelo HEALTHCHECK do Docker e pelo `scripts/atualizar.sh`."""
     return {"status": "ok"}
 
 
@@ -115,6 +119,8 @@ if frontend_dist.exists():
 
     @app.get("/{full_path:path}")
     def serve_frontend(full_path: str, request: Request):
+        """Entrega arquivos do build do frontend e, para qualquer outra rota, o `index.html` (o React Router
+        decide a tela). Só serve arquivos de dentro de `frontend/dist` (proteção contra path traversal)."""
         # Rotas de API que não existem devem continuar dando 404 "de API",
         # não a página do frontend.
         if full_path.startswith("api/"):

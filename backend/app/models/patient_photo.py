@@ -1,3 +1,5 @@
+"""Tabela `patient_photos`: galeria de fotos do paciente."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, String

@@ -1,3 +1,5 @@
+"""Tabela `psychologists`: a conta de quem usa o sistema, com os textos da assinatura e a capa padrão."""
+
 from sqlalchemy import JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -6,6 +8,8 @@ from app.models.base import CreatedAtMixin, UUIDPrimaryKeyMixin
 
 
 class Psychologist(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+    """Psicóloga (uma conta = uma profissional). Todos os dados de pacientes pertencem a ela."""
+
     __tablename__ = "psychologists"
 
     name: Mapped[str] = mapped_column(String(255))

@@ -1,3 +1,6 @@
+"""Formatos da API de laudos. `ReportResumoOut` é a versão leve (sem respostas e sem HTML) usada em listas
+e salvamentos; `ReportOut` traz o laudo inteiro."""
+
 from datetime import date, datetime
 from uuid import UUID
 

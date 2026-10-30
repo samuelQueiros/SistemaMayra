@@ -1,3 +1,7 @@
+"""PDF dos laudos guardados no banco. Os laudos de HTML pronto (protocolo fixo, modelos próprios e Laudo por
+IA) vão direto para o WeasyPrint, com cache pelo conteúdo; os laudos antigos do motor de regras são montados
+aqui (tabela de pontuação, gráfico Matplotlib, seções clínicas, fotos e assinatura)."""
+
 import base64
 import hashlib
 import io

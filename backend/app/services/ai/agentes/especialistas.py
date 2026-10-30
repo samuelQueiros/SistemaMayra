@@ -15,6 +15,8 @@ from app.services.ai.schemas import CampoPreenchido
 
 @dataclass(frozen=True)
 class Especialista:
+    """Um agente especialista: nome e o papel (prompt) que delimita a parte do catálogo que ele preenche."""
+
     nome: str
     papel: str
 
@@ -57,6 +59,7 @@ DESENVOLVIMENTO = Especialista(
 )
 
 
+# Saída de um especialista: os campos que os documentos permitem preencher.
 class CamposDoEspecialista(BaseModel):
     campos: list[CampoPreenchido] = Field(
         description="Campos do catálogo que os documentos permitem preencher. Omita o que os documentos não informam."
@@ -67,6 +70,7 @@ class CamposDoEspecialista(BaseModel):
     )
 
 
+# Saída do redator: o estudo de caso em prosa clínica.
 class EstudoDeCaso(BaseModel):
     estudo_de_caso: str = Field(description="Estudo de caso do paciente em prosa clínica.")
 
@@ -102,6 +106,7 @@ def preencher_campos(
     catalogo_texto: str,
     observacoes: str | None = None,
 ) -> CamposDoEspecialista:
+    """Um especialista preenche, a partir do JSON dos documentos, a parte do catálogo que lhe cabe."""
     chat_model = get_structured_model(provider, model, api_key, CamposDoEspecialista, limites.ESPECIALISTA)
     conteudo = (
         _cabecalho(paciente, observacoes)
@@ -128,6 +133,8 @@ ESTUDO_DE_CASO_SYSTEM_PROMPT = (
 def redigir_estudo_de_caso(
     *, provider: str, model: str, api_key: str, paciente: str, documentos_texto: str, observacoes: str | None = None
 ) -> str:
+    """Redige o estudo de caso do paciente só com o JSON dos documentos e os dados confirmados pela
+    psicóloga. O limite do que a IA pode afirmar vem de `LIMITES_DA_IA` (chains.py)."""
     chat_model = get_structured_model(provider, model, api_key, EstudoDeCaso, limites.ESTUDO_DE_CASO)
     conteudo = _cabecalho(paciente, observacoes) + "\nDOCUMENTOS DO CASO (JSON):\n" + documentos_texto
     resultado = _invocar_com_retentativas(

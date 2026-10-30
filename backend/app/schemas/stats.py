@@ -1,3 +1,5 @@
+"""Formato do painel de números de uso."""
+
 from pydantic import BaseModel
 
 

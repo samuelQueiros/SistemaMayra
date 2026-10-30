@@ -1,3 +1,6 @@
+"""Tabela `report_templates`: modelos de laudo. Tem dois usos hoje: o "porta-laudo" do protocolo fixo
+(`rule_type: custom_form`) e os modelos de protocolo próprios (`rule_type: protocolo`)."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, Integer, JSON, String

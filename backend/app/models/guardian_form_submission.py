@@ -1,3 +1,5 @@
+"""Tabela `guardian_form_submissions`: formulários preenchidos pelos responsáveis do paciente."""
+
 import uuid
 from datetime import date, datetime
 

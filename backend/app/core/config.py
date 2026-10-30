@@ -1,3 +1,6 @@
+"""Configuração do sistema, lida das variáveis de ambiente (e do `.env` em desenvolvimento).
+Em produção (`ENV=production`) o app se recusa a subir com `JWT_SECRET` fraco."""
+
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -8,6 +11,8 @@ _SEGREDOS_DE_EXEMPLO = {"change-me", "troque-por-um-segredo-forte", "gere-com-op
 
 
 class Settings(BaseSettings):
+    """Todas as variáveis de ambiente do sistema, com valores padrão para desenvolvimento."""
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     env: str = "development"

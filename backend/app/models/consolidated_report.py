@@ -1,3 +1,5 @@
+"""Tabela `consolidated_reports` (legado, sem uso novo). Ver a classe."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, JSON, String, Text

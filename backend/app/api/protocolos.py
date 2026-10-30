@@ -32,6 +32,7 @@ def list_protocolos(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> list[ReportTemplate]:
+    """Modelos de protocolo da psicóloga (ativos e arquivados)."""
     modelos = db.query(ReportTemplate).filter(ReportTemplate.owner_id == current.id).order_by(ReportTemplate.name).all()
     return [
         m for m in modelos if m.schema_json.get("rule_type") == RULE_TYPE and (incluir_arquivados or not m.arquivado)
@@ -44,6 +45,7 @@ def create_protocolo(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> ReportTemplate:
+    """Cria um modelo de protocolo próprio (`rule_type: "protocolo"`, formato de `schemas/protocolo.py`)."""
     schema = data.schema_json.model_dump(mode="json")
     modelo = ReportTemplate(owner_id=current.id, name=schema["name"], version=1, schema_json=schema)
     db.add(modelo)
@@ -58,6 +60,7 @@ def get_protocolo(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> ReportTemplate:
+    """Um modelo de protocolo da psicóloga logada."""
     return _get_protocolo_or_404(protocolo_id, db, current)
 
 
@@ -101,6 +104,7 @@ def restaurar_protocolo(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> ReportTemplate:
+    """Tira o modelo do arquivo."""
     modelo = _get_protocolo_or_404(protocolo_id, db, current)
     modelo.arquivado = False
     db.commit()
@@ -114,6 +118,7 @@ def duplicar_protocolo(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> ReportTemplate:
+    """Cria uma cópia do modelo, com "(cópia)" no nome, para editar sem mexer no original."""
     original = _get_protocolo_or_404(protocolo_id, db, current)
     schema = dict(original.schema_json)
     schema["name"] = f"{original.name} (cópia)"[:255]

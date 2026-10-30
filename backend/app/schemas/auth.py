@@ -1,3 +1,5 @@
+"""Formatos de cadastro, login, perfil e configuração da capa da psicóloga."""
+
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator

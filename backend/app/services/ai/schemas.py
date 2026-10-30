@@ -1,3 +1,6 @@
+"""Formatos que a IA devolve (Pydantic). As descrições dos campos (`Field(description=...)`) fazem parte do
+prompt: mudá-las muda o que a IA entende e responde."""
+
 from pydantic import BaseModel, Field
 
 
@@ -16,12 +19,14 @@ class ExtractedTemplateField(BaseModel):
     weight: float = Field(default=1, description="Peso do campo na soma total (rule_type 'sum_threshold').")
 
 
+# Área de um rascunho de modelo extraído de documento.
 class ExtractedTemplateArea(BaseModel):
     key: str = Field(description="Chave técnica da área/domínio, em snake_case.")
     label: str = Field(description="Rótulo legível da área/domínio avaliado.")
     fields: list[ExtractedTemplateField] = Field(default_factory=list)
 
 
+# Faixa de classificação de um rascunho de modelo extraído de documento.
 class ExtractedClassificationRange(BaseModel):
     label: str = Field(description="Nome da classificação (ex.: 'Normal', 'Grave').")
     min: float | None = Field(default=None, description="Mínimo da faixa (rule_type 'sum_threshold').")
@@ -140,6 +145,7 @@ class GraficoDaArea(BaseModel):
     )
 
 
+# Área clínica do relatório por IA: título, texto, fontes e um gráfico opcional.
 class AreaDoRelatorio(BaseModel):
     titulo: str = Field(description="Área/tema clínico (ex.: 'Comunicação E Linguagem', 'Atenção E Comportamento').")
     texto: str = Field(
@@ -171,6 +177,7 @@ class RelatorioPorPdfs(BaseModel):
     )
 
 
+# Valor que a IA escolheu para um campo do catálogo do protocolo.
 class CampoPreenchido(BaseModel):
     id: str = Field(description="Id exato do campo, copiado do catálogo do protocolo (ex.: 'cars_3', 'parto').")
     valor: str = Field(

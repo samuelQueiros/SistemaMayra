@@ -1,3 +1,5 @@
+"""Formatos de entrada e saída da API de pacientes."""
+
 from datetime import date, datetime
 from uuid import UUID
 

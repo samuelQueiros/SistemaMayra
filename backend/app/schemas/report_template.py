@@ -1,3 +1,5 @@
+"""Formato (`schema_json`) dos modelos do motor de regras e da API de modelos."""
+
 from typing import Literal
 from uuid import UUID
 

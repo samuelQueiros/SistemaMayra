@@ -45,11 +45,14 @@ SEM_CATALOGO = "Este laudo não guardou os campos do protocolo. Envie o catálog
 
 
 def catalogo_do_laudo(report: Report) -> CatalogoDoProtocolo | None:
+    """Catálogo de campos do protocolo guardado no laudo (`computed_json.catalogo`), ou None em laudos
+    anteriores ao catálogo."""
     dados = (report.computed_json or {}).get("catalogo")
     return CatalogoDoProtocolo.model_validate(dados) if dados else None
 
 
 def sugestoes_dos_anexos(db: Session, report: Report) -> list[dict]:
+    """Sugestões que a IA tirou dos anexos prontos, para a psicóloga confirmar uma a uma."""
     anexos = (
         db.query(PatientAttachment)
         .filter(PatientAttachment.report_id == report.id, PatientAttachment.status == "pronto")
@@ -64,6 +67,8 @@ def sugestoes_dos_anexos(db: Session, report: Report) -> list[dict]:
 
 
 def montar_pendencias(db: Session, report: Report, catalogo: CatalogoDoProtocolo) -> dict:
+    """Calcula as pendências do laudo (`services/pendencias.py`) com as respostas atuais, os dados
+    confirmados do paciente, as escalas já aplicadas e as sugestões dos anexos."""
     computed = report.computed_json or {}
     resultado = Pendencias(
         catalogo,
@@ -85,6 +90,7 @@ def montar_pendencias(db: Session, report: Report, catalogo: CatalogoDoProtocolo
 def ver_pendencias(
     report_id: UUID, db: Session = Depends(get_db), current: Psychologist = Depends(get_current_psychologist)
 ) -> dict:
+    """Pendências de um laudo, agrupadas por seção."""
     report = _get_report_do_psicologo(report_id, db, current, defer(Report.generated_text))
     catalogo = catalogo_do_laudo(report)
     if catalogo is None:
@@ -138,6 +144,8 @@ def excluir_metodos(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> dict:
+    """Guarda quais escalas a psicóloga tirou do relatório (`answers_json.__metodosExcluidos`). Os dados
+    da escala continuam salvos; o gerador do documento só omite os blocos."""
     report = _get_report_do_psicologo(report_id, db, current, defer(Report.generated_text))
     catalogo = catalogo_do_laudo(report)
     if catalogo is None:
@@ -156,6 +164,8 @@ _TAMANHO_MAXIMO_DO_VALOR = 8000
 
 
 class DadoComplementar(BaseModel):
+    """Um campo confirmado pela psicóloga: valor e situação (preenchido, não se aplica, não informado)."""
+
     valor: str | bool | float | None = None
     situacao: Literal["preenchido", "nao_se_aplica", "nao_informado"]
     origem: Literal["digitado", "anexo"] = "digitado"
@@ -163,6 +173,8 @@ class DadoComplementar(BaseModel):
 
 
 class DadosComplementaresIn(BaseModel):
+    """Dados confirmados, por id de campo do catálogo (até 500 por pedido)."""
+
     # None apaga o campo (ex.: desfazer "Não se aplica").
     campos: dict[IdDoCampo, DadoComplementar | None] = Field(max_length=500)
 
@@ -208,6 +220,8 @@ def salvar_dados_complementares(
 
 
 class AtualizarLaudoIn(BaseModel):
+    """Pedido de "Atualizar relatório"; `reescrever_estudo` força reescrever o estudo de caso do zero."""
+
     # Inclui os dados novos mesmo no estudo de caso editado à mão (pedido explícito).
     reescrever_estudo: bool = False
 

@@ -1,3 +1,5 @@
+"""Execução em paralelo das chamadas ao provedor de IA."""
+
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import TypeVar

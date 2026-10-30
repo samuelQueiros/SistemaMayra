@@ -1,3 +1,7 @@
+"""Modelos de laudo (`ReportTemplate`). No fluxo principal só `POST /api/templates/custom-form-avaliacao`
+é usado: cria, uma vez por psicóloga, o "porta-laudo" do protocolo fixo. O CRUD e a importação por IA
+vieram do motor de regras antigo e continuam disponíveis (ver docs/ARQUITETURA.md)."""
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
@@ -29,6 +33,7 @@ def list_templates(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> list[ReportTemplate]:
+    """Modelos da psicóloga logada."""
     return db.query(ReportTemplate).filter(ReportTemplate.owner_id == current.id).order_by(ReportTemplate.name).all()
 
 
@@ -38,6 +43,7 @@ def create_template(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> ReportTemplate:
+    """Cria um modelo no formato do motor de regras (`schema_json`), já validado pelo schema."""
     template = ReportTemplate(
         owner_id=current.id,
         name=data.name,
@@ -167,6 +173,7 @@ def get_template(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> ReportTemplate:
+    """Um modelo da psicóloga logada (404 se for de outra conta)."""
     template = db.get(ReportTemplate, template_id)
     if template is None or template.owner_id != current.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Modelo não encontrado")

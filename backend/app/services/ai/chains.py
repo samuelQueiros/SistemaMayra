@@ -1,3 +1,8 @@
+"""Prompts e chamadas de IA. `PERSONA`, `LIMITES_DA_IA` e `ESTILO_DE_ESCRITA` são compartilhados por todos os
+prompts: a IA escreve como profissional da área, usa só os dados fornecidos, não fecha diagnóstico, não usa
+a palavra "percentil" e nunca diz que o texto foi gerado por IA. Repetições só acontecem para erros passageiros
+(limite de taxa, instabilidade); chave inválida ou documento grande demais falham na hora."""
+
 import base64
 import re
 import time
@@ -53,6 +58,7 @@ def status_http_do_erro(exc: Exception) -> int | None:
 
 
 def tempo_esgotado(exc: Exception) -> bool:
+    """Verdadeiro se o erro é de tempo esgotado na chamada ao provedor."""
     nomes = " ".join(type(e).__name__.lower() for e in (exc, exc.__cause__) if e is not None)
     return "timeout" in nomes or "timed out" in str(exc).lower() or status_http_do_erro(exc) in (408, 504)
 
@@ -173,6 +179,7 @@ def generate_report_text(
     answers: dict,
     computed: dict,
 ) -> ReportSections:
+    """Legado: texto do parecer a partir da pontuação do motor de regras."""
     resumo = _montar_resumo(schema, answers, computed)
     chat_model = get_structured_model(provider, model, api_key, ReportSections)
     messages = _prompt.format_messages(template_name=template_name, patient_name=patient_name, resumo=resumo)
@@ -255,6 +262,7 @@ def generate_conclusion_and_interventions(
     protocolos_utilizados: str | None,
     hipotese_selecionada: str | None,
 ) -> ConclusionAndInterventions:
+    """Escreve Considerações Finais e Sugestões de Intervenção a partir dos dados do paciente."""
     partes = []
     if estudo_de_caso:
         partes.append(f"Estudo de caso:\n{estudo_de_caso}")
@@ -421,6 +429,7 @@ _template_extraction_prompt = ChatPromptTemplate.from_messages(
 def extract_template_from_document(
     *, provider: str, model: str, api_key: str, document_text: str
 ) -> ExtractedTemplateDraft:
+    """Extrai um rascunho de modelo (`schema_json`) de um documento que descreve uma escala."""
     chat_model = get_structured_model(provider, model, api_key, ExtractedTemplateDraft)
     messages = _template_extraction_prompt.format_messages(document_text=document_text)
     return _invocar_com_retentativas(chat_model, messages)
