@@ -21,6 +21,8 @@ class Especialista:
     papel: str
 
 
+# Os três especialistas dividem o catálogo do protocolo. Cada um só devolve campos que existem no catálogo
+# e com valores válidos; o que não vem nos documentos fica em branco (nada é inventado).
 ANAMNESE = Especialista(
     "anamnese",
     "Você cuida da identificação complementar (responsável, escola, rotina), da anamnese "
@@ -120,6 +122,8 @@ def preencher_campos(
     )
 
 
+# Redator do estudo de caso. Objetivo: prosa clínica sobre história, queixas, desenvolvimento, rotina,
+# comportamento, escola e escalas, só com o que está nos documentos.
 ESTUDO_DE_CASO_SYSTEM_PROMPT = (
     f"{PERSONA} Você redige o ESTUDO DE CASO do paciente a partir dos documentos "
     "do caso já transcritos em JSON (formulários respondidos por familiares, "
@@ -143,6 +147,8 @@ def redigir_estudo_de_caso(
     return resultado.estudo_de_caso
 
 
+# "Atualizar relatório": encaixa dados novos confirmados pela profissional no estudo de caso que já existe,
+# sem reescrever o que continua válido. Quando há divergência, vale o dado confirmado.
 INTEGRAR_AO_ESTUDO_SYSTEM_PROMPT = (
     f"{PERSONA} Você recebe o ESTUDO DE CASO já redigido para este paciente e "
     "DADOS NOVOS confirmados pela profissional depois que ele foi escrito. "

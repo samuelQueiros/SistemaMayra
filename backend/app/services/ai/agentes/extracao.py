@@ -126,6 +126,9 @@ class DocumentoExtraido(BaseModel):
     )
 
 
+# Agente de extração. Objetivo: TRANSCREVER o PDF (pergunta + opção marcada), sem interpretar nem concluir.
+# Limite: nunca inventar resposta; pergunta sem marca fica vazia. Nas caixas de seleção da ATA, informa
+# quantas caixas estão marcadas (`marcadas`), que é o que o sistema pontua (services/ata.py).
 EXTRACAO_SYSTEM_PROMPT = (
     f"{PERSONA} Sua tarefa agora é só TRANSCREVER um PDF para dados "
     "estruturados — sem interpretar, resumir ou concluir nada. O PDF é um "

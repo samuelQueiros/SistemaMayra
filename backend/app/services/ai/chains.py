@@ -149,6 +149,8 @@ LIMITES_DA_IA = (
     "preenchê-la com suposições."
 )
 
+# Prompt legado do texto do parecer (modelos do motor de regras). Limites: só os dados fornecidos, sem
+# diagnóstico fechado, sem "percentil", sem citar escala que não esteja nos dados.
 SYSTEM_PROMPT = (
     f"{PERSONA} {LIMITES_DA_IA} Escreva em português do Brasil, em tom "
     f"clínico, objetivo e respeitoso. {ESTILO_DE_ESCRITA}"
@@ -220,6 +222,8 @@ def _montar_resumo(schema: dict, answers: dict, computed: dict) -> str:
 # só à hipótese diagnóstica) e passam a ser compostas pela IA a partir do
 # conjunto de dados individuais do paciente — usado pelo formulário
 # standalone (formulario-novo-paciente.html) ao gerar o laudo.
+# Considerações Finais e Sugestões de Intervenção. Objetivo: sugestões que decorrem do que foi registrado
+# para este paciente, nunca uma lista fixa associada só à hipótese. Mesmos limites de LIMITES_DA_IA.
 CONCLUSION_SYSTEM_PROMPT = (
     f"{PERSONA} Sua tarefa agora é escrever DUAS seções de fechamento de um "
     'parecer neuropsicopedagógico — as "Considerações Finais" e as '
@@ -304,6 +308,9 @@ def _truncar(texto: str, limite: int = _TAMANHO_MAXIMO_TEXTO_POR_LAUDO) -> str:
     return texto[:limite].rstrip() + "…"
 
 
+# Relatório por IA a partir de PDFs (fluxo anterior ao Laudo por IA). Objetivo: organizar por área clínica,
+# citando as fontes. Limite: gráficos só com valores contados ou somados das respostas marcadas, dizendo a
+# régua usada; sem dados em escala, não há gráfico.
 FORM_PDFS_SYSTEM_PROMPT = (
     f"{PERSONA} Você vai receber as RESPOSTAS de 1 a 6 formulários "
     "(geralmente Google Forms) preenchidos por familiares, cuidadores, "
@@ -395,6 +402,8 @@ def _blocos_dos_pdfs(pdfs: list[dict], leitura: str) -> list[dict]:
     return conteudo
 
 
+# Importação de modelo: lê o texto de um documento que descreve uma escala e propõe o `schema_json`.
+# É só um rascunho, a psicóloga revisa antes de salvar.
 TEMPLATE_EXTRACTION_SYSTEM_PROMPT = (
     f"{PERSONA} Agora sua tarefa é diferente: ler o texto de um documento "
     "que descreve uma escala/instrumento de avaliação psicológica (extraído "

@@ -29,6 +29,8 @@ class LeituraDoAnexo(BaseModel):
     )
 
 
+# Leitura de anexo (foto ou PDF). Objetivo: sugerir valores só para campos pendentes. Limites: letra
+# ilegível ou dúvida não preenche; cada sugestão traz o trecho que a sustenta; a psicóloga confirma.
 ANEXO_SYSTEM_PROMPT = (
     f"{PERSONA} Você recebe a foto ou o PDF de um documento do caso (ficha "
     "preenchida à mão, caderneta de saúde, relatório escolar, laudo anterior) e "
