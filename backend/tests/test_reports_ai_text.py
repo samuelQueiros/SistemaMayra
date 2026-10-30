@@ -9,7 +9,7 @@ RESPOSTAS_VALIDAS = {"comunicacao": {"iniciativa_social": 3}}
 
 def _criar_relatorio(client, headers):
     patient = client.post(
-        "/api/patients", json={"name": "Safira Kerolainy", "birth_date": "2020-05-10"}, headers=headers
+        "/api/patients", json={"name": "Paciente Teste", "birth_date": "2020-05-10"}, headers=headers
     ).json()
     template = client.post("/api/templates", json=TEMPLATE_VALIDO, headers=headers).json()
     report = client.post(
@@ -53,7 +53,7 @@ def test_gera_texto_via_ia_e_salva_no_laudo(client, monkeypatch):
     assert "Introdução de teste." in body["generated_text"]
     assert "Análise de teste." in body["generated_text"]
     assert "Conclusão de teste." in body["generated_text"]
-    assert chamada["patient_name"] == "Safira Kerolainy"
+    assert chamada["patient_name"] == "Paciente Teste"
     assert chamada["template_name"] == TEMPLATE_VALIDO["name"]
     assert chamada["provider"] == "anthropic"
     assert chamada["api_key"] == "chave-de-teste-1234"

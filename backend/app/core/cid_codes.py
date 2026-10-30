@@ -1,6 +1,6 @@
 """Lista fixa de hipóteses diagnósticas comuns nos laudos da clínica, com o
-código CID-11 correspondente (ver referencia_cliente/RELATORIO_FINAL_
-ARTHUR_DANIEL__assinado.pdf). Não é uma tabela oficial completa do CID-11 —
+código CID-11 correspondente (baseada na tabela CID-10 x CID-11 fornecida pela
+clínica). Não é uma tabela oficial completa do CID-11 —
 é só um atalho para as hipóteses mais frequentes; a psicóloga pode
 descrever qualquer outra hipótese como texto livre na seção de hipóteses
 diagnósticas do laudo."""

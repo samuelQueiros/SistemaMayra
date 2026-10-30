@@ -111,7 +111,7 @@ _TROCAS = (
     (".caixa-cinza{background:#a6a6a6;", ".caixa-cinza{background:#c6d9f1;"),
     (".caixa-cinza.clara{background:#bfbfbf}", ".caixa-cinza.clara{background:#dbe5f1}"),
     ("background:#ede9fa", "background:#dbe5f1"),
-    # Rodapé do tamanho e na altura do modelo João Neto (~87 mm de conteúdo, ~7 mm da borda)
+    # Rodapé do tamanho e na altura do relatório-modelo de referência (~87 mm de conteúdo, ~7 mm da borda)
     (".rodape-pagina img{width:78mm}", ".rodape-pagina img{width:99mm}"),
     (
         "@bottom-center{content:element(rodapePagina);vertical-align:top;padding-top:1mm}",

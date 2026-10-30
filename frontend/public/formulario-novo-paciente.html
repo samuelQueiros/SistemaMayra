@@ -2887,7 +2887,7 @@ async function gerarDocumentoLaudoHTML(){
   const imgDominios=graficoDominios();
   if(imgDominios)partes.push('<div class="grafico"><img src="'+imgDominios+'" data-mm="118" style="width:118mm"></div>');
 
-  /* A partir daqui, a sequência do relatório-modelo (João Neto):
+  /* A partir daqui, a sequência do relatório-modelo:
      habilidades → funções executivas → Portage → CARS → ATA → SNAP-IV →
      hipóteses → conclusão → encaminhamentos → fechamento. */
 
@@ -3048,8 +3048,8 @@ async function gerarDocumentoLaudoHTML(){
   const encaminhamentosSelecionados=Array.from(document.querySelectorAll(".encaminhamento:checked")).map(el=>el.value);
   if(encaminhamentosSelecionados.length)partes.push('<h3><mark class="cinza">Encaminhamentos</mark></h3><ul class="bullets">'+encaminhamentosSelecionados.map(e=>"<li>"+esc(e)+"</li>").join("")+"</ul>");
 
-  // Considerações Finais: texto-padrão fixo do modelo (inclui a OBSERVAÇÃO
-  // de que o documento não é laudo médico).
+  // Considerações Finais: (1) texto "A análise dos comportamentos…" (igual para todos os relatórios, desde
+  // 2026-10-30), (2) texto de TEA em meninas, quando se aplica, e (3) o aviso legal ("Vale ressaltar…").
   partes.push('<h3><mark class="cinza">Considerações Finais</mark></h3>');
   partes.push(blocoDeTexto(analiseDosComportamentosFechamento(),opcoesTexto));
   partes.push(blocoDeTexto(consideracoesFinaisTEAMeninas(valor("sexo"),hipoteses[0]||""),opcoesTexto));

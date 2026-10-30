@@ -6,7 +6,7 @@ RESPOSTAS_VALIDAS = {"comunicacao": {"iniciativa_social": 3}}
 
 def _criar_relatorio(client, headers):
     patient = client.post(
-        "/api/patients", json={"name": "Safira Kerolainy", "birth_date": "2020-05-10"}, headers=headers
+        "/api/patients", json={"name": "Paciente Teste", "birth_date": "2020-05-10"}, headers=headers
     ).json()
     template = client.post("/api/templates", json=TEMPLATE_VALIDO, headers=headers).json()
     report = client.post(

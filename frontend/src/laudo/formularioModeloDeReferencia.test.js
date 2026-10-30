@@ -3,7 +3,7 @@ import { JSDOM } from 'jsdom'
 import { afterEach, beforeEach, expect, it } from 'vitest'
 
 // Ajustes da videochamada de 2026-10-16: o documento do protocolo padrão
-// segue o relatório-modelo da psicóloga (João Neto).
+// segue o relatório-modelo da psicóloga.
 
 let dom
 let w

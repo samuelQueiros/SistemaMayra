@@ -2,7 +2,7 @@ from tests.helpers import registrar_e_logar
 from tests.test_templates import TEMPLATE_VALIDO
 
 
-def _criar_paciente(client, headers, name="Safira Kerolainy"):
+def _criar_paciente(client, headers, name="Paciente Teste"):
     response = client.post("/api/patients", json={"name": name, "birth_date": "2020-05-10"}, headers=headers)
     return response.json()["id"]
 

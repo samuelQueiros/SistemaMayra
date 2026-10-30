@@ -4,7 +4,7 @@ from tests.test_templates import TEMPLATE_VALIDO
 RESPOSTAS_VALIDAS = {"comunicacao": {"iniciativa_social": 3}}
 
 
-def _criar_paciente(client, headers, nome="Safira Kerolainy"):
+def _criar_paciente(client, headers, nome="Paciente Teste"):
     return client.post("/api/patients", json={"name": nome, "birth_date": "2020-05-10"}, headers=headers).json()
 
 

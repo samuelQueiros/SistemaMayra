@@ -6,7 +6,7 @@ RESPOSTAS_VALIDAS = {"comunicacao": {"iniciativa_social": 3}}
 
 def _criar_relatorio(client, headers):
     patient = client.post(
-        "/api/patients", json={"name": "Safira Kerolainy", "birth_date": "2020-05-10"}, headers=headers
+        "/api/patients", json={"name": "Paciente Teste", "birth_date": "2020-05-10"}, headers=headers
     ).json()
     template = client.post("/api/templates", json=TEMPLATE_VALIDO, headers=headers).json()
     report = client.post(
@@ -126,7 +126,7 @@ def test_pagina_de_logs_lista_todas_as_edicoes_com_filtro_por_paciente(client):
 
     todos = client.get("/api/logs", headers=headers).json()
     assert [log["report_id"] for log in todos] == [segundo, primeiro]  # mais recente primeiro
-    assert todos[0]["patient_name"] == "Safira Kerolainy"
+    assert todos[0]["patient_name"] == "Paciente Teste"
     assert todos[0]["template_name"] == "Outro Nome"
     assert todos[1]["field"] == "classification_override"
     assert todos[1]["new_value"] == "Leve"

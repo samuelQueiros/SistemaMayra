@@ -13,16 +13,16 @@ def test_cria_e_lista_paciente_do_proprio_psicologo(client):
 
     created = client.post(
         "/api/patients",
-        json={"name": "Safira Kerolainy", "birth_date": "2020-05-10"},
+        json={"name": "Paciente Teste", "birth_date": "2020-05-10"},
         headers=headers,
     )
     assert created.status_code == 201
-    assert created.json()["name"] == "Safira Kerolainy"
+    assert created.json()["name"] == "Paciente Teste"
 
     listed = client.get("/api/patients", headers=headers)
     assert listed.status_code == 200
     assert len(listed.json()) == 1
-    assert listed.json()[0]["name"] == "Safira Kerolainy"
+    assert listed.json()[0]["name"] == "Paciente Teste"
 
 
 def test_psicologo_nao_ve_paciente_de_outro_psicologo(client):
@@ -88,7 +88,7 @@ def test_nao_permite_excluir_paciente_com_laudos_no_historico(client):
     headers = registrar_e_logar(client)
     patient_id = client.post(
         "/api/patients",
-        json={"name": "Safira Kerolainy", "birth_date": "2020-05-10"},
+        json={"name": "Paciente Teste", "birth_date": "2020-05-10"},
         headers=headers,
     ).json()["id"]
     template_id = client.post("/api/templates", json=TEMPLATE_VALIDO, headers=headers).json()["id"]
