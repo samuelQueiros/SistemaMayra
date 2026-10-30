@@ -22,8 +22,6 @@ from dataclasses import dataclass
 
 from app.services.laudo_ia import CatalogoDoProtocolo, CampoDoCatalogo
 
-SITUACOES = ("preenchido", "nao_se_aplica", "nao_informado")
-
 
 @dataclass(frozen=True)
 class Secao:
@@ -311,12 +309,6 @@ class Pendencias:
             "grupos": grupos,
             "escalas_para_adicionar": escalas_fora,
         }
-
-
-def secoes_dos_campos(catalogo: CatalogoDoProtocolo, ids: set[str]) -> set[str]:
-    """Chaves das seções (SECOES) a que pertencem os campos."""
-    numeros = {_numero_da_secao(c.secao) for c in catalogo.campos if c.id in ids}
-    return {s.chave for s in SECOES if s.numero in numeros}
 
 
 def _para_o_formulario(valor):

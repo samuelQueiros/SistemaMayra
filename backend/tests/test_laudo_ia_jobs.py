@@ -10,7 +10,7 @@ import app.services.laudo_ia_jobs as jobs
 import app.services.storage as storage_module
 from app.services.ai.agentes.extracao import ErroNaLeituraDosDocumentos
 from tests.helpers import registrar_e_logar
-from tests.test_laudo_ia import CATALOGO, _concluir, _enviar, _preparar
+from tests.test_laudo_ia import _concluir, _enviar, _preparar
 
 
 @pytest.fixture(autouse=True)

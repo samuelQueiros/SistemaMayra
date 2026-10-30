@@ -8,11 +8,13 @@ from app.models.base import CreatedAtMixin, UUIDPrimaryKeyMixin
 
 
 class ConsolidatedReport(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
-    """Parecer consolidado (síntese por IA de vários laudos de um mesmo
-    paciente — ver `POST /api/patients/{id}/consolidated-pdf`). Antes,
-    esse PDF era gerado e baixado na hora sem ficar salvo em lugar
-    nenhum; agora fica registrado para poder ser rebaixado depois sem
-    precisar gerar tudo de novo (e sem chamar a IA outra vez)."""
+    """Parecer consolidado: síntese por IA de vários laudos de um mesmo paciente.
+
+    Legado. A rota que gerava este parecer (`/api/patients/{id}/consolidated-pdf`)
+    e as telas foram removidas quando o "Laudo por IA" passou a ser o único
+    fluxo de criação por PDFs. A tabela continua no banco (há migration
+    aplicada e dados salvos) e os registros são apagados junto com o
+    paciente (`api/patients.py`). Não crie registros novos aqui."""
 
     __tablename__ = "consolidated_reports"
 

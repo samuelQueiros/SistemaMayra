@@ -2,7 +2,6 @@ import pytest
 from weasyprint import HTML
 
 import app.api.relatorios_pdf as modulo
-import app.services.ai.chains as chains
 import app.services.storage as storage_module
 from app.services.ai.schemas import RelatorioPorPdfs
 from tests.helpers import registrar_e_logar

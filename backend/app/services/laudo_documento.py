@@ -610,7 +610,7 @@ class _ConversorDocx:
         tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
         _sem_bordas_tabela(tabela)
         _fixar_colunas(tabela, [44, 10, 112])
-        c_foto, c_espaco, c_caixa = tabela.rows[0].cells
+        c_foto, _, c_caixa = tabela.rows[0].cells
         if foto is not None:
             p = c_foto.paragraphs[0]
             p.paragraph_format.line_spacing = 1.0
