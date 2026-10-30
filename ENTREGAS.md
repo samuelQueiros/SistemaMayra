@@ -2563,3 +2563,4 @@ Correções pedidas na gravação de 2026-10-16. O relatório do João Neto pass
 - SOBRE A PROFISSIONAL RESPONSÁVEL e NOTA SOBRE OS RESULTADOS continuam, sem a caixa azul (classe `fechamento-texto`).
 - Arquivos: `frontend/public/formulario-novo-paciente.html`, `frontend/src/laudo/{documento,css}.ts`, `backend/app/services/laudo_documento.py`; testes em `formularioModeloJoaoNeto.test.js` e `test_documents_export.py`.
 - Atenção: o texto vale para todas as hipóteses (decisão do usuário) e cita TEA; texto transcrito de print de baixa resolução, a confirmar com a Mayra. Relatórios já salvos só mudam em "Atualizar Relatório".
+- Ajuste no mesmo dia: o bloco "SOBRE A PROFISSIONAL RESPONSÁVEL" saiu do protocolo padrão (repetia o parágrafo "A presente análise técnica foi elaborada por…"). Modelos próprios e Relatório por PDFs ainda o imprimem (não têm o texto novo); laudos antigos só mudam em "Atualizar Relatório".

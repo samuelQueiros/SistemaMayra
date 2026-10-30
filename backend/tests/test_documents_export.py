@@ -290,7 +290,7 @@ def test_laudo_antigo_sai_no_modelo_atual():
 
 def test_fechamento_sem_caixa_azul_no_word_e_no_pdf():
     """OBS-01 a OBS-04 (2026-10-30): texto da análise em negrito, sem caixa
-    azul em volta de SOBRE A PROFISSIONAL e da NOTA, e "Desde já" junto da
+    azul em volta da NOTA (o bloco "Sobre a profissional" saiu), e "Desde já" junto da
     assinatura. Paciente fictício."""
     from app.services.laudo_documento import html_para_pdf
 
@@ -299,7 +299,6 @@ def test_fechamento_sem_caixa_azul_no_word_e_no_pdf():
         '<h3><mark class="cinza">Considerações Finais</mark></h3>'
         '<p class="recuo"><strong>A ANÁLISE DOS COMPORTAMENTOS</strong>, realizada evidenciou um conjunto.</p>'
         '<p class="recuo">Vale ressaltar que não se deve rejeitar nenhuma mudança.</p>'
-        '<div class="fechamento-texto"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>Bio fictícia.</p></div>'
         '<div class="fechamento-texto"><p><strong>NOTA SOBRE OS RESULTADOS:</strong> Texto da nota.</p></div>'
         '<div class="bloco-assinatura"><p class="recuo">Desde já, coloco-me à disposição.</p>'
         '<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>'
@@ -307,7 +306,7 @@ def test_fechamento_sem_caixa_azul_no_word_e_no_pdf():
     )
     doc = Document(io.BytesIO(html_para_docx(html)))
     textos = [p.text for p in doc.paragraphs]
-    ordem = ["Considerações Finais", "A ANÁLISE DOS COMPORTAMENTOS", "Vale ressaltar", "SOBRE A PROFISSIONAL", "NOTA SOBRE OS RESULTADOS", "Desde já", "Atenciosamente"]
+    ordem = ["Considerações Finais", "A ANÁLISE DOS COMPORTAMENTOS", "Vale ressaltar", "NOTA SOBRE OS RESULTADOS", "Desde já", "Atenciosamente"]
     posicoes = [next(i for i, t in enumerate(textos) if o in t) for o in ordem]
     assert posicoes == sorted(posicoes)
     # Nada de caixa (tabela) em volta dos dois blocos

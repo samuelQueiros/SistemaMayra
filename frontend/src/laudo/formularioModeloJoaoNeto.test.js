@@ -92,12 +92,11 @@ it('cabeçalho, metodologia, destaques e final no modelo do relatório', async (
   expect(doc).not.toContain('Observação sobre a faixa etária do Portage')
 
   // Nota perto da assinatura; galeria depois dela, com todas as fotos
-  const sobre = doc.indexOf('SOBRE A PROFISSIONAL RESPONSÁVEL')
   const nota = doc.indexOf('NOTA SOBRE OS RESULTADOS')
   const atenciosamente = doc.indexOf('Atenciosamente')
   const galeria = doc.indexOf('REGISTROS DOS ATENDIMENTOS')
-  expect(sobre).toBeGreaterThan(0)
-  expect(nota).toBeGreaterThan(sobre)
+  expect(doc).not.toContain('SOBRE A PROFISSIONAL RESPONSÁVEL')
+  expect(nota).toBeGreaterThan(doc.lastIndexOf('Considerações Finais'))
   expect(atenciosamente).toBeGreaterThan(nota)
   expect(galeria).toBeGreaterThan(atenciosamente)
   const fotosNaGaleria = doc.slice(galeria)
@@ -154,15 +153,16 @@ it.each([
   const consideracoes = doc.indexOf('Considerações Finais')
   const analise = doc.indexOf('<strong>A ANÁLISE DOS COMPORTAMENTOS</strong>, realizada evidenciou')
   const vale = doc.indexOf('Vale ressaltar que não se deve rejeitar')
-  const sobre = doc.indexOf('SOBRE A PROFISSIONAL RESPONSÁVEL')
   const nota = doc.indexOf('NOTA SOBRE OS RESULTADOS')
   const desdeJa = doc.indexOf('Desde já, coloco-me à disposição')
   const atenciosamente = doc.indexOf('Atenciosamente')
   expect(consideracoes).toBeGreaterThan(0)
   expect(analise).toBeGreaterThan(consideracoes)
   expect(vale).toBeGreaterThan(analise)
-  expect(sobre).toBeGreaterThan(vale)
-  expect(nota).toBeGreaterThan(sobre)
+  expect(nota).toBeGreaterThan(vale)
+  // O bloco antigo repetia o parágrafo do texto da análise (nome, CBO, ABA, anos de experiência)
+  expect(doc).not.toContain('SOBRE A PROFISSIONAL RESPONSÁVEL')
+  expect(doc).not.toContain('Este relatório foi elaborado por Mayra')
 
   // Negritos pedidos: TEA por extenso e nome com CBO
   expect(doc).toContain('<strong>Transtorno do Espectro Autista (TEA)</strong>')
@@ -175,7 +175,6 @@ it.each([
   expect(desdeJa).toBeLessThan(atenciosamente)
   expect(doc.slice(doc.lastIndexOf('<div class="bloco-assinatura">'))).toContain('Desde já, coloco-me à disposição')
 
-  // Sem a caixa azul em volta de SOBRE A PROFISSIONAL e da NOTA
-  expect(doc.slice(sobre - 80, sobre)).not.toContain('caixa-cinza')
+  // Sem a caixa azul em volta da NOTA
   expect(doc.slice(nota - 80, nota)).not.toContain('caixa-cinza')
 })
