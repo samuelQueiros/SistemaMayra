@@ -38,23 +38,49 @@ SECOES = (
         "gestacao",
         "Gestação e parto",
         frozenset(
-            {"idadeMaeGestacao", "idadeGestacional", "intercorrenciasGestacionais", "parto", "complicacaoParto",
-             "usoMedicamentosGestacao", "sofrimentoFetal"}
+            {
+                "idadeMaeGestacao",
+                "idadeGestacional",
+                "intercorrenciasGestacionais",
+                "parto",
+                "complicacaoParto",
+                "usoMedicamentosGestacao",
+                "sofrimentoFetal",
+            }
         ),
     ),
     Secao(
         "3",
         "desenvolvimento",
         "Desenvolvimento",
-        frozenset({"filhoUnico", "filhoUnicoDescricao", "convivenciaSocial", "andouAno", "falouAno", "desfralde", "desfraldeAno"}),
+        frozenset(
+            {
+                "filhoUnico",
+                "filhoUnicoDescricao",
+                "convivenciaSocial",
+                "andouAno",
+                "falouAno",
+                "desfralde",
+                "desfraldeAno",
+            }
+        ),
     ),
     Secao(
         "4",
         "historico",
         "Histórico clínico e queixas",
         frozenset(
-            {"encaminhamento", "diagnosticoAtual", "laudoAnterior", "familiaLaudo", "transtornoFamilia", "irmaosDiagnostico",
-             "terapias", "queixaFamiliar", "queixaEscolarCuidador"}
+            {
+                "encaminhamento",
+                "diagnosticoAtual",
+                "laudoAnterior",
+                "familiaLaudo",
+                "transtornoFamilia",
+                "irmaosDiagnostico",
+                "terapias",
+                "queixaFamiliar",
+                "queixaEscolarCuidador",
+            }
         ),
     ),
     Secao("6", "observacoes", "Observações clínicas"),
@@ -286,7 +312,9 @@ class Pendencias:
                     if _ATA_PERCENTUAIS.match(c.id) and self._pendente_no_laudo(c.id)
                 ]
             if itens:
-                grupos.append({"chave": f"escala_{escala.chave}", "titulo": escala.titulo, "escala": True, "itens": itens})
+                grupos.append(
+                    {"chave": f"escala_{escala.chave}", "titulo": escala.titulo, "escala": True, "itens": itens}
+                )
 
         # Progresso: cada item essencial conta 1; cada escala conta 1 (resolvida
         # quando todos os seus itens essenciais estão resolvidos).
@@ -318,7 +346,9 @@ def _para_o_formulario(valor):
     return valor
 
 
-def aplicar_dados_confirmados(catalogo: CatalogoDoProtocolo, answers: dict, dados: dict | None) -> tuple[dict, set[str]]:
+def aplicar_dados_confirmados(
+    catalogo: CatalogoDoProtocolo, answers: dict, dados: dict | None
+) -> tuple[dict, set[str]]:
     """Copia para as respostas do laudo os dados confirmados pela psicóloga
     ("preenchido") de campos do protocolo que estão vazios. Nunca sobrescreve
     o que já tem resposta; dispensados ("não se aplica"/"não informado") não
@@ -355,14 +385,15 @@ def dados_confirmados_como_documento(catalogo: CatalogoDoProtocolo, answers: dic
         "respondente": "",
         "data": "",
         "respostas": [
-            {"pergunta": f"{rotulos[i].secao} — {rotulos[i].rotulo}", "resposta": str(answers[i])}
-            for i in sorted(ids)
+            {"pergunta": f"{rotulos[i].secao} — {rotulos[i].rotulo}", "resposta": str(answers[i])} for i in sorted(ids)
         ],
         "observacoes": "",
     }
 
 
-def campos_novos_para_o_estudo(catalogo: CatalogoDoProtocolo, answers: dict, dados: dict | None, integrados: list[str] | None) -> set[str]:
+def campos_novos_para_o_estudo(
+    catalogo: CatalogoDoProtocolo, answers: dict, dados: dict | None, integrados: list[str] | None
+) -> set[str]:
     """Dados confirmados, já no laudo, das seções que alimentam o estudo de
     caso e que o texto ainda não incorporou (`computed_json.estudo_campos_integrados`)."""
     numeros = {s.numero for s in SECOES if s.chave in SECOES_DO_ESTUDO_DE_CASO}

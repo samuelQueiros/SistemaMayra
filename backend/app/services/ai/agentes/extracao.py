@@ -16,7 +16,13 @@ from pydantic import BaseModel, Field
 
 from app.services.ai.agentes import limites
 from app.services.ai.agentes.paralelo import em_paralelo
-from app.services.ai.chains import PERSONA, _blocos_dos_pdfs, _invocar_com_retentativas, status_http_do_erro, tempo_esgotado
+from app.services.ai.chains import (
+    PERSONA,
+    _blocos_dos_pdfs,
+    _invocar_com_retentativas,
+    status_http_do_erro,
+    tempo_esgotado,
+)
 from app.services.ai.provedores import provedor
 from app.services.ai.erros import cota_diaria_esgotada
 from app.services.ai.provider import get_structured_model
@@ -86,23 +92,33 @@ class RespostaExtraida(BaseModel):
     # Perguntas de caixas de seleção ("marque todas que se aplicam", como os
     # itens da ATA): a pontuação é calculada pelo sistema a partir da contagem.
     marcadas: int | None = Field(
-        default=None, ge=0, le=60, description="Caixas de seleção: quantas caixas estão marcadas. Vazio nas demais perguntas."
+        default=None,
+        ge=0,
+        le=60,
+        description="Caixas de seleção: quantas caixas estão marcadas. Vazio nas demais perguntas.",
     )
     opcoes: int | None = Field(
-        default=None, ge=0, le=60, description="Caixas de seleção: quantas caixas existem na pergunta. Vazio nas demais perguntas."
+        default=None,
+        ge=0,
+        le=60,
+        description="Caixas de seleção: quantas caixas existem na pergunta. Vazio nas demais perguntas.",
     )
 
 
 class DocumentoExtraido(BaseModel):
     arquivo: str = Field(default="", description="Deixe vazio (preenchido pelo sistema).")
-    tipo: Literal["formulario", "cars", "ata", "snap_iv", "tod", "portage", "m_chat", "relatorio_escolar", "outro"] = Field(
-        description="Tipo do documento: formulário de respostas (ex.: Google Forms), escala pontuada ou relatório."
+    tipo: Literal["formulario", "cars", "ata", "snap_iv", "tod", "portage", "m_chat", "relatorio_escolar", "outro"] = (
+        Field(
+            description="Tipo do documento: formulário de respostas (ex.: Google Forms), escala pontuada ou relatório."
+        )
     )
     titulo: str = Field(description="Título do formulário/escala.")
     respondente: str = Field(default="", description="Quem respondeu (ex.: mãe, professora), se o PDF disser.")
     data: str = Field(default="", description="Data do preenchimento, se houver.")
     respostas: list[RespostaExtraida] = Field(description="Todas as perguntas/itens, na ordem do PDF.")
-    observacoes: str = Field(default="", description="Texto livre do PDF que não é pergunta/resposta (ex.: comentários).")
+    observacoes: str = Field(
+        default="", description="Texto livre do PDF que não é pergunta/resposta (ex.: comentários)."
+    )
 
 
 EXTRACAO_SYSTEM_PROMPT = (
@@ -152,7 +168,9 @@ def extrair_documento(*, provider: str, model: str, api_key: str, pdf: dict) -> 
     chave = _chave_do_cache(pdf, provider, model, leitura)
     if storage.exists(chave):
         try:
-            return DocumentoExtraido.model_validate_json(storage.read(chave)).model_copy(update={"arquivo": pdf["nome"]})
+            return DocumentoExtraido.model_validate_json(storage.read(chave)).model_copy(
+                update={"arquivo": pdf["nome"]}
+            )
         except ValueError:
             pass  # cache corrompido: extrai de novo
 

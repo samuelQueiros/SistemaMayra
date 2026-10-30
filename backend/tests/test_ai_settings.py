@@ -109,11 +109,20 @@ def test_configuracao_de_ia_e_isolada_por_psicologa(client):
 
 def test_aceita_os_novos_provedores_e_recusa_desconhecido(client):
     headers = registrar_e_logar(client)
-    for provider, modelo in [("xai", "grok-4"), ("deepseek", "deepseek-chat"), ("openrouter", "openai/gpt-5"), ("mistral", "mistral-large-latest")]:
-        resposta = client.put("/api/settings/ai", json={"provider": provider, "model": modelo, "api_key": "chave-1234"}, headers=headers)
+    for provider, modelo in [
+        ("xai", "grok-4"),
+        ("deepseek", "deepseek-chat"),
+        ("openrouter", "openai/gpt-5"),
+        ("mistral", "mistral-large-latest"),
+    ]:
+        resposta = client.put(
+            "/api/settings/ai", json={"provider": provider, "model": modelo, "api_key": "chave-1234"}, headers=headers
+        )
         assert resposta.status_code == 200, resposta.text
         assert resposta.json()["provider"] == provider
-    resposta = client.put("/api/settings/ai", json={"provider": "inventado", "model": "x", "api_key": "chave-1234"}, headers=headers)
+    resposta = client.put(
+        "/api/settings/ai", json={"provider": "inventado", "model": "x", "api_key": "chave-1234"}, headers=headers
+    )
     assert resposta.status_code == 422
 
 
@@ -121,7 +130,18 @@ def test_lista_os_provedores_para_a_tela(client):
     headers = registrar_e_logar(client)
     provedores = client.get("/api/settings/ai/provedores", headers=headers).json()
     ids = [p["id"] for p in provedores]
-    assert {"anthropic", "openai", "google", "openrouter", "xai", "mistral", "groq", "qwen", "deepseek", "cohere"} <= set(ids)
+    assert {
+        "anthropic",
+        "openai",
+        "google",
+        "openrouter",
+        "xai",
+        "mistral",
+        "groq",
+        "qwen",
+        "deepseek",
+        "cohere",
+    } <= set(ids)
     deepseek = next(p for p in provedores if p["id"] == "deepseek")
     assert deepseek["leitura_pdf"] == "texto"
     assert "não lê imagens" in deepseek["observacao"]

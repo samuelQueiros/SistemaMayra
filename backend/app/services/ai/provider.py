@@ -48,7 +48,9 @@ def _raciocinio_leve_gemini(model: str) -> dict:
     return {}
 
 
-def get_chat_model(provider: str, model: str, api_key: str, limites: LimitesDaChamada = LIMITES_PADRAO) -> BaseChatModel:
+def get_chat_model(
+    provider: str, model: str, api_key: str, limites: LimitesDaChamada = LIMITES_PADRAO
+) -> BaseChatModel:
     """Instancia o chat model do LangChain para o provedor/modelo/chave
     informados — trocar de provedor não exige mexer no restante do
     sistema (SPEC.md seção 5). As credenciais já vêm resolvidas pelo
@@ -70,7 +72,12 @@ def get_chat_model(provider: str, model: str, api_key: str, limites: LimitesDaCh
 
         extras = {"reasoning_effort": "low"} if limites.raciocinio_leve and _modelo_de_raciocinio_openai(model) else {}
         return ChatOpenAI(
-            model=model, api_key=api_key, timeout=limites.timeout_s, max_tokens=limites.max_tokens, max_retries=0, **extras
+            model=model,
+            api_key=api_key,
+            timeout=limites.timeout_s,
+            max_tokens=limites.max_tokens,
+            max_retries=0,
+            **extras,
         )
 
     if provider == "google":

@@ -47,7 +47,9 @@ def imagens_para_ia(conteudo: bytes, mime: str) -> list[bytes]:
     """JPEGs comprimidos do anexo (uma por imagem/página)."""
     try:
         if mime == "application/pdf":
-            return [_comprimir(Image.open(io.BytesIO(png))) for png in paginas_em_png(conteudo, maximo=MAXIMO_DE_PAGINAS)]
+            return [
+                _comprimir(Image.open(io.BytesIO(png))) for png in paginas_em_png(conteudo, maximo=MAXIMO_DE_PAGINAS)
+            ]
         return [_comprimir(Image.open(io.BytesIO(conteudo)))]
     except Exception as exc:  # noqa: BLE001 - arquivo corrompido ou formato disfarçado
         raise ArquivoInvalido("Não foi possível abrir o arquivo. Envie uma foto (JPG, PNG, WEBP) ou um PDF.") from exc

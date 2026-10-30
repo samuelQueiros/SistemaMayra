@@ -85,7 +85,8 @@ _BLOCOS_REMOVIDOS = (
     re.compile(r'<h3><mark class="cinza">Estudo De Caso E Observações Clínicas</mark></h3>.*?(?=<h3)', re.S),
 )
 _NOTA_SOBRE_OS_RESULTADOS = re.compile(
-    r'<div class="(?:caixa-cinza clara|fechamento-texto)"><p><strong>NOTA SOBRE OS RESULTADOS:</strong>.*?</p></div>', re.S
+    r'<div class="(?:caixa-cinza clara|fechamento-texto)"><p><strong>NOTA SOBRE OS RESULTADOS:</strong>.*?</p></div>',
+    re.S,
 )
 _BLOCO_ASSINATURA = '<div class="bloco-assinatura">'
 _ATENCIOSAMENTE = '<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>'
@@ -96,7 +97,10 @@ _TROCAS = (
     ("PARECER NEUROPSICOPEDAGÓGICO<br>ANÁLISE COMPORTAMENTAL", "PARECER NEUROPSICOPEDAGÓGICO ANÁLISE COMPORTAMENTAL"),
     ("<strong>PROTOCOLO UTILIZADO</strong>", "<strong>METODOLOGIA E PROTOCOLOS UTILIZADOS</strong>"),
     # Credencial da assinatura
-    (">com formação especializada em Análise do Comportamento Aplicada (ABA)</span>", ">Especialista em Análise do Comportamento Aplicada - ABA</span>"),
+    (
+        ">com formação especializada em Análise do Comportamento Aplicada (ABA)</span>",
+        ">Especialista em Análise do Comportamento Aplicada - ABA</span>",
+    ),
     (">Analista Comportamental - ABA</span>", ">Especialista em Análise do Comportamento Aplicada - ABA</span>"),
     # Fundos cinza -> azul-claro (CSS do documento)
     ("mark.cinza{background:#d9d9d9}", "mark.cinza{background:#dbe5f1}"),
@@ -107,7 +111,10 @@ _TROCAS = (
     ("background:#ede9fa", "background:#dbe5f1"),
     # Rodapé do tamanho e na altura do modelo João Neto (~87 mm de conteúdo, ~7 mm da borda)
     (".rodape-pagina img{width:78mm}", ".rodape-pagina img{width:99mm}"),
-    ("@bottom-center{content:element(rodapePagina);vertical-align:top;padding-top:1mm}", "@bottom-center{content:element(rodapePagina);vertical-align:top;padding-top:2mm}"),
+    (
+        "@bottom-center{content:element(rodapePagina);vertical-align:top;padding-top:1mm}",
+        "@bottom-center{content:element(rodapePagina);vertical-align:top;padding-top:2mm}",
+    ),
 )
 
 
@@ -347,7 +354,14 @@ class _ConversorDocx:
         quebra.getparent().remove(quebra)
 
         capa = self.doc.sections[0]
-        for margem in ("top_margin", "bottom_margin", "left_margin", "right_margin", "header_distance", "footer_distance"):
+        for margem in (
+            "top_margin",
+            "bottom_margin",
+            "left_margin",
+            "right_margin",
+            "header_distance",
+            "footer_distance",
+        ):
             setattr(capa, margem, Mm(0))
         bordas = capa._sectPr.find(qn("w:pgBorders"))
         if bordas is not None:
@@ -497,7 +511,7 @@ class _ConversorDocx:
         self._inline(p, el, {"negrito": True, "destaque": "cinza", "sublinhado": True})
 
     def _titulo_de_area(self, el) -> None:
-        """"ÁREA DO DESENVOLVIMENTO: …" acima de cada quadro, centralizado e sem fundo."""
+        """ "ÁREA DO DESENVOLVIMENTO: …" acima de cada quadro, centralizado e sem fundo."""
         p = self._novo_paragrafo(alinhamento=WD_ALIGN_PARAGRAPH.CENTER)
         p.paragraph_format.keep_with_next = True
         p.paragraph_format.space_before = Pt(10)
@@ -676,9 +690,7 @@ class _ConversorDocx:
         linhas_html = el.xpath("./tr|./thead/tr|./tbody/tr")
         if not linhas_html:
             return None
-        num_colunas = max(
-            sum(int(c.get("colspan") or 1) for c in tr.xpath("./td|./th")) for tr in linhas_html
-        )
+        num_colunas = max(sum(int(c.get("colspan") or 1) for c in tr.xpath("./td|./th")) for tr in linhas_html)
         larguras = [float(x) for x in (el.get("data-larguras") or "").split(",") if x.strip()]
         if len(larguras) != num_colunas:
             larguras = [170 / num_colunas] * num_colunas
@@ -814,9 +826,7 @@ class _ConversorDocx:
         total = len(filhos)
 
         def prender_tabela_ao_que_vem_depois(tabela, depois) -> None:
-            if tabela is not None and depois is not None and (
-                "grafico" in _classes(depois) or depois.tag == "p"
-            ):
+            if tabela is not None and depois is not None and ("grafico" in _classes(depois) or depois.tag == "p"):
                 self._prender_ao_proximo(tabela)
 
         while i < total:

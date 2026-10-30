@@ -25,7 +25,13 @@ RELATORIO = RelatorioPorPdfs(
             "titulo": "Atenção",
             "texto": "Relatos de desatenção frequente.",
             "fontes": ["Anamnese"],
-            "grafico": {"titulo": "SNAP", "rotulos": ["Desatenção"], "valores": [7], "maximo": 9, "regua": "itens marcados"},
+            "grafico": {
+                "titulo": "SNAP",
+                "rotulos": ["Desatenção"],
+                "valores": [7],
+                "maximo": 9,
+                "regua": "itens marcados",
+            },
         }
     ],
     consideracoes_finais="Síntese.",
@@ -54,7 +60,9 @@ def _configurar_ia(client, headers):
 
 
 def _paciente(client, headers):
-    return client.post("/api/patients", json={"name": "Criança Teste", "birth_date": "2018-02-10"}, headers=headers).json()["id"]
+    return client.post(
+        "/api/patients", json={"name": "Criança Teste", "birth_date": "2018-02-10"}, headers=headers
+    ).json()["id"]
 
 
 def _enviar(client, headers, patient_id, arquivos, observacoes=None):
@@ -72,7 +80,9 @@ def test_gera_relatorio_a_partir_dos_pdfs(client, ia_falsa):
     _configurar_ia(client, headers)
     pid = _paciente(client, headers)
 
-    resposta = _enviar(client, headers, pid, [("mae.pdf", _pdf("Anamnese")), ("escola.pdf", _pdf("Escola"))], "Foco em atenção")
+    resposta = _enviar(
+        client, headers, pid, [("mae.pdf", _pdf("Anamnese")), ("escola.pdf", _pdf("Escola"))], "Foco em atenção"
+    )
 
     assert resposta.status_code == 201, resposta.text
     laudo = resposta.json()
@@ -121,7 +131,11 @@ def test_rejeita_arquivo_que_nao_e_pdf(client, ia_falsa):
 
 
 def test_sem_ia_configurada_da_erro_amigavel(client, monkeypatch):
-    monkeypatch.setattr(modulo, "resolve_ai_credentials", lambda _s: (_ for _ in ()).throw(modulo.AIConfigurationError("Configure a IA.")))
+    monkeypatch.setattr(
+        modulo,
+        "resolve_ai_credentials",
+        lambda _s: (_ for _ in ()).throw(modulo.AIConfigurationError("Configure a IA.")),
+    )
     headers = registrar_e_logar(client)
     pid = _paciente(client, headers)
     resposta = _enviar(client, headers, pid, [("a.pdf", _pdf("A"))])
@@ -165,7 +179,9 @@ def test_salva_edicoes_e_exporta_pdf_e_word_do_historico(client, ia_falsa):
     editado = RELATORIO.model_dump()
     editado["areas"][0]["texto"] = "Texto revisado pela psicóloga."
     resposta = client.put(
-        f"/api/reports/{laudo_id}/relatorio-ia", json={"relatorio": editado, "extras": {"cidade": "Gama"}}, headers=headers
+        f"/api/reports/{laudo_id}/relatorio-ia",
+        json={"relatorio": editado, "extras": {"cidade": "Gama"}},
+        headers=headers,
     )
     assert resposta.status_code == 200
     assert resposta.json()["computed_json"]["relatorio"]["areas"][0]["texto"] == "Texto revisado pela psicóloga."
@@ -180,7 +196,9 @@ def test_salva_edicoes_e_exporta_pdf_e_word_do_historico(client, ia_falsa):
 def test_rota_do_consolidado_antigo_nao_existe_mais(client):
     headers = registrar_e_logar(client)
     pid = _paciente(client, headers)
-    assert client.post(f"/api/patients/{pid}/consolidated-pdf", json={"report_ids": []}, headers=headers).status_code in (404, 405)
+    assert client.post(
+        f"/api/patients/{pid}/consolidated-pdf", json={"report_ids": []}, headers=headers
+    ).status_code in (404, 405)
 
 
 # Como os PDFs chegam ao modelo (inteiros, imagens ou texto) agora é

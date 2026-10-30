@@ -56,7 +56,9 @@ def test_tipo_do_arquivo_confere_o_conteudo():
 
 def _configurar_ia(client, headers):
     client.put(
-        "/api/settings/ai", json={"provider": "anthropic", "model": "claude-sonnet-5", "api_key": "chave-de-teste-1234"}, headers=headers
+        "/api/settings/ai",
+        json={"provider": "anthropic", "model": "claude-sonnet-5", "api_key": "chave-de-teste-1234"},
+        headers=headers,
     )
 
 
@@ -109,7 +111,13 @@ def test_foto_vira_sugestao_so_dos_campos_pendentes_da_secao(client, laudo, ia_d
     pendencias = client.get(f"/api/reports/{rid}/pendencias", headers=headers).json()
     parto = next(i for i in _grupo(pendencias, "gestacao")["itens"] if i["chave"] == "parto")
     assert parto["sugestoes"] == [
-        {"campo_id": "parto", "valor": "Cesáreo", "trecho": "parto cesárea", "anexo_id": anexo["id"], "anexo_nome": "ficha_anamnese.jpg"}
+        {
+            "campo_id": "parto",
+            "valor": "Cesáreo",
+            "trecho": "parto cesárea",
+            "anexo_id": anexo["id"],
+            "anexo_nome": "ficha_anamnese.jpg",
+        }
     ]
     # Nada entra no laudo sem confirmação.
     laudo_atual = client.get(f"/api/reports/{rid}", headers=headers).json()
@@ -124,7 +132,12 @@ def test_falha_da_ia_vira_mensagem_no_anexo(client, laudo, monkeypatch):  # noqa
         pass
 
     monkeypatch.setattr(modulo, "ler_anexo", lambda **kw: (_ for _ in ()).throw(Timeout("Request timed out.")))
-    client.post(f"/api/patients/{pid}/anexos", headers=headers, files={"arquivo": ("ficha.jpg", _foto(), "image/jpeg")}, data={"report_id": rid})
+    client.post(
+        f"/api/patients/{pid}/anexos",
+        headers=headers,
+        files={"arquivo": ("ficha.jpg", _foto(), "image/jpeg")},
+        data={"report_id": rid},
+    )
     [anexo] = _esperar(client, headers, pid, rid)
     assert anexo["status"] == "erro" and "'ficha.jpg' (o provedor de IA demorou demais para responder)" in anexo["erro"]
 
@@ -133,7 +146,10 @@ def test_rejeita_arquivo_que_nao_e_foto_nem_pdf(client, laudo, ia_de_anexo):  # 
     headers, pid, rid = laudo
     _configurar_ia(client, headers)
     resposta = client.post(
-        f"/api/patients/{pid}/anexos", headers=headers, files={"arquivo": ("virus.exe", b"MZ\x90", "application/octet-stream")}, data={"report_id": rid}
+        f"/api/patients/{pid}/anexos",
+        headers=headers,
+        files={"arquivo": ("virus.exe", b"MZ\x90", "application/octet-stream")},
+        data={"report_id": rid},
     )
     assert resposta.status_code == 400
     assert not ia_de_anexo
@@ -142,7 +158,12 @@ def test_rejeita_arquivo_que_nao_e_foto_nem_pdf(client, laudo, ia_de_anexo):  # 
 def test_outra_psicologa_nao_acessa_os_anexos(client, laudo, ia_de_anexo):  # noqa: F811
     headers, pid, rid = laudo
     _configurar_ia(client, headers)
-    client.post(f"/api/patients/{pid}/anexos", headers=headers, files={"arquivo": ("ficha.jpg", _foto(), "image/jpeg")}, data={"report_id": rid})
+    client.post(
+        f"/api/patients/{pid}/anexos",
+        headers=headers,
+        files={"arquivo": ("ficha.jpg", _foto(), "image/jpeg")},
+        data={"report_id": rid},
+    )
     [anexo] = _esperar(client, headers, pid, rid)
 
     outra = registrar_e_logar(client, email="outra@exemplo.com")
@@ -151,7 +172,9 @@ def test_outra_psicologa_nao_acessa_os_anexos(client, laudo, ia_de_anexo):  # no
     assert client.get(base, headers=outra).status_code == 404
     assert client.get(f"{base}/{anexo['id']}/arquivo", headers=outra).status_code == 404
     assert client.delete(f"{base}/{anexo['id']}", headers=outra).status_code == 404
-    envio = client.post(base, headers=outra, files={"arquivo": ("f.jpg", _foto(), "image/jpeg")}, data={"report_id": rid})
+    envio = client.post(
+        base, headers=outra, files={"arquivo": ("f.jpg", _foto(), "image/jpeg")}, data={"report_id": rid}
+    )
     assert envio.status_code == 404
 
     # A dona continua acessando e pode apagar.

@@ -3,9 +3,7 @@ from tests.test_templates import TEMPLATE_VALIDO
 
 
 def _criar_paciente(client, headers, name="Safira Kerolainy"):
-    response = client.post(
-        "/api/patients", json={"name": name, "birth_date": "2020-05-10"}, headers=headers
-    )
+    response = client.post("/api/patients", json={"name": name, "birth_date": "2020-05-10"}, headers=headers)
     return response.json()["id"]
 
 
@@ -138,16 +136,22 @@ def test_lista_de_laudos_e_autosave_sao_leves(client):
     final; o autosave sem fotos mantém as fotos já salvas."""
     headers = registrar_e_logar(client)
     template = client.post("/api/templates/custom-form-avaliacao", headers=headers).json()
-    pid = client.post("/api/patients", json={"name": "Criança", "birth_date": "2019-01-01"}, headers=headers).json()["id"]
+    pid = client.post("/api/patients", json={"name": "Criança", "birth_date": "2019-01-01"}, headers=headers).json()[
+        "id"
+    ]
     fotos = [{"nome": "f.jpg", "src": "data:image/jpeg;base64," + "A" * 5000}]
     laudo = client.post(
         f"/api/patients/{pid}/reports",
         json={"template_id": template["id"], "answers": {"nomePaciente": "Criança", "__fotosPacienteDados": fotos}},
         headers=headers,
     ).json()
-    client.put(f"/api/reports/{laudo['id']}/text", json={"generated_text": "<html>" + "x" * 5000 + "</html>"}, headers=headers)
+    client.put(
+        f"/api/reports/{laudo['id']}/text", json={"generated_text": "<html>" + "x" * 5000 + "</html>"}, headers=headers
+    )
 
-    resposta = client.put(f"/api/reports/{laudo['id']}/answers", json={"answers": {"nomePaciente": "Criança Atualizada"}}, headers=headers)
+    resposta = client.put(
+        f"/api/reports/{laudo['id']}/answers", json={"answers": {"nomePaciente": "Criança Atualizada"}}, headers=headers
+    )
     assert resposta.status_code == 200
     assert "answers_json" not in resposta.json() and "generated_text" not in resposta.json()
 
@@ -162,30 +166,35 @@ def test_lista_de_laudos_e_autosave_sao_leves(client):
 
     # Enviar a chave (ex.: lista vazia) substitui as fotos.
     client.put(f"/api/reports/{laudo['id']}/answers", json={"answers": {"__fotosPacienteDados": []}}, headers=headers)
-    assert client.get(f"/api/reports/{laudo['id']}", headers=headers).json()["answers_json"]["__fotosPacienteDados"] == []
+    assert (
+        client.get(f"/api/reports/{laudo['id']}", headers=headers).json()["answers_json"]["__fotosPacienteDados"] == []
+    )
 
 
 def test_resumo_individual_nao_transfere_documento_e_exige_proprietario(client):
     from uuid import UUID
     from app.models.report import Report
+
     headers = registrar_e_logar(client)
     pid = _criar_paciente(client, headers)
     tid = _criar_template(client, headers)
-    rid = client.post(f'/api/patients/{pid}/reports', json={'template_id': tid, 'answers': RESPOSTAS_VALIDAS}, headers=headers).json()['id']
+    rid = client.post(
+        f"/api/patients/{pid}/reports", json={"template_id": tid, "answers": RESPOSTAS_VALIDAS}, headers=headers
+    ).json()["id"]
     with client.db_session_factory() as db:
         report = db.get(Report, UUID(rid))
-        report.answers_json = {'__fotosPacienteDados': ['foto-pesada']}
-        report.generated_text = '<html>documento-com-imagens</html>'
-        report.computed_json = {'origem': 'ia_pdf', 'catalogo': {'campos': ['campo']}}
+        report.answers_json = {"__fotosPacienteDados": ["foto-pesada"]}
+        report.generated_text = "<html>documento-com-imagens</html>"
+        report.computed_json = {"origem": "ia_pdf", "catalogo": {"campos": ["campo"]}}
         db.commit()
-    resposta = client.get(f'/api/reports/{rid}/resumo', headers=headers)
+    resposta = client.get(f"/api/reports/{rid}/resumo", headers=headers)
     assert resposta.status_code == 200
-    assert resposta.json()['id'] == rid
-    assert resposta.json()['computed_json'] == {'origem': 'ia_pdf'}
-    assert 'answers_json' not in resposta.json()
-    assert 'generated_text' not in resposta.json()
-    completo = client.get(f'/api/reports/{rid}', headers=headers).json()
-    assert completo['generated_text'] == '<html>documento-com-imagens</html>'
-    outra = registrar_e_logar(client, email='outra@example.com')
-    assert client.get(f'/api/reports/{rid}/resumo', headers=outra).status_code == 404
-    assert client.get(f'/api/reports/{rid}/resumo').status_code == 401
+    assert resposta.json()["id"] == rid
+    assert resposta.json()["computed_json"] == {"origem": "ia_pdf"}
+    assert "answers_json" not in resposta.json()
+    assert "generated_text" not in resposta.json()
+    completo = client.get(f"/api/reports/{rid}", headers=headers).json()
+    assert completo["generated_text"] == "<html>documento-com-imagens</html>"
+    outra = registrar_e_logar(client, email="outra@example.com")
+    assert client.get(f"/api/reports/{rid}/resumo", headers=outra).status_code == 404
+    assert client.get(f"/api/reports/{rid}/resumo").status_code == 401

@@ -70,13 +70,17 @@ def test_producao_recusa_jwt_secret_fraco_ou_de_exemplo():
 def test_cadastro_publico_fica_desligado_em_producao_por_padrao():
     forte = "b" * 64
     assert Settings(env="production", jwt_secret=forte, _env_file=None).cadastro_publico is False
-    assert Settings(env="production", jwt_secret=forte, allow_registration=True, _env_file=None).cadastro_publico is True
+    assert (
+        Settings(env="production", jwt_secret=forte, allow_registration=True, _env_file=None).cadastro_publico is True
+    )
     assert Settings(env="development", _env_file=None).cadastro_publico is True
 
 
 def test_register_respeita_cadastro_desligado(client, monkeypatch):
     monkeypatch.setattr("app.api.auth.settings.allow_registration", False)
-    resposta = client.post("/api/auth/register", json={"name": "X", "email": "x@example.com", "password": "senhaSegura123"})
+    resposta = client.post(
+        "/api/auth/register", json={"name": "X", "email": "x@example.com", "password": "senhaSegura123"}
+    )
     assert resposta.status_code == 403
 
 
@@ -107,7 +111,9 @@ def test_upload_de_foto_grande_demais_e_recusado(client, tmp_path, monkeypatch):
     monkeypatch.setattr(uploads.ler_upload, "__defaults__", (10,))
     headers = registrar_e_logar(client)
     pid = client.post("/api/patients", json={"name": "P", "birth_date": "2020-01-01"}, headers=headers).json()["id"]
-    resposta = client.post(f"/api/patients/{pid}/photos", headers=headers, files={"file": ("f.jpg", b"x" * 11, "image/jpeg")})
+    resposta = client.post(
+        f"/api/patients/{pid}/photos", headers=headers, files={"file": ("f.jpg", b"x" * 11, "image/jpeg")}
+    )
     assert resposta.status_code == 413
 
 

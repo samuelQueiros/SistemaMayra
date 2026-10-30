@@ -18,12 +18,28 @@ def usar_storage_temporario(tmp_path, monkeypatch):
 
 CATALOGO = {
     "campos": [
-        {"id": "parto", "secao": "2. Anamnese Inicial", "rotulo": "Parto", "tipo": "opcao",
-         "opcoes": [{"valor": "Normal", "rotulo": "Normal"}, {"valor": "Cesáreo", "rotulo": "Cesáreo"}]},
-        {"id": "complicacaoParto", "secao": "2. Anamnese Inicial", "rotulo": "Houve Complicação No Parto?", "tipo": "opcao",
-         "opcoes": [{"valor": "Sim", "rotulo": "Sim"}, {"valor": "Não", "rotulo": "Não"}]},
-        {"id": "cars_0", "secao": "11. Pontuações ATA E CARS", "grupo": "CARS", "rotulo": "Relacionamento", "tipo": "opcao",
-         "opcoes": [{"valor": "1", "rotulo": "Normal"}, {"valor": "2", "rotulo": "Leve"}]},
+        {
+            "id": "parto",
+            "secao": "2. Anamnese Inicial",
+            "rotulo": "Parto",
+            "tipo": "opcao",
+            "opcoes": [{"valor": "Normal", "rotulo": "Normal"}, {"valor": "Cesáreo", "rotulo": "Cesáreo"}],
+        },
+        {
+            "id": "complicacaoParto",
+            "secao": "2. Anamnese Inicial",
+            "rotulo": "Houve Complicação No Parto?",
+            "tipo": "opcao",
+            "opcoes": [{"valor": "Sim", "rotulo": "Sim"}, {"valor": "Não", "rotulo": "Não"}],
+        },
+        {
+            "id": "cars_0",
+            "secao": "11. Pontuações ATA E CARS",
+            "grupo": "CARS",
+            "rotulo": "Relacionamento",
+            "tipo": "opcao",
+            "opcoes": [{"valor": "1", "rotulo": "Normal"}, {"valor": "2", "rotulo": "Leve"}],
+        },
         {"id": "dom_atencao", "secao": "17. Domínios", "rotulo": "Atenção (%)", "tipo": "numero", "min": 0, "max": 100},
         {"id": "hip_tdah", "secao": "9. Hipóteses", "rotulo": "TDAH", "tipo": "marcar"},
         {"id": "queixaFamiliar", "secao": "4. Queixas", "rotulo": "Queixas Familiares", "tipo": "texto"},
@@ -74,7 +90,9 @@ def ia_falsa(monkeypatch):
     def fake(**kwargs):
         chamadas.append(kwargs)
         documento = DocumentoExtraido(tipo="formulario", titulo="Anamnese", arquivo="anamnese.pdf", respostas=[])
-        return ResultadoDaIA(protocolo=PROTOCOLO, documentos=[documento], tempos={"extracao_s": 1.0, "especialistas_s": 2.0})
+        return ResultadoDaIA(
+            protocolo=PROTOCOLO, documentos=[documento], tempos={"extracao_s": 1.0, "especialistas_s": 2.0}
+        )
 
     monkeypatch.setattr(modulo, "preencher_protocolo", fake)
     return chamadas
@@ -91,7 +109,9 @@ def _preparar(client):
         json={"provider": "anthropic", "model": "claude-sonnet-5", "api_key": "chave-de-teste-1234"},
         headers=headers,
     )
-    pid = client.post("/api/patients", json={"name": "Criança Teste", "birth_date": "2019-02-10", "sex": "Masculino"}, headers=headers).json()["id"]
+    pid = client.post(
+        "/api/patients", json={"name": "Criança Teste", "birth_date": "2019-02-10", "sex": "Masculino"}, headers=headers
+    ).json()["id"]
     return headers, pid
 
 
@@ -99,8 +119,16 @@ def _enviar(client, headers, pid, catalogo=None, arquivos=None):
     return client.post(
         f"/api/patients/{pid}/laudo-ia",
         headers=headers,
-        files=[("arquivos", (n, c, "application/pdf")) for n, c in (arquivos or [("anamnese.pdf", _pdf("Anamnese")), ("cars.pdf", _pdf("CARS"))])],
-        data={"data_relatorio": "2026-10-15", "cidade": "Gama – DF", "catalogo": catalogo if catalogo is not None else json.dumps(CATALOGO), "observacoes": "Foco em atenção"},
+        files=[
+            ("arquivos", (n, c, "application/pdf"))
+            for n, c in (arquivos or [("anamnese.pdf", _pdf("Anamnese")), ("cars.pdf", _pdf("CARS"))])
+        ],
+        data={
+            "data_relatorio": "2026-10-15",
+            "cidade": "Gama – DF",
+            "catalogo": catalogo if catalogo is not None else json.dumps(CATALOGO),
+            "observacoes": "Foco em atenção",
+        },
     )
 
 
@@ -123,8 +151,7 @@ def test_cota_diaria_retorna_orientacao_e_nao_cria_laudo(client, monkeypatch):
 
     def falhar(**kwargs):
         raise RuntimeError(
-            "429 RESOURCE_EXHAUSTED GenerateRequestsPerDayPerProjectPerModel-FreeTier "
-            "quotaValue: 20 retryDelay: 77036s"
+            "429 RESOURCE_EXHAUSTED GenerateRequestsPerDayPerProjectPerModel-FreeTier quotaValue: 20 retryDelay: 77036s"
         )
 
     monkeypatch.setattr(modulo, "preencher_protocolo", falhar)
@@ -199,7 +226,16 @@ def test_catalogo_real_do_formulario_e_aceito():
     dados = json.loads((Path(__file__).parent / "fixtures_catalogo_protocolo.json").read_text(encoding="utf-8"))
     catalogo = CatalogoDoProtocolo.model_validate(dados)
     ids = {c.id for c in catalogo.campos}
-    assert {"parto", "complicacaoParto", "cars_0", "ata_item_0", "snap_0", "hip_tdah", "anoEscolar", "hab_status_0"} <= ids
+    assert {
+        "parto",
+        "complicacaoParto",
+        "cars_0",
+        "ata_item_0",
+        "snap_0",
+        "hip_tdah",
+        "anoEscolar",
+        "hab_status_0",
+    } <= ids
     assert any(i.startswith("portage_") for i in ids)
     assert "estudoCaso" not in ids and "nomePaciente" not in ids
     texto = formatar_catalogo(catalogo)
@@ -228,11 +264,13 @@ def test_dados_confirmados_antes_preenchem_o_que_a_ia_deixou_vazio(client, ia_fa
     headers, pid = _preparar(client)
     client.patch(
         f"/api/patients/{pid}/dados-complementares",
-        json={"campos": {
-            "complicacaoParto": {"valor": "Não", "situacao": "preenchido"},  # a IA não preencheu (valor inválido)
-            "parto": {"valor": "Normal", "situacao": "preenchido"},  # a IA leu "Cesáreo" no PDF: vale o PDF
-            "queixaFamiliar": {"situacao": "nao_informado"},
-        }},
+        json={
+            "campos": {
+                "complicacaoParto": {"valor": "Não", "situacao": "preenchido"},  # a IA não preencheu (valor inválido)
+                "parto": {"valor": "Normal", "situacao": "preenchido"},  # a IA leu "Cesáreo" no PDF: vale o PDF
+                "queixaFamiliar": {"situacao": "nao_informado"},
+            }
+        },
         headers=headers,
     )
     andamento = _concluir(client, headers, _enviar(client, headers, pid))
@@ -242,12 +280,23 @@ def test_dados_confirmados_antes_preenchem_o_que_a_ia_deixou_vazio(client, ia_fa
     assert answers["queixaFamiliar"] == "Esquece tarefas."  # dispensado nunca apaga o que a IA leu
 
 
-@pytest.mark.parametrize('metadados', [{}, {'data_relatorio': 'inválida'}, {'data_relatorio': '2026-02-30'}, {'data_relatorio': '2026-10-15', 'cidade': 'Cidade inválida'}])
+@pytest.mark.parametrize(
+    "metadados",
+    [
+        {},
+        {"data_relatorio": "inválida"},
+        {"data_relatorio": "2026-02-30"},
+        {"data_relatorio": "2026-10-15", "cidade": "Cidade inválida"},
+    ],
+)
 def test_exige_data_valida_e_cidade_do_sistema(client, metadados):
     headers, pid = _preparar(client)
-    resposta = client.post(f'/api/patients/{pid}/laudo-ia', headers=headers,
-        files=[('arquivos', ('teste.pdf', b'%PDF-1.4', 'application/pdf'))],
-        data={'catalogo': json.dumps(CATALOGO), **metadados})
+    resposta = client.post(
+        f"/api/patients/{pid}/laudo-ia",
+        headers=headers,
+        files=[("arquivos", ("teste.pdf", b"%PDF-1.4", "application/pdf"))],
+        data={"catalogo": json.dumps(CATALOGO), **metadados},
+    )
     assert resposta.status_code == 422
 
 
@@ -268,10 +317,27 @@ def test_escolhas_da_profissional_ata_calculada_e_metodos(client, monkeypatch):
         {"id": "hip_tea", "secao": "9. Hipóteses", "rotulo": "TEA", "tipo": "marcar"},
         {"id": "hip_tea_6a02_0", "secao": "9. Hipóteses", "rotulo": "TEA 6A02.0", "tipo": "marcar"},
         {"id": "enc_fonoaudiologia", "secao": "19. Encaminhamentos", "rotulo": "Fonoaudiologia", "tipo": "marcar"},
-        *({"id": f"ata_item_{i}", "secao": "11. Pontuações ATA E CARS", "rotulo": f"Item {i}", "tipo": "opcao",
-           "opcoes": [{"valor": v, "rotulo": v} for v in "012"]} for i in range(22)),
-        *({"id": f"ata_perc_{i}", "secao": "11. Pontuações ATA E CARS", "rotulo": f"% {i}", "tipo": "numero"} for i in range(22)),
-        {"id": "snap_0", "secao": "14. SNAP-IV", "rotulo": "Item 1", "tipo": "opcao", "opcoes": [{"valor": "0", "rotulo": "0"}]},
+        *(
+            {
+                "id": f"ata_item_{i}",
+                "secao": "11. Pontuações ATA E CARS",
+                "rotulo": f"Item {i}",
+                "tipo": "opcao",
+                "opcoes": [{"valor": v, "rotulo": v} for v in "012"],
+            }
+            for i in range(22)
+        ),
+        *(
+            {"id": f"ata_perc_{i}", "secao": "11. Pontuações ATA E CARS", "rotulo": f"% {i}", "tipo": "numero"}
+            for i in range(22)
+        ),
+        {
+            "id": "snap_0",
+            "secao": "14. SNAP-IV",
+            "rotulo": "Item 1",
+            "tipo": "opcao",
+            "opcoes": [{"valor": "0", "rotulo": "0"}],
+        },
     ]
     headers, pid = _preparar(client)
     resposta = client.post(
@@ -294,28 +360,44 @@ def test_escolhas_da_profissional_ata_calculada_e_metodos(client, monkeypatch):
     assert "hip_inexistente" not in answers and answers.get("parto") == "Cesáreo"  # "parto" não vira caixa marcada
     assert answers["ata_item_17"] == "2" and answers["ata_perc_0"] == "14"
     assert "ata" not in answers  # o total fica com o formulário (campo fora do catálogo)
-    assert set(answers["__metodosExcluidos"]) == {"snap", "tod", "portage", "mchat"}  # ATA (PDF) e CARS (respondida) ficam
+    assert set(answers["__metodosExcluidos"]) == {
+        "snap",
+        "tod",
+        "portage",
+        "mchat",
+    }  # ATA (PDF) e CARS (respondida) ficam
 
 
 def test_ia_nao_recebe_o_que_a_profissional_escolhe():
     from app.services.laudo_ia import dividir_catalogo
 
     catalogo = CatalogoDoProtocolo.model_validate(
-        {"campos": CATALOGO["campos"] + [
-            {"id": "enc_neuropediatra", "secao": "19. Encaminhamentos", "rotulo": "Neuropediatra", "tipo": "marcar"},
-            {"id": "hab_status_0", "secao": "8. Habilidades Acadêmicas", "rotulo": "Hab 0", "tipo": "texto"},
-            {"id": "hab_obs_0", "secao": "8. Habilidades Acadêmicas", "rotulo": "Obs 0", "tipo": "texto"},
-            {"id": "anoEscolar", "secao": "1. Identificação", "rotulo": "Ano Escolar", "tipo": "texto"},
-            {"id": "desfralde", "secao": "3. Histórico", "rotulo": "Desfralde", "tipo": "texto"},
-            {"id": "desfraldeAno", "secao": "3. Histórico", "rotulo": "Idade", "tipo": "texto"},
-            {"id": "desfraldeMes", "secao": "3. Histórico", "rotulo": "Idade", "tipo": "texto"},
-            {"id": "andouAno", "secao": "3. Histórico", "rotulo": "Andou", "tipo": "texto"},
-        ]}
+        {
+            "campos": CATALOGO["campos"]
+            + [
+                {
+                    "id": "enc_neuropediatra",
+                    "secao": "19. Encaminhamentos",
+                    "rotulo": "Neuropediatra",
+                    "tipo": "marcar",
+                },
+                {"id": "hab_status_0", "secao": "8. Habilidades Acadêmicas", "rotulo": "Hab 0", "tipo": "texto"},
+                {"id": "hab_obs_0", "secao": "8. Habilidades Acadêmicas", "rotulo": "Obs 0", "tipo": "texto"},
+                {"id": "anoEscolar", "secao": "1. Identificação", "rotulo": "Ano Escolar", "tipo": "texto"},
+                {"id": "desfralde", "secao": "3. Histórico", "rotulo": "Desfralde", "tipo": "texto"},
+                {"id": "desfraldeAno", "secao": "3. Histórico", "rotulo": "Idade", "tipo": "texto"},
+                {"id": "desfraldeMes", "secao": "3. Histórico", "rotulo": "Idade", "tipo": "texto"},
+                {"id": "andouAno", "secao": "3. Histórico", "rotulo": "Andou", "tipo": "texto"},
+            ]
+        }
     )
     ids = {c.id for parte in dividir_catalogo(catalogo).values() for c in parte.campos}
     # A IA escreve a observação de cada habilidade e os demais marcos.
     assert {"parto", "cars_0", "hab_obs_0", "andouAno"} <= ids
-    assert not {"hip_tdah", "enc_neuropediatra", "hab_status_0", "anoEscolar", "desfralde", "desfraldeAno", "desfraldeMes"} & ids
+    assert (
+        not {"hip_tdah", "enc_neuropediatra", "hab_status_0", "anoEscolar", "desfralde", "desfraldeAno", "desfraldeMes"}
+        & ids
+    )
 
 
 def test_desfralde_ano_escolar_e_habilidades_escolhidos_pela_profissional(client, monkeypatch):
@@ -323,22 +405,62 @@ def test_desfralde_ano_escolar_e_habilidades_escolhidos_pela_profissional(client
 
     def fake(**kwargs):
         chamadas.append(kwargs)
-        protocolo = ProtocoloPorIA(estudo_de_caso="Estudo.", lacunas=[], campos=[
-            {"id": "parto", "valor": "Cesáreo"},
-            {"id": "desfralde", "valor": "Em Processo"},  # a IA não decide: prevalece a escolha
-        ])
+        protocolo = ProtocoloPorIA(
+            estudo_de_caso="Estudo.",
+            lacunas=[],
+            campos=[
+                {"id": "parto", "valor": "Cesáreo"},
+                {"id": "desfralde", "valor": "Em Processo"},  # a IA não decide: prevalece a escolha
+            ],
+        )
         return ResultadoDaIA(protocolo=protocolo, documentos=[], tempos={})
 
     monkeypatch.setattr(modulo, "preencher_protocolo", fake)
     opcoes = lambda lista: [{"valor": v, "rotulo": v} for v in lista]  # noqa: E731
     catalogo = json.loads(json.dumps(CATALOGO))
     catalogo["campos"] += [
-        {"id": "desfralde", "secao": "3. Histórico", "rotulo": "Desfralde", "tipo": "opcao", "opcoes": opcoes(["Controle Total", "Em Processo"])},
-        {"id": "desfraldeAno", "secao": "3. Histórico", "rotulo": "Idade", "tipo": "opcao", "opcoes": opcoes(["2 anos", "3 anos"])},
-        {"id": "desfraldeMes", "secao": "3. Histórico", "rotulo": "Idade", "tipo": "opcao", "opcoes": opcoes(["0 meses", "6 meses"])},
-        {"id": "anoEscolar", "secao": "1. Identificação", "rotulo": "Ano Escolar", "tipo": "opcao", "opcoes": opcoes(["1º Ano", "2º Ano"])},
-        {"id": "hab_status_0", "secao": "8. Habilidades Acadêmicas", "rotulo": "Hab 0", "tipo": "opcao", "opcoes": opcoes(["Satisfatório", "Em Desenvolvimento"])},
-        {"id": "hab_status_1", "secao": "8. Habilidades Acadêmicas", "rotulo": "Hab 1", "tipo": "opcao", "opcoes": opcoes(["Satisfatório", "Em Desenvolvimento"])},
+        {
+            "id": "desfralde",
+            "secao": "3. Histórico",
+            "rotulo": "Desfralde",
+            "tipo": "opcao",
+            "opcoes": opcoes(["Controle Total", "Em Processo"]),
+        },
+        {
+            "id": "desfraldeAno",
+            "secao": "3. Histórico",
+            "rotulo": "Idade",
+            "tipo": "opcao",
+            "opcoes": opcoes(["2 anos", "3 anos"]),
+        },
+        {
+            "id": "desfraldeMes",
+            "secao": "3. Histórico",
+            "rotulo": "Idade",
+            "tipo": "opcao",
+            "opcoes": opcoes(["0 meses", "6 meses"]),
+        },
+        {
+            "id": "anoEscolar",
+            "secao": "1. Identificação",
+            "rotulo": "Ano Escolar",
+            "tipo": "opcao",
+            "opcoes": opcoes(["1º Ano", "2º Ano"]),
+        },
+        {
+            "id": "hab_status_0",
+            "secao": "8. Habilidades Acadêmicas",
+            "rotulo": "Hab 0",
+            "tipo": "opcao",
+            "opcoes": opcoes(["Satisfatório", "Em Desenvolvimento"]),
+        },
+        {
+            "id": "hab_status_1",
+            "secao": "8. Habilidades Acadêmicas",
+            "rotulo": "Hab 1",
+            "tipo": "opcao",
+            "opcoes": opcoes(["Satisfatório", "Em Desenvolvimento"]),
+        },
     ]
     catalogo["contexto"] = "Habilidades acadêmicas:\n- 2º Ano: 0=Leitura De Textos Curtos; 1=Escrita De Frases"
     headers, pid = _preparar(client)
@@ -350,20 +472,35 @@ def test_desfralde_ano_escolar_e_habilidades_escolhidos_pela_profissional(client
             "data_relatorio": "2026-10-15",
             "catalogo": json.dumps(catalogo),
             "observacoes": "Foco em atenção",
-            "dados_profissional": json.dumps({
-                "desfralde": "Controle Total", "desfraldeAno": "3 anos", "desfraldeMes": "6 meses",
-                "anoEscolar": "2º Ano", "hab_status_0": "Em Desenvolvimento", "hab_status_1": "Satisfatório",
-                "hab_status_9": "Satisfatório",  # fora do catálogo
-                "desfraldeMes_x": "6 meses", "parto": "Normal",  # não é escolha da profissional
-                "anoEscolar_invalido": 3,
-            }),
+            "dados_profissional": json.dumps(
+                {
+                    "desfralde": "Controle Total",
+                    "desfraldeAno": "3 anos",
+                    "desfraldeMes": "6 meses",
+                    "anoEscolar": "2º Ano",
+                    "hab_status_0": "Em Desenvolvimento",
+                    "hab_status_1": "Satisfatório",
+                    "hab_status_9": "Satisfatório",  # fora do catálogo
+                    "desfraldeMes_x": "6 meses",
+                    "parto": "Normal",  # não é escolha da profissional
+                    "anoEscolar_invalido": 3,
+                }
+            ),
         },
     )
     andamento = _concluir(client, headers, resposta)
     assert andamento["status"] == "concluido", andamento
     answers = client.get(f"/api/reports/{andamento['report_id']}", headers=headers).json()["answers_json"]
-    assert (answers["desfralde"], answers["desfraldeAno"], answers["desfraldeMes"]) == ("Controle Total", "3 anos", "6 meses")
-    assert (answers["anoEscolar"], answers["hab_status_0"], answers["hab_status_1"]) == ("2º Ano", "Em Desenvolvimento", "Satisfatório")
+    assert (answers["desfralde"], answers["desfraldeAno"], answers["desfraldeMes"]) == (
+        "Controle Total",
+        "3 anos",
+        "6 meses",
+    )
+    assert (answers["anoEscolar"], answers["hab_status_0"], answers["hab_status_1"]) == (
+        "2º Ano",
+        "Em Desenvolvimento",
+        "Satisfatório",
+    )
     assert answers["parto"] == "Cesáreo" and "hab_status_9" not in answers
     # A IA recebe as escolhas como dados confirmados, junto das observações.
     observacoes = chamadas[0]["observacoes"]
@@ -391,27 +528,40 @@ def _catalogo_de_idades() -> CatalogoDoProtocolo:
     anos = ["Antes de 1 ano", "1 ano", "2 anos", "3 anos", "4 anos", "5 anos", "6 anos ou mais", "Não informado"]
     meses = ["0 meses", "1 mês"] + [f"{n} meses" for n in range(2, 12)] + ["Não informado"]
     opcoes = lambda lista: [{"valor": v, "rotulo": v} for v in lista]  # noqa: E731
-    return CatalogoDoProtocolo.model_validate({"campos": [
-        {"id": "desfralde", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(["Controle Total", "Em Processo"])},
-        {"id": "desfraldeAno", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(anos)},
-        {"id": "desfraldeMes", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(meses)},
-        {"id": "andouAno", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(anos)},
-        {"id": "andouMes", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(meses)},
-        {"id": "falouAno", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(anos)},
-        {"id": "falouMes", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(meses)},
-    ]})
+    return CatalogoDoProtocolo.model_validate(
+        {
+            "campos": [
+                {
+                    "id": "desfralde",
+                    "secao": "3. Histórico",
+                    "tipo": "opcao",
+                    "opcoes": opcoes(["Controle Total", "Em Processo"]),
+                },
+                {"id": "desfraldeAno", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(anos)},
+                {"id": "desfraldeMes", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(meses)},
+                {"id": "andouAno", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(anos)},
+                {"id": "andouMes", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(meses)},
+                {"id": "falouAno", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(anos)},
+                {"id": "falouMes", "secao": "3. Histórico", "tipo": "opcao", "opcoes": opcoes(meses)},
+            ]
+        }
+    )
 
 
 def test_idade_inteira_no_campo_de_anos_e_dividida_em_ano_e_mes():
     from app.services.ai.schemas import ProtocoloPorIA
 
-    protocolo = ProtocoloPorIA(estudo_de_caso="", lacunas=[], campos=[
-        {"id": "desfralde", "valor": "Controle Total"},
-        {"id": "desfraldeAno", "valor": "2 anos e 6 meses"},
-        {"id": "andouAno", "valor": "18 meses"},
-        {"id": "falouAno", "valor": "com 3 anos e meio"},
-        {"id": "falouMes", "valor": "4 meses"},  # o mês preenchido pela IA prevalece
-    ])
+    protocolo = ProtocoloPorIA(
+        estudo_de_caso="",
+        lacunas=[],
+        campos=[
+            {"id": "desfralde", "valor": "Controle Total"},
+            {"id": "desfraldeAno", "valor": "2 anos e 6 meses"},
+            {"id": "andouAno", "valor": "18 meses"},
+            {"id": "falouAno", "valor": "com 3 anos e meio"},
+            {"id": "falouMes", "valor": "4 meses"},  # o mês preenchido pela IA prevalece
+        ],
+    )
     answers, descartados = respostas_para_answers(protocolo, _catalogo_de_idades())
     assert answers["desfralde"] == "Controle Total"
     assert (answers["desfraldeAno"], answers["desfraldeMes"]) == ("2 anos", "6 meses")

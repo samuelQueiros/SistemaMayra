@@ -39,7 +39,7 @@ TAMANHO_MAXIMO_PDF = 15 * 1024 * 1024
 
 
 def _template_interno(db: Session, current: Psychologist) -> ReportTemplate:
-    """"Porta-laudo" fixo por psicóloga (mesma ideia do custom_form do
+    """ "Porta-laudo" fixo por psicóloga (mesma ideia do custom_form do
     protocolo padrão). Idempotente."""
     for template in db.query(ReportTemplate).filter(ReportTemplate.owner_id == current.id).all():
         if template.schema_json.get("rule_type") == RULE_TYPE:
@@ -89,7 +89,8 @@ def ler_pdfs_enviados(arquivos: list[UploadFile], maximo: int) -> list[dict]:
             texto = extrair_texto_pdf(conteudo)
         except DocumentTextError as exc:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Não foi possível ler '{nome}'. O PDF pode estar corrompido."
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Não foi possível ler '{nome}'. O PDF pode estar corrompido.",
             ) from exc
         pdfs.append({"nome": nome, "conteudo": conteudo, "texto": texto})
     return pdfs
@@ -137,8 +138,8 @@ def criar_relatorio_por_pdfs(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=(
                 "Não foi possível gerar o relatório com o provedor de IA configurado "
-                f"({provider}/{model}). Verifique a chave e o modelo em \"Configurações → "
-                f"Inteligência Artificial\" (o modelo precisa aceitar PDFs). Detalhe técnico: {exc}"
+                f'({provider}/{model}). Verifique a chave e o modelo em "Configurações → '
+                f'Inteligência Artificial" (o modelo precisa aceitar PDFs). Detalhe técnico: {exc}'
             ),
         ) from exc
 
@@ -158,7 +159,11 @@ def criar_relatorio_por_pdfs(
 
 def _laudo_ia_do_psicologo(report_id: UUID, db: Session, current: Psychologist) -> Report:
     report = db.get(Report, report_id)
-    if report is None or report.patient.owner_id != current.id or report.template.schema_json.get("rule_type") != RULE_TYPE:
+    if (
+        report is None
+        or report.patient.owner_id != current.id
+        or report.template.schema_json.get("rule_type") != RULE_TYPE
+    ):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Relatório não encontrado.")
     return report
 
@@ -199,4 +204,8 @@ def baixar_pdf_original(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Arquivo não encontrado.")
     conteudo = get_form_pdfs_storage().read(arquivos[indice]["chave"])
     nome = nome_de_arquivo_seguro(arquivos[indice]["nome"].removesuffix(".pdf"), "pdf")
-    return Response(content=conteudo, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{nome}"'})
+    return Response(
+        content=conteudo,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{nome}"'},
+    )

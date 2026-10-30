@@ -214,7 +214,11 @@ def test_pdf_do_mesmo_html_vem_do_cache_e_o_editado_e_refeito(client, monkeypatc
     assert segundo.content == primeiro.content
     assert len(geracoes) == 1
 
-    client.put(f"/api/reports/{report_id}/text", json={"generated_text": HTML_LAUDO.replace("Criança Teste", "Outro Nome")}, headers=headers)
+    client.put(
+        f"/api/reports/{report_id}/text",
+        json={"generated_text": HTML_LAUDO.replace("Criança Teste", "Outro Nome")},
+        headers=headers,
+    )
     assert client.get(f"/api/reports/{report_id}/pdf", headers=headers).status_code == 200
     assert len(geracoes) == 2
     # Só o PDF da versão atual fica guardado.
@@ -252,12 +256,12 @@ def test_laudo_antigo_sai_no_modelo_atual():
 
     nota = '<div class="caixa-cinza clara"><p><strong>NOTA SOBRE OS RESULTADOS:</strong> Os percentuais…</p></div>'
     antigo = (
-        "<style>mark.cinza{background:#d9d9d9}.caixa-cinza.clara{background:#bfbfbf}</style><main class=\"documento\">"
-        "<div class=\"cab-box\"><p>Idade Cognitiva: Repertório de referência pelo Portage: 00 meses à 03 anos "
+        '<style>mark.cinza{background:#d9d9d9}.caixa-cinza.clara{background:#bfbfbf}</style><main class="documento">'
+        '<div class="cab-box"><p>Idade Cognitiva: Repertório de referência pelo Portage: 00 meses à 03 anos '
         "(fora da faixa etária do instrumento — não é comparação normativa)</p></div>"
         '<div class="faixa centro">PARECER NEUROPSICOPEDAGÓGICO<br>ANÁLISE COMPORTAMENTAL</div>'
         + nota
-        + '<p><strong>PROTOCOLO UTILIZADO</strong>: Realizada análise.</p>'
+        + "<p><strong>PROTOCOLO UTILIZADO</strong>: Realizada análise.</p>"
         '<div class="caixa-cinza clara"><p><strong>Observação sobre a faixa etária do Portage:</strong> fora da faixa.</p></div>'
         '<div class="caixa-cinza clara"><p class="recuo">Encaminhei também o paciente para exames.</p></div>'
         '<h3><mark class="cinza">Encaminhamentos</mark></h3><ul class="bullets"><li>Neuropediatra</li></ul>'
@@ -269,7 +273,14 @@ def test_laudo_antigo_sai_no_modelo_atual():
     )
     atual = no_modelo_atual(antigo)
 
-    for removido in ("faixa etária do Portage", "Encaminhei também", "Estudo De Caso", "Estudo longo", "Repertório de referência", "<br>ANÁLISE"):
+    for removido in (
+        "faixa etária do Portage",
+        "Encaminhei também",
+        "Estudo De Caso",
+        "Estudo longo",
+        "Repertório de referência",
+        "<br>ANÁLISE",
+    ):
         assert removido not in atual
     assert "Idade Cognitiva: 00 meses à 03 anos</p>" in atual
     assert "PARECER NEUROPSICOPEDAGÓGICO ANÁLISE COMPORTAMENTAL" in atual
@@ -306,7 +317,14 @@ def test_fechamento_sem_caixa_azul_no_word_e_no_pdf():
     )
     doc = Document(io.BytesIO(html_para_docx(html)))
     textos = [p.text for p in doc.paragraphs]
-    ordem = ["Considerações Finais", "A ANÁLISE DOS COMPORTAMENTOS", "Vale ressaltar", "NOTA SOBRE OS RESULTADOS", "Desde já", "Atenciosamente"]
+    ordem = [
+        "Considerações Finais",
+        "A ANÁLISE DOS COMPORTAMENTOS",
+        "Vale ressaltar",
+        "NOTA SOBRE OS RESULTADOS",
+        "Desde já",
+        "Atenciosamente",
+    ]
     posicoes = [next(i for i, t in enumerate(textos) if o in t) for o in ordem]
     assert posicoes == sorted(posicoes)
     # Nada de caixa (tabela) em volta dos dois blocos

@@ -176,7 +176,12 @@ class Andamento:
 
     def concluir(self, report_id) -> None:
         self._gravar(
-            status="concluido", mensagem="Laudo pronto.", report_id=str(report_id), etapas_pendentes=[], progresso=100, progresso_teto=100
+            status="concluido",
+            mensagem="Laudo pronto.",
+            report_id=str(report_id),
+            etapas_pendentes=[],
+            progresso=100,
+            progresso_teto=100,
         )
 
     def falhar(self, erro: str) -> None:

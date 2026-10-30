@@ -29,9 +29,7 @@ def calculate(schema: dict, answers: dict) -> dict:
         for field in area["fields"]:
             field_key = field["key"]
             if field_key not in area_answers:
-                raise RulesEngineError(
-                    f"Falta a resposta do campo '{field_key}' na área '{area_key}'."
-                )
+                raise RulesEngineError(f"Falta a resposta do campo '{field_key}' na área '{area_key}'.")
             if area_answers[field_key] in target_values:
                 count += 1
         scores[area_key] = count
@@ -51,8 +49,7 @@ def _classificar_area(classification_ranges: list[dict], area_key: str, count: i
         comparador = _COMPARADORES.get(faixa.get("comparison"))
         if comparador is None:
             raise RulesEngineError(
-                f"Faixa da área '{area_key}' tem 'comparison' inválido ou ausente: "
-                f"{faixa.get('comparison')!r}."
+                f"Faixa da área '{area_key}' tem 'comparison' inválido ou ausente: {faixa.get('comparison')!r}."
             )
         if comparador(count, faixa["minimum_count"]):
             return faixa["label"]

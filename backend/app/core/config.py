@@ -72,7 +72,7 @@ class Settings(BaseSettings):
         # usa psycopg 3: troca o esquema para "postgresql+psycopg://".
         for prefixo in ("postgres://", "postgresql://"):
             if valor.startswith(prefixo):
-                return "postgresql+psycopg://" + valor[len(prefixo):]
+                return "postgresql+psycopg://" + valor[len(prefixo) :]
         return valor
 
 

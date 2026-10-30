@@ -9,16 +9,12 @@ SCHEMA = {
         {
             "key": "area_1",
             "label": "Área 1",
-            "fields": [
-                {"key": "score", "label": "Pontuação", "type": "scale", "min": 0, "max": 4, "weight": 1}
-            ],
+            "fields": [{"key": "score", "label": "Pontuação", "type": "scale", "min": 0, "max": 4, "weight": 1}],
         },
         {
             "key": "area_2",
             "label": "Área 2",
-            "fields": [
-                {"key": "score", "label": "Pontuação", "type": "scale", "min": 0, "max": 4, "weight": 2}
-            ],
+            "fields": [{"key": "score", "label": "Pontuação", "type": "scale", "min": 0, "max": 4, "weight": 2}],
         },
     ],
     "classification_ranges": [

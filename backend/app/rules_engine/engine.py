@@ -40,11 +40,7 @@ def calculate_report(
 
     if rule_type == "age_equivalent_percentage":
         if birth_date is None:
-            raise RulesEngineError(
-                "rule_type 'age_equivalent_percentage' exige a data de nascimento do paciente."
-            )
-        return age_equivalent_percentage.calculate(
-            schema, answers, birth_date, evaluation_date or date.today()
-        )
+            raise RulesEngineError("rule_type 'age_equivalent_percentage' exige a data de nascimento do paciente.")
+        return age_equivalent_percentage.calculate(schema, answers, birth_date, evaluation_date or date.today())
 
     raise RulesEngineError(f"rule_type desconhecido: '{rule_type}'.")

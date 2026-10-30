@@ -26,9 +26,7 @@ def extract_text(upload: UploadFile) -> str:
     if nome.endswith(".txt"):
         return conteudo.decode("utf-8", errors="ignore")
 
-    raise DocumentTextError(
-        f"Formato de arquivo não suportado: '{upload.filename}'. Envie um PDF, DOCX ou TXT."
-    )
+    raise DocumentTextError(f"Formato de arquivo não suportado: '{upload.filename}'. Envie um PDF, DOCX ou TXT.")
 
 
 def extrair_texto_pdf(conteudo: bytes) -> str:

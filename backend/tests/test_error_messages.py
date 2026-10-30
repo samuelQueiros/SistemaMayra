@@ -3,7 +3,9 @@ from tests.helpers import registrar_e_logar
 
 
 def test_validacao_vira_frase_em_portugues(client):
-    resposta = client.post("/api/auth/register", json={"name": "Mayra", "email": "nao-e-email", "password": "senhaSegura123"})
+    resposta = client.post(
+        "/api/auth/register", json={"name": "Mayra", "email": "nao-e-email", "password": "senhaSegura123"}
+    )
     assert resposta.status_code == 422
     detalhe = resposta.json()["detail"]
     assert isinstance(detalhe, str)

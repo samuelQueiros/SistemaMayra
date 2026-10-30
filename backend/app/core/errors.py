@@ -48,26 +48,26 @@ def mensagem_de_validacao(erro: dict) -> str:
     contexto = erro.get("ctx") or {}
 
     if tipo == "missing":
-        return f"Preencha o campo \"{campo}\"."
+        return f'Preencha o campo "{campo}".'
     if tipo == "string_too_short":
         minimo = contexto.get("min_length")
-        return f"\"{campo}\" precisa ter pelo menos {minimo} caracteres." if minimo else f"\"{campo}\" está curto demais."
+        return f'"{campo}" precisa ter pelo menos {minimo} caracteres.' if minimo else f'"{campo}" está curto demais.'
     if tipo == "string_too_long":
         maximo = contexto.get("max_length")
-        return f"\"{campo}\" pode ter no máximo {maximo} caracteres." if maximo else f"\"{campo}\" está longo demais."
+        return f'"{campo}" pode ter no máximo {maximo} caracteres.' if maximo else f'"{campo}" está longo demais.'
     if tipo in ("date_parsing", "date_from_datetime_parsing", "date_type", "datetime_parsing"):
-        return f"\"{campo}\" não é uma data válida. Use o formato dd/mm/aaaa."
+        return f'"{campo}" não é uma data válida. Use o formato dd/mm/aaaa.'
     if tipo == "uuid_parsing":
         return "O registro solicitado não existe ou o endereço está incorreto."
     if tipo in ("greater_than", "greater_than_equal", "less_than", "less_than_equal"):
-        return f"\"{campo}\" está fora do intervalo permitido."
+        return f'"{campo}" está fora do intervalo permitido.'
     if tipo in ("int_parsing", "float_parsing", "int_type", "float_type"):
-        return f"\"{campo}\" precisa ser um número."
+        return f'"{campo}" precisa ser um número.'
     if tipo == "value_error" and "email" in str(erro.get("msg", "")).lower():
         return "Informe um e-mail válido (ex.: nome@exemplo.com)."
     if tipo == "json_invalid":
         return "Os dados enviados estão corrompidos. Recarregue a página e tente novamente."
-    return f"O campo \"{campo}\" tem um valor inválido. Confira e tente novamente."
+    return f'O campo "{campo}" tem um valor inválido. Confira e tente novamente.'
 
 
 def registrar_tratadores_de_erro(app: FastAPI) -> None:

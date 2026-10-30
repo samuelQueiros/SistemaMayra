@@ -16,7 +16,13 @@ from app.models.patient_attachment import PatientAttachment
 from app.models.guardian_form_submission import GuardianFormSubmission
 from app.models.consolidated_report import ConsolidatedReport
 from app.schemas.patient import PatientCreate, PatientOut, PatientPhotoOut, PatientUpdate
-from app.services.storage import (get_photos_storage, get_reports_storage, get_form_pdfs_storage, get_attachments_storage, get_guardian_forms_storage)
+from app.services.storage import (
+    get_photos_storage,
+    get_reports_storage,
+    get_form_pdfs_storage,
+    get_attachments_storage,
+    get_guardian_forms_storage,
+)
 
 router = APIRouter(prefix="/api/patients", tags=["patients"])
 
@@ -87,12 +93,16 @@ def delete_patient(
     patient = get_patient_or_404(patient_id, db, current)
     reports = list(patient.reports)
     if reports and not confirmar_historico:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail="Confirme a exclusão definitiva do paciente e de todo o histórico.")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Confirme a exclusão definitiva do paciente e de todo o histórico.",
+        )
     arquivos = [(get_photos_storage(), p.file_path) for p in patient.photos]
-    for model, storage in ((PatientAttachment, get_attachments_storage()),
-                           (GuardianFormSubmission, get_guardian_forms_storage()),
-                           (ConsolidatedReport, get_reports_storage())):
+    for model, storage in (
+        (PatientAttachment, get_attachments_storage()),
+        (GuardianFormSubmission, get_guardian_forms_storage()),
+        (ConsolidatedReport, get_reports_storage()),
+    ):
         for registro in db.query(model).filter(model.patient_id == patient.id).all():
             chave = getattr(registro, "file_path", None) or getattr(registro, "pdf_path", None)
             if chave:
@@ -183,9 +193,7 @@ def delete_patient_photo(
     db.commit()
 
 
-def _get_patient_photo_or_404(
-    patient_id: UUID, photo_id: UUID, db: Session, current: Psychologist
-) -> PatientPhoto:
+def _get_patient_photo_or_404(patient_id: UUID, photo_id: UUID, db: Session, current: Psychologist) -> PatientPhoto:
     patient = get_patient_or_404(patient_id, db, current)
     photo = db.get(PatientPhoto, photo_id)
     if photo is None or photo.patient_id != patient.id:

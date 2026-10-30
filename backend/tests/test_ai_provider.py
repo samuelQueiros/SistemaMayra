@@ -79,7 +79,13 @@ def test_sem_limites_explicitos_ainda_ha_teto_de_tempo():
 
 @pytest.mark.parametrize(
     "provider, modelo, esperado",
-    [("openai", "gpt-5", "low"), ("openai", "o3-mini", "low"), ("openai", "gpt-5-chat-latest", None), ("openai", "gpt-4o", None), ("openrouter", "openai/gpt-5", None)],
+    [
+        ("openai", "gpt-5", "low"),
+        ("openai", "o3-mini", "low"),
+        ("openai", "gpt-5-chat-latest", None),
+        ("openai", "gpt-4o", None),
+        ("openrouter", "openai/gpt-5", None),
+    ],
 )
 def test_raciocinio_leve_so_em_modelos_de_raciocinio_da_openai(provider, modelo, esperado):
     assert get_chat_model(provider, modelo, "chave-fake", LIMITES).reasoning_effort == esperado
@@ -87,7 +93,12 @@ def test_raciocinio_leve_so_em_modelos_de_raciocinio_da_openai(provider, modelo,
 
 @pytest.mark.parametrize(
     "modelo, nivel, orcamento",
-    [("gemini-3.6-flash", "low", None), ("gemini-3-pro-preview", "low", None), ("gemini-2.5-pro", None, 1024), ("gemini-2.0-flash", None, None)],
+    [
+        ("gemini-3.6-flash", "low", None),
+        ("gemini-3-pro-preview", "low", None),
+        ("gemini-2.5-pro", None, 1024),
+        ("gemini-2.0-flash", None, None),
+    ],
 )
 def test_raciocinio_leve_no_gemini(modelo, nivel, orcamento):
     # Sem isso o Gemini 3 pensa no nível "high" em todo agente do Laudo Por IA.

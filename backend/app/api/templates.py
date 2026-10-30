@@ -29,12 +29,7 @@ def list_templates(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> list[ReportTemplate]:
-    return (
-        db.query(ReportTemplate)
-        .filter(ReportTemplate.owner_id == current.id)
-        .order_by(ReportTemplate.name)
-        .all()
-    )
+    return db.query(ReportTemplate).filter(ReportTemplate.owner_id == current.id).order_by(ReportTemplate.name).all()
 
 
 @router.post("", response_model=ReportTemplateOut, status_code=status.HTTP_201_CREATED)
@@ -93,7 +88,7 @@ def import_template_from_document(
             detail=(
                 "Não foi possível processar o documento com o provedor de IA "
                 f"configurado ({provider}/{model}). Verifique a chave de API e o "
-                f"modelo em \"Configurações\". Detalhe técnico: {exc}"
+                f'modelo em "Configurações". Detalhe técnico: {exc}'
             ),
         ) from exc
 
@@ -151,9 +146,7 @@ def garantir_template_custom_form(db: Session, current: Psychologist) -> ReportT
                 fields=[TemplateField(key="html", label="HTML", type="text")],
             )
         ],
-        classification_ranges=[
-            ClassificationRange(label="Não Aplicável (Formulário Externo)", min=0, max=0)
-        ],
+        classification_ranges=[ClassificationRange(label="Não Aplicável (Formulário Externo)", min=0, max=0)],
         chart=ChartConfig(type="bar", group_by="areas"),
     )
     template = ReportTemplate(

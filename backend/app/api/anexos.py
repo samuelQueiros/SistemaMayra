@@ -68,7 +68,9 @@ def _anexo_or_404(patient_id: UUID, anexo_id: UUID, db: Session, current: Psycho
     return anexo
 
 
-def campos_que_faltam(db: Session, report: Report, catalogo: CatalogoDoProtocolo, secao: str | None) -> CatalogoDoProtocolo:
+def campos_que_faltam(
+    db: Session, report: Report, catalogo: CatalogoDoProtocolo, secao: str | None
+) -> CatalogoDoProtocolo:
     """Só os campos ainda sem resposta (da seção, ou todos), com o rótulo
     amigável da pendência — é isso que a IA procura no documento."""
     pendencias = montar_pendencias(db, report, catalogo)
@@ -92,7 +94,9 @@ def _ler_em_segundo_plano(*, bind, anexo_id: UUID, conteudo: bytes, credenciais:
         report = db.get(Report, anexo.report_id)
         try:
             catalogo = catalogo_do_laudo(report)
-            faltam = campos_que_faltam(db, report, catalogo, anexo.secao) if catalogo else CatalogoDoProtocolo(campos=[])
+            faltam = (
+                campos_que_faltam(db, report, catalogo, anexo.secao) if catalogo else CatalogoDoProtocolo(campos=[])
+            )
             if not faltam.campos:
                 anexo.sugestoes_json, anexo.status = [], "pronto"
                 db.commit()
@@ -105,7 +109,10 @@ def _ler_em_segundo_plano(*, bind, anexo_id: UUID, conteudo: bytes, credenciais:
             )
             # Mesma régua do Laudo por IA: fora do catálogo ou opção inválida é descartado.
             validos, _ = respostas_para_answers(
-                ProtocoloPorIA(estudo_de_caso="", campos=[CampoPreenchido(id=c.id, valor=c.valor) for c in leitura.campos]), faltam
+                ProtocoloPorIA(
+                    estudo_de_caso="", campos=[CampoPreenchido(id=c.id, valor=c.valor) for c in leitura.campos]
+                ),
+                faltam,
             )
             trechos = {c.id: c.trecho for c in leitura.campos}
             anexo.sugestoes_json = [
@@ -187,7 +194,8 @@ def listar_anexos(
     anexos = consulta.order_by(PatientAttachment.created_at).all()
     limite = datetime.now(timezone.utc) - _LEITURA_PARADA_APOS
     parados = [
-        a for a in anexos
+        a
+        for a in anexos
         if a.status == "analisando" and (a.created_at.replace(tzinfo=a.created_at.tzinfo or timezone.utc)) < limite
     ]
     for anexo in parados:
@@ -199,7 +207,10 @@ def listar_anexos(
 
 @router.get("/{anexo_id}/arquivo")
 def baixar_anexo(
-    patient_id: UUID, anexo_id: UUID, db: Session = Depends(get_db), current: Psychologist = Depends(get_current_psychologist)
+    patient_id: UUID,
+    anexo_id: UUID,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
 ) -> Response:
     anexo = _anexo_or_404(patient_id, anexo_id, db, current)
     return Response(content=get_attachments_storage().read(anexo.file_path), media_type=anexo.mime)
@@ -207,7 +218,10 @@ def baixar_anexo(
 
 @router.delete("/{anexo_id}", status_code=status.HTTP_204_NO_CONTENT)
 def apagar_anexo(
-    patient_id: UUID, anexo_id: UUID, db: Session = Depends(get_db), current: Psychologist = Depends(get_current_psychologist)
+    patient_id: UUID,
+    anexo_id: UUID,
+    db: Session = Depends(get_db),
+    current: Psychologist = Depends(get_current_psychologist),
 ) -> None:
     anexo = _anexo_or_404(patient_id, anexo_id, db, current)
     get_attachments_storage().delete(anexo.file_path)

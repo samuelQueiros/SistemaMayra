@@ -42,7 +42,13 @@ PROVEDORES: dict[str, Provedor] = {
             ["claude-sonnet-5", "claude-opus-5", "claude-haiku-4-5-20251001"],
             "https://console.anthropic.com/settings/keys",
         ),
-        Provedor("openai", "OpenAI (ChatGPT / GPT)", "nativa", ["gpt-5", "gpt-5-mini"], "https://platform.openai.com/api-keys"),
+        Provedor(
+            "openai",
+            "OpenAI (ChatGPT / GPT)",
+            "nativa",
+            ["gpt-5", "gpt-5-mini"],
+            "https://platform.openai.com/api-keys",
+        ),
         Provedor(
             "google",
             "Google (Gemini)",
@@ -72,7 +78,14 @@ PROVEDORES: dict[str, Provedor] = {
             base_url="https://openrouter.ai/api/v1",
             observacao="Com uma chave do OpenRouter dá para usar modelos de quase todas as empresas. Escreva o modelo como empresa/modelo.",
         ),
-        Provedor("xai", "xAI (Grok)", "imagens", ["grok-4", "grok-4-fast"], "https://console.x.ai", base_url="https://api.x.ai/v1"),
+        Provedor(
+            "xai",
+            "xAI (Grok)",
+            "imagens",
+            ["grok-4", "grok-4-fast"],
+            "https://console.x.ai",
+            base_url="https://api.x.ai/v1",
+        ),
         Provedor(
             "mistral",
             "Mistral AI (Le Chat)",
@@ -85,7 +98,11 @@ PROVEDORES: dict[str, Provedor] = {
             "groq",
             "Meta Llama (via Groq)",
             "imagens",
-            ["meta-llama/llama-4-maverick-17b-128e-instruct", "meta-llama/llama-4-scout-17b-16e-instruct", "llama-3.3-70b-versatile"],
+            [
+                "meta-llama/llama-4-maverick-17b-128e-instruct",
+                "meta-llama/llama-4-scout-17b-16e-instruct",
+                "llama-3.3-70b-versatile",
+            ],
             "https://console.groq.com/keys",
             base_url="https://api.groq.com/openai/v1",
         ),

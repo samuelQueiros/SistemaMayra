@@ -122,21 +122,14 @@ class ReportTemplateSchemaJSON(BaseModel):
                         "'minimum_count' e 'comparison' em classification_ranges."
                     )
                 if faixa.area not in chaves_de_area:
-                    raise ValueError(
-                        f"Faixa '{faixa.label}': área '{faixa.area}' não existe em 'areas'."
-                    )
+                    raise ValueError(f"Faixa '{faixa.label}': área '{faixa.area}' não existe em 'areas'.")
 
         if self.rule_type == "age_equivalent_percentage":
             if not self.item_scoring:
-                raise ValueError(
-                    "rule_type 'age_equivalent_percentage' exige 'item_scoring' não vazio."
-                )
+                raise ValueError("rule_type 'age_equivalent_percentage' exige 'item_scoring' não vazio.")
             for area in self.areas:
                 if not area.age_brackets:
-                    raise ValueError(
-                        f"Área '{area.key}': rule_type 'age_equivalent_percentage' exige "
-                        "'age_brackets'."
-                    )
+                    raise ValueError(f"Área '{area.key}': rule_type 'age_equivalent_percentage' exige 'age_brackets'.")
             for faixa in self.classification_ranges:
                 if faixa.min is None or faixa.max is None:
                     raise ValueError(

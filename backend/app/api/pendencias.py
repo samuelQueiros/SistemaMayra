@@ -74,7 +74,9 @@ def montar_pendencias(db: Session, report: Report, catalogo: CatalogoDoProtocolo
         sugestoes_dos_anexos(db, report),
     ).montar()
     excluidos = report.answers_json.get("__metodosExcluidos", [])
-    resultado["metodos"] = [{"chave": e.chave, "titulo": e.titulo, "incluido": e.chave not in excluidos} for e in ESCALAS]
+    resultado["metodos"] = [
+        {"chave": e.chave, "titulo": e.titulo, "incluido": e.chave not in excluidos} for e in ESCALAS
+    ]
     resultado["estudo_de_caso"] = {"editado": estudo_de_caso_editado(report.answers_json, computed)}
     return resultado
 
@@ -116,7 +118,7 @@ def marcar_escalas_aplicadas(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> dict:
-    """"Também apliquei": escalas sem PDF que entram nas pendências."""
+    """ "Também apliquei": escalas sem PDF que entram nas pendências."""
     report = _get_report_do_psicologo(report_id, db, current, defer(Report.generated_text))
     validas = {e.chave for e in ESCALAS}
     if not set(dados.escalas) <= validas:
@@ -178,12 +180,15 @@ def salvar_dados_complementares(
     anexos_citados = {d.anexo_id for d in dados.campos.values() if d and d.anexo_id}
     if anexos_citados:
         do_paciente = {
-            a.id for a in db.query(PatientAttachment.id).filter(
+            a.id
+            for a in db.query(PatientAttachment.id).filter(
                 PatientAttachment.patient_id == patient.id, PatientAttachment.id.in_(anexos_citados)
             )
         }
         if anexos_citados - do_paciente:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Anexo não encontrado para este paciente.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Anexo não encontrado para este paciente."
+            )
 
     atuais = dict(patient.dados_complementares or {})
     agora = datetime.now(timezone.utc).isoformat()
@@ -208,7 +213,7 @@ class AtualizarLaudoIn(BaseModel):
 
 
 def _reescrever_estudo(andamento: Andamento, *, bind, report_id: UUID, paciente: str, credenciais: dict) -> None:
-    """"Atualizar relatório": a IA recebe só o estudo de caso atual + os dados
+    """ "Atualizar relatório": a IA recebe só o estudo de caso atual + os dados
     novos e os encaixa no texto (coerente com o que já foi escrito, sem os
     documentos do caso). Sem estudo anterior, redige do zero sobre o JSON dos
     PDFs já lidos (computed_json.documentos) — nunca relê os PDFs."""
@@ -218,7 +223,9 @@ def _reescrever_estudo(andamento: Andamento, *, bind, report_id: UUID, paciente:
         catalogo = catalogo_do_laudo(report)
         dados = report.patient.dados_complementares or {}
         estudo_atual = (report.answers_json.get("estudoCaso") or "").strip()
-        novos = campos_novos_para_o_estudo(catalogo, report.answers_json, dados, computed.get("estudo_campos_integrados"))
+        novos = campos_novos_para_o_estudo(
+            catalogo, report.answers_json, dados, computed.get("estudo_campos_integrados")
+        )
         try:
             if estudo_atual:
                 andamento.mensagem("Incluindo os dados novos no estudo de caso…")
@@ -234,7 +241,11 @@ def _reescrever_estudo(andamento: Andamento, *, bind, report_id: UUID, paciente:
                 andamento.mensagem("Escrevendo o estudo de caso com os dados novos…")
                 documentos = [DocumentoExtraido.model_validate(d) for d in computed.get("documentos", [])]
                 if novos:
-                    documentos.append(DocumentoExtraido.model_validate(dados_confirmados_como_documento(catalogo, report.answers_json, novos)))
+                    documentos.append(
+                        DocumentoExtraido.model_validate(
+                            dados_confirmados_como_documento(catalogo, report.answers_json, novos)
+                        )
+                    )
                 estudo = redigir_estudo_de_caso(
                     paciente=paciente,
                     documentos_texto=documentos_em_texto(documentos),

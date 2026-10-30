@@ -80,9 +80,7 @@ def test_outro_psicologo_nao_edita_secoes_clinicas_de_laudo_alheio(client):
 def test_atualiza_registro_profissional_do_psicologo(client):
     headers = registrar_e_logar(client)
 
-    response = client.put(
-        "/api/auth/me", json={"professional_registration": "CRP 12/34567"}, headers=headers
-    )
+    response = client.put("/api/auth/me", json={"professional_registration": "CRP 12/34567"}, headers=headers)
 
     assert response.status_code == 200
     assert response.json()["professional_registration"] == "CRP 12/34567"

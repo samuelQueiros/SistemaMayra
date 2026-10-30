@@ -59,7 +59,10 @@ def _get_report_do_psicologo(report_id: UUID, db: Session, current: Psychologist
     else:
         report = db.get(Report, report_id)
     if report is None or report.patient.owner_id != current.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Protocolo não encontrado. Ele pode ter sido excluído ou pertencer a outra conta.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Protocolo não encontrado. Ele pode ter sido excluído ou pertencer a outra conta.",
+        )
     return report
 
 
@@ -189,7 +192,7 @@ def generate_text(
             detail=(
                 "Não foi possível gerar o texto com o provedor de IA configurado "
                 f"({provider}/{model}). Verifique a chave de API e o modelo em "
-                f"\"Configurações\". Detalhe técnico: {exc}"
+                f'"Configurações". Detalhe técnico: {exc}'
             ),
         ) from exc
 
@@ -239,7 +242,7 @@ def generate_conclusion(
             detail=(
                 "Não foi possível gerar o texto com o provedor de IA configurado "
                 f"({provider}/{model}). Verifique a chave de API e o modelo em "
-                f"\"Configurações\". Detalhe técnico: {exc}"
+                f'"Configurações". Detalhe técnico: {exc}'
             ),
         ) from exc
 
@@ -456,14 +459,14 @@ def download_docx(
     if template.schema_json.get("rule_type") not in RULE_TYPES_COM_HTML_PRONTO or not report.generated_text:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="O relatório deste protocolo ainda não foi gerado. Abra o protocolo e clique em \"Salvar Protocolo\".",
+            detail='O relatório deste protocolo ainda não foi gerado. Abra o protocolo e clique em "Salvar Protocolo".',
         )
     try:
         conteudo = html_para_docx(report.generated_text)
     except DocumentoInvalidoError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Este protocolo foi salvo num formato antigo. Abra o protocolo e clique em \"Salvar Protocolo\" para gerar o Word.",
+            detail='Este protocolo foi salvo num formato antigo. Abra o protocolo e clique em "Salvar Protocolo" para gerar o Word.',
         ) from exc
     nome = nome_de_arquivo_seguro(f"laudo_{report.patient.name}", "docx")
     return resposta_de_arquivo(conteudo, MIME_DOCX, nome)

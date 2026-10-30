@@ -12,9 +12,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-TipoPergunta = Literal[
-    "texto_curto", "texto_longo", "sim_nao", "multipla_escolha", "caixas", "data", "numero"
-]
+TipoPergunta = Literal["texto_curto", "texto_longo", "sim_nao", "multipla_escolha", "caixas", "data", "numero"]
 TipoSecao = Literal["perguntas", "escala", "fotos", "texto"]
 FormatoRelatorio = Literal["lista", "tabela", "so_texto"]
 
@@ -84,9 +82,7 @@ class Escala(BaseModel):
         ordenadas = sorted(self.faixas, key=lambda f: f.min)
         for anterior, atual in zip(ordenadas, ordenadas[1:]):
             if atual.min <= anterior.max:
-                raise ValueError(
-                    f"As faixas '{anterior.rotulo}' e '{atual.rotulo}' se sobrepõem."
-                )
+                raise ValueError(f"As faixas '{anterior.rotulo}' e '{atual.rotulo}' se sobrepõem.")
         return self
 
 

@@ -323,9 +323,7 @@ def _sobre_a_profissional_html(psychologist) -> str:
 def _assinatura_html(psychologist, report) -> str:
     if psychologist is None:
         return ""
-    registro = (
-        f" — {psychologist.professional_registration}" if psychologist.professional_registration else ""
-    )
+    registro = f" — {psychologist.professional_registration}" if psychologist.professional_registration else ""
     return f"""
     <div style="margin-top:40px;text-align:center;">
       <p>_____________________________________</p>
@@ -353,9 +351,7 @@ def _montar_html(patient, template, report, grafico_data_uri: str | None, psycho
     if total is not None:
         resumo_geral += f"<p><strong>Pontuação total:</strong> {total}</p>"
 
-    grafico_html = (
-        f'<img src="{grafico_data_uri}" style="max-width:100%">' if grafico_data_uri else ""
-    )
+    grafico_html = f'<img src="{grafico_data_uri}" style="max-width:100%">' if grafico_data_uri else ""
 
     identificacao_extra = ""
     if patient.sex:
@@ -420,5 +416,3 @@ def _montar_html(patient, template, report, grafico_data_uri: str | None, psycho
   </div>
 </body>
 </html>"""
-
-

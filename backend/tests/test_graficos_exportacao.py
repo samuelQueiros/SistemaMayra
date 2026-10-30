@@ -29,15 +29,20 @@ def _grafico_png(indice: int, largura: int = 1000, altura: int = 480) -> str:
     desenho = ImageDraw.Draw(img)
     for barra in range(5):
         x = 80 + barra * 170
-        desenho.rectangle([x, altura - 60 - (barra + 1) * 60, x + 110, altura - 60], fill=CORES[(indice + barra) % len(CORES)])
+        desenho.rectangle(
+            [x, altura - 60 - (barra + 1) * 60, x + 110, altura - 60], fill=CORES[(indice + barra) % len(CORES)]
+        )
     saida = io.BytesIO()
     img.save(saida, format="PNG")
     return "data:image/png;base64," + base64.b64encode(saida.getvalue()).decode()
 
 
-GRAFICOS = {nome: _grafico_png(i) for i, nome in enumerate(
-    ["dominios", "habilidades", "funcoes", "portage", "cars", "ata", "snap_pontos", "snap_perc"]
-)}
+GRAFICOS = {
+    nome: _grafico_png(i)
+    for i, nome in enumerate(
+        ["dominios", "habilidades", "funcoes", "portage", "cars", "ata", "snap_pontos", "snap_perc"]
+    )
+}
 
 
 def _tabela(titulo: str) -> str:
@@ -105,12 +110,16 @@ def test_word_grafico_vem_logo_depois_da_tabela_do_bloco():
     corpo = list(Document(io.BytesIO(html_para_docx(HTML_COM_GRAFICOS))).element.body)
 
     def tabela_com(texto: str) -> int:
-        return next(i for i, el in enumerate(corpo) if el.tag == qn("w:tbl") and texto in "".join(t.text or "" for t in el.iter(qn("w:t"))))
+        return next(
+            i
+            for i, el in enumerate(corpo)
+            if el.tag == qn("w:tbl") and texto in "".join(t.text or "" for t in el.iter(qn("w:t")))
+        )
 
     for titulo in ("HABILIDADES ACADÊMICAS", "Aplicação das Funções Executivas"):
         i = tabela_com(titulo)
         # Primeiro elemento com conteúdo depois da tabela: o parágrafo do gráfico.
-        seguinte = next(el for el in corpo[i + 1:] if _tem_conteudo(el))
+        seguinte = next(el for el in corpo[i + 1 :] if _tem_conteudo(el))
         assert seguinte.tag == qn("w:p") and seguinte.findall(".//" + qn("w:drawing")), titulo
 
     # ATA: o gráfico vem antes da tabela de percentuais e fica preso a ela

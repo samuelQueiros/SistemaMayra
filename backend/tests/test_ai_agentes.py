@@ -29,7 +29,10 @@ def _pdf(titulo: str) -> bytes:
 
 
 DOCUMENTO = DocumentoExtraido(
-    tipo="formulario", titulo="Anamnese", respondente="Mãe", respostas=[{"pergunta": "Distrai-se?", "resposta": "Sempre"}]
+    tipo="formulario",
+    titulo="Anamnese",
+    respondente="Mãe",
+    respostas=[{"pergunta": "Distrai-se?", "resposta": "Sempre"}],
 )
 
 
@@ -118,13 +121,20 @@ def test_extracao_roda_um_agente_por_pdf_em_paralelo(monkeypatch):
 
 
 def test_relatorio_por_ia_escreve_a_partir_do_json_sem_reenviar_pdfs(monkeypatch):
-    relatorio = RelatorioPorPdfs(formularios=[], metodologia="m", areas=[], consideracoes_finais="c", sugestoes_intervencao="s")
+    relatorio = RelatorioPorPdfs(
+        formularios=[], metodologia="m", areas=[], consideracoes_finais="c", sugestoes_intervencao="s"
+    )
     modelo_relatorio = ModeloFalso(resposta=relatorio)
     monkeypatch.setattr(extracao, "get_structured_model", lambda *a: ModeloFalso())
     monkeypatch.setattr(chains, "get_structured_model", lambda *a: modelo_relatorio)
     chains.generate_report_from_form_pdfs(
-        provider="anthropic", model="m", api_key="k", patient_name="Criança", idade="8 anos e 7 meses",
-        pdfs=[{"nome": "mae.pdf", "conteudo": _pdf("Anamnese"), "texto": ""}], observacoes="olhar atenção",
+        provider="anthropic",
+        model="m",
+        api_key="k",
+        patient_name="Criança",
+        idade="8 anos e 7 meses",
+        pdfs=[{"nome": "mae.pdf", "conteudo": _pdf("Anamnese"), "texto": ""}],
+        observacoes="olhar atenção",
     )
     sistema, humano = modelo_relatorio.chamadas[0]
     assert "transcritas em JSON" in sistema.content
@@ -153,7 +163,15 @@ def test_catalogo_dividido_entre_os_especialistas():
     # Hipóteses, encaminhamentos, desfralde, ano escolar e desempenho nas
     # habilidades ficam com a profissional.
     da_profissional = {c.id for c in _catalogo_real().campos if CAMPOS_DA_PROFISSIONAL.match(c.id)}
-    assert {"hip_tdah", "enc_fonoaudiologia", "anoEscolar", "desfralde", "desfraldeAno", "desfraldeMes", "hab_status_0"} <= da_profissional
+    assert {
+        "hip_tdah",
+        "enc_fonoaudiologia",
+        "anoEscolar",
+        "desfralde",
+        "desfraldeAno",
+        "desfraldeMes",
+        "hab_status_0",
+    } <= da_profissional
     assert "hab_obs_0" not in da_profissional
     # Cada campo com um único dono.
     todos = [i for parte in ids.values() for i in parte]
@@ -168,7 +186,9 @@ def test_orquestracao_extrai_e_roda_especialistas_e_redator_em_paralelo(monkeypa
     def especialista(**kw):
         chamadas.append(("especialista", kw["especialista"].nome, kw["catalogo_texto"], kw["documentos_texto"]))
         primeiro_id = kw["catalogo_texto"].split("[", 1)[1].split("]", 1)[0]
-        return CamposDoEspecialista(campos=[{"id": primeiro_id, "valor": "x"}], lacunas=[f"lacuna {kw['especialista'].nome}"])
+        return CamposDoEspecialista(
+            campos=[{"id": primeiro_id, "valor": "x"}], lacunas=[f"lacuna {kw['especialista'].nome}"]
+        )
 
     def redator(**kw):
         chamadas.append(("redator", kw["paciente"]))
@@ -192,7 +212,13 @@ def test_orquestracao_extrai_e_roda_especialistas_e_redator_em_paralelo(monkeypa
 
     chamadas.clear()
     preencher_protocolo(
-        provider="anthropic", model="m", api_key="k", paciente="Criança", pdfs=[], catalogo=_catalogo_real(), com_estudo_de_caso=False
+        provider="anthropic",
+        model="m",
+        api_key="k",
+        paciente="Criança",
+        pdfs=[],
+        catalogo=_catalogo_real(),
+        com_estudo_de_caso=False,
     )
     assert not any(c[0] == "redator" for c in chamadas)
 
@@ -241,7 +267,11 @@ def test_pdf_com_erro_e_nomeado_e_os_lidos_ficam_guardados(monkeypatch):
 
     with pytest.raises(extracao.ErroNaLeituraDosDocumentos) as erro:
         extracao.extrair_documentos(
-            provider="anthropic", model="m", api_key="k", pdfs=pdfs, ao_progredir=lambda evento, **d: avisos.append((evento, d.get("nome")))
+            provider="anthropic",
+            model="m",
+            api_key="k",
+            pdfs=pdfs,
+            ao_progredir=lambda evento, **d: avisos.append((evento, d.get("nome"))),
         )
     mensagem = str(erro.value)
     assert "'escola.pdf' (o provedor de IA demorou demais para responder)" in mensagem
@@ -269,11 +299,16 @@ def test_falha_de_um_especialista_diz_qual_parte(monkeypatch):
     monkeypatch.setattr(laudo_ia, "preencher_campos", especialista)
     monkeypatch.setattr(laudo_ia, "redigir_estudo_de_caso", lambda **kw: "Estudo.")
     with pytest.raises(ErroNaEtapaDaIA, match='parte "escalas" \\(o provedor de IA está instável no momento\\)'):
-        preencher_protocolo(provider="anthropic", model="m", api_key="k", paciente="C", pdfs=[], catalogo=_catalogo_real())
+        preencher_protocolo(
+            provider="anthropic", model="m", api_key="k", paciente="C", pdfs=[], catalogo=_catalogo_real()
+        )
 
 
 def test_motivo_do_erro_de_conexao():
     class APIConnectionError(Exception):
         pass
 
-    assert extracao.motivo_do_erro(APIConnectionError("Connection error.")) == "não foi possível conectar ao provedor de IA"
+    assert (
+        extracao.motivo_do_erro(APIConnectionError("Connection error."))
+        == "não foi possível conectar ao provedor de IA"
+    )

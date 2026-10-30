@@ -1,0 +1,20 @@
+# Configuração das ferramentas de desenvolvimento do backend.
+# O ruff NÃO é instalado na imagem de produção (não está em requirements.txt);
+# instale com `pip install ruff` e rode `ruff check .` e `ruff format .`.
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = [".venv", "storage", "alembic/versions"]
+
+[tool.ruff.lint]
+# F = erros de lógica/imports não usados; E9 = erros de sintaxe.
+select = ["F", "E9"]
+ignore = [
+    # Modelos SQLAlchemy usam anotações em texto ("Patient") para referências
+    # circulares; o ruff não as resolve e acusa nome indefinido.
+    "F821",
+]
+
+[tool.ruff.format]
+quote-style = "double"

@@ -64,7 +64,10 @@ def test_mensagens_de_andamento_por_etapa():
     andamento("documento_lido", indice=1, total=4, nome="a.pdf")
     assert jobs.ler(job["id"])["mensagem"] == "Lendo documento 2 de 4…"
     andamento("preenchendo", etapas=["anamnese", "escalas", "estudo_de_caso"])
-    assert jobs.ler(job["id"])["mensagem"] == "Preenchendo o protocolo (anamnese e histórico, escalas) e redigindo o estudo de caso…"
+    assert (
+        jobs.ler(job["id"])["mensagem"]
+        == "Preenchendo o protocolo (anamnese e histórico, escalas) e redigindo o estudo de caso…"
+    )
     andamento("etapa_concluida", etapa="anamnese")
     andamento("etapa_concluida", etapa="escalas")
     assert jobs.ler(job["id"])["mensagem"] == "Redigindo o estudo de caso…"
@@ -89,5 +92,3 @@ def test_progresso_avanca_por_documento_e_por_agente():
     assert lido["progresso"] == 69 and lido["progresso_teto"] == 95
     andamento.mensagem("Salvando o laudo…", progresso=95, teto=99)
     assert jobs.ler(job["id"])["progresso"] == 95
-
-

@@ -106,9 +106,7 @@ def test_classificacao_muda_conforme_idade_cronologica_cresce_e_desenvolvimento_
     )
     avaliacao_com_idade_maior = date(2025, 8, 1)  # 67 meses cronológicos
 
-    result = calculate_report(
-        SCHEMA, answers, birth_date=NASCIMENTO, evaluation_date=avaliacao_com_idade_maior
-    )
+    result = calculate_report(SCHEMA, answers, birth_date=NASCIMENTO, evaluation_date=avaliacao_com_idade_maior)
 
     area = result["areas"]["socializacao"]
     assert result["chronological_age_months"] == 67
@@ -131,9 +129,7 @@ def test_faixas_fora_de_ordem_no_schema_sao_ordenadas_pelo_motor():
         {"item_3": "sim", "item_4": "sim"},
     )
 
-    result = calculate_report(
-        schema_desordenado, answers, birth_date=NASCIMENTO, evaluation_date=AVALIACAO
-    )
+    result = calculate_report(schema_desordenado, answers, birth_date=NASCIMENTO, evaluation_date=AVALIACAO)
 
     assert result["areas"]["socializacao"]["developmental_age_months"] == 48.0
 
@@ -149,9 +145,7 @@ def test_data_de_nascimento_posterior_a_avaliacao_gera_erro_de_dominio():
     answers = _answers({"item_1": "sim", "item_2": "sim"}, {"item_3": "sim", "item_4": "sim"})
 
     with pytest.raises(RulesEngineError):
-        calculate_report(
-            SCHEMA, answers, birth_date=date(2030, 1, 1), evaluation_date=AVALIACAO
-        )
+        calculate_report(SCHEMA, answers, birth_date=date(2030, 1, 1), evaluation_date=AVALIACAO)
 
 
 def test_falta_resposta_de_uma_faixa_gera_erro_de_dominio():

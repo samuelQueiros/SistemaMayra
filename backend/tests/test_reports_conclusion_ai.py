@@ -100,9 +100,7 @@ def test_sem_configuracao_de_ia_retorna_500_com_mensagem_clara(client):
     headers = registrar_e_logar(client)
     report_id = _criar_relatorio(client, headers)
 
-    response = client.post(
-        f"/api/reports/{report_id}/generate-conclusion", headers=headers, json=_payload_conclusao()
-    )
+    response = client.post(f"/api/reports/{report_id}/generate-conclusion", headers=headers, json=_payload_conclusao())
 
     assert response.status_code == 500
     assert "Configurações" in response.json()["detail"]
@@ -118,9 +116,7 @@ def test_erro_do_provedor_de_ia_retorna_500_com_mensagem_clara(client, monkeypat
 
     monkeypatch.setattr(reports_module, "generate_conclusion_and_interventions", fake)
 
-    response = client.post(
-        f"/api/reports/{report_id}/generate-conclusion", headers=headers, json=_payload_conclusao()
-    )
+    response = client.post(f"/api/reports/{report_id}/generate-conclusion", headers=headers, json=_payload_conclusao())
 
     assert response.status_code == 500
 
@@ -135,9 +131,7 @@ def test_erro_generico_do_provedor_de_ia_retorna_502_com_mensagem_clara(client, 
 
     monkeypatch.setattr(reports_module, "generate_conclusion_and_interventions", fake)
 
-    response = client.post(
-        f"/api/reports/{report_id}/generate-conclusion", headers=headers, json=_payload_conclusao()
-    )
+    response = client.post(f"/api/reports/{report_id}/generate-conclusion", headers=headers, json=_payload_conclusao())
 
     assert response.status_code == 502
     assert "Configurações" in response.json()["detail"]

@@ -8,7 +8,21 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.gzip import DEFAULT_EXCLUDED_CONTENT_TYPES, GZipMiddleware
 
 from app import models  # noqa: F401 -- garante que todos os modelos sejam registrados no ORM
-from app.api import ai_settings, anexos, auth, documents, guardian_forms, laudo_ia, patients, pendencias, protocolos, relatorios_pdf, reports, stats, templates
+from app.api import (
+    ai_settings,
+    anexos,
+    auth,
+    documents,
+    guardian_forms,
+    laudo_ia,
+    patients,
+    pendencias,
+    protocolos,
+    relatorios_pdf,
+    reports,
+    stats,
+    templates,
+)
 from app.core.config import settings
 from app.core.cabecalhos import registrar_cabecalhos_de_seguranca
 from app.core.errors import registrar_tratadores_de_erro
@@ -62,6 +76,7 @@ def health() -> dict[str, str]:
 frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 frontend_dist_resolvido = frontend_dist.resolve()
+
 
 class ArquivosComHash(StaticFiles):
     """/assets do build do Vite: o nome muda a cada build (hash), então o

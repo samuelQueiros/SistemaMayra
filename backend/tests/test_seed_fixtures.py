@@ -59,15 +59,12 @@ def test_portage_calcula_idade_de_desenvolvimento_adequada_no_melhor_cenario():
     schema = json.loads((FIXTURES_DIR / "portage.json").read_text(encoding="utf-8"))
     answers = {
         area["key"]: {
-            bracket["label"]: {field["key"]: "sim" for field in bracket["fields"]}
-            for bracket in area["age_brackets"]
+            bracket["label"]: {field["key"]: "sim" for field in bracket["fields"]} for bracket in area["age_brackets"]
         }
         for area in schema["areas"]
     }
 
-    result = calculate_report(
-        schema, answers, birth_date=date(2020, 1, 1), evaluation_date=date(2024, 1, 1)
-    )
+    result = calculate_report(schema, answers, birth_date=date(2020, 1, 1), evaluation_date=date(2024, 1, 1))
 
     for area in schema["areas"]:
         assert result["areas"][area["key"]]["classification"] == "Adequado"

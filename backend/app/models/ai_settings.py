@@ -19,9 +19,7 @@ class AISettings(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
 
     __tablename__ = "ai_settings"
 
-    owner_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("psychologists.id"), unique=True, index=True
-    )
+    owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("psychologists.id"), unique=True, index=True)
     provider: Mapped[str] = mapped_column(String(50))
     model: Mapped[str] = mapped_column(String(100))
     api_key: Mapped[str] = mapped_column(Text)

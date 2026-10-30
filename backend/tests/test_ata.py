@@ -1,17 +1,37 @@
 from app.services.ai.agentes import DocumentoExtraido
 from app.services.ai.agentes.extracao import RespostaExtraida
-from app.services.ata import OPCOES_POR_ITEM, indice_do_item, nota_do_item, percentual_do_item, percentual_total, pontuar_ata
+from app.services.ata import (
+    OPCOES_POR_ITEM,
+    indice_do_item,
+    nota_do_item,
+    percentual_do_item,
+    percentual_total,
+    pontuar_ata,
+)
 
 TITULOS = [
-    "I. DIFICULDADE NA INTERAÇÃO SOCIAL", "II. MANIPULAÇÃO DO AMBIENTE", "III. UTILIZAÇÃO DAS PESSOAS A SEU REDOR",
-    "IV. RESISTÊNCIA A MUDANÇAS", "V. BUSCA DE UMA ORDEM RÍGIDA", "VI. FALTA DE CONTATO VISUAL. OLHAR INDEFINIDO",
-    "VII. MÍMICA INEXPRESSIVA", "VIII. DISTÚRBIOS DE SONO", "IX. ALTERAÇÃO NA ALIMENTAÇÃO",
-    "X. DIFICULDADE NO CONTROLE DOS ESFÍNCTERES", "XI. EXPLORAÇÃO DOS OBJETOS (APALPAR, CHUPAR)",
-    "XII. USO INAPROPRIADO DOS OBJETOS.", "XIII. FALTA DE ATENÇÃO", "XIV. AUSÊNCIA DE INTERESSE PELA APRENDIZAGEM",
-    "XV. FALTA DE INICIATIVA", "XVI. ALTERAÇÃO DE LINGUAGEM E COMUNICAÇÃO",
-    "XVII. NÃO MANIFESTA HABILIDADES E CONHECIMENTOS", "XVIII. REAÇÕES INAPROPRIADAS ANTE A FRUSTRAÇÃO",
-    "XIX. NÃO ASSUME RESPONSABILIDADES", "XX. HIPERATIVIDADE/ HIPOATIVIDADE",
-    "XXI. MOVIMENTOS ESTEREOTIPADOS E REPETITIVOS", "XXII. IGNORA O PERIGO",
+    "I. DIFICULDADE NA INTERAÇÃO SOCIAL",
+    "II. MANIPULAÇÃO DO AMBIENTE",
+    "III. UTILIZAÇÃO DAS PESSOAS A SEU REDOR",
+    "IV. RESISTÊNCIA A MUDANÇAS",
+    "V. BUSCA DE UMA ORDEM RÍGIDA",
+    "VI. FALTA DE CONTATO VISUAL. OLHAR INDEFINIDO",
+    "VII. MÍMICA INEXPRESSIVA",
+    "VIII. DISTÚRBIOS DE SONO",
+    "IX. ALTERAÇÃO NA ALIMENTAÇÃO",
+    "X. DIFICULDADE NO CONTROLE DOS ESFÍNCTERES",
+    "XI. EXPLORAÇÃO DOS OBJETOS (APALPAR, CHUPAR)",
+    "XII. USO INAPROPRIADO DOS OBJETOS.",
+    "XIII. FALTA DE ATENÇÃO",
+    "XIV. AUSÊNCIA DE INTERESSE PELA APRENDIZAGEM",
+    "XV. FALTA DE INICIATIVA",
+    "XVI. ALTERAÇÃO DE LINGUAGEM E COMUNICAÇÃO",
+    "XVII. NÃO MANIFESTA HABILIDADES E CONHECIMENTOS",
+    "XVIII. REAÇÕES INAPROPRIADAS ANTE A FRUSTRAÇÃO",
+    "XIX. NÃO ASSUME RESPONSABILIDADES",
+    "XX. HIPERATIVIDADE/ HIPOATIVIDADE",
+    "XXI. MOVIMENTOS ESTEREOTIPADOS E REPETITIVOS",
+    "XXII. IGNORA O PERIGO",
 ]
 # Marcações de um formulário real (anonimizado): uma caixa por item, duas no XVIII.
 MARCADAS = [1] * 22
@@ -69,7 +89,9 @@ def test_sem_contagem_conta_as_opcoes_da_resposta():
     documento = DocumentoExtraido(
         tipo="ata",
         titulo="ATA",
-        respostas=[RespostaExtraida(pergunta="XVIII. REAÇÕES ANTE A FRUSTRAÇÃO", resposta="c. Desgostoso; d. Reações de birra")],
+        respostas=[
+            RespostaExtraida(pergunta="XVIII. REAÇÕES ANTE A FRUSTRAÇÃO", resposta="c. Desgostoso; d. Reações de birra")
+        ],
     )
     answers = pontuar_ata([documento])
     assert answers == {"ata_item_17": "2", "ata_perc_17": "50"}  # sem os 22 itens, sem total

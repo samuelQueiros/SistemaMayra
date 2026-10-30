@@ -62,7 +62,8 @@ class CamposDoEspecialista(BaseModel):
         description="Campos do catálogo que os documentos permitem preencher. Omita o que os documentos não informam."
     )
     lacunas: list[str] = Field(
-        default_factory=list, description="Informações da sua parte que os documentos não trazem (para a psicóloga completar)."
+        default_factory=list,
+        description="Informações da sua parte que os documentos não trazem (para a psicóloga completar).",
     )
 
 
@@ -153,7 +154,14 @@ INTEGRAR_AO_ESTUDO_SYSTEM_PROMPT = (
 
 
 def integrar_dados_ao_estudo_de_caso(
-    *, provider: str, model: str, api_key: str, paciente: str, estudo_atual: str, dados_novos: str, observacoes: str | None = None
+    *,
+    provider: str,
+    model: str,
+    api_key: str,
+    paciente: str,
+    estudo_atual: str,
+    dados_novos: str,
+    observacoes: str | None = None,
 ) -> str:
     """Atualização incremental: só o texto atual + os dados novos (sem os
     documentos do caso) — mais barata e preserva o que a IA já escreveu."""

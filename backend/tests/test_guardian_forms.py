@@ -31,9 +31,7 @@ def test_registra_formulario_como_pendente_por_padrao(client):
     headers = registrar_e_logar(client)
     patient_id = _criar_paciente(client, headers)
 
-    response = client.post(
-        f"/api/patients/{patient_id}/guardian-forms", headers=headers, json=_dados_submissao()
-    )
+    response = client.post(f"/api/patients/{patient_id}/guardian-forms", headers=headers, json=_dados_submissao())
 
     assert response.status_code == 201
     body = response.json()
@@ -60,9 +58,7 @@ def test_valida_formulario_registra_quem_e_quando(client):
         f"/api/patients/{patient_id}/guardian-forms", headers=headers, json=_dados_submissao()
     ).json()["id"]
 
-    response = client.post(
-        f"/api/patients/{patient_id}/guardian-forms/{submission_id}/validate", headers=headers
-    )
+    response = client.post(f"/api/patients/{patient_id}/guardian-forms/{submission_id}/validate", headers=headers)
 
     assert response.status_code == 200
     body = response.json()
@@ -78,9 +74,7 @@ def test_rejeita_formulario(client):
         f"/api/patients/{patient_id}/guardian-forms", headers=headers, json=_dados_submissao()
     ).json()["id"]
 
-    response = client.post(
-        f"/api/patients/{patient_id}/guardian-forms/{submission_id}/reject", headers=headers
-    )
+    response = client.post(f"/api/patients/{patient_id}/guardian-forms/{submission_id}/reject", headers=headers)
 
     assert response.status_code == 200
     assert response.json()["status"] == "rejeitado"
@@ -102,9 +96,7 @@ def test_upload_e_download_do_formulario_original_preserva_o_arquivo(client):
     assert upload.status_code == 200
     assert upload.json()["file_path"] is not None
 
-    download = client.get(
-        f"/api/patients/{patient_id}/guardian-forms/{submission_id}/file", headers=headers
-    )
+    download = client.get(f"/api/patients/{patient_id}/guardian-forms/{submission_id}/file", headers=headers)
     assert download.status_code == 200
     assert download.content == conteudo
 
@@ -154,8 +146,6 @@ def test_outro_psicologo_nao_acessa_formularios_de_paciente_alheio(client):
         == 404
     )
     assert (
-        client.delete(
-            f"/api/patients/{patient_id}/guardian-forms/{submission_id}", headers=headers_b
-        ).status_code
+        client.delete(f"/api/patients/{patient_id}/guardian-forms/{submission_id}", headers=headers_b).status_code
         == 404
     )

@@ -93,6 +93,7 @@ def _invocar_com_retentativas(chat_model: Runnable, messages: list, tentativas: 
                 espera = min(max(_espera_pedida(exc) or espera, 1.0) + 1.0, _ESPERA_MAXIMA_LIMITE_DE_TAXA_SEGUNDOS)
             time.sleep(espera)
 
+
 # Framing pedido explicitamente pelo usuário: a IA deve responder como uma
 # assistente experiente em psicologia/neuropsicopedagogia, e não como um
 # assistente genérico de texto.
@@ -158,9 +159,7 @@ dividido em: introdução (contextualiza a avaliação), análise por área \
 (descreve os achados por área/domínio a partir das pontuações) e conclusão \
 (fecha o parecer com recomendações gerais, sem diagnóstico fechado)."""
 
-_prompt = ChatPromptTemplate.from_messages(
-    [("system", SYSTEM_PROMPT), ("human", HUMAN_TEMPLATE)]
-)
+_prompt = ChatPromptTemplate.from_messages([("system", SYSTEM_PROMPT), ("human", HUMAN_TEMPLATE)])
 
 
 def generate_report_text(
@@ -176,9 +175,7 @@ def generate_report_text(
 ) -> ReportSections:
     resumo = _montar_resumo(schema, answers, computed)
     chat_model = get_structured_model(provider, model, api_key, ReportSections)
-    messages = _prompt.format_messages(
-        template_name=template_name, patient_name=patient_name, resumo=resumo
-    )
+    messages = _prompt.format_messages(template_name=template_name, patient_name=patient_name, resumo=resumo)
     return _invocar_com_retentativas(chat_model, messages)
 
 
@@ -218,8 +215,8 @@ def _montar_resumo(schema: dict, answers: dict, computed: dict) -> str:
 # standalone (formulario-novo-paciente.html) ao gerar o laudo.
 CONCLUSION_SYSTEM_PROMPT = (
     f"{PERSONA} Sua tarefa agora é escrever DUAS seções de fechamento de um "
-    "parecer neuropsicopedagógico — as \"Considerações Finais\" e as "
-    "\"Sugestões De Intervenção\" — construídas a partir do conjunto de "
+    'parecer neuropsicopedagógico — as "Considerações Finais" e as '
+    '"Sugestões De Intervenção" — construídas a partir do conjunto de '
     "dados específicos deste paciente (estudo de caso, observações "
     f"clínicas, habilidades avaliadas, protocolos utilizados e a hipótese "
     "diagnóstica selecionada). As sugestões de intervenção devem decorrer "
@@ -354,8 +351,7 @@ def _mensagens_dos_formularios(patient_name, idade, pdfs, documentos_texto, obse
         "\nCom base nos formulários abaixo (fonte única de verdade), produza o "
         "relatório estruturado: formulários lidos, metodologia, análise por "
         "área/tema com fontes e gráficos quando houver dados em escala, "
-        "considerações finais e sugestões de intervenção.\n\nFORMULÁRIOS (JSON):\n"
-        + documentos_texto
+        "considerações finais e sugestões de intervenção.\n\nFORMULÁRIOS (JSON):\n" + documentos_texto
     )
     return [SystemMessage(content=FORM_PDFS_SYSTEM_PROMPT), HumanMessage(content=instrucoes)]
 
@@ -378,7 +374,9 @@ def _blocos_dos_pdfs(pdfs: list[dict], leitura: str) -> list[dict]:
         elif leitura == "imagens":
             for numero, png in enumerate(paginas_em_png(pdf["conteudo"]), start=1):
                 conteudo.append({"type": "text", "text": f"Página {numero}:"})
-                conteudo.append({"type": "image", "base64": base64.b64encode(png).decode("ascii"), "mime_type": "image/png"})
+                conteudo.append(
+                    {"type": "image", "base64": base64.b64encode(png).decode("ascii"), "mime_type": "image/png"}
+                )
         if pdf.get("texto", "").strip():
             rotulo = (
                 "Texto extraído deste PDF:\n"

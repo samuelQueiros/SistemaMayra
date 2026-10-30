@@ -23,7 +23,7 @@ def resolve_ai_credentials(ai_settings: AISettings | None) -> tuple[str, str, st
     api_key = chaves_por_provedor.get(provider)
     if not api_key:
         raise AIConfigurationError(
-            "Nenhuma chave de IA configurada. Configure em \"Configurações\" "
+            'Nenhuma chave de IA configurada. Configure em "Configurações" '
             "dentro do sistema, ou defina ANTHROPIC_API_KEY/OPENAI_API_KEY/"
             "GOOGLE_API_KEY no .env do servidor."
         )

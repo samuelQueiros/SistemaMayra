@@ -24,15 +24,12 @@ def calculate(schema: dict, answers: dict, birth_date: date, evaluation_date: da
 
     item_scoring = schema.get("item_scoring")
     if not item_scoring:
-        raise RulesEngineError(
-            "rule_type 'age_equivalent_percentage' exige 'item_scoring' no schema_json."
-        )
+        raise RulesEngineError("rule_type 'age_equivalent_percentage' exige 'item_scoring' no schema_json.")
 
     chronological_months = _meses_entre(birth_date, evaluation_date)
     if chronological_months <= 0:
         raise RulesEngineError(
-            "Data de nascimento do paciente é inválida para o cálculo de idade "
-            "(deve ser anterior à data da avaliação)."
+            "Data de nascimento do paciente é inválida para o cálculo de idade (deve ser anterior à data da avaliação)."
         )
 
     areas_resultado: dict[str, dict] = {}
@@ -62,9 +59,7 @@ def calculate(schema: dict, answers: dict, birth_date: date, evaluation_date: da
     return {"areas": areas_resultado, "chronological_age_months": chronological_months}
 
 
-def _idade_de_desenvolvimento(
-    area_key: str, brackets: list[dict], area_answers: dict, item_scoring: dict
-) -> float:
+def _idade_de_desenvolvimento(area_key: str, brackets: list[dict], area_answers: dict, item_scoring: dict) -> float:
     developmental_months = 0.0
     previous_limit = 0.0
 
@@ -72,9 +67,7 @@ def _idade_de_desenvolvimento(
         bracket_label = bracket["label"]
         bracket_answers = area_answers.get(bracket_label)
         if bracket_answers is None:
-            raise RulesEngineError(
-                f"Faltam respostas da faixa '{bracket_label}' na área '{area_key}'."
-            )
+            raise RulesEngineError(f"Faltam respostas da faixa '{bracket_label}' na área '{area_key}'.")
 
         limit = float(bracket["max_age_months"])
         ratio = _razao_atingida(area_key, bracket_label, bracket["fields"], bracket_answers, item_scoring)
@@ -98,8 +91,7 @@ def _razao_atingida(
         field_key = field["key"]
         if field_key not in bracket_answers:
             raise RulesEngineError(
-                f"Falta a resposta do item '{field_key}' na faixa '{bracket_label}' "
-                f"da área '{area_key}'."
+                f"Falta a resposta do item '{field_key}' na faixa '{bracket_label}' da área '{area_key}'."
             )
         resposta = bracket_answers[field_key]
         if resposta not in item_scoring:

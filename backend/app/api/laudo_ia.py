@@ -127,8 +127,8 @@ def _erro_da_ia(exc: Exception, provider: str, model: str) -> tuple[int, str]:
         )
     return status.HTTP_502_BAD_GATEWAY, (
         "Não foi possível ler os PDFs com o provedor de IA configurado "
-        f"({provider}/{model}): {motivo_do_erro(exc)}. Verifique a chave e o modelo em \"Configurações → "
-        "Inteligência Artificial\" (o modelo precisa aceitar PDFs)."
+        f'({provider}/{model}): {motivo_do_erro(exc)}. Verifique a chave e o modelo em "Configurações → '
+        'Inteligência Artificial" (o modelo precisa aceitar PDFs).'
     )
 
 
@@ -220,7 +220,9 @@ def _gerar_laudo(
         andamento.concluir(report.id)
 
 
-@router.post("/api/patients/{patient_id}/laudo-ia", response_model=GeracaoIniciada, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/api/patients/{patient_id}/laudo-ia", response_model=GeracaoIniciada, status_code=status.HTTP_202_ACCEPTED
+)
 def criar_laudo_por_ia(
     patient_id: UUID,
     arquivos: list[UploadFile] = File(...),
@@ -298,7 +300,11 @@ def extrair_escalas_de_pdf(
     credenciais = _credenciais(db, current)
     try:
         resultado = preencher_protocolo(
-            paciente=_descricao_do_paciente(patient), pdfs=pdfs, catalogo=catalogo_do_protocolo, com_estudo_de_caso=False, **credenciais
+            paciente=_descricao_do_paciente(patient),
+            pdfs=pdfs,
+            catalogo=catalogo_do_protocolo,
+            com_estudo_de_caso=False,
+            **credenciais,
         )
     except Exception as exc:
         codigo, mensagem = _erro_da_ia(exc, credenciais["provider"], credenciais["model"])

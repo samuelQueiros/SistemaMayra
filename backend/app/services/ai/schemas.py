@@ -27,7 +27,9 @@ class ExtractedClassificationRange(BaseModel):
     min: float | None = Field(default=None, description="Mínimo da faixa (rule_type 'sum_threshold').")
     max: float | None = Field(default=None, description="Máximo da faixa (rule_type 'sum_threshold').")
     area: str | None = Field(default=None, description="Área a que a faixa se refere (rule_type 'count_threshold').")
-    minimum_count: int | None = Field(default=None, description="Quantidade mínima exigida (rule_type 'count_threshold').")
+    minimum_count: int | None = Field(
+        default=None, description="Quantidade mínima exigida (rule_type 'count_threshold')."
+    )
     comparison: str | None = Field(
         default=None, description="Comparação usada com minimum_count: gte, gt, lte, lt ou eq."
     )
@@ -55,7 +57,8 @@ class ExtractedTemplateDraft(BaseModel):
     areas: list[ExtractedTemplateArea] = Field(default_factory=list)
     classification_ranges: list[ExtractedClassificationRange] = Field(default_factory=list)
     target_values: list[str] | None = Field(
-        default=None, description="Só para rule_type 'count_threshold': valores que contam (ex.: ['bastante', 'demais'])."
+        default=None,
+        description="Só para rule_type 'count_threshold': valores que contam (ex.: ['bastante', 'demais']).",
     )
     item_scoring: dict[str, float] | None = Field(
         default=None,
@@ -98,7 +101,9 @@ class ReportSections(BaseModel):
     seção 5). Seções nomeadas em vez de um texto único solto, para casar
     com o layout do laudo e não depender do formato livre do modelo."""
 
-    introducao: str = Field(description="Parágrafo introdutório contextualizando a avaliação e o motivo do atendimento.")
+    introducao: str = Field(
+        description="Parágrafo introdutório contextualizando a avaliação e o motivo do atendimento."
+    )
     analise_por_area: str = Field(
         description="Análise descritiva dos resultados por área/domínio avaliado, com base nas pontuações e classificação calculadas."
     )
@@ -107,11 +112,7 @@ class ReportSections(BaseModel):
     )
 
     def como_texto(self) -> str:
-        return (
-            f"{self.introducao}\n\n"
-            f"{self.analise_por_area}\n\n"
-            f"{self.conclusao}"
-        )
+        return f"{self.introducao}\n\n{self.analise_por_area}\n\n{self.conclusao}"
 
 
 class FormularioLido(BaseModel):
@@ -120,7 +121,8 @@ class FormularioLido(BaseModel):
     arquivo: str = Field(description="Nome do arquivo PDF exatamente como informado.")
     titulo: str = Field(description="Título do formulário, como aparece no PDF.")
     respondente: str | None = Field(
-        default=None, description="Quem respondeu e a relação com o paciente (ex.: 'Mãe', 'Professora'), se constar no PDF."
+        default=None,
+        description="Quem respondeu e a relação com o paciente (ex.: 'Mãe', 'Professora'), se constar no PDF.",
     )
     data: str | None = Field(default=None, description="Data de preenchimento, se constar no PDF (DD/MM/AAAA).")
 

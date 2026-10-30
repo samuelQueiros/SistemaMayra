@@ -82,11 +82,5 @@ def test_outro_psicologo_nao_acessa_fotos_de_paciente_alheio(client):
     ).json()["id"]
 
     assert client.get(f"/api/patients/{patient_id}/photos", headers=headers_b).status_code == 404
-    assert (
-        client.get(f"/api/patients/{patient_id}/photos/{photo_id}/file", headers=headers_b).status_code
-        == 404
-    )
-    assert (
-        client.delete(f"/api/patients/{patient_id}/photos/{photo_id}", headers=headers_b).status_code
-        == 404
-    )
+    assert client.get(f"/api/patients/{patient_id}/photos/{photo_id}/file", headers=headers_b).status_code == 404
+    assert client.delete(f"/api/patients/{patient_id}/photos/{photo_id}", headers=headers_b).status_code == 404

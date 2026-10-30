@@ -41,7 +41,11 @@ MODELO = {
             "tipo": "escala",
             "escala": {
                 "itens": [{"id": "i1", "rotulo": "Item 1"}, {"id": "i2", "rotulo": "Item 2"}],
-                "opcoes": [{"rotulo": "Nunca", "valor": 0}, {"rotulo": "Às vezes", "valor": 1}, {"rotulo": "Sempre", "valor": 2}],
+                "opcoes": [
+                    {"rotulo": "Nunca", "valor": 0},
+                    {"rotulo": "Às vezes", "valor": 1},
+                    {"rotulo": "Sempre", "valor": 2},
+                ],
                 "faixas": [
                     {"min": 0, "max": 1, "rotulo": "Sem indícios"},
                     {"min": 2, "max": 3, "rotulo": "Leve"},
@@ -136,7 +140,9 @@ def test_modelo_de_outra_psicologa_da_404(client):
     modelo_id = _criar(client, headers_a).json()["id"]
 
     assert client.get(f"/api/protocolos/{modelo_id}", headers=headers_b).status_code == 404
-    assert client.put(f"/api/protocolos/{modelo_id}", json={"schema_json": MODELO}, headers=headers_b).status_code == 404
+    assert (
+        client.put(f"/api/protocolos/{modelo_id}", json={"schema_json": MODELO}, headers=headers_b).status_code == 404
+    )
     assert client.delete(f"/api/protocolos/{modelo_id}", headers=headers_b).status_code == 404
     assert client.get("/api/protocolos", headers=headers_b).json() == []
 

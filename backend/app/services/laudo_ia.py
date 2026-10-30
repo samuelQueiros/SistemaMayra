@@ -135,7 +135,12 @@ def _idades_em_partes(protocolo: ProtocoloPorIA, por_id: dict[str, CampoDoCatalo
     partes: dict[str, str] = {}
     for item in protocolo.campos:
         campo = por_id.get(item.id)
-        if campo is None or campo.tipo != "opcao" or not item.id.endswith("Ano") or any(o.valor == item.valor for o in campo.opcoes):
+        if (
+            campo is None
+            or campo.tipo != "opcao"
+            or not item.id.endswith("Ano")
+            or any(o.valor == item.valor for o in campo.opcoes)
+        ):
             continue
         idade = _idade_em_anos_e_meses(item.valor or "")
         if idade is None:
@@ -177,7 +182,11 @@ def respostas_para_answers(protocolo: ProtocoloPorIA, catalogo: CatalogoDoProtoc
             answers[campo.id] = escolhida
         elif campo.tipo == "numero":
             numero = _numero(valor)
-            if numero is None or (campo.min is not None and numero < campo.min) or (campo.max is not None and numero > campo.max):
+            if (
+                numero is None
+                or (campo.min is not None and numero < campo.min)
+                or (campo.max is not None and numero > campo.max)
+            ):
                 descartados.append(item.id)
                 continue
             answers[campo.id] = f"{numero:g}"
@@ -253,14 +262,22 @@ def dados_da_profissional_em_texto(catalogo: CatalogoDoProtocolo, valores: dict[
                 linhas.append(f"Habilidade nº {i} ({nome}): {valores[f'hab_status_{i}']}")
     if not linhas:
         return ""
-    return "Dados confirmados pela profissional (use como verdade; não os altere):\n" + "\n".join(f"- {l}" for l in linhas)
+    return "Dados confirmados pela profissional (use como verdade; não os altere):\n" + "\n".join(
+        f"- {l}" for l in linhas
+    )
 
 
 # Qual especialista cuida de cada seção do formulário (pelo título da seção;
 # o resto fica com a anamnese).
 SECOES_POR_ESPECIALISTA: dict[str, tuple[str, ...]] = {
     ESCALAS.nome: ("ATA E CARS", "Protocolo TOD", "SNAP-IV", "M-CHAT"),
-    DESENVOLVIMENTO.nome: ("Portage", "Habilidades Acadêmicas", "Habilidades Cognitivas", "Funções Executivas", "Por Domínio"),
+    DESENVOLVIMENTO.nome: (
+        "Portage",
+        "Habilidades Acadêmicas",
+        "Habilidades Cognitivas",
+        "Funções Executivas",
+        "Por Domínio",
+    ),
 }
 ESPECIALISTAS: tuple[Especialista, ...] = (ANAMNESE, ESCALAS, DESENVOLVIMENTO)
 ROTULOS_DAS_ETAPAS = {
@@ -278,11 +295,19 @@ def dividir_catalogo(catalogo: CatalogoDoProtocolo) -> dict[str, CatalogoDoProto
         if CAMPOS_DA_PROFISSIONAL.match(campo.id):
             continue
         dono = next(
-            (nome for nome, secoes in SECOES_POR_ESPECIALISTA.items() if any(s.lower() in campo.secao.lower() for s in secoes)),
+            (
+                nome
+                for nome, secoes in SECOES_POR_ESPECIALISTA.items()
+                if any(s.lower() in campo.secao.lower() for s in secoes)
+            ),
             ANAMNESE.nome,
         )
         partes[dono].append(campo)
-    return {nome: CatalogoDoProtocolo(campos=campos, contexto=catalogo.contexto) for nome, campos in partes.items() if campos}
+    return {
+        nome: CatalogoDoProtocolo(campos=campos, contexto=catalogo.contexto)
+        for nome, campos in partes.items()
+        if campos
+    }
 
 
 @dataclass
@@ -317,6 +342,7 @@ def preencher_protocolo(
     texto = documentos_em_texto(documentos)
     partes = dividir_catalogo(catalogo)
     especialistas = [e for e in ESPECIALISTAS if e.nome in partes]
+
     def etapa(nome: str, funcao):
         """Avisa o fim de cada agente e diz qual parte falhou."""
 
@@ -327,7 +353,7 @@ def preencher_protocolo(
                 if cota_diaria_esgotada(exc):
                     raise
                 raise ErroNaEtapaDaIA(
-                    f"Os documentos foram lidos, mas não foi possível concluir a parte \"{ROTULOS_DAS_ETAPAS[nome]}\" "
+                    f'Os documentos foram lidos, mas não foi possível concluir a parte "{ROTULOS_DAS_ETAPAS[nome]}" '
                     f"({motivo_do_erro(exc)}). Tente de novo: os documentos não serão lidos outra vez."
                 ) from exc
             avisar("etapa_concluida", etapa=nome)
@@ -336,22 +362,31 @@ def preencher_protocolo(
         return rodar
 
     tarefas = [
-        etapa(e.nome, partial(
-            preencher_campos,
-            especialista=e,
-            paciente=paciente,
-            documentos_texto=texto,
-            catalogo_texto=formatar_catalogo(partes[e.nome]),
-            observacoes=observacoes,
-            **credenciais,
-        ))
+        etapa(
+            e.nome,
+            partial(
+                preencher_campos,
+                especialista=e,
+                paciente=paciente,
+                documentos_texto=texto,
+                catalogo_texto=formatar_catalogo(partes[e.nome]),
+                observacoes=observacoes,
+                **credenciais,
+            ),
+        )
         for e in especialistas
     ]
     if com_estudo_de_caso:
         tarefas.append(
             etapa(
                 "estudo_de_caso",
-                partial(redigir_estudo_de_caso, paciente=paciente, documentos_texto=texto, observacoes=observacoes, **credenciais),
+                partial(
+                    redigir_estudo_de_caso,
+                    paciente=paciente,
+                    documentos_texto=texto,
+                    observacoes=observacoes,
+                    **credenciais,
+                ),
             )
         )
     avisar("preenchendo", etapas=[e.nome for e in especialistas] + (["estudo_de_caso"] if com_estudo_de_caso else []))

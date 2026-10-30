@@ -47,7 +47,12 @@ def test_nenhum_id_tecnico_aparece_como_texto():
 def test_agrupado_por_secao_com_essenciais_primeiro():
     resultado = _montar({"anoEscolar": "2º Ano"})
     titulos = [g["titulo"] for g in resultado["grupos"]]
-    assert titulos[:4] == ["Identificação e escola", "Gestação e parto", "Desenvolvimento", "Histórico clínico e queixas"]
+    assert titulos[:4] == [
+        "Identificação e escola",
+        "Gestação e parto",
+        "Desenvolvimento",
+        "Histórico clínico e queixas",
+    ]
     essenciais = [g["essencial"] for g in resultado["grupos"]]
     assert essenciais == sorted(essenciais, reverse=True)  # nenhum essencial depois de um opcional
     gestacao = _grupo(resultado, "gestacao")
@@ -83,7 +88,9 @@ def test_habilidades_com_o_nome_real_do_ano_escolar():
 def test_descricao_so_quando_a_resposta_e_sim_e_pares_ano_mes_juntos():
     rotulos = [i["chave"] for i in _grupo(_montar({"complicacaoParto": "Sim"}), "gestacao")["itens"]]
     assert "complicacaoPartoDescricao" in rotulos
-    assert "complicacaoPartoDescricao" not in [i["chave"] for i in _grupo(_montar({"complicacaoParto": "Não"}), "gestacao")["itens"]]
+    assert "complicacaoPartoDescricao" not in [
+        i["chave"] for i in _grupo(_montar({"complicacaoParto": "Não"}), "gestacao")["itens"]
+    ]
 
     andou = next(i for i in _grupo(_montar(), "desenvolvimento")["itens"] if i["chave"] == "andouAno")
     assert [c["id"] for c in andou["campos"]] == ["andouAno", "andouMes"]
@@ -117,8 +124,12 @@ def test_sugestao_de_anexo_aparece_no_item_ate_ser_confirmada():
 def test_essenciais_iguais_aos_do_formulario():
     """Mesmos essenciais da tela de fases do formulário (REGRAS)."""
     html = (RAIZ / "frontend" / "public" / "formulario-novo-paciente.html").read_text(encoding="utf-8")
-    for secao, titulo in [("gestacao", "Anamnese Inicial"), ("desenvolvimento", "Histórico De Desenvolvimento Da Criança"),
-                          ("historico", "Encaminhamento, Histórico E Queixas"), ("identificacao", "Identificação Do Paciente")]:
+    for secao, titulo in [
+        ("gestacao", "Anamnese Inicial"),
+        ("desenvolvimento", "Histórico De Desenvolvimento Da Criança"),
+        ("historico", "Encaminhamento, Histórico E Queixas"),
+        ("identificacao", "Identificação Do Paciente"),
+    ]:
         linha = re.search(rf'"{re.escape(titulo)}": {{ campos: \[([^\]]*)\]', html).group(1)
         do_formulario = {c for c in re.findall(r'"(\w+)"', linha) if c in IDS}
         nossos = next(s for s in SECOES if s.chave == secao).essenciais
@@ -131,7 +142,9 @@ def test_essenciais_iguais_aos_do_formulario():
 @pytest.fixture
 def laudo(client):
     headers = registrar_e_logar(client)
-    pid = client.post("/api/patients", json={"name": "Criança Teste", "birth_date": "2019-02-10"}, headers=headers).json()["id"]
+    pid = client.post(
+        "/api/patients", json={"name": "Criança Teste", "birth_date": "2019-02-10"}, headers=headers
+    ).json()["id"]
     template = client.post("/api/templates/custom-form-avaliacao", headers=headers).json()
     with client.db_session_factory() as db:
         report = Report(
@@ -156,7 +169,12 @@ def test_tambem_apliquei_adiciona_a_escala(client, laudo):
     headers, _, rid = laudo
     resposta = client.put(f"/api/reports/{rid}/escalas-aplicadas", json={"escalas": ["tod"]}, headers=headers)
     assert _grupo(resposta.json(), "escala_tod") is not None
-    assert client.put(f"/api/reports/{rid}/escalas-aplicadas", json={"escalas": ["inventada"]}, headers=headers).status_code == 400
+    assert (
+        client.put(
+            f"/api/reports/{rid}/escalas-aplicadas", json={"escalas": ["inventada"]}, headers=headers
+        ).status_code
+        == 400
+    )
 
 
 def test_laudo_antigo_sem_catalogo_recebe_o_do_formulario(client, laudo):
@@ -204,7 +222,14 @@ def test_salvamento_valida_campos_e_anexos(client, laudo):
     url = f"/api/patients/{pid}/dados-complementares"
     assert client.patch(url, json={"campos": {"x y": {"situacao": "preenchido"}}}, headers=headers).status_code == 422
     assert client.patch(url, json={"campos": {"parto": {"situacao": "talvez"}}}, headers=headers).status_code == 422
-    anexo_alheio = {"parto": {"valor": "Normal", "situacao": "preenchido", "origem": "anexo", "anexo_id": "00000000-0000-0000-0000-000000000001"}}
+    anexo_alheio = {
+        "parto": {
+            "valor": "Normal",
+            "situacao": "preenchido",
+            "origem": "anexo",
+            "anexo_id": "00000000-0000-0000-0000-000000000001",
+        }
+    }
     assert client.patch(url, json={"campos": anexo_alheio}, headers=headers).status_code == 400
 
 
@@ -224,14 +249,25 @@ import app.services.ai.agentes.extracao as extracao  # noqa: E402
 @pytest.fixture
 def ia_do_estudo(monkeypatch, client, laudo):
     headers, _, rid = laudo
-    client.put("/api/settings/ai", json={"provider": "anthropic", "model": "claude-sonnet-5", "api_key": "chave-de-teste-1234"}, headers=headers)
+    client.put(
+        "/api/settings/ai",
+        json={"provider": "anthropic", "model": "claude-sonnet-5", "api_key": "chave-de-teste-1234"},
+        headers=headers,
+    )
     with client.db_session_factory() as db:
         report = db.get(Report, UUID(rid))
         report.answers_json = {**report.answers_json, "estudoCaso": "Estudo original da IA."}
         report.computed_json = {
             **report.computed_json,
             "estudo_de_caso_ia": "Estudo original da IA.",
-            "documentos": [{"arquivo": "mae.pdf", "tipo": "formulario", "titulo": "Anamnese", "respostas": [{"pergunta": "Sono", "resposta": "Agitado"}]}],
+            "documentos": [
+                {
+                    "arquivo": "mae.pdf",
+                    "tipo": "formulario",
+                    "titulo": "Anamnese",
+                    "respostas": [{"pergunta": "Sono", "resposta": "Agitado"}],
+                }
+            ],
         }
         db.commit()
     chamadas = []
@@ -273,11 +309,16 @@ def _atualizar(client, headers, rid, **corpo):
 
 def test_aplica_os_campos_sem_ia_quando_nao_muda_o_estudo(client, laudo, ia_do_estudo):
     headers, pid, rid = laudo
-    _confirmar(client, headers, pid, {
-        "ata_item_0": {"valor": "2", "situacao": "preenchido"},
-        "dom_atencao": {"valor": 35.0, "situacao": "preenchido"},
-        "ata_item_1": {"situacao": "nao_se_aplica"},
-    })
+    _confirmar(
+        client,
+        headers,
+        pid,
+        {
+            "ata_item_0": {"valor": "2", "situacao": "preenchido"},
+            "dom_atencao": {"valor": 35.0, "situacao": "preenchido"},
+            "ata_item_1": {"situacao": "nao_se_aplica"},
+        },
+    )
     resultado, laudo_atual = _atualizar(client, headers, rid)
     assert resultado == {"job_id": None, "campos_aplicados": 2, "estudo": "sem_mudanca"}
     assert laudo_atual["answers_json"]["ata_item_0"] == "2" and laudo_atual["answers_json"]["dom_atencao"] == "35"
@@ -312,7 +353,11 @@ def test_dado_ja_incluido_nao_volta_para_a_ia(client, laudo, ia_do_estudo):
 
 def test_estudo_editado_a_mao_e_mantido_salvo_pedido(client, laudo, ia_do_estudo):
     headers, pid, rid = laudo
-    client.put(f"/api/reports/{rid}/answers", json={"answers": {"anoEscolar": "2º Ano", "estudoCaso": "Texto ajustado pela psicóloga."}}, headers=headers)
+    client.put(
+        f"/api/reports/{rid}/answers",
+        json={"answers": {"anoEscolar": "2º Ano", "estudoCaso": "Texto ajustado pela psicóloga."}},
+        headers=headers,
+    )
     _confirmar(client, headers, pid, {"parto": {"valor": "Normal", "situacao": "preenchido"}})
     assert client.get(f"/api/reports/{rid}/pendencias", headers=headers).json()["estudo_de_caso"] == {"editado": True}
 
@@ -330,7 +375,9 @@ def test_estudo_editado_a_mao_e_mantido_salvo_pedido(client, laudo, ia_do_estudo
 
 def test_sem_estudo_anterior_redige_sobre_os_documentos_ja_lidos(client, laudo, ia_do_estudo):
     headers, pid, rid = laudo
-    client.put(f"/api/reports/{rid}/answers", json={"answers": {"anoEscolar": "2º Ano", "estudoCaso": ""}}, headers=headers)
+    client.put(
+        f"/api/reports/{rid}/answers", json={"answers": {"anoEscolar": "2º Ano", "estudoCaso": ""}}, headers=headers
+    )
     _confirmar(client, headers, pid, {"parto": {"valor": "Cesáreo", "situacao": "preenchido"}})
     resultado, laudo_atual = _atualizar(client, headers, rid, reescrever_estudo=True)
     assert resultado["andamento"]["status"] == "concluido"
@@ -356,23 +403,23 @@ def test_remove_metodos_preservando_respostas_e_permite_reincluir(client, laudo)
     headers, _, rid = laudo
     with client.db_session_factory() as db:
         report = db.get(Report, UUID(rid))
-        report.answers_json = {**report.answers_json, 'cars_0': '2'}
+        report.answers_json = {**report.answers_json, "cars_0": "2"}
         db.commit()
-    url = f'/api/reports/{rid}/metodos-excluidos'
-    outra = registrar_e_logar(client, email='outra@example.com')
-    assert client.put(url, json={'escalas': ['cars']}, headers=outra).status_code == 404
-    assert client.put(url, json={'escalas': ['invalida']}, headers=headers).status_code == 400
-    resultado = client.put(url, json={'escalas': ['ata', 'cars']}, headers=headers)
+    url = f"/api/reports/{rid}/metodos-excluidos"
+    outra = registrar_e_logar(client, email="outra@example.com")
+    assert client.put(url, json={"escalas": ["cars"]}, headers=outra).status_code == 404
+    assert client.put(url, json={"escalas": ["invalida"]}, headers=headers).status_code == 400
+    resultado = client.put(url, json={"escalas": ["ata", "cars"]}, headers=headers)
     assert resultado.status_code == 200
-    assert _grupo(resultado.json(), 'escala_ata') is None
-    assert _grupo(resultado.json(), 'escala_cars') is None
-    assert not next(m for m in resultado.json()['metodos'] if m['chave'] == 'cars')['incluido']
-    respostas = client.get(f'/api/reports/{rid}', headers=headers).json()['answers_json']
-    assert respostas['cars_0'] == '2'
-    assert respostas['__metodosExcluidos'] == ['ata', 'cars']
-    resultado = client.put(url, json={'escalas': []}, headers=headers).json()
-    assert _grupo(resultado, 'escala_cars') is not None
-    assert _grupo(resultado, 'escala_ata') is not None
+    assert _grupo(resultado.json(), "escala_ata") is None
+    assert _grupo(resultado.json(), "escala_cars") is None
+    assert not next(m for m in resultado.json()["metodos"] if m["chave"] == "cars")["incluido"]
+    respostas = client.get(f"/api/reports/{rid}", headers=headers).json()["answers_json"]
+    assert respostas["cars_0"] == "2"
+    assert respostas["__metodosExcluidos"] == ["ata", "cars"]
+    resultado = client.put(url, json={"escalas": []}, headers=headers).json()
+    assert _grupo(resultado, "escala_cars") is not None
+    assert _grupo(resultado, "escala_ata") is not None
 
 
 def test_idade_do_desfralde_e_essencial_quando_houve_desfralde():
@@ -392,7 +439,13 @@ def test_metodos_nao_aplicados_seguem_os_pdfs_e_as_respostas():
     from app.services.pendencias import metodos_nao_aplicados
 
     assert metodos_nao_aplicados({}, {"ata"}) == ["cars", "snap", "tod", "portage", "mchat"]
-    assert metodos_nao_aplicados({"tod_0": "1", "snap_3": ""}, {"formulario"}) == ["ata", "cars", "snap", "portage", "mchat"]
+    assert metodos_nao_aplicados({"tod_0": "1", "snap_3": ""}, {"formulario"}) == [
+        "ata",
+        "cars",
+        "snap",
+        "portage",
+        "mchat",
+    ]
 
 
 def test_irmaos_quando_nao_e_filho_unico():

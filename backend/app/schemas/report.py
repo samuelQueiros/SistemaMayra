@@ -149,5 +149,3 @@ class ReportChangeLogOut(BaseModel):
     new_value: str | None
     created_at: datetime
     psychologist_name: str
-
-

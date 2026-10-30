@@ -47,10 +47,19 @@ def ler_anexo(
             "O modelo de IA configurado não lê imagens. Escolha um modelo com visão em "
             "Configurações → Inteligência Artificial ou preencha os campos digitando."
         )
-    conteudo: list[dict] = [{"type": "text", "text": f"Documento: {nome}\n\nCAMPOS SEM RESPOSTA (id · rótulo · tipo/opções):\n{catalogo_texto}"}]
+    conteudo: list[dict] = [
+        {
+            "type": "text",
+            "text": f"Documento: {nome}\n\nCAMPOS SEM RESPOSTA (id · rótulo · tipo/opções):\n{catalogo_texto}",
+        }
+    ]
     for numero, imagem in enumerate(imagens, start=1):
         if len(imagens) > 1:
             conteudo.append({"type": "text", "text": f"Página {numero}:"})
-        conteudo.append({"type": "image", "base64": base64.b64encode(imagem).decode("ascii"), "mime_type": "image/jpeg"})
+        conteudo.append(
+            {"type": "image", "base64": base64.b64encode(imagem).decode("ascii"), "mime_type": "image/jpeg"}
+        )
     chat_model = get_structured_model(provider, model, api_key, LeituraDoAnexo, limites.ANEXO)
-    return _invocar_com_retentativas(chat_model, [SystemMessage(content=ANEXO_SYSTEM_PROMPT), HumanMessage(content=conteudo)])
+    return _invocar_com_retentativas(
+        chat_model, [SystemMessage(content=ANEXO_SYSTEM_PROMPT), HumanMessage(content=conteudo)]
+    )

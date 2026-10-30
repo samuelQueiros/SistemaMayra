@@ -21,11 +21,7 @@ RULE_TYPE = "protocolo"
 
 def _get_protocolo_or_404(protocolo_id: UUID, db: Session, current: Psychologist) -> ReportTemplate:
     modelo = db.get(ReportTemplate, protocolo_id)
-    if (
-        modelo is None
-        or modelo.owner_id != current.id
-        or modelo.schema_json.get("rule_type") != RULE_TYPE
-    ):
+    if modelo is None or modelo.owner_id != current.id or modelo.schema_json.get("rule_type") != RULE_TYPE:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Modelo de protocolo não encontrado")
     return modelo
 
@@ -36,16 +32,9 @@ def list_protocolos(
     db: Session = Depends(get_db),
     current: Psychologist = Depends(get_current_psychologist),
 ) -> list[ReportTemplate]:
-    modelos = (
-        db.query(ReportTemplate)
-        .filter(ReportTemplate.owner_id == current.id)
-        .order_by(ReportTemplate.name)
-        .all()
-    )
+    modelos = db.query(ReportTemplate).filter(ReportTemplate.owner_id == current.id).order_by(ReportTemplate.name).all()
     return [
-        m
-        for m in modelos
-        if m.schema_json.get("rule_type") == RULE_TYPE and (incluir_arquivados or not m.arquivado)
+        m for m in modelos if m.schema_json.get("rule_type") == RULE_TYPE and (incluir_arquivados or not m.arquivado)
     ]
 
 

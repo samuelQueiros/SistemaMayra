@@ -52,9 +52,7 @@ def register(data: PsychologistRegister, db: Session = Depends(get_db)) -> Psych
 
 @router.post("/login", response_model=Token)
 def login(data: PsychologistLogin, request: Request, db: Session = Depends(get_db)) -> Token:
-    invalid_credentials = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED, detail="E-mail ou senha inválidos"
-    )
+    invalid_credentials = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="E-mail ou senha inválidos")
     # IP real do cliente (o uvicorn roda com --proxy-headers atrás do Caddy).
     chave_ip = f"ip:{request.client.host if request.client else 'desconhecido'}"
 
@@ -66,10 +64,7 @@ def login(data: PsychologistLogin, request: Request, db: Session = Depends(get_d
     if esta_bloqueado(data.email):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=(
-                "Muitas tentativas de login com este e-mail. Aguarde alguns minutos antes de "
-                "tentar novamente."
-            ),
+            detail=("Muitas tentativas de login com este e-mail. Aguarde alguns minutos antes de tentar novamente."),
         )
 
     psychologist = db.query(Psychologist).filter(Psychologist.email == data.email).first()

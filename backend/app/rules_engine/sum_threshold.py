@@ -21,9 +21,7 @@ def calculate(schema: dict, answers: dict) -> dict:
         for field in area["fields"]:
             field_key = field["key"]
             if field_key not in area_answers:
-                raise RulesEngineError(
-                    f"Falta a resposta do campo '{field_key}' na área '{area_key}'."
-                )
+                raise RulesEngineError(f"Falta a resposta do campo '{field_key}' na área '{area_key}'.")
             value = _valor_numerico(area_key, field, area_answers[field_key])
             area_total += value * field.get("weight", 1)
 
