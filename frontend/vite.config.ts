@@ -18,7 +18,7 @@ export default defineConfig({
     proxy: {
       // Em dev, o frontend roda em porta separada (npm run dev) e a API
       // fica no backend FastAPI. Em produção, o FastAPI serve os dois
-      // juntos a partir de frontend/dist (ver CLAUDE.md seção 2).
+      // juntos a partir de frontend/dist (ver docs/ARQUITETURA.md).
       '/api': {
         target: `http://localhost:${backendPort}`,
         changeOrigin: true,

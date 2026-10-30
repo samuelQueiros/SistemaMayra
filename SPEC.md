@@ -1,11 +1,11 @@
 # SPEC.md — Especificação Técnica
 
-Complementa o `CLAUDE.md`. Aqui está o detalhamento de dados, regras e API.
+Complementa o `docs/ARQUITETURA.md`. Aqui está o detalhamento de dados, regras e API.
 
 > **⚠️ Aviso de 2026-09-20 — leia antes de qualquer coisa:** o restante
 > deste documento (seções 1-4) descreve o **motor de templates
 > configuráveis original**, que deixou de ser o caminho principal do
-> sistema (decisão do usuário — ver `CLAUDE.md` seção 1/9). Hoje o
+> sistema (decisão do usuário — ver `docs/ARQUITETURA.md` seção 1/9). Hoje o
 > protocolo de avaliação é **fixo**, implementado em
 > `frontend/public/formulario-novo-paciente.html` (HTML standalone), não
 > em `schema_json` cadastrado pela psicóloga. As entidades/endpoints
@@ -232,7 +232,7 @@ aviso no topo do arquivo).
 `frontend/public/formulario-novo-paciente.html` — HTML/CSS/JS autocontido
 (sem framework, sem bundler), cópia funcional e byte-a-byte fiel do
 protótipo original da psicóloga (fonte intocada fora do repositório, em
-`/home/samu/formpsico/.claude/formulario_prototipo_cliente.html`). Contém:
+`/home/samu/formpsico/formulario_prototipo_cliente.html`). Contém:
 
 - Identificação, gestação/parto/desenvolvimento, escola, convivência
   social.
@@ -283,6 +283,6 @@ Além disso (2026-09-20), o bootstrap também envia cada foto para a galeria
 oficial `/api/patients/{id}/photos` assim que o paciente existe no banco, e
 recarrega as fotos já existentes na galeria quando o formulário abre para
 um paciente com atendimento anterior. Remover uma foto no formulário
-também apaga da galeria, se já tinha sido enviada. Ver `CLAUDE.md` seção 9
+também apaga da galeria, se já tinha sido enviada. Ver `docs/ARQUITETURA.md` seção 9
 para os detalhes de implementação (funções `enviarFotosNovasParaGaleria`,
 `carregarFotosDaGaleria`, `interceptarRemocaoDeFoto`).

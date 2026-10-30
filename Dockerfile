@@ -1,5 +1,5 @@
 # Build do frontend (Node só é usado aqui — nunca em produção/runtime,
-# ver CLAUDE.md seção 2).
+# (ver docs/ARQUITETURA.md).
 FROM node:20-slim AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./

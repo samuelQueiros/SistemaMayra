@@ -1,7 +1,7 @@
 """Limite de tentativas de login (proteção básica contra força bruta).
 
 Contador em memória do próprio processo — coerente com a decisão de
-arquitetura do projeto ("um único serviço", ver CLAUDE.md seção 2).
+arquitetura do projeto ("um único serviço", ver docs/ARQUITETURA.md).
 Limitação assumida conscientemente: reseta se o processo reiniciar, e não é
 compartilhado entre processos — com WEB_CONCURRENCY=2 (padrão da imagem
 Docker), cada processo conta à parte, então no pior caso o bloqueio vem

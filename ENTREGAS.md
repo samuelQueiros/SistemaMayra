@@ -1,6 +1,6 @@
 # ENTREGAS.md — Registro de entregas prontas
 
-**Este arquivo é atualizado pelo Claude Code, não pela psicóloga.** Sempre
+**Este arquivo é atualizado pelo assistente de desenvolvimento, não pela psicóloga.** Sempre
 que uma funcionalidade dos `PROMPTS.md` for concluída, adicione (ou marque)
 uma entrada aqui **antes de seguir para o próximo prompt**. Não apague
 entradas antigas — isso é o histórico do que já foi construído.
@@ -51,7 +51,7 @@ entradas antigas — isso é o histórico do que já foi construído.
 
 ## Registro detalhado das entregas
 
-> As entradas abaixo são adicionadas pelo Claude Code, uma por
+> As entradas abaixo são adicionadas pelo assistente de desenvolvimento, uma por
 > funcionalidade concluída, na ordem em que forem sendo feitas.
 
 ## [Semana 1] Estrutura inicial do projeto
@@ -60,7 +60,7 @@ entradas antigas — isso é o histórico do que já foi construído.
 - **Prompt de origem:** Prompt 1.1 do PROMPTS.md
 - **O que foi feito:** Criado o esqueleto do projeto com backend em Python
   (FastAPI) e frontend em React + Vite + TypeScript, do jeito combinado no
-  CLAUDE.md (um único serviço em produção). O backend já sobe com uma rota
+  docs/ARQUITETURA.md (um único serviço em produção). O backend já sobe com uma rota
   de teste (`/api/health`) e, quando o frontend está compilado, ele mesmo
   serve as telas do site na mesma porta — não existe servidor Node rodando
   em produção. Também foi criado o arquivo `.env.example` com as variáveis
@@ -129,7 +129,7 @@ entradas antigas — isso é o histórico do que já foi construído.
   essas tabelas (isso é autenticação e CRUD, Prompts 2.1 e 2.2). Em
   produção o banco será Postgres (`DATABASE_URL` no `.env`); em
   desenvolvimento local, por padrão, usamos SQLite para simplificar,
-  conforme autorizado no CLAUDE.md seção 2.
+  conforme autorizado no docs/ARQUITETURA.md.
 
 ## [Semana 1] Protótipo de telas
 - **Status:** ✅ Pronto
@@ -179,7 +179,7 @@ entradas antigas — isso é o histórico do que já foi construído.
   digital" (token JWT) que prova quem ela é nas próximas requisições
   (`GET /api/auth/me`). A senha nunca é guardada em texto puro — é
   transformada com bcrypt antes de ir para o banco, exatamente como pede o
-  CLAUDE.md seção 5. Também foi criada a trava (`dependency`) que qualquer
+  docs/ARQUITETURA.md. Também foi criada a trava (`dependency`) que qualquer
   rota futura vai usar para exigir login antes de mostrar dados de
   pacientes/laudos.
 - **Arquivos criados/alterados:**
@@ -218,7 +218,7 @@ entradas antigas — isso é o histórico do que já foi construído.
 - **O que foi feito:** Criadas as rotas para cadastrar/listar/editar/excluir
   pacientes (`/api/patients`) e para cadastrar/listar/consultar modelos de
   laudo (`/api/templates`). As duas seguem a mesma regra de segurança do
-  CLAUDE.md seção 5: exigem login e cada psicóloga só vê os próprios
+  docs/ARQUITETURA.md: exigem login e cada psicóloga só vê os próprios
   pacientes e modelos — se a psicóloga B tentar acessar um paciente da
   psicóloga A pelo número dele, o sistema responde "não encontrado" (não
   entrega nem confirma que existe). Também foi criada uma conferência
@@ -565,7 +565,7 @@ entradas antigas — isso é o histórico do que já foi construído.
 - **Prompt de origem:** Prompt 4.3 do PROMPTS.md
 - **O que foi feito:** Revisão de ponta a ponta em todas as rotas que
   mexem com dados de paciente ou laudo, conferindo item por item o que o
-  CLAUDE.md seção 5 exige: (1) toda rota que devolve dado de paciente
+  docs/ARQUITETURA.md exige: (1) toda rota que devolve dado de paciente
   exige login e (2) cada psicóloga só acessa o que é dela. Resultado:
   **todas as rotas de pacientes, templates e laudos já exigiam login e
   filtravam por dona** desde que foram criadas nas semanas anteriores —
@@ -608,7 +608,7 @@ entradas antigas — isso é o histórico do que já foi construído.
 - **Prompt de origem:** Prompt 4.4 do PROMPTS.md
 - **O que foi feito:** Criado um `Dockerfile` único que compila o
   frontend e empacota tudo com o backend num só serviço (exatamente a
-  decisão de arquitetura do CLAUDE.md seção 2 — sem servidor Node em
+  decisão de arquitetura do docs/ARQUITETURA.md — sem servidor Node em
   produção). O container já sabe rodar as migrations do banco sozinho
   antes de subir. Também foi criado o `DEPLOY.md`, um checklist completo
   de implantação: quais variáveis de ambiente são obrigatórias e por quê
@@ -1611,8 +1611,8 @@ entradas antigas — isso é o histórico do que já foi construído.
     pacientes (nome completo, laudo assinado) — não deveriam continuar no
     repositório sem necessidade depois que a integração real foi feita.
     Backup intocado do HTML original mantido fora do repositório, em
-    `/home/samu/formpsico/.claude/formulario_prototipo_cliente.html`.
-  - **Documentação atualizada**: `CLAUDE.md` (seções 1, 2, 3, 6 e 9
+    `/home/samu/formpsico/formulario_prototipo_cliente.html`.
+  - **Documentação atualizada**: `docs/ARQUITETURA.md` (seções 1, 2, 3, 6 e 9
     reescritas), `SPEC.md` (aviso no topo + nova seção 7 descrevendo a
     arquitetura atual), `APRESENTACAO.md` (seções 1-4 e 6 reescritas para
     o público não técnico), `README.md` e `DEPLOY.md` (referências a
@@ -1628,7 +1628,7 @@ entradas antigas — isso é o histórico do que já foi construído.
   - Apagados: `frontend/src/pages/ModelosDeLaudo.tsx`,
     `frontend/src/components/DynamicField.tsx` (+ `.test.tsx`),
     `referencia_cliente/` (pasta inteira)
-  - `CLAUDE.md`, `SPEC.md`, `APRESENTACAO.md`, `README.md`, `DEPLOY.md`
+  - `docs/ARQUITETURA.md`, `SPEC.md`, `APRESENTACAO.md`, `README.md`, `DEPLOY.md`
 - **Como testar/ver funcionando:**
   1. `cd backend && ./.venv/bin/python3 -m pytest tests/ -v` — 140 de 140
      testes passando (nada quebrou no motor de regras legado).
@@ -1650,11 +1650,11 @@ entradas antigas — isso é o histórico do que já foi construído.
   - Motor de regras dinâmico, geração de texto por IA e CRUD/import de
     templates **continuam no backend**, só não são mais chamados por
     nenhuma tela — decisão deliberada de não remover código que pode
-    voltar a ser útil, documentada em `CLAUDE.md` seção 9 para não
+    voltar a ser útil, documentada em `docs/ARQUITETURA.md` seção 9 para não
     confundir uma sessão futura.
   - `.venv` do backend tem um `shebang` quebrado (caminho antigo da
     máquina) — usar `./.venv/bin/python3 -m uvicorn ...` em vez do script
-    `uvicorn` direto; documentado em `CLAUDE.md` seção 9.
+    `uvicorn` direto; documentado em `docs/ARQUITETURA.md` seção 9.
 
 ## Fotos do paciente passam a sincronizar com a galeria oficial
 
@@ -1691,7 +1691,7 @@ entradas antigas — isso é o histórico do que já foi construído.
   - Nenhuma mudança no backend — os endpoints de fotos já existiam,
     prontos e testados (`backend/tests/test_patient_photos.py`).
 - **Arquivos alterados:** `frontend/public/formulario-novo-paciente.html`,
-  `CLAUDE.md` (seção 9), `SPEC.md` (seção 7).
+  `docs/ARQUITETURA.md` (seção 9), `SPEC.md` (seção 7).
 - **Como testar/ver funcionando:**
   1. `cd backend && ./.venv/bin/python3 -m pytest tests/ -v` — 140 de 140
      continuam passando (nenhum endpoint de backend foi alterado).

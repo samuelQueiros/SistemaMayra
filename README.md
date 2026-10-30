@@ -98,7 +98,7 @@ psicologa/
 ├── docs/                 ESCOPO, ARQUITETURA, REGRAS_DO_RELATORIO, MANUTENCAO
 ├── .github/workflows/    publicação da imagem Docker
 ├── Dockerfile, docker-compose*.yml, Caddyfile
-└── CLAUDE.md, SPEC.md, PROMPTS.md, ENTREGAS.md, APRESENTACAO.md, DEPLOY.md   documentos de projeto
+└── SPEC.md, PROMPTS.md, ENTREGAS.md, APRESENTACAO.md, DEPLOY.md   documentos de projeto
 ```
 
 ## 6. Tecnologias

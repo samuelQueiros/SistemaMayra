@@ -6,7 +6,7 @@ no histórico do git. Datas são aproximadas (a data do commit).
 
 > **Sobre a fonte do escopo original.** Não foi encontrado nenhum contrato ou proposta assinada no
 > repositório nem nas pastas de apoio. O escopo original abaixo foi **deduzido** do roteiro de 4 semanas
-> (`PROMPTS.md`, que se descreve como "o mesmo cronograma de 4 semanas da proposta"), do `CLAUDE.md`, do
+> (`PROMPTS.md`, que se descreve como "o mesmo cronograma de 4 semanas da proposta"), do `docs/ARQUITETURA.md`, do
 > `SPEC.md` e do `APRESENTACAO.md`. Por isso toda a Parte 1 está marcada como **a confirmar** com quem
 > fechou a proposta.
 
@@ -32,7 +32,7 @@ web com login, banco de dados e geração automática do relatório no padrão d
 
 Em 20/09/2026 houve uma **mudança de rumo decidida pelo usuário**: em vez de modelos de laudo configuráveis,
 o sistema passou a girar em torno de um **protocolo fixo** (o formulário original da Mayra, embutido). Isso
-está registrado em `ENTREGAS.md` (entrada "Mudança de arquitetura") e no `CLAUDE.md`. O escopo abaixo já
+está registrado em `ENTREGAS.md` (entrada "Mudança de arquitetura") e no `docs/ARQUITETURA.md`. O escopo abaixo já
 considera essa mudança.
 
 ## Parte 2. Entregue dentro do escopo

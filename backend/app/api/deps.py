@@ -1,5 +1,5 @@
 """Dependências compartilhadas das rotas. `get_current_psychologist` é o que exige login: toda rota
-com dados de paciente depende dela e filtra por `owner_id` (CLAUDE.md, seção 5)."""
+com dados de paciente depende dela e filtra por `owner_id` (docs/ARQUITETURA.md)."""
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer

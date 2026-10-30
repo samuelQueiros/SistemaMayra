@@ -75,7 +75,7 @@ def health() -> dict[str, str]:
 
 
 # Serve o build do frontend (frontend/dist) quando existir, no mesmo processo
-# e porta da API (ver CLAUDE.md seção 2: um único serviço em produção).
+# e porta da API (ver docs/ARQUITETURA.md; um único serviço em produção).
 # Precisa ser registrado por último: as rotas de API acima têm prioridade.
 frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 

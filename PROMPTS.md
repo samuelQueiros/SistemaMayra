@@ -1,15 +1,15 @@
-# PROMPTS.md — Roteiro de prompts para o Claude Code
+# PROMPTS.md — Roteiro de prompts para o assistente
 
-Copie e cole os prompts abaixo, um de cada vez, na ordem. Espere o Claude
+Copie e cole os prompts abaixo, um de cada vez, na ordem. Espere o assistente
 Code terminar e revise antes de colar o próximo. Eles seguem o mesmo
 cronograma de 4 semanas da proposta.
 
-Antes de começar: coloque `CLAUDE.md`, `SPEC.md`, `TEMPLATES_LAUDOS.md` e
-`ENTREGAS.md` na raiz do projeto — o Claude Code os lê automaticamente
+Antes de começar: coloque `docs/ARQUITETURA.md`, `SPEC.md`, `TEMPLATES_LAUDOS.md` e
+`ENTREGAS.md` na raiz do projeto — o assistente os lê automaticamente
 como contexto.
 
-**Depois de cada prompt concluído, o Claude Code deve atualizar
-`ENTREGAS.md` sozinho** (isso já está instruído em `CLAUDE.md`, seção 8).
+**Depois de cada prompt concluído, o assistente deve atualizar
+`ENTREGAS.md` sozinho** (isso já está instruído em `docs/ARQUITETURA.md`, seção 8).
 Se ele não fizer isso, cole este lembrete antes de seguir para o próximo
 prompt:
 ```
@@ -23,7 +23,7 @@ foi feito, os arquivos alterados e como testar.
 ## Prompt 0 — Kickoff (rodar uma vez, antes de tudo)
 
 ```
-Leia CLAUDE.md e SPEC.md nesta pasta. Antes de escrever qualquer código,
+Leia docs/ARQUITETURA.md e SPEC.md nesta pasta. Antes de escrever qualquer código,
 me dê um resumo em poucas linhas confirmando que entendeu:
 1. A arquitetura (backend único em Python servindo a API e o frontend estático)
 2. O modelo de dados principal
@@ -175,7 +175,7 @@ e implemente GET /api/reports/{id}/pdf para download.
 ### Prompt 4.3 — Testes finais e revisão de segurança
 ```
 Revise todas as rotas que retornam dados de pacientes ou laudos e confirme
-que exigem autenticação E checam owner_id (seção 5 do CLAUDE.md). Rode
+que exigem autenticação E checam owner_id (seção 5 do docs/ARQUITETURA.md). Rode
 todos os testes automatizados. Liste qualquer ponto de segurança ou dado
 sensível que ficou exposto sem proteção.
 ```
@@ -192,7 +192,7 @@ variáveis de ambiente, HTTPS). Não faça o deploy, apenas deixe tudo pronto.
 
 ## Dicas gerais de uso
 
-- Se o Claude Code sugerir mudar a arquitetura (ex.: separar frontend em
+- Se o assistente sugerir mudar a arquitetura (ex.: separar frontend em
   outro serviço Node), isso está fora do que foi combinado — recuse ou
   pergunte antes de aceitar.
 - Sempre que cadastrar um novo tipo de laudo, valide o `schema_json` no

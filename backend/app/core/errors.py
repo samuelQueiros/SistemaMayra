@@ -86,7 +86,7 @@ def registrar_tratadores_de_erro(app: FastAPI) -> None:
     @app.exception_handler(Exception)
     async def _inesperado(request: Request, exc: Exception) -> JSONResponse:
         # Só o tipo/rota e o traceback vão para o log — nunca o corpo da
-        # requisição (dados de pacientes, ver CLAUDE.md seção 5).
+        # requisição (dados de pacientes, ver docs/ARQUITETURA.md).
         logger.exception("Erro inesperado em %s %s", request.method, request.url.path)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
