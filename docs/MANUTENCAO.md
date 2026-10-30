@@ -88,4 +88,4 @@ Antes, confira `docker volume ls` e faça um backup.
 
 Nomes de pacientes que apareciam em testes e comentários foram retirados dos arquivos, mas **continuam nos
 commits antigos**. Se o repositório (ou o pacote no GHCR) for público, é preciso reescrever o histórico ou
-mantê-lo privado. Pastas de referência (`reclamacoes`, `referencias`, etc.) ficam fora do repositório.
+mantê-lo privado. Os materiais de referência da clínica ficam fora do repositório.
