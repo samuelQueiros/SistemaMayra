@@ -2557,3 +2557,9 @@ Correções pedidas na gravação de 2026-10-16. O relatório do João Neto pass
 - **Teste com a IA real** (dados fictícios): observações escritas só para as habilidades avaliadas e coerentes com o desempenho; o estudo de caso cita "desfralde com controle total alcançado aos 3 anos e 6 meses".
 - **Arquivos:** `frontend/src/components/DadosDaProfissional.tsx` (+ teste), `frontend/src/pages/LaudoPorIA.tsx`, `frontend/src/api/laudoIA.ts`, `frontend/public/formulario-novo-paciente.html` (catálogo com `habilidadesPorAno`), `backend/app/services/laudo_ia.py`, `backend/app/api/laudo_ia.py`, `backend/app/services/ai/agentes/especialistas.py` + testes.
 - **Validação:** 363 testes do backend e 87 do frontend; build aprovado.
+
+## 2026-10-30 — Fechamento do relatório no padrão da Mayra (OBS-01 a OBS-04)
+- Considerações Finais: texto novo "A ANÁLISE DOS COMPORTAMENTOS…" (com negritos) antes do "Vale ressaltar"; a OBSERVAÇÃO "não configura laudo médico" saiu; "Desde já, coloco-me à disposição…" desceu para junto de "Atenciosamente".
+- SOBRE A PROFISSIONAL RESPONSÁVEL e NOTA SOBRE OS RESULTADOS continuam, sem a caixa azul (classe `fechamento-texto`).
+- Arquivos: `frontend/public/formulario-novo-paciente.html`, `frontend/src/laudo/{documento,css}.ts`, `backend/app/services/laudo_documento.py`; testes em `formularioModeloJoaoNeto.test.js` e `test_documents_export.py`.
+- Atenção: o texto vale para todas as hipóteses (decisão do usuário) e cita TEA; texto transcrito de print de baixa resolução, a confirmar com a Mayra. Relatórios já salvos só mudam em "Atualizar Relatório".

@@ -164,7 +164,7 @@ export function htmlFechamento(id: Identificacao, perfil: Perfil): string {
   const partes: string[] = []
   if (perfil.bio) {
     partes.push(
-      `<div class="caixa-cinza clara"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>${esc(perfil.bio)}</p></div>`,
+      `<div class="fechamento-texto"><h3><mark class="cinza">SOBRE A PROFISSIONAL RESPONSÁVEL</mark></h3><p>${esc(perfil.bio)}</p></div>`,
     )
   }
   // Atenciosamente, local/data e assinatura numa página só.

@@ -141,3 +141,41 @@ it('gráfico da ATA vai só até 2 e a idade cognitiva sai só como faixa', () =
   expect(graficoATA).toContain('min:0,max:2')
   expect(fonte).not.toContain('Repertório de referência pelo Portage')
 })
+
+// Observações de 2026-10-30 (OBS-01 a OBS-04): fechamento no padrão enviado
+// pela psicóloga.
+it.each([
+  ['TEA', { hip_tea: true }],
+  ['sem hipótese de TEA', { hip_tdah: true }],
+])('fechamento: texto da análise antes do "Vale ressaltar", sem caixa azul (%s)', async (_nome, hipotese) => {
+  w.aplicarDados({ nomePaciente: 'Paciente Teste', sexo: 'Masculino', dataNascimento: '2019-11-02', dataRelatorio: '2026-10-15', cidade: 'Cidade Fictícia - GO', ...hipotese })
+  const doc = await w.gerarDocumentoLaudoHTML()
+
+  const consideracoes = doc.indexOf('Considerações Finais')
+  const analise = doc.indexOf('<strong>A ANÁLISE DOS COMPORTAMENTOS</strong>, realizada evidenciou')
+  const vale = doc.indexOf('Vale ressaltar que não se deve rejeitar')
+  const sobre = doc.indexOf('SOBRE A PROFISSIONAL RESPONSÁVEL')
+  const nota = doc.indexOf('NOTA SOBRE OS RESULTADOS')
+  const desdeJa = doc.indexOf('Desde já, coloco-me à disposição')
+  const atenciosamente = doc.indexOf('Atenciosamente')
+  expect(consideracoes).toBeGreaterThan(0)
+  expect(analise).toBeGreaterThan(consideracoes)
+  expect(vale).toBeGreaterThan(analise)
+  expect(sobre).toBeGreaterThan(vale)
+  expect(nota).toBeGreaterThan(sobre)
+
+  // Negritos pedidos: TEA por extenso e nome com CBO
+  expect(doc).toContain('<strong>Transtorno do Espectro Autista (TEA)</strong>')
+  expect(doc).toContain('<strong>Mayra Vanessa Andrade da Cunha, Neuropsicopedagoga Clínica (CBO 2394-40) e Institucional (CBO 2394-45)</strong>')
+
+  // A OBSERVAÇÃO sai; "Desde já" desce para junto de "Atenciosamente"
+  expect(doc).not.toContain('OBSERVAÇÃO: Este relatório')
+  expect(doc.split('Desde já, coloco-me à disposição').length - 1).toBe(1)
+  expect(desdeJa).toBeGreaterThan(nota)
+  expect(desdeJa).toBeLessThan(atenciosamente)
+  expect(doc.slice(doc.lastIndexOf('<div class="bloco-assinatura">'))).toContain('Desde já, coloco-me à disposição')
+
+  // Sem a caixa azul em volta de SOBRE A PROFISSIONAL e da NOTA
+  expect(doc.slice(sobre - 80, sobre)).not.toContain('caixa-cinza')
+  expect(doc.slice(nota - 80, nota)).not.toContain('caixa-cinza')
+})

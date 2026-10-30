@@ -85,8 +85,9 @@ _BLOCOS_REMOVIDOS = (
     re.compile(r'<h3><mark class="cinza">Estudo De Caso E Observações Clínicas</mark></h3>.*?(?=<h3)', re.S),
 )
 _NOTA_SOBRE_OS_RESULTADOS = re.compile(
-    r'<div class="caixa-cinza clara"><p><strong>NOTA SOBRE OS RESULTADOS:</strong>.*?</p></div>', re.S
+    r'<div class="(?:caixa-cinza clara|fechamento-texto)"><p><strong>NOTA SOBRE OS RESULTADOS:</strong>.*?</p></div>', re.S
 )
+_BLOCO_ASSINATURA = '<div class="bloco-assinatura">'
 _ATENCIOSAMENTE = '<p class="direita" style="margin-top:6mm"><strong>Atenciosamente,</strong></p>'
 _IDADE_COGNITIVA_ANTIGA = re.compile(
     r"Repertório de referência pelo Portage: (.*?) \(fora da faixa etária do instrumento — não é comparação normativa\)"
@@ -120,7 +121,9 @@ def no_modelo_atual(html: str) -> str:
     nota = _NOTA_SOBRE_OS_RESULTADOS.search(html)
     if nota and _ATENCIOSAMENTE in html:
         html = html[: nota.start()] + html[nota.end() :]
-        html = html.replace(_ATENCIOSAMENTE, nota.group(0) + _ATENCIOSAMENTE, 1)
+        # Antes do bloco da assinatura (que abre com "Desde já…") quando ele existe.
+        ancora = _BLOCO_ASSINATURA if _BLOCO_ASSINATURA in html else _ATENCIOSAMENTE
+        html = html.replace(ancora, nota.group(0) + ancora, 1)
     return html
 
 
