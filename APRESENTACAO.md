@@ -1,3 +1,6 @@
+> **Aviso (30/10/2026):** este documento é de apresentação e está parcialmente desatualizado (por exemplo, o
+> PDF consolidado foi removido em 05/10). O estado atual está no [README](README.md) e em [docs/ESCOPO.md](docs/ESCOPO.md).
+
 # Sistema de Relatório Automático — Apresentação
 
 > Documento pensado para apresentar o sistema a alguém que não vai ler
