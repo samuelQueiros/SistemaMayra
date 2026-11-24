@@ -29,6 +29,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_COLOR_INDEX, WD_LINE_SPACING
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Mm, Pt, RGBColor
+from lxml import etree
 from lxml import html as lxml_html
 from weasyprint import HTML
 from weasyprint.urls import URLFetcher
@@ -194,12 +195,56 @@ def _mm_do_elemento(el, padrao: float) -> float:
         return padrao
 
 
+# Ordem dos filhos que o schema do Word (OOXML) exige em cada bloco de propriedades. O Word do Windows
+# perdoa elementos fora de ordem ou repetidos; Word para Mac, Pages e Google Docs nem sempre, e mostram a
+# tabela ou o parágrafo sem a formatação (ex.: cabeçalho do paciente sem negrito, com bordas em tudo).
+_ORDEM_XML = {
+    "tblPr": [
+        "tblStyle", "tblpPr", "tblOverlap", "bidiVisual", "tblStyleRowBandSize", "tblStyleColBandSize", "tblW", "jc",
+        "tblCellSpacing", "tblInd", "tblBorders", "shd", "tblLayout", "tblCellMar", "tblLook", "tblCaption",
+        "tblDescription",
+    ],
+    "tcPr": [
+        "cnfStyle", "tcW", "gridSpan", "hMerge", "vMerge", "tcBorders", "shd", "noWrap", "tcMar", "textDirection",
+        "tcFitText", "vAlign", "hideMark",
+    ],
+    "pPr": [
+        "pStyle", "keepNext", "keepLines", "pageBreakBefore", "framePr", "widowControl", "numPr",
+        "suppressLineNumbers", "pBdr", "shd", "tabs", "suppressAutoHyphens", "kinsoku", "wordWrap", "overflowPunct",
+        "topLinePunct", "autoSpaceDE", "autoSpaceDN", "bidi", "adjustRightInd", "snapToGrid", "spacing", "ind",
+        "contextualSpacing", "mirrorIndents", "suppressOverlap", "jc", "textDirection", "textAlignment",
+        "textboxTightWrap", "outlineLvl", "divId", "cnfStyle", "rPr", "sectPr", "pPrChange",
+    ],
+    "rPr": [
+        "rStyle", "rFonts", "b", "bCs", "i", "iCs", "caps", "smallCaps", "strike", "dstrike", "outline", "shadow",
+        "emboss", "imprint", "noProof", "snapToGrid", "vanish", "webHidden", "color", "spacing", "w", "kern",
+        "position", "sz", "szCs", "highlight", "u", "effect", "bdr", "shd", "fitText", "vertAlign", "rtl", "cs", "em",
+        "lang", "eastAsianLayout", "specVanish", "oMath",
+    ],
+}
+
+
+def _inserir_na_ordem(pai, filho) -> None:
+    """Põe `filho` dentro de `pai` na posição do schema e troca um irmão de mesmo nome, se já existir (evita
+    elementos repetidos como dois `tblLayout`)."""
+    ordem = _ORDEM_XML[etree.QName(pai).localname]
+    posicao = ordem.index(etree.QName(filho).localname)
+    for existente in pai.findall(filho.tag):
+        pai.remove(existente)
+    for irmao in pai:
+        nome = etree.QName(irmao).localname
+        if nome in ordem and ordem.index(nome) > posicao:
+            irmao.addprevious(filho)
+            return
+    pai.append(filho)
+
+
 def _sombrear(elemento_pr, cor: str) -> None:
     shd = OxmlElement("w:shd")
     shd.set(qn("w:val"), "clear")
     shd.set(qn("w:color"), "auto")
     shd.set(qn("w:fill"), cor.lstrip("#").upper())
-    elemento_pr.append(shd)
+    _inserir_na_ordem(elemento_pr, shd)
 
 
 def _bordas_celula(celula, cor: str = "000000", tipo: str = "single", tamanho: int = 4) -> None:
@@ -212,7 +257,7 @@ def _bordas_celula(celula, cor: str = "000000", tipo: str = "single", tamanho: i
         b.set(qn("w:space"), "0")
         b.set(qn("w:color"), cor)
         bordas.append(b)
-    tc_pr.append(bordas)
+    _inserir_na_ordem(tc_pr, bordas)
 
 
 def _sem_bordas_tabela(tabela) -> None:
@@ -222,7 +267,7 @@ def _sem_bordas_tabela(tabela) -> None:
         b = OxmlElement(f"w:{lado}")
         b.set(qn("w:val"), "nil")
         bordas.append(b)
-    tbl_pr.append(bordas)
+    _inserir_na_ordem(tbl_pr, bordas)
 
 
 def _bordas_tabela(tabela, cor: str, tipo: str, tamanho: int) -> None:
@@ -235,7 +280,7 @@ def _bordas_tabela(tabela, cor: str, tipo: str, tamanho: int) -> None:
         b.set(qn("w:space"), "0")
         b.set(qn("w:color"), cor)
         bordas.append(b)
-    tbl_pr.append(bordas)
+    _inserir_na_ordem(tbl_pr, bordas)
 
 
 def _largura_celula(celula, mm: float) -> None:
@@ -244,7 +289,7 @@ def _largura_celula(celula, mm: float) -> None:
     tc_w = tc_pr.find(qn("w:tcW"))
     if tc_w is None:
         tc_w = OxmlElement("w:tcW")
-        tc_pr.append(tc_w)
+        _inserir_na_ordem(tc_pr, tc_w)
     tc_w.set(qn("w:w"), str(int(mm * 56.7)))
     tc_w.set(qn("w:type"), "dxa")
 
@@ -257,11 +302,11 @@ def _fixar_colunas(tabela, larguras_mm: list[float]) -> None:
     tbl_pr = tbl.tblPr
     layout = OxmlElement("w:tblLayout")
     layout.set(qn("w:type"), "fixed")
-    tbl_pr.append(layout)
+    _inserir_na_ordem(tbl_pr, layout)
     tbl_w = tbl_pr.find(qn("w:tblW"))
     if tbl_w is None:
         tbl_w = OxmlElement("w:tblW")
-        tbl_pr.append(tbl_w)
+        _inserir_na_ordem(tbl_pr, tbl_w)
     tbl_w.set(qn("w:w"), str(int(sum(larguras_mm) * 56.7)))
     tbl_w.set(qn("w:type"), "dxa")
     for col, largura in zip(tbl.tblGrid.findall(qn("w:gridCol")), larguras_mm):
@@ -675,6 +720,9 @@ class _ConversorDocx:
                 _adicionar_imagem(p.add_run(), img.get("src"), _mm_do_elemento(img, 160))
             return
         _repetir_cabecalho(linha)
+        # O título fica preso à linha seguinte (cabeçalho das colunas): o Word não deixa o título sozinho no
+        # fim de uma página.
+        p.paragraph_format.keep_with_next = True
         if antes_el.tag in ("h1", "h2"):
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             formato = {"negrito": True, "tamanho": 12.5}
@@ -748,6 +796,9 @@ class _ConversorDocx:
                     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 p.paragraph_format.space_after = Pt(0)
                 p.paragraph_format.line_spacing = 1.0
+                if eh_cabecalho:
+                    # Cabeçalho das colunas preso à primeira linha de dados.
+                    p.paragraph_format.keep_with_next = True
                 self._inline(p, celula_html, formato)
                 coluna += span
         espaco = self.doc.add_paragraph()
@@ -795,7 +846,7 @@ class _ConversorDocx:
             base.set(qn("w:space"), "1")
             base.set(qn("w:color"), "000000")
             p_bdr.append(base)
-            p._p.get_or_add_pPr().append(p_bdr)
+            _inserir_na_ordem(p._p.get_or_add_pPr(), p_bdr)
         elif "grafico" in classes:
             self._imagem_centralizada(el)
         elif "galeria" in classes:
@@ -841,6 +892,12 @@ class _ConversorDocx:
             eh_titulo = el.tag in ("h1", "h2", "h3")
             eh_grafico = "grafico" in classes
 
+            if "cab-paciente" in classes:
+                # Foto + caixa de identificação: tem conversor próprio. Sem este desvio a tabela caía no conversor
+                # genérico e saía com bordas em todas as células, colunas iguais e o texto todo num parágrafo só.
+                self._cabecalho_paciente(el)
+                i += 1
+                continue
             if (eh_titulo or eh_grafico) and proximo is not None and proximo.tag == "table":
                 tabela = self._tabela(proximo, antes_el=el)
                 if tabela is None:

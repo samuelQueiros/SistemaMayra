@@ -3,6 +3,18 @@
 Resumo por data, em linguagem simples, montado a partir do git. Os detalhes estão em
 [ENTREGAS.md](ENTREGAS.md) e o panorama em [docs/ESCOPO.md](docs/ESCOPO.md).
 
+## 2026-11-24
+
+### Corrigido
+* Texto de TEA aparecendo em relatório de TDAH: a conclusão (após o gráfico de domínios), o 1º parágrafo das Considerações Finais e a frase "Partindo de uma hipótese diagnóstica de…" da metodologia agora seguem a hipótese principal. Para outras hipóteses (ex.: TPAC) o texto é neutro e usa o nome da hipótese. Os textos de TDAH e o neutro são adaptações e aguardam revisão da Mayra.
+* Cabeçalho do paciente no Word (foto + identificação) saía com bordas em todas as células e o texto sem negrito, num parágrafo só.
+* XML do Word fora da ordem do schema (elementos repetidos e fora de ordem), que o Word do Windows perdoa mas Word para Mac, Pages e Google Docs não.
+* Título e cabeçalho das tabelas de quadros ficam presos à primeira linha no Word.
+* Gráfico do Portage: legenda movida para baixo, sem encostar nos números.
+
+### Alterado
+* Gráficos CARS e ATA menores (110 mm de largura em vez de 170 e 165 mm).
+
 ## 2026-10-30
 
 ### Alterado

@@ -558,7 +558,7 @@ input[type=file]:focus-visible::file-selector-button{box-shadow:var(--focus-ring
 <label>Após Os Gráficos Do SNAP-IV</label><textarea id="textoSNAP" style="min-height:180px"></textarea>
 <label>Síntese Clínica</label><textarea id="textoSintese" style="min-height:360px"></textarea>
 <label>Corroboração SNAP-IV (Antes Do Gráfico De Funções Executivas)</label><textarea id="textoCorroboracao" style="min-height:130px"></textarea>
-<label>Conclusão Sobre TEA (Após O Gráfico De Domínios) — {PROBABILIDADE_TEA} Vira O Percentual Calculado</label><textarea id="textoConclusaoTEA" style="min-height:260px"></textarea>
+<label>Conclusão Sobre A Hipótese Principal (Após O Gráfico De Domínios) — {PROBABILIDADE_TEA} / {PROBABILIDADE_TDAH} Viram O Percentual Calculado; {HIPOTESE} Vira O Nome Da Hipótese Marcada</label><textarea id="textoConclusaoTEA" style="min-height:260px"></textarea>
 
 
 <h2>19. Encaminhamentos</h2>
@@ -1753,9 +1753,39 @@ function formasGenero(sexo){
 // **negrito**, ==destaque cinza== e !!destaque amarelo!!; linhas iniciadas
 // por ✔ ou • viram lista. {PROBABILIDADE_TEA} é trocado pelo percentual
 // calculado a partir das escalas ATA/CARS.
+// Qual conjunto de textos-padrão vale para a hipótese principal: TEA, TDAH ou
+// "OUTRA" (texto neutro: usa {HIPOTESE}, trocado pelo nome da hipótese marcada).
+function perfilDeTextoDaHipotese(chave){return chave==="TEA"?"TEA":chave==="TDAH"?"TDAH":"OUTRA";}
+function chaveDaHipotesePrincipal(){return chaveDaHipotese(hipotesesParaRelatorio()[0]||"");}
+function nomeDaHipotesePrincipal(){
+  const chave=chaveDaHipotesePrincipal();
+  const h=hipotesesDoQuadro().find(x=>x.chave===chave)||hipotesesDoQuadro()[0];
+  return h?nomeDaHipoteseNoRelatorio(h):"a hipótese diagnóstica investigada";
+}
+
+// Conclusão do relatório (após o gráfico de domínios). Mesma estrutura para
+// qualquer hipótese; só muda o diagnóstico citado e o que é descrito como padrão.
+function textoDeConclusao(g,perfil){
+  const dx={
+    TEA:{nome:"Transtorno do Espectro Autista (TEA)",casa:"particulares e restritos, alinhando-se aos padrões observados em crianças no espectro autista",laudo:"a emissão do laudo confirmatório de TEA"},
+    TDAH:{nome:"Transtorno do Déficit de Atenção com Hiperatividade (TDAH)",casa:"marcados por desatenção, inquietação e impulsividade, alinhando-se aos padrões observados em crianças com TDAH",laudo:"a emissão do laudo confirmatório de TDAH"},
+    OUTRA:{nome:"{HIPOTESE}",casa:"compatíveis com o que se observa nos atendimentos e nos relatos da família",laudo:"a avaliação médica para a confirmação diagnóstica de {HIPOTESE}"}
+  }[perfil];
+  const abertura=perfil==="OUTRA"
+    ? "==Não é possível, até o momento, descartar a correspondência clínica dos comportamentos avaliados com "+dx.nome+", de acordo com as escalas e o histórico clínico==, pois os protocolos apresentam resultados importantes. Com a continuidade do acompanhamento, poderão se estabelecer estímulos significativos para que se estruturem novas informações sobre "+g.o+" paciente."
+    : "==A probabilidade de os comportamentos avaliados terem correspondência clínica com "+dx.nome+" não é nula até o momento e de acordo com as escalas e histórico clínico é de {PROBABILIDADE_"+perfil+"}% de probabilidade==, pois os protocolos apresentam resultados importantes. Com a continuidade do acompanhamento, poderão se estabelecer estímulos significativos para que se estruturem novas informações sobre "+g.o+" paciente.";
+  return [
+    abertura,
+    "==O conjunto de comportamentos observados sugere a presença de características compatíveis com "+(perfil==="OUTRA"?"a hipótese de ":"o ")+dx.nome+". Os comportamentos "+g.do+" paciente indicam desafios tanto no âmbito familiar quanto social que também podem influenciar diretamente nos seus comportamentos, pois talvez tenha suas vontades atendidas prontamente. Em casa, alguns dos seus comportamentos são "+dx.casa+".==",
+    "==O relato da família e o resultado dos protocolos sugerem que fatores contextuais podem estar reforçando certos comportamentos, os quais não são totalmente capturados pelas ferramentas de avaliação utilizadas (não restritas). É importante considerar que "+g.o+" paciente ainda pode se beneficiar de estímulos apropriados para o seu desenvolvimento.==",
+    g.O+" paciente apresenta muitos dos critérios necessários para a confirmação diagnóstica de **"+dx.nome+"**, evidenciando características consistentes em diferentes contextos de avaliação. Dessa forma, recomenda-se que a família, em momento oportuno, realize uma avaliação complementar, preferencialmente de natureza **Neuropsicológica**, a fim de mensurar com maior precisão o funcionamento das **Funções Executivas Superiores** "+g.do+" paciente. Considerando, porém, a idade atual e a condição social e financeira da família, compreende-se que tal encaminhamento não é viável no momento, tornando pertinente e necessária, neste estágio, !!"+dx.laudo+", como medida prioritária para garantir acesso aos direitos e intervenções adequadas.!!"
+  ].join("\n");
+}
+
 function textosPadraoLaudo(g,chaveHipotese){
   const t = {};
   const ehTEA=chaveHipotese==="TEA";
+  const perfil=perfilDeTextoDaHipotese(chaveHipotese);
   const paragrafosMetodologia = {
     intro: "**METODOLOGIA E PROTOCOLOS UTILIZADOS**: Realizada análise dos comportamentos quanto ao desenvolvimento sócio comunicativo e cognitivo, baseado no **DSM - V**, registrado a partir de observações clínicas e escalas de avaliação **(ATA, CARS, SNAP IV, TOD e PORTAGE),** a depender da necessidade do processo da avaliação e da suspeita apresentada.",
     CARS: "**Escala CARS** - **(Childhood Autism Rating Scale)**, em português escala de pontuação para Autismo na infância, é um questionário frequentemente utilizado por profissionais da área da saúde para averiguar a possibilidade da presença de Autismo em crianças e adolescentes **(2 anos de idade e adolescentes até 17 anos e 11 meses)** e é considerada uma ferramenta pré-diagnóstica bastante confiável. Dentre todas as escalas de avaliação do Autismo, a **CARS** é a de maior validação e preferência.",
@@ -1794,6 +1824,8 @@ function textosPadraoLaudo(g,chaveHipotese){
   ].join("\n");
   t.parecerContexto = ehTEA
     ? "As dificuldades "+g.do+" paciente podem estar relacionadas ao fato de ser laudad"+g.e+" com **TEA** e por estar em fase de adaptação a novas rotinas, regras escolares e sociais constantemente, "+g.o+" paciente está em processo de estímulo e desenvolvimento de habilidades necessárias para o ambiente escolar, como comunicação, flexibilidade e interação social desde sempre."
+    : perfil==="OUTRA"
+    ? "As dificuldades "+g.do+" paciente podem estar relacionadas ao fato de ser laudad"+g.e+" com **{HIPOTESE}** e por estar em fase de adaptação a novas rotinas, regras escolares e sociais constantemente, "+g.o+" paciente está em processo de estímulo e desenvolvimento de habilidades necessárias para o ambiente escolar, como atenção, comunicação, flexibilidade e interação social desde sempre."
     : "As dificuldades "+g.do+" paciente podem estar relacionadas ao fato de ser laudad"+g.e+" com **TDAH e TOD** e por estar em fase de adaptação a novas rotinas, regras escolares e sociais constantemente, "+g.o+" paciente está em processo de estímulo e desenvolvimento de habilidades necessárias para o ambiente escolar, como atenção, disciplina e interação social desde sempre.";
   t.aspectosComportamentais = ehTEA ? [
     "As informações a seguir foram obtidas a partir de um estudo de caso detalhado "+g.do+" paciente, reunindo dados provenientes de observações diretas e indiretas, relatos familiares, e interações em diferentes contextos sociais e escolares, com o intuito de oferecer uma análise abrangente de seu comportamento, desenvolvimento e desafios específicos. "+g.O+" paciente descrit"+g.e+" apresenta um conjunto de características que são consistentes com o **TEA - Transtorno do Espectro Autista.** A seguir, destaco alguns aspectos importantes que indicam a necessidade de observações mais específicas para a elaboração de um plano de intervenção apropriado.",
@@ -1845,7 +1877,10 @@ function textosPadraoLaudo(g,chaveHipotese){
     "Sua dificuldade "+g.o+" impede de concluir as atividades propostas com prazer e interesse. Não acolhe bem as explicações e orientações recebidas demonstrando falta de compreensão do que lhe é solicitado, porém, são realizadas com muita rapidez depois de ter os comandos repetidos por mais de uma vez (duas ou três vezes) e ainda não é capaz de realizar com coerência o que lhe é proposto em alguns momentos.",
     "Essas características podem interferir significativamente no desempenho acadêmico, nas interações sociais e nas atividades diárias "+g.do+" paciente. O manejo desses comportamentos geralmente envolve uma combinação de intervenções comportamentais, educacionais e, em alguns casos, medicamentosas."
   ].join("\n");
-  t.textoSintese = ehTEA ? [
+  t.textoSintese = perfil==="OUTRA" ? [
+    "Com base nas observações realizadas ao longo dos atendimentos clínicos, identifica-se que "+g.o+" paciente apresenta um padrão de funcionamento compatível com **{HIPOTESE}**, com impacto direto no desempenho escolar, funcional e na autonomia diária.",
+    "De forma geral, o conjunto das observações clínicas indica um perfil compatível com a hipótese diagnóstica investigada, gerando impacto funcional no cotidiano "+g.do+" paciente. As manifestações observadas reforçam a necessidade de acompanhamento terapêutico contínuo e de estratégias adaptadas aos contextos clínico, escolar e familiar."
+  ].join("\n") : ehTEA ? [
     "Com base nas observações realizadas ao longo dos atendimentos clínicos, identifica-se que "+g.o+" paciente apresenta um padrão de funcionamento compatível com o **Transtorno do Espectro Autista (TEA)**, caracterizado por particularidades na comunicação social e por padrões restritos e repetitivos de comportamento, interesses ou atividades, com impacto direto no desempenho escolar, funcional e na autonomia diária.",
     "Observa-se **dificuldade na reciprocidade socioemocional**, com limitações na iniciativa de interações sociais e no compartilhamento espontâneo de interesses e emoções com outras pessoas. "+g.O+" paciente demonstra padrões particulares na comunicação não verbal, como contato visual, expressões faciais e gestos, o que impacta a construção e manutenção de vínculos sociais.",
     "Nota-se também a presença de **interesses restritos e/ou comportamentos repetitivos**, com forte apego a rotinas e rituais específicos, podendo apresentar reações intensas diante de mudanças inesperadas no ambiente ou na rotina. Observam-se ainda particularidades sensoriais, com hiper ou hiporreatividade a estímulos do ambiente (sons, texturas, luzes, entre outros).",
@@ -1879,12 +1914,7 @@ function textosPadraoLaudo(g,chaveHipotese){
     "As observações feitas no consultório corroboram os resultados obtidos por meio da Escala **SNAP IV**, aplicada junto à família e estudo de caso com a escola, confirmando a presença de comportamentos relacionados à desatenção, impulsividade e dificuldades de atenção. A convergência dessas informações aponta para a necessidade de acompanhamento especializado para melhor compreensão do perfil neurocomportamental "+g.do+" estudante.",
     "Ressalto a importância de um olhar individualizado e de estratégias pedagógicas adaptadas, de modo a favorecer seu desenvolvimento sem comprometer suas habilidades socioemocionais, que são notoriamente preservadas e valiosas."
   ].join("\n");
-  t.textoConclusaoTEA = [
-    "==A probabilidade de os comportamentos avaliados terem correspondência clínica com Transtorno do Espectro Autista (TEA) não é nula até o momento e de acordo com as escalas e histórico clínico é de {PROBABILIDADE_TEA}% de probabilidade==, pois os protocolos apresentam resultados importantes. Com a continuidade do acompanhamento, poderão se estabelecer estímulos significativos para que se estruturem novas informações sobre "+g.o+" paciente.",
-    "==O conjunto de comportamentos observados sugere a presença de características compatíveis com o Transtorno do Espectro Autista (TEA). Os comportamentos "+g.do+" paciente indicam desafios tanto no âmbito familiar quanto social que também podem influenciar diretamente nos seus comportamentos, pois talvez tenha suas vontades atendidas prontamente. Em casa, alguns dos seus comportamentos são particulares e restritos, alinhando-se aos padrões observados em crianças no espectro autista.==",
-    "==O relato da família e o resultado dos protocolos sugerem que fatores contextuais podem estar reforçando certos comportamentos, os quais não são totalmente capturados pelas ferramentas de avaliação utilizadas (não restritas). É importante considerar que "+g.o+" paciente ainda pode se beneficiar de estímulos apropriados para o seu desenvolvimento.==",
-    g.O+" paciente apresenta muitos dos critérios necessários para a confirmação diagnóstica de **Transtorno do Espectro Autista (TEA)**, evidenciando características consistentes em diferentes contextos de avaliação. Dessa forma, recomenda-se que a família, em momento oportuno, realize uma avaliação complementar, preferencialmente de natureza **Neuropsicológica**, a fim de mensurar com maior precisão o funcionamento das **Funções Executivas Superiores** "+g.do+" paciente. Considerando, porém, a idade atual e a condição social e financeira da família, compreende-se que tal encaminhamento não é viável no momento, tornando pertinente e necessária, neste estágio, !!a emissão do laudo confirmatório de TEA, como medida prioritária para garantir acesso aos direitos e intervenções adequadas.!!"
-  ].join("\n");
+  t.textoConclusaoTEA = textoDeConclusao(g,perfil);
   t.fe_manif_0 = "Observa-se comprometimento acentuado no monitoramento da própria conduta. "+g.O+" paciente demonstra pouca percepção das consequências de suas ações e reduzida capacidade de reconhecer espontaneamente quando um comportamento é inadequado, perigoso ou prejudicial ao outro. Mesmo após orientações, pode repetir a mesma resposta, necessitando de mediação constante para interromper, compreender o ocorrido e reorganizar sua conduta.";
   t.fe_manif_1 = "Apresenta importante dificuldade para organizar ações de maneira antecipada e funcional. Seu comportamento tende a ser imediato e guiado pelo desejo do momento, com pouca previsão das etapas ou consequências. Necessita de elevada estruturação externa para iniciar, permanecer e concluir propostas, apresentando dificuldade para sustentar sequências, seguir uma organização previamente estabelecida e ajustar o próprio comportamento diante das demandas.";
   t.fe_manif_2 = "Esta função mostra-se severamente comprometida. "+g.O+" paciente apresenta grande dificuldade para esperar, aceitar negativas, interromper ações e conter impulsos. Diante de limites ou frustrações, pode responder com agressividade, fuga, autoagressão ou intensa desorganização comportamental. Comandos de interrupção frequentemente não produzem resposta imediata, inclusive em situações de risco, evidenciando necessidade de supervisão e intervenção externa constantes.";
@@ -1906,9 +1936,15 @@ function consideracoesFinaisTEAMeninas(sexo,hipotese){
 // Texto de abertura das Considerações Finais, enviado pela psicóloga em
 // 2026-10-30 (OBS-01/OBS-02): vai logo abaixo do título, antes do "Vale
 // ressaltar", com os negritos do original. Uma linha = um parágrafo.
-function analiseDosComportamentosFechamento(){
+function analiseDosComportamentosFechamento(perfil){
+  // Só o 1º parágrafo cita o diagnóstico: segue a hipótese principal (TEA, TDAH ou {HIPOTESE}).
+  const caracteristicas={
+    TEA:"características comportamentais, comunicativas, sociais e funcionais compatíveis com os critérios clínicos do **Transtorno do Espectro Autista (TEA)**",
+    TDAH:"características comportamentais, atencionais, executivas, sociais e funcionais compatíveis com os critérios clínicos do **Transtorno do Déficit de Atenção com Hiperatividade (TDAH)**",
+    OUTRA:"características comportamentais, comunicativas, sociais e funcionais compatíveis com os critérios clínicos de **{HIPOTESE}**"
+  }[perfil||"OUTRA"];
   return [
-    "**A ANÁLISE DOS COMPORTAMENTOS**, realizada evidenciou um conjunto expressivo e consistente de características comportamentais, comunicativas, sociais e funcionais compatíveis com os critérios clínicos do **Transtorno do Espectro Autista (TEA)**, associado a prejuízos significativos em diferentes áreas do desenvolvimento global do paciente.",
+    "**A ANÁLISE DOS COMPORTAMENTOS**, realizada evidenciou um conjunto expressivo e consistente de "+caracteristicas+", associado a prejuízos significativos em diferentes áreas do desenvolvimento global do paciente.",
     "Considerando sua faixa etária e suas necessidades específicas, recomenda-se, em momento oportuno, a realização de Avaliação Neuropsicológica complementar, com o objetivo de investigar e mensurar aspectos relacionados ao funcionamento cognitivo, atenção, memória, linguagem, funções executivas, autorregulação e habilidades adaptativas, possibilitando uma compreensão mais abrangente de seu perfil de desenvolvimento.",
     "Entretanto, considerando as limitações de acesso a essa modalidade de avaliação pela rede pública que atende a família, bem como as condições atuais de sua rotina e a necessidade de assistência em tempo oportuno, entende-se que sua realização não deve constituir um impedimento para o prosseguimento da investigação diagnóstica. Diante da consistência dos achados clínico-observacionais e dos prejuízos funcionais identificados, considera-se pertinente e prioritário o encaminhamento para avaliação médica especializada, a fim de verificar a possibilidade de confirmação diagnóstica e emissão do respectivo laudo médico, favorecendo o acesso aos direitos, aos suportes educacionais e às intervenções necessárias.",
     "Ressalta-se que a presente avaliação possui caráter neuropsicopedagógico, fundamentado na análise individualizada dos comportamentos, das habilidades do desenvolvimento e dos prejuízos funcionais apresentados pelo paciente, não substituindo a avaliação médica, cuja responsabilidade pela definição diagnóstica compete ao profissional legalmente habilitado.",
@@ -1935,7 +1971,7 @@ const fraseDeDisponibilidade="Desde já, coloco-me à disposição para maiores 
 function aplicarTextosPadrao(preencherVazios){
   const chaveHipotese=chaveDaHipotese(hipotesesParaRelatorio()[0]||"");
   const atual=textosPadraoLaudo(formasGenero(valor("sexo")),chaveHipotese);
-  const variantes=["Masculino","Feminino"].flatMap(sx=>["TDAH","TEA"].map(ch=>textosPadraoLaudo(formasGenero(sx),ch)));
+  const variantes=["Masculino","Feminino"].flatMap(sx=>["TDAH","TEA","OUTRA"].map(ch=>textosPadraoLaudo(formasGenero(sx),ch)));
   Object.keys(atual).forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
     const v=el.value;
@@ -1950,7 +1986,10 @@ function aplicarTextosPadrao(preencherVazios){
 // usado ao ligar o ícone correspondente.
 function chaveDoMetodo(id){return {CARS:"cars",ATA:"ata",SNAPIV:"snap",PORTAGE:"portage",TOD:"tod",MCHAT:"mchat"}[id];}
 function metodologiaDoRelatorio(){
-  return valor("metodologia").replace(/\*\*PROTOCOLO UTILIZADO\*\*/g,"**METODOLOGIA E PROTOCOLOS UTILIZADOS**")
+  let texto=valor("metodologia").replace(/\*\*PROTOCOLO UTILIZADO\*\*/g,"**METODOLOGIA E PROTOCOLOS UTILIZADOS**");
+  // "Partindo de uma hipótese diagnóstica de **TEA…**": o texto-padrão vem com TEA; no relatório segue a hipótese principal.
+  if(hipotesesParaRelatorio().length&&chaveDaHipotesePrincipal()!=="TEA")texto=texto.replace(/\*\*TEA - Transtorno do Espectro Autista\*\*/g,"**"+nomeDaHipotesePrincipal().replace(/ – /g," - ")+"**");
+  return texto
     .split(/\r?\n/).filter(linha=>!ESCALAS_METODOLOGIA.some(e=>!metodoNoRelatorio(chaveDoMetodo(e.id))&&linha.trim().startsWith(e.marcador))).join("\n");
 }
 // M-CHAT é o instrumento dos 16 aos 30 meses: nessa idade ele entra no lugar
@@ -2103,6 +2142,8 @@ function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"
 function marcacao(s,extras){
   let h=esc(s);
   if(extras&&extras.probabilidadeTEA!==undefined)h=h.replace(/\{PROBABILIDADE_TEA\}%/g,"!!"+extras.probabilidadeTEA+"%!!").replace(/\{PROBABILIDADE_TEA\}/g,String(extras.probabilidadeTEA));
+  if(extras&&extras.probabilidadeTDAH!==undefined)h=h.replace(/\{PROBABILIDADE_TDAH\}%/g,"!!"+extras.probabilidadeTDAH+"%!!").replace(/\{PROBABILIDADE_TDAH\}/g,String(extras.probabilidadeTDAH));
+  if(extras&&extras.hipotese)h=h.replace(/\{HIPOTESE\}/g,esc(extras.hipotese));
   return h
     .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
     .replace(/==(.+?)==/g,'<mark class="cinza"><strong>$1</strong></mark>')
@@ -2243,7 +2284,7 @@ function graficoCARS(){
     rotulos:{fonte:"bold 14px Arial",cor:PALETA_LAUDO.texto,formato:v=>numeroBR(v),posicao:v=>v<=0.5?"acima":"abaixo"}}]},
     options:{layout:{padding:{top:8,right:26,left:14,bottom:6}},
       plugins:{legend:{display:false},tooltip:{enabled:false},title:{display:true,text:"Pontuação por Área - CARS",color:PALETA_LAUDO.textoSuave,font:{size:19,weight:"bold",family:FONTE_GRAFICO},padding:{bottom:16}}},
-      scales:{y:{min:0,max:4.4,ticks:{display:false,stepSize:1},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},border:{color:PALETA_LAUDO.gradeForte},ticks:{color:PALETA_LAUDO.texto,maxRotation:90,minRotation:90,autoSkip:false,font:{size:13,family:FONTE_GRAFICO}}}}}},1000,600);
+      scales:{y:{min:0,max:4.4,ticks:{display:false,stepSize:1},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},border:{color:PALETA_LAUDO.gradeForte},ticks:{color:PALETA_LAUDO.texto,maxRotation:90,minRotation:90,autoSkip:false,font:{size:13,family:FONTE_GRAFICO}}}}}},800,440);
 }
 
 function graficoATA(){
@@ -2254,7 +2295,7 @@ function graficoATA(){
       {type:"line",data:media,borderColor:PALETA_LAUDO.serieEscura,borderWidth:2,borderDash:[3,4],pointRadius:0,spanGaps:false},
       {data:valores,backgroundColor:PALETA_LAUDO.serie,barPercentage:0.75,categoryPercentage:0.85,rotulos:{fonte:"15px Arial",cor:PALETA_LAUDO.tinta}}]},
     options:{layout:{padding:{top:22,right:18,left:10,bottom:8}},plugins:{legend:{display:false},tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.grade,espessura:1}},
-      scales:{y:{min:0,max:2,ticks:{stepSize:1,color:PALETA_LAUDO.texto,font:{size:14}},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:90,minRotation:90,autoSkip:false,font:{size:11,family:FONTE_GRAFICO}}}}}},1000,720);
+      scales:{y:{min:0,max:2,ticks:{stepSize:1,color:PALETA_LAUDO.texto,font:{size:14}},grid:{color:PALETA_LAUDO.grade},border:{display:false}},x:{grid:{display:false},ticks:{color:PALETA_LAUDO.texto,maxRotation:90,minRotation:90,autoSkip:false,font:{size:11,family:FONTE_GRAFICO}}}}}},800,520);
 }
 
 // Habilidades acadêmicas da seção 8 (ano escolar): só as avaliadas.
@@ -2344,7 +2385,7 @@ function graficoPortage(portage,idadeAnos){
       {label:"Idade Cronológica",data:portage.areas.map(()=>Math.min(idadeAnos,limite)),backgroundColor:PALETA_LAUDO.referencia,borderColor:PALETA_LAUDO.tinta,borderWidth:1,
         rotulos:{fonte:"15px Arial",cor:PALETA_LAUDO.tinta,posicao:"topoEixo",formato:()=>doisDigitos(idadeAnos)}}]},
     options:{barPercentage:0.92,categoryPercentage:0.62,layout:{padding:{top:40,right:26,left:20,bottom:14}},
-      plugins:{legend:{display:true,position:"top",align:"start",labels:{boxWidth:12,boxHeight:12,color:PALETA_LAUDO.texto,font:{size:13,family:FONTE_GRAFICO}}},tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.textoSuave,raio:22,espessura:1.5},
+      plugins:{legend:{display:true,position:"bottom",align:"center",labels:{boxWidth:12,boxHeight:12,padding:14,color:PALETA_LAUDO.texto,font:{size:14,family:FONTE_GRAFICO}}},tooltip:{enabled:false},fundoLaudo:{borda:PALETA_LAUDO.textoSuave,raio:22,espessura:1.5},
         title:{display:true,text:"Idade de Desenvolvimento - Inventário Portage",color:PALETA_LAUDO.texto,font:{size:26,family:FONTE_GRAFICO},padding:{top:0,bottom:40}}},
       scales:{y:{min:0,max:limite,ticks:{stepSize:limite>3?1:0.5,color:PALETA_LAUDO.tinta,font:{size:15},callback:v=>numeroBR(Number(v).toFixed(1))},grid:{color:PALETA_LAUDO.gradeForte},border:{display:false}},
         x:{grid:{display:false},ticks:{color:PALETA_LAUDO.tinta,font:{size:15,family:FONTE_GRAFICO}}}}}},1000,480);
@@ -2795,7 +2836,7 @@ async function gerarDocumentoLaudoHTML(){
   const g=formasGenero(valor("sexo"));
   const prob=probabilidades();
   atualizarIdadeCognitivaDoCabecalho();
-  const opcoesTexto={probabilidadeTEA:prob.tea};
+  const opcoesTexto={probabilidadeTEA:prob.tea,probabilidadeTDAH:prob.tdah,hipotese:nomeDaHipotesePrincipal()};
   const texto=(id,opcoes)=>blocoDeTexto(valor(id),Object.assign({},opcoesTexto,opcoes||{}));
   const QUEBRA='<div class="quebra"></div>';
   const partes=[];
@@ -2946,7 +2987,7 @@ async function gerarDocumentoLaudoHTML(){
       partes.push('<p class="recuo">Segue abaixo rastreamento dos comportamentos utilizando a <strong>Escala CARS,</strong> que caracterizam o <strong>TEA-Transtorno do Espectro Autista.</strong> A escala '+faixa+" atraso importante de desenvolvimento dos comportamentos com um resultado de "+destaqueAmarelo(numeroBR(cars)+" PONTOS")+(valor("carsPercentualFalhas")!==""?", e de "+destaqueAmarelo(valor("carsPercentualFalhas")+"% de falhas")+" do que se espera para sua idade de acordo com o marco de desenvolvimento infantil":"")+".</p>");
     }
     if(imgCARS){
-      partes.push('<div class="grafico"><img src="'+imgCARS+'" data-mm="170" style="width:170mm"></div>');
+      partes.push('<div class="grafico"><img src="'+imgCARS+'" data-mm="110" style="width:110mm"></div>');
       const faixasCARS=[["Normal - &nbsp;15 à 29,5 pontos",c=>c<30],["Autismo leve-moderado &nbsp;- 30 à 36,5 pontos",c=>c>=30&&c<37],["Autismo grave – acima de 37 pontos",c=>c>=37]];
       partes.push('<p class="centro"><strong><span style="font-size:7.5pt"><mark class="cinza">Classificação:&nbsp;</mark> '+faixasCARS.map(([t,naFaixa])=>'<mark class="'+(cars!==null&&naFaixa(cars)?"amarelo":"cinza")+'">'+t+"</mark>").join(" / ")+"</span></strong></p>");
     }
@@ -2959,7 +3000,7 @@ async function gerarDocumentoLaudoHTML(){
     partes.push('<p class="recuo">Os comportamentos observados direta e indiretamente e de acordo com as observações, foram totalizados '+destaqueAmarelo(valor("ata")+" pontos na análise da escala ATA")+" o que significa que "+g.o+" paciente apresenta "+destaqueAmarelo((valor("ataPercentual")||"0")+"% de características")+" (rastreada por essa escala) que correspondem ao <strong>TEA- Transtorno do Espectro Autista.</strong></p>");
     const faixaATA=(texto,atingida)=>'<mark class="'+(atingida?"amarelo":"cinza")+'">'+texto+"</mark>";
     partes.push('<p class="centro"><strong><span style="font-size:8pt">'+faixaATA("Pontuação acima de 16 pontos&nbsp; - &nbsp;Atraso no desenvolvimento",pontosATA>16&&pontosATA<=20)+"&nbsp; / &nbsp;"+faixaATA("Pontuação acima 20 pontos&nbsp; - &nbsp;Traços Autísticos",pontosATA>20)+"</span></strong></p>");
-    if(imgATA)partes.push('<div class="grafico"><img src="'+imgATA+'" data-mm="165" style="width:165mm"></div>');
+    if(imgATA)partes.push('<div class="grafico"><img src="'+imgATA+'" data-mm="110" style="width:110mm"></div>');
     if(ATA_ITENS.some((_,i)=>valor("ata_perc_"+i)!=="")){
       const celula=(i)=>'<td style="background:#dbe5f1"><strong><span style="font-size:7pt">'+esc(ATA_ITENS[i][1])+'</span></strong></td><td class="centro" style="background:#dbe5f1"><strong><span style="font-size:7pt">'+esc(valor("ata_perc_"+i)?valor("ata_perc_"+i)+"%":"-")+"</span></strong></td>";
       let linhas="";
@@ -3051,7 +3092,7 @@ async function gerarDocumentoLaudoHTML(){
   // Considerações Finais: (1) texto "A análise dos comportamentos…" (igual para todos os relatórios, desde
   // 2026-10-30), (2) texto de TEA em meninas, quando se aplica, e (3) o aviso legal ("Vale ressaltar…").
   partes.push('<h3><mark class="cinza">Considerações Finais</mark></h3>');
-  partes.push(blocoDeTexto(analiseDosComportamentosFechamento(),opcoesTexto));
+  partes.push(blocoDeTexto(analiseDosComportamentosFechamento(perfilDeTextoDaHipotese(chaveDaHipotesePrincipal())),opcoesTexto));
   partes.push(blocoDeTexto(consideracoesFinaisTEAMeninas(valor("sexo"),hipoteses[0]||""),opcoesTexto));
   partes.push(blocoDeTexto(avisoLegalFechamento(g),opcoesTexto));
 

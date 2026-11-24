@@ -76,7 +76,7 @@ os blocos somem. Backend: `api/pendencias.py`.
 
 Ordem desde 30/10 (OBS-01 a OBS-04), em "Considerações Finais":
 
-1. Texto "**A ANÁLISE DOS COMPORTAMENTOS**…" (igual para todos os relatórios; **a confirmar** com a Mayra, ver `ESCOPO.md` P1/P2), com negritos.
+1. Texto "**A ANÁLISE DOS COMPORTAMENTOS**…", com negritos. Só o 1º parágrafo cita o diagnóstico e segue a hipótese principal (a 1ª marcada): TEA, TDAH ou, para as demais, o nome da hipótese (`analiseDosComportamentosFechamento(perfil)`). Antes de 24/11 era sempre TEA; a cliente apontou o erro. **Os textos de TDAH e neutro foram adaptados do de TEA e precisam da revisão da Mayra.**
 2. Texto sobre TEA em meninas, quando o sexo é Feminino e a hipótese é TEA (`consideracoesFinaisTEAMeninas()`).
 3. "Vale ressaltar que não se deve rejeitar nenhuma mudança…" (`avisoLegalFechamento()`).
 4. Nota sobre os resultados, sem caixa azul (classe `fechamento-texto`).
