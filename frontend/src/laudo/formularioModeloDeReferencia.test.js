@@ -39,6 +39,7 @@ it('cabeçalho, metodologia, destaques e final no modelo do relatório', async (
     __fotosPacienteDados: [{ src: 'data:image/png;base64,FOTO1' }, { src: 'data:image/png;base64,FOTO2' }],
   })
   w.calcularATA()
+  w.aplicarTextosPadrao(false) // na tela, marcar a hipótese dispara a troca dos textos-padrão
   const doc = await w.gerarDocumentoLaudoHTML()
 
   expect(doc).toContain('PARECER NEUROPSICOPEDAGÓGICO ANÁLISE COMPORTAMENTAL</div>')
@@ -144,10 +145,12 @@ it('gráfico da ATA vai só até 2 e a idade cognitiva sai só como faixa', () =
 // Observações de 2026-10-30 (OBS-01 a OBS-04): fechamento no padrão enviado
 // pela psicóloga.
 it.each([
-  ['TEA', { hip_tea: true }],
-  ['sem hipótese de TEA', { hip_tdah: true }],
-])('fechamento: texto da análise antes do "Vale ressaltar", sem caixa azul (%s)', async (_nome, hipotese) => {
+  ['TEA', { hip_tea: true }, 'Transtorno do Espectro Autista (TEA)'],
+  ['TDAH', { hip_tdah: true }, 'Transtorno do Déficit de Atenção com Hiperatividade (TDAH)'],
+  ['outra hipótese (TPAC)', { hip_tpac: true }, 'Transtorno do Processamento Auditivo Central – TPAC'],
+])('fechamento: texto da análise antes do "Vale ressaltar", sem caixa azul (%s)', async (_nome, hipotese, diagnostico) => {
   w.aplicarDados({ nomePaciente: 'Paciente Teste', sexo: 'Masculino', dataNascimento: '2019-11-02', dataRelatorio: '2026-10-15', cidade: 'Cidade Fictícia - GO', ...hipotese })
+  w.aplicarTextosPadrao(false)
   const doc = await w.gerarDocumentoLaudoHTML()
 
   const consideracoes = doc.indexOf('Considerações Finais')
@@ -164,8 +167,8 @@ it.each([
   expect(doc).not.toContain('SOBRE A PROFISSIONAL RESPONSÁVEL')
   expect(doc).not.toContain('Este relatório foi elaborado por Mayra')
 
-  // Negritos pedidos: TEA por extenso e nome com CBO
-  expect(doc).toContain('<strong>Transtorno do Espectro Autista (TEA)</strong>')
+  // Negritos pedidos: diagnóstico da hipótese por extenso e nome com CBO
+  expect(doc).toContain(`<strong>${diagnostico}</strong>`)
   expect(doc).toContain('<strong>Mayra Vanessa Andrade da Cunha, Neuropsicopedagoga Clínica (CBO 2394-40) e Institucional (CBO 2394-45)</strong>')
 
   // A OBSERVAÇÃO sai; "Desde já" desce para junto de "Atenciosamente"
@@ -177,4 +180,22 @@ it.each([
 
   // Sem a caixa azul em volta da NOTA
   expect(doc.slice(nota - 80, nota)).not.toContain('caixa-cinza')
+})
+
+// Retorno da cliente: com TDAH (ou outra hipótese) marcado, conclusão, considerações finais e
+// metodologia não podem falar em TEA.
+it.each([
+  ['TDAH', { hip_tdah: true }, 'laudo confirmatório de TDAH'],
+  ['TPAC', { hip_tpac: true }, 'confirmação diagnóstica de Transtorno do Processamento Auditivo Central – TPAC'],
+])('conclusão e fechamento seguem a hipótese %s, sem citar TEA', async (_nome, hipotese, trecho) => {
+  w.aplicarDados({ nomePaciente: 'Paciente Teste', sexo: 'Masculino', dataNascimento: '2019-11-02', dataRelatorio: '2026-10-15', ...hipotese })
+  w.aplicarTextosPadrao(false)
+  const doc = await w.gerarDocumentoLaudoHTML()
+
+  expect(doc).toContain(trecho)
+  expect(doc).not.toContain('laudo confirmatório de TEA')
+  expect(doc).not.toContain('correspondência clínica com Transtorno do Espectro Autista')
+  expect(doc).not.toContain('crianças no espectro autista')
+  expect(doc).not.toContain('Partindo de uma hipótese diagnóstica de <strong>TEA')
+  expect(doc).not.toMatch(/\{(HIPOTESE|PROBABILIDADE_TEA|PROBABILIDADE_TDAH)\}/)
 })
