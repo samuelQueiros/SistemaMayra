@@ -7,6 +7,7 @@ Resumo por data, em linguagem simples, montado a partir do git. Os detalhes est�
 
 ### Corrigido
 * Texto de TEA aparecendo em relatório de TDAH: a conclusão (após o gráfico de domínios), o 1º parágrafo das Considerações Finais e a frase "Partindo de uma hipótese diagnóstica de…" da metodologia agora seguem a hipótese principal. Para outras hipóteses (ex.: TPAC) o texto é neutro e usa o nome da hipótese. Os textos de TDAH e o neutro são adaptações e aguardam revisão da Mayra.
+* Texto-padrão de um diagnóstico aparecendo para outra hipótese: a frase "Partindo de uma hipótese diagnóstica de…" da Metodologia vinha com TEA fixo na tela (e saía no relatório sem hipótese marcada); "Aspectos comportamentais" e o texto do Portage vinham com o texto de TDAH para TPAC ou sem hipótese; a "Corroboração SNAP-IV" (texto de TDAH) entrava em todo relatório. Agora cada texto-padrão só vem do diagnóstico marcado (TEA, TDAH) e, para as demais hipóteses ou sem hipótese, é neutro. Os textos neutros aguardam revisão da Mayra.
 * Cabeçalho do paciente no Word (foto + identificação) saía com bordas em todas as células e o texto sem negrito, num parágrafo só.
 * XML do Word fora da ordem do schema (elementos repetidos e fora de ordem), que o Word do Windows perdoa mas Word para Mac, Pages e Google Docs não.
 * Título e cabeçalho das tabelas de quadros ficam presos à primeira linha no Word.

@@ -199,3 +199,55 @@ it.each([
   expect(doc).not.toContain('Partindo de uma hipótese diagnóstica de <strong>TEA')
   expect(doc).not.toMatch(/\{(HIPOTESE|PROBABILIDADE_TEA|PROBABILIDADE_TDAH)\}/)
 })
+
+// Retorno da cliente (2ª rodada): o texto-padrão da Metodologia, na tela e no relatório, só cita TEA quando a
+// hipótese marcada é TEA.
+it.each([
+  ['nenhuma', {}, 'Partindo da hipótese diagnóstica investigada'],
+  ['TDAH', { hip_tdah: true }, 'Partindo de uma hipótese diagnóstica de <strong>TDAH - Transtorno do Déficit de Atenção com Hiperatividade'],
+  ['TPAC', { hip_tpac: true }, 'Partindo de uma hipótese diagnóstica de <strong>Transtorno do Processamento Auditivo Central'],
+  ['TEA', { hip_tea: true }, 'Partindo de uma hipótese diagnóstica de <strong>TEA - Transtorno do Espectro Autista'],
+])('metodologia com hipótese %s', async (_nome, hipotese, trecho) => {
+  w.aplicarDados({ nomePaciente: 'Paciente Teste', sexo: 'Masculino', dataNascimento: '2019-11-02', dataRelatorio: '2026-10-15', ...hipotese })
+  w.aplicarTextosPadrao(true)
+  const naTela = w.document.getElementById('metodologia').value
+  const doc = await w.gerarDocumentoLaudoHTML()
+  expect(doc).toContain(trecho)
+  expect(doc).not.toContain('{HIPOTESE}')
+  if (!hipotese.hip_tea) expect(naTela).not.toContain('TEA - Transtorno do Espectro Autista')
+})
+
+// Texto-padrão de um diagnóstico só aparece quando a hipótese marcada é aquele diagnóstico (nada de TDAH como
+// "padrão" para TPAC/sem hipótese, nem TEA como padrão para TDAH).
+it.each([
+  ['nenhuma', {}], ['TPAC', { hip_tpac: true }], ['TEA', { hip_tea: true }],
+])('hipótese %s: sem texto-padrão de TDAH nos campos', async (_nome, hipotese) => {
+  w.aplicarDados({ nomePaciente: 'Paciente Teste', sexo: 'Masculino', dataNascimento: '2019-11-02', dataRelatorio: '2026-10-15', ...hipotese })
+  w.aplicarTextosPadrao(true)
+  const campo = id => w.document.getElementById(id).value
+  for (const id of ['parecerContexto', 'aspectosComportamentais', 'textoPortage', 'textoSintese', 'textoCorroboracao', 'textoConclusaoTEA']) {
+    expect(campo(id), id).not.toMatch(/TDAH|hiperatividade cerebral|SNAP IV/)
+  }
+})
+
+it.each([
+  ['nenhuma', {}], ['TPAC', { hip_tpac: true }], ['TDAH', { hip_tdah: true }],
+])('hipótese %s: sem texto-padrão de TEA nos campos', async (_nome, hipotese) => {
+  w.aplicarDados({ nomePaciente: 'Paciente Teste', sexo: 'Masculino', dataNascimento: '2019-11-02', dataRelatorio: '2026-10-15', ...hipotese })
+  w.aplicarTextosPadrao(true)
+  const campo = id => w.document.getElementById(id).value
+  for (const id of ['parecerContexto', 'aspectosComportamentais', 'textoPortage', 'textoSintese', 'textoCorroboracao', 'textoConclusaoTEA']) {
+    expect(campo(id), id).not.toMatch(/\bTEA\b|espectro autista|Espectro Autista/)
+  }
+  expect(campo('metodologia')).not.toContain('TEA - Transtorno do Espectro Autista')
+})
+
+it('trocar a hipótese de TDAH para TEA troca os textos-padrão (e a corroboração do SNAP-IV some)', () => {
+  w.aplicarDados({ nomePaciente: 'Paciente Teste', sexo: 'Masculino', dataNascimento: '2019-11-02', dataRelatorio: '2026-10-15', hip_tdah: true })
+  w.aplicarTextosPadrao(true)
+  expect(w.document.getElementById('textoCorroboracao').value).toContain('SNAP IV')
+  w.aplicarDados({ hip_tdah: false, hip_tea: true })
+  w.aplicarTextosPadrao(false)
+  expect(w.document.getElementById('textoCorroboracao').value).toBe('')
+  expect(w.document.getElementById('aspectosComportamentais').value).toContain('TEA - Transtorno do Espectro Autista')
+})
